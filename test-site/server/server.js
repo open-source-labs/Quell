@@ -1,7 +1,12 @@
 
 const express = require('express');
+const { graphqlHTTP } = require('express-graphql');
+const schema = require('./types');
+const resolvers = require('./resolvers');
+
 const app = express();
-const PORT = process.env.PORT || 3000;
+// const PORT = process.env.PORT || 3000;
+const PORT = 3000;
 
 const path = require('path');
 
@@ -11,12 +16,19 @@ app.use(express.json());
 // Webpack DevServer
 if (process.env.NODE_ENV === 'production') {
   // statically serve everything in the dist folder on the route
-  app.use('/dist', express.static(path.resolve(process.cwd(), './dist')));
+  app.use('/dist', express.static(path.resolve(process.cwd(), '../dist')));
   // serve index.html on the route '/'
   app.get('/', (req, res) => {
-    res.status(200).sendFile(path.resolve(process.cwd(), './client/src/index.html'));
+    res.status(200).sendFile(path.resolve(process.cwd(), '../client/src/index.html'));
   });
 }
+
+// GraphQL route
+app.use('/graphql', graphqlHTTP({
+  schema: schema,
+  rootValue: resolvers,
+  graphiql:true,
+}));
 
 // catch-all endpoint handler
 app.use((req, res) => {
@@ -26,7 +38,7 @@ app.use((req, res) => {
 // global error handler
 app.use((err, req, res, next) => {
   const defaultErr = {
-    log: 'Express error handler caught unkown middleware error!',
+    log: 'Express error handler caught unknown middleware error!',
     status: 500,
     message: { err: 'An error occurred!' }
   };
