@@ -10,8 +10,9 @@ module.exports = {
   },
   devServer: {
     port: 8080,
+    // publicPath: '/dist/',
     proxy: {
-      '/': 'http://localhost:3000',
+      '/graphql': 'http://localhost:3000',
     },
     hot: true,
   },
@@ -50,5 +51,5 @@ resolve: {
       template: './client/src/index.html',
     }),
     new CleanWebpackPlugin(), 
-]
+  ]
 }
