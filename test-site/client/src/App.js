@@ -3,7 +3,7 @@ import React from 'react';
 function App() {
   return (
     <div className='App'>
-        <h1>Quell</h1>
+        <h1>Quell Update</h1>
     </div>
   );
 }
