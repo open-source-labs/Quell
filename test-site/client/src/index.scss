@@ -1,38 +1,75 @@
 @import url('https://fonts.googleapis.com/css2?family=Alegreya+Sans+SC:wght@300&family=Julius+Sans+One&family=Baloo+Tamma+2&family=Poiret+One&display=swap');
 
-body {
-  font-family: 'Baloo Tamma 2';
+* {
   margin: 0;
   padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Baloo Tamma 2';
   background: #f1f1f1b9;
-  background-image: linear-gradient(to bottom right, #f5f5f5b9, #dbdbdbb9);
+  background-image: linear-gradient(to bottom, white, #171E26);
 }
 
 .App {
   margin: auto;
-  margin-top: 150px;
-  text-align: center;
-  width: 800px;
+  padding: 5%;
+  width: 80%;
   background: white;
   border: 1px solid #e7e7e7;
-  box-shadow: 30px 30px 40px 20px #cecece;
+  box-shadow: 5px 5px 40px 5px #cecece;
   border-radius: 20px;
+  
 }
 
 .App h1 {
-  margin: auto;
-  margin: 100 0 100 0;
+  margin: 40px auto;
+  text-align: center;
   font-family: 'Alegreya Sans SC';
   letter-spacing: 6px;
   font-size: 60px;
   color: rgb(66, 66, 66);
 }
 
-.App .description {
-  color: rgb(187, 185, 185);
+.query-container {
+  margin-top: 5vh;
 }
 
-.App .description h3 {
-  color: rgb(143, 206, 118);
-  padding: 20 0 20 0;
+.results-view {
+  border: 1px solid black;
+  min-height: 250px;
+}
+
+textarea {
+  outline: none;
+  padding: 5px;
+}
+
+.run-query-btn {
+  border-radius: 6px;
+  border: 1px solid #566f8b;
+  margin: 10px 0;
+  padding: 5px;
+  background-color: white;
+  color: #171E26;
+  outline: none;
+}
+
+.run-query-btn:hover {
+  background-color: #566f8b;
+  color: white;
+}
+
+.run-query-btn:active {
+  background-color: #273341;
+  color: white;
+}
+
+.results-view {
+  padding: 10px;
+}
+
+footer {
+  min-height: 50px;
 }
