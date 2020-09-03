@@ -5,42 +5,44 @@ const QueryAll = () => {
   const [queryResponse, setQueryResponse] = useState('');
 
   // // query for full dataset
-  // const query = `
-  //   countries {
-  //     results {
-  //       id
-  //       name
-  //       capital
-  //       languages {
-  //         results {
-  //           name
-  //         }
-  //       }
-  //       cities {
-  //         results {
-  //           country {
-  //             id
-  //           }
-  //           id
-  //           cityId
-  //           name
-  //           population
-  //         }
-  //       }
-  //     }
-  //   }
-  // `
-  
   const query = `
   {
-    countries {
-      name
+    country(id: "1"){
       id
+      name
       capital
+      cities{
+        country_id
+        id
+        name
+        population
+      }
+    }
+    countries{
+      id
+      name
+      capital
+      cities{
+        country_id
+        id
+        name
+        population
+      }
+    }
+    citiesByCountry(country_id: "3"){
+      country_id
+      id
+      name
+      population
+    }
+    cities{
+      country_id
+      id
+      name
+      population
     }
   }
   `
-
   const handleClick = () => {
     fetch('/graphql', {
       method: 'POST',
@@ -51,7 +53,7 @@ const QueryAll = () => {
     })
     .then(res => res.json())
     .then(res => {
-      setQueryResponse(JSON.stringify(res.data.countries));
+      setQueryResponse(JSON.stringify(res.data));
     })
     .catch(err => console.log(err))
   }

@@ -36,14 +36,11 @@ body {
   margin-top: 5vh;
 }
 
-.results-view {
-  border: 1px solid black;
-  min-height: 250px;
-}
-
 textarea {
   outline: none;
   padding: 5px;
+  width: 50%;
+  height: 30%;
 }
 
 .run-query-btn {
@@ -67,7 +64,10 @@ textarea {
 }
 
 .results-view {
+  border: 1px solid black;
+  height: 250px;
   padding: 10px;
+  overflow: auto;
 }
 
 footer {
