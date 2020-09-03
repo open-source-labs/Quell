@@ -28,12 +28,12 @@ const QuerySome = () => {
     <div className="query-container">
       <h2>Query Some</h2>
       <div className="text-area">
-        <label htmlFor="custom-query">Query Input</label><br/>
-        <textarea id="custom-query" rows="20" cols="80" onChange={handleChange}>Enter query...</textarea><br/>
+        <label htmlFor="custom-query">Query Input: {queryInput}</label><br/>
+        <textarea id="custom-query" rows="20" cols="80" placeholder="Enter query..." onChange={handleChange}></textarea><br/>
         <button className="run-query-btn" onClick={handleClick}>Run Query</button>
       </div>
+      <h2>Results:</h2>
       <div className="results-view">
-        <h2>Results View</h2>
         {queryResponse}
       </div>
     </div>

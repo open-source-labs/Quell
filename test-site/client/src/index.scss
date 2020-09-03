@@ -34,11 +34,11 @@ body {
 
 .results-view {
   border: 1px solid black;
-  min-height: 500px;
+  min-height: 250px;
 }
 
 footer {
-  min-height: 100px;
+  min-height: 50px;
 }
 
 .run-query-btn {
@@ -50,7 +50,15 @@ footer {
 }
 
 .run-query-btn:hover {
-  background-color: #171E26;
+  background-color: #566f8b;
   color: white;
+}
 
+.run-query-btn:active {
+  background-color: #273341;
+  color: white;
+}
+
+#custom-query {
+  margin-bottom: 10px;
 }

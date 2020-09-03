@@ -59,10 +59,10 @@ const QueryAll = () => {
   return(
     <div className="query-container">
       <h2>Query All</h2>
-  <div className="query">Query Input: {query}</div>
+    <div className="query">Query Input: {query}</div>
       <button className="run-query-btn" onClick={handleClick}>Run Query</button>
+      <h2>Results:</h2>
       <div className="results-view">
-        <h2>Results View</h2>
         {queryResponse}
       </div>
     </div>

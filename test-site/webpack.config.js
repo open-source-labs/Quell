@@ -5,14 +5,14 @@ const { CleanWebpackPlugin } = require('clean-webpack-plugin');
 module.exports = {
   mode: process.env.NODE_ENV,
   output: {
-    path: path.resolve(process.cwd(), 'dist'),
+    path: path.resolve(__dirname, 'dist'),
     filename: 'bundle.js',
   },
   devServer: {
     port: 8080,
     // publicPath: '/dist/',
     proxy: {
-      '/': 'http://localhost:3000',
+      '/graphql': 'http://localhost:3000',
     },
     hot: true,
   },
