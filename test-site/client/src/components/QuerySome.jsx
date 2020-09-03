@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 const QuerySome = () => {
   const [queryInput, setQueryInput] = useState('');
   const [queryResponse, setQueryResponse] = useState('');
+  // const [queryResponseError, setQueryResponseError] = useState('');
 
   const handleChange = e => {
     setQueryInput(e.target.value)
@@ -35,7 +36,8 @@ const QuerySome = () => {
       </div>
       <h3>Results:</h3>
       <div className="results-view">
-        {queryResponse.length > 0 ? queryResponse : 'Error'}
+        {/* {queryResponse.length > 0 ? queryResponse : 'Error'} */}
+        {queryResponse}
       </div>
     </div>
   )

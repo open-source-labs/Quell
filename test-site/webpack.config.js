@@ -11,7 +11,8 @@ module.exports = {
   },
   devServer: {
     port: 8080,
-    // publicPath: '/dist/',
+    publicPath: '/dist/',
+    contentBase: './client/src',
     proxy: {
       '/graphql': 'http://localhost:3000',
     },
