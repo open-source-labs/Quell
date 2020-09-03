@@ -20,6 +20,7 @@ const QuerySome = () => {
     .then(res => res.json())
     .then(res => {
       setQueryResponse(JSON.stringify(res.data.countries));
+      console.log('queryResponse', queryResponse)
     })
     .catch(err => console.log(err))
   }
@@ -32,9 +33,9 @@ const QuerySome = () => {
         <textarea id="custom-query" rows="20" cols="80" placeholder="Enter query..." onChange={handleChange}></textarea><br/>
         <button className="run-query-btn" onClick={handleClick}>Run Query</button>
       </div>
-      <h2>Results:</h2>
+      <h3>Results:</h3>
       <div className="results-view">
-        {queryResponse}
+        {queryResponse.length > 0 ? queryResponse : 'Error'}
       </div>
     </div>
   )

@@ -7,6 +7,7 @@ module.exports = {
   output: {
     path: path.resolve(__dirname, 'dist'),
     filename: 'bundle.js',
+    // publicPath: '/dist/',
   },
   devServer: {
     port: 8080,
@@ -16,7 +17,7 @@ module.exports = {
     },
     hot: true,
   },
-  entry: './client/src/index.js',
+  entry: path.resolve(__dirname, './client/src/index.js'),
   module: {
     rules: [
     {

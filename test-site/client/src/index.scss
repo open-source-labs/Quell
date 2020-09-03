@@ -32,17 +32,24 @@ body {
   color: rgb(66, 66, 66);
 }
 
+.query-container {
+  margin-top: 5vh;
+}
+
 .results-view {
   border: 1px solid black;
   min-height: 250px;
 }
 
-footer {
-  min-height: 50px;
+textarea {
+  outline: none;
+  padding: 5px;
 }
 
 .run-query-btn {
-  margin-bottom: 10px;
+  border-radius: 6px;
+  border: 1px solid #566f8b;
+  margin: 10px 0;
   padding: 5px;
   background-color: white;
   color: #171E26;
@@ -59,6 +66,10 @@ footer {
   color: white;
 }
 
-#custom-query {
-  margin-bottom: 10px;
+.results-view {
+  padding: 10px;
+}
+
+footer {
+  min-height: 50px;
 }
