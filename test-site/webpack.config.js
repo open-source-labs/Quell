@@ -12,7 +12,7 @@ module.exports = {
     port: 8080,
     // publicPath: '/dist/',
     proxy: {
-      '/graphql': 'http://localhost:3000',
+      '/': 'http://localhost:3000',
     },
     hot: true,
   },
