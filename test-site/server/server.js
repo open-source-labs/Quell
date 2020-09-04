@@ -1,7 +1,7 @@
-
 const express = require('express');
 const { graphqlHTTP } = require('express-graphql');
 const schema = require('./schema/schema');
+const { checkCache, graphqlSchema, writeToCache } = require('./controllers/quellController')
 
 const app = express();
 // const PORT = process.env.PORT || 3000;
@@ -23,10 +23,12 @@ if (process.env.NODE_ENV === 'production') {
 }
 
 // GraphQL route
-app.use('/graphql', graphqlHTTP({
-  schema,
-  graphiql:true,
-}));
+app.use('/graphql', 
+  checkCache, 
+  graphqlSchema,
+  writeToCache,
+  (req, res) => { res.status(200).send(res.locals.result) }
+);
 
 // catch-all endpoint handler
 app.use((req, res) => {
