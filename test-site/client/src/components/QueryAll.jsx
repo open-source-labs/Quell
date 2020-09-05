@@ -56,7 +56,6 @@ const QueryAll = () => {
       .then(res => setQueryResponse(res))
       .then(() => {
         setStorageSpace(Quell.calculateSessionStorage())
-        
         const fTime = formatTimer(Quell.performanceTime)
         setFetchTime(fTime)
       })
