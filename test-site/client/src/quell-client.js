@@ -1,44 +1,55 @@
 const quell = {};
 
-quell.checkStorage = (query) => {
-    // is query in storage?
-    if (sessionStorage.getItem(query)) return true
-    return false
-}
+quell.quellFetch = (query, endpoint = '/graphql') => {
+    // timer Start
+    let startTime, endTime;
+    startTime = performance.now();
 
-quell.serveFromCache = (query) => {
-    // return from storage and update state
-    console.log('Serving from cache:')
-    // console.log(sessionStorage.getItem(query))
-    return sessionStorage.getItem(query)
-}
+    const promise = new Promise((resolve, reject) => {
 
-quell.fetchAndServe = (query, endpoint = '/graphql') => {
-    // return from fetch and update state
-    fetch(endpoint, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ query: query })
+        const inSessionStorage = sessionStorage.getItem(query);
+
+        if (inSessionStorage) {
+            console.log('serving from cache')
+            return resolve(inSessionStorage);
+        }
+
+        fetch(endpoint, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ query: query })
         })
-        .then(res => res.json())
-        .then(res => {
-            const responseData = JSON.stringify(res.data);
-            console.log('Serving from Fetch:')
-            // console.log(responseData)
-            sessionStorage.setItem(query, responseData);
-            return responseData;
-        })
-        .catch(err => console.log(err))
+            .then(res => res.json())
+            .then(res => {
+                const responseData = JSON.stringify(res.data);
+                console.log('Serving from Fetch:')
+                sessionStorage.setItem(query, responseData);
+                return resolve(responseData);
+            })
+            .catch(err => reject(err))
+    });
+
+    // timer End
+    endTime = performance.now();
+    quell.performanceTime = endTime - startTime;
+
+    return promise;
 }
 
-quell.quellFetch = function(query) {
-    // check if full query is in cache, if so serve result from cache
-    if (this.checkStorage(query)) return this.serveFromCache(query)
-
-    // query not found in cache, fetch data from server and return data
-    return this.fetchAndServe(query)
+quell.calculateSessionStorage = () => {
+    var _lsTotal = 0,
+        _xLen, _x;
+    for (_x in sessionStorage) {
+        if (!sessionStorage.hasOwnProperty(_x)) {
+            continue;
+        }
+        _xLen = ((sessionStorage[_x].length + _x.length) * 2);
+        _lsTotal += _xLen;
+        // console.log(_x.substr(0, 50) + " = " + (_xLen / 1024).toFixed(2) + " KB")
+    };
+    return ((_lsTotal / 1024).toFixed(2) + " KB");
 }
 
 export default quell
