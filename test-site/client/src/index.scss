@@ -36,17 +36,14 @@ body {
   margin-top: 5vh;
 }
 
-.results-view {
-  border: 1px solid black;
-  min-height: 250px;
-}
-
 textarea {
   outline: none;
   padding: 5px;
+  width: 50%;
+  height: 30%;
 }
 
-.run-query-btn {
+button {
   border-radius: 6px;
   border: 1px solid #566f8b;
   margin: 10px 0;
@@ -56,18 +53,21 @@ textarea {
   outline: none;
 }
 
-.run-query-btn:hover {
+button:hover {
   background-color: #566f8b;
   color: white;
 }
 
-.run-query-btn:active {
+button:active {
   background-color: #273341;
   color: white;
 }
 
 .results-view {
+  border: 1px solid black;
+  height: 250px;
   padding: 10px;
+  overflow: auto;
 }
 
 footer {

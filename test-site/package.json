@@ -19,7 +19,8 @@
     "graphql": "^15.3.0",
     "pg": "^8.3.3",
     "react": "^16.13.1",
-    "react-dom": "^16.13.1"
+    "react-dom": "^16.13.1",
+    "redis": "^3.0.2"
   },
   "devDependencies": {
     "@babel/core": "^7.11.5",

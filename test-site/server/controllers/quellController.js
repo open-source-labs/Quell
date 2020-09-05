@@ -40,7 +40,7 @@ client.get = promisify(client.get) // enables cache to return a promise
 const quellController = {}
 
 quellController.quell = async (req, res, next) => {
-  client.flushall(); // uncomment if you want to clear the Redis cache
+  // client.flushall(); // uncomment if you want to clear the Redis cache
   
   // If request body does not contain a query, set response to empty object and pass to next middleware
   if (!req.body.query) {
