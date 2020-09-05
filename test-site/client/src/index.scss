@@ -43,7 +43,7 @@ textarea {
   height: 30%;
 }
 
-.run-query-btn {
+button {
   border-radius: 6px;
   border: 1px solid #566f8b;
   margin: 10px 0;
@@ -53,12 +53,12 @@ textarea {
   outline: none;
 }
 
-.run-query-btn:hover {
+button:hover {
   background-color: #566f8b;
   color: white;
 }
 
-.run-query-btn:active {
+button:active {
   background-color: #273341;
   color: white;
 }

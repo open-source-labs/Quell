@@ -11,6 +11,11 @@ quell.quellFetch = (query, endpoint = '/graphql') => {
 
         if (inSessionStorage) {
             console.log('serving from cache')
+
+            // timer End
+            endTime = performance.now();
+            quell.performanceTime = endTime - startTime;
+
             return resolve(inSessionStorage);
         }
 
@@ -26,14 +31,15 @@ quell.quellFetch = (query, endpoint = '/graphql') => {
                 const responseData = JSON.stringify(res.data);
                 console.log('Serving from Fetch:')
                 sessionStorage.setItem(query, responseData);
+
+                // timer End
+                endTime = performance.now();
+                quell.performanceTime = endTime - startTime;
+                
                 return resolve(responseData);
             })
             .catch(err => reject(err))
     });
-
-    // timer End
-    endTime = performance.now();
-    quell.performanceTime = endTime - startTime;
 
     return promise;
 }
