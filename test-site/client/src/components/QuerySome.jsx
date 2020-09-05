@@ -14,26 +14,10 @@ const QuerySome = () => {
     setQueryInput(e.target.value)
   }
 
-  // const handleClick = e => {
-  //   fetch('/graphql', {
-  //     method: 'POST',
-  //     headers: {
-  //       'Content-Type': 'application/json'
-  //     },
-  //     body: JSON.stringify({query: queryInput})
-  //   })
-  //   .then(res => res.json())
-  //   .then(res => {
-  //     setQueryResponse(JSON.stringify(res.data));
-  //     console.log('queryResponse:', queryResponse)
-  //   })
-  //   .catch(err => console.log(err))
-  // }
-
   const formatTimer = (time) => {
     return time.toFixed(2) + ' ms'
   }
-  
+
   const handleFetchClick = () => {
     Quell.quellFetch(queryInput)
       .then(res => setQueryResponse(res))

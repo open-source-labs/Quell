@@ -8,7 +8,7 @@ const QueryAll = () => {
   const [fetchTime, setFetchTime] = useState('0.00 ms');
   const [cacheStatus, setCacheStatus] = useState('');
 
-  // // query for full dataset
+  // query for full dataset
   const queryCall = `
   {
     country(id: "1"){
