@@ -3,7 +3,7 @@ import Quell from '../quell-client.js'
 
 // component to get ALL data from our created DB
 const QueryAll = () => {
-  const [queryResponse, setQueryResponse] = useState('');
+  const [queryResponse, setQueryResponse] = useState({});
   const [storageSpace, setStorageSpace] = useState('0');
   const [fetchTime, setFetchTime] = useState('0.00 ms');
   const [cacheStatus, setCacheStatus] = useState('');
@@ -47,17 +47,24 @@ const QueryAll = () => {
     }
   }
   `
+
   const formatTimer = (time) => {
     return time.toFixed(2) + ' ms'
   }
 
   const handleFetchClick = () => {
     Quell.quellFetch(queryCall)
-      .then(res => setQueryResponse(res))
-      .then(() => {
-        setStorageSpace(Quell.calculateSessionStorage())
-        const fTime = formatTimer(Quell.performanceTime)
-        setFetchTime(fTime)
+      .then(res => JSON.parse(res))
+      .then(res => {
+        // query response state
+        setQueryResponse(res);
+
+        // storage state
+        setStorageSpace(Quell.calculateSessionStorage());
+
+        // timer state
+        const fTime = formatTimer(Quell.performanceTime);
+        setFetchTime(fTime);
       })
       .catch(err => console.log(err))
   }
@@ -77,7 +84,11 @@ const QueryAll = () => {
       <button onClick={handleFetchClick}>Run Query</button>
       <h3>Results:</h3>
       <div className="results-view">
-        {queryResponse}
+        <pre>
+          <code>
+            {JSON.stringify(queryResponse, null, 2)}
+          </code>
+        </pre>
       </div>
       <h3>Stored In Cache: {storageSpace}</h3>
       <h3>Timer: {fetchTime}</h3>

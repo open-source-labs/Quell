@@ -4,7 +4,7 @@ import Quell from '../quell-client.js'
 // component to get ALL data from our created DB
 const QuerySome = () => {
   const [queryInput, setQueryInput] = useState('');
-  const [queryResponse, setQueryResponse] = useState('');
+  const [queryResponse, setQueryResponse] = useState({});
   // const [queryResponseError, setQueryResponseError] = useState('');
   const [storageSpace, setStorageSpace] = useState('0');
   const [fetchTime, setFetchTime] = useState('0.00 ms');
@@ -20,12 +20,17 @@ const QuerySome = () => {
 
   const handleFetchClick = () => {
     Quell.quellFetch(queryInput)
-      .then(res => setQueryResponse(res))
-      .then(() => {
-        setStorageSpace(Quell.calculateSessionStorage())
-        const fTime = formatTimer(Quell.performanceTime)
-        console.log('ftime', fTime)
-        setFetchTime(fTime)
+      .then(res => JSON.parse(res))
+      .then(res => {
+        // query response state
+        setQueryResponse(res);
+
+        // storage state
+        setStorageSpace(Quell.calculateSessionStorage());
+
+        // timer state
+        const fTime = formatTimer(Quell.performanceTime);
+        setFetchTime(fTime);
       })
       .catch(err => console.log(err))
   }
@@ -42,13 +47,17 @@ const QuerySome = () => {
     <div className="query-container">
       <h2>Query Some</h2>
       <div className="text-area">
-        <label htmlFor="custom-query">Query Input: {queryInput}</label><br/>
+        <label htmlFor="custom-query">Query Input:</label><br/>
         <textarea id="custom-query" placeholder="Enter query..." onChange={handleChange}></textarea><br/>
         <button className="run-query-btn" onClick={handleFetchClick}>Run Query</button>
       </div>
       <h3>Results:</h3>
       <div className="results-view">
-        {queryResponse}
+        <pre>
+          <code>
+            {JSON.stringify(queryResponse, null, 2)}
+          </code>
+        </pre>
       </div>
       <h3>Stored In Cache: {storageSpace}</h3>
       <h3>Timer: {fetchTime}</h3>
