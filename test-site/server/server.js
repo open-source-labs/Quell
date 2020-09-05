@@ -1,13 +1,16 @@
 const express = require('express');
-const { graphqlHTTP } = require('express-graphql');
+const path = require('path');
 const schema = require('./schema/schema');
-const { checkCache, graphqlSchema, writeToCache } = require('./controllers/quellController')
+const quellController = require('./controllers/quellController')
+
+// Apply user-defined schema to quell middleware
+quellController.schema = schema;
 
 const app = express();
 // const PORT = process.env.PORT || 3000;
 const PORT = 3000;
 
-const path = require('path');
+
 
 // JSON parser:
 app.use(express.json());
@@ -24,10 +27,8 @@ if (process.env.NODE_ENV === 'production') {
 
 // GraphQL route
 app.use('/graphql', 
-  checkCache, 
-  graphqlSchema,
-  writeToCache,
-  (req, res) => { res.status(200).send(res.locals.result) }
+  quellController.quell,
+  (req, res) => { res.status(200).send(res.locals.value) }
 );
 
 // catch-all endpoint handler
