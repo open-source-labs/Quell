@@ -39,46 +39,49 @@ client.get = promisify(client.get) // enables cache to return a promise
 
 const quellController = {}
 
-quellController.quell = async (req, res, next) => {
-  // client.flushall(); // uncomment if you want to clear the Redis cache
-  
-  // If request body does not contain a query, set response to empty object and pass to next middleware
-  if (!req.body.query) {
-    res.locals.value = {};
-    return next();
-  }
+quellController.quell = (schema) => {
 
-  // Create a key - strip white space from query string & stringify
-  const key = JSON.stringify(req.body.query.replace(/\s/g, ''));
+  return async (req, res, next) => {
+    // client.flushall(); // uncomment if you want to clear the Redis cache
+    
+    // If request body does not contain a query, set response to empty object and pass to next middleware
+    if (!req.body.query) {
+      res.locals.value = {};
+      return next();
+    }
 
-  // Check cache
-  const redisCacheValue = await client.get(key)
-  
-  // If query is in cache, set res.locals.value and move to next middleware
-  if (redisCacheValue) {
-    console.log('REDIS CACHE HIT', redisCacheValue)
-    res.locals.value = redisCacheValue;
-    return next();
-  }
+    // Create a key - strip white space from query string & stringify
+    const key = JSON.stringify(req.body.query.replace(/\s/g, ''));
 
-  graphql(quellController.schema, req.body.query)
-    .then((response) => {
-      // Save GraphQL response to Express response object
-      res.locals.value = JSON.stringify(response);
-      console.log('FETCHED QUERY FROM DATABASE')
-      // Write GraphQL response to Redis cache
-      client.set(key, res.locals.value);
-      console.log('SUCCESSFULLY SET DB RESPONSE IN REDIS')
-      return next()
-    })
-    .catch((error) => {
-      const errorObject = {
-        log: `Error in GraphQL layer: ${error}`,
-        status: 500,
-        message: { err: 'Unable to parse or fetch GraphQL query' }
-      };
-      next(errorObject);
-    });
+    // Check cache
+    const redisCacheValue = await client.get(key)
+    
+    // If query is in cache, set res.locals.value and move to next middleware
+    if (redisCacheValue) {
+      console.log('REDIS CACHE HIT', redisCacheValue)
+      res.locals.value = redisCacheValue;
+      return next();
+    }
+
+    graphql(schema, req.body.query)
+      .then((response) => {
+        // Save GraphQL response to Express response object
+        res.locals.value = JSON.stringify(response);
+        console.log('FETCHED QUERY FROM DATABASE')
+        // Write GraphQL response to Redis cache
+        client.set(key, res.locals.value);
+        console.log('SUCCESSFULLY SET DB RESPONSE IN REDIS')
+        return next()
+      })
+      .catch((error) => {
+        const errorObject = {
+          log: `Error in GraphQL layer: ${error}`,
+          status: 500,
+          message: { err: 'Unable to parse or fetch GraphQL query' }
+        };
+        next(errorObject);
+      });
+  };
 };
 
 module.exports = quellController;
