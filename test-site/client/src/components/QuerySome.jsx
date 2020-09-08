@@ -44,25 +44,54 @@ const QuerySome = () => {
   }
 
   return(
-    <div className="query-container">
-      <h2>Query Some</h2>
-      <div className="text-area">
-        <label htmlFor="custom-query">Query Input:</label><br/>
-        <textarea id="custom-query" placeholder="Enter query..." onChange={handleChange}></textarea><br/>
-        <button className="run-query-btn" onClick={handleFetchClick}>Run Query</button>
+    <div className="dashboard-container">
+
+      <div className="left-div">
+        <div className="query-div">
+          {/*Query Main*/}
+          <h2>Query Some</h2>
+          <div className="text-area">
+            <label htmlFor="custom-query">Query Input:</label><br/>
+            <textarea id="custom-query" placeholder="Enter query..." onChange={handleChange}></textarea><br/>
+          </div>
+        </div>
+
+        <div className="button-div">
+          {/*Run Query Button*/}
+          <button className="run-query-btn" onClick={handleFetchClick}>Run Query</button>
+        </div>
+        
+        <div className="results-div">
+          {/*Results*/}
+          <h3>Results:</h3>
+          <div className="results-view">
+            <pre>
+              <code>
+                {JSON.stringify(queryResponse, null, 2)}
+              </code>
+            </pre>
+          </div>
+        </div>
       </div>
-      <h3>Results:</h3>
-      <div className="results-view">
-        <pre>
-          <code>
-            {JSON.stringify(queryResponse, null, 2)}
-          </code>
-        </pre>
+
+      <div className="right-div">
+        <div className="metrics-div">
+          {/*Metrics*/}
+          <h3>Stored In Cache: {storageSpace}</h3>
+          <h3>Timer: {fetchTime}</h3>
+        </div>
+
+        <div className="button-div">
+          <button onClick={handleClearClick}>Clear Cache</button>
+          <span>  Cleared: {cacheStatus}</span>
+        </div>
+
+        <div className="graph-div">
+          {/*Line graph*/}
+          <div className="graph">Line graph here:</div>
+        </div>
       </div>
-      <h3>Stored In Cache: {storageSpace}</h3>
-      <h3>Timer: {fetchTime}</h3>
-      <button onClick={handleClearClick}>Clear Cache</button>
-      <span>  Cleared: {cacheStatus}</span>
+      
     </div>
   )
 }

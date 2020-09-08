@@ -77,23 +77,49 @@ const QueryAll = () => {
     setCacheStatus(date.toString());
   }
 
-  return (
-    <div className="query-container">
-      <h2>Query All</h2>
-      <div className="query">Query Input: {queryCall}</div>
-      <button onClick={handleFetchClick}>Run Query</button>
-      <h3>Results:</h3>
-      <div className="results-view">
-        <pre>
-          <code>
-            {JSON.stringify(queryResponse, null, 2)}
-          </code>
-        </pre>
+  return(
+    <div className="dashboard-container">
+
+      <div className="query-div">
+        {/*Query Main*/}
+        <h2>Query All</h2>
+        <div className="query">Query Input: {queryCall}</div>
       </div>
-      <h3>Stored In Cache: {storageSpace}</h3>
-      <h3>Timer: {fetchTime}</h3>
-      <button onClick={handleClearClick}>Clear Cache</button>
-      <span>  Cleared: {cacheStatus}</span>
+
+      <div className="button-query-div">
+        {/*Run Query Button*/}
+        <button onClick={handleFetchClick}>Run Query</button>
+      </div>
+
+      <div className="results-div">
+        {/*Results*/}
+        <h3>Results:</h3>
+        <div className="results-view">
+          <pre>
+            <code>
+              {JSON.stringify(queryResponse, null, 2)}
+            </code>
+          </pre>
+        </div>       
+      </div>
+    
+
+      <div className="metrics-div">
+        {/*Metrics*/}
+        <h3>Stored In Cache: {storageSpace}</h3>
+        <h3>Timer: {fetchTime}</h3>
+      </div>
+
+      <div className="button-cache-div"> 
+        <button onClick={handleClearClick}>Clear Cache</button>
+        <span>  Cleared: {cacheStatus}</span>
+      </div>
+
+      <div className="graph-div">
+        {/*Line graph*/}
+        <div className="graph">Line graph here:</div>
+      </div>
+      
     </div>
   )
 }
