@@ -66,6 +66,7 @@ body {
 
   .button-query-div {
     grid-area: button-query;
+    padding: 0 !important;
   }
 
   .results-div {
@@ -78,6 +79,7 @@ body {
 
   .button-cache-div {
     grid-area: button-cache;
+    padding: 0 !important;
   }
 
   .graph-div {
@@ -104,6 +106,7 @@ button {
   border-radius: 6px;
   border: 1px solid #566f8b;
   width: 100%;
+  height: 50px;
   // margin: 10px 0;
   padding: 5px;
   outline: none;

@@ -108,11 +108,11 @@ const QueryAll = () => {
         {/*Metrics*/}
         <h3>Stored In Cache: {storageSpace}</h3>
         <h3>Timer: {fetchTime}</h3>
+        <h3>Cache Cleared: {cacheStatus}</h3>
       </div>
 
       <div className="button-cache-div"> 
         <button onClick={handleClearClick}>Clear Cache</button>
-        <span>  Cleared: {cacheStatus}</span>
       </div>
 
       <div className="graph-div">
