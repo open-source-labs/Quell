@@ -1,16 +1,11 @@
 const express = require('express');
 const path = require('path');
 const schema = require('./schema/schema');
-const quellController = require('./controllers/quellController')
-
-// Apply user-defined schema to quell middleware
-quellController.schema = schema;
+const { quell } = require('./controllers/quellController')
 
 const app = express();
 // const PORT = process.env.PORT || 3000;
 const PORT = 3000;
-
-
 
 // JSON parser:
 app.use(express.json());
@@ -27,7 +22,7 @@ if (process.env.NODE_ENV === 'production') {
 
 // GraphQL route
 app.use('/graphql', 
-  quellController.quell,
+  quell(schema),
   (req, res) => { res.status(200).send(res.locals.value) }
 );
 
