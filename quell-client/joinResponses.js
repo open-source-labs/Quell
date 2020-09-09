@@ -1,27 +1,27 @@
-const response = [
-  {
-    "id": "1",
-    "name": "Andorra"
-  },
-  {
-    "id": "2",
-    "name": "Bolivia"
-  },
-  {
-    "id": "3",
-    "name": "Armenia"
-  },
-  {
-    "id": "4",
-    "name": "American Samoa"
-  },
-  {
-    "id": "5",
-    "name": "Aruba"
-  }
-];
+// const response = [
+//   {
+//     "id": "1",
+//     "name": "Andorra"
+//   },
+//   {
+//     "id": "2",
+//     "name": "Bolivia"
+//   },
+//   {
+//     "id": "3",
+//     "name": "Armenia"
+//   },
+//   {
+//     "id": "4",
+//     "name": "American Samoa"
+//   },
+//   {
+//     "id": "5",
+//     "name": "Aruba"
+//   }
+// ];
 
-const countriesAll =
+const fetchResponse =
 {
   "countries": [
     {
@@ -31,9 +31,9 @@ const countriesAll =
       "cities": [
         {
           "country_id": "1",
-          "id": "1",
-          "name": "El Tarter",
-          "population": 1052
+          "id": "Jaeger1234",
+          "name": "El Justin",
+          "population": 1
         },
         {
           "country_id": "1",
@@ -362,7 +362,7 @@ const countriesAll =
 //   ]
 // }
 
-const fetchResponse = // capital & cities
+const response = // capital & cities
 {
   "countries": [
     {
@@ -373,14 +373,7 @@ const fetchResponse = // capital & cities
           "id": "1",
           "name": "El Tarter",
           "population": 1052,
-          "newArr": [{
-            "prop1": true,
-            "prop1Array": [{"prop1ArrObj": [{
-              "end": "Hello"
-            }]}],
-          }, {
-            "prop2": true,
-          }]
+          "newArr": [{"prop1": true, "prop1Array": [{"prop1ArrObj": [{"end": "Hello"}]}],}, {"prop2": true,}]
         },
         {
           "country_id": "1",
@@ -392,7 +385,8 @@ const fetchResponse = // capital & cities
           "country_id": "1",
           "id": "3",
           "name": "Canillo",
-          "population": 3292
+          "population": 3292,
+          "newObject": [{"Rob": "Hi"}]
         },
         {
           "country_id": "1",
@@ -534,19 +528,19 @@ const fetchResponse = // capital & cities
 // Assumed that fetched data comes back in similar ordered list; trverse response array to join each item with fetched data array items
 // Make sure that fetched response is converted into array, e.g. fetchResponse.countries, before passing into function
 
-const fetchedArray = fetchResponse.countries;
+// const fetchedArray = fetchResponse.countries;
 
 // function joinResponses(responseArray, fetchedResponseArray) {
-  // // create new array and create new object items by joining original response items with fetched response items
-  // return responseArray.map((response, index) => {
-  //   return Object.assign(response, fetchedResponseArray[index]);
-  // })
+//   // create new array and create new object items by joining original response items with fetched response items
+//   return responseArray.map((response, index) => {
+//     return Object.assign(response, fetchedResponseArray[index]);
+//   })
 
-  // const joinedArray = [];
-  // for (let i = 0; i < responseArray.length; i++) {
-  //   joinedArray.push(Object.assign(responseArray[i], fetchedResponseArray[i]));
-  // }
-  // return joinedArray;
+//   // const joinedArray = [];
+//   // for (let i = 0; i < responseArray.length; i++) {
+//   //   joinedArray.push(Object.assign(responseArray[i], fetchedResponseArray[i]));
+//   // }
+//   // return joinedArray;
 // }
 
 // console.log(joinResponses(response, fetchedArray)[0].cities[0].newArr[0].prop1Array[0].prop1ArrObj)
@@ -571,14 +565,16 @@ function joinResponses(responseArray, fetchedResponseArray) { // Inputs array of
           // WOULD DATA TYPE BE AN {} ????
           
           // if type is []
-          // set new field on starting object equal empty array
-          objStart[field] = [];
+          // set new field on new object equal empty array
+          const newObj = {};
+          newObj[field] = [];
           // declare variable eual to array of items to add from
           const objArr = objAdd[field];
           // iterate over array
           for (let j = 0; j < objArr.length; j++) {
+
             // push to new array the return value of invoking this same fieldRecurse() function.  fieldRecurse() will combine the nested array elements with the new obj field.
-            objStart[field].push(fieldRecurse({}, objArr[j]));
+            newObj[field].push(fieldRecurse(objStart[field][j], objArr[j]));
           }
         } else {
           // if field is scalar, simplay add key/value pair add to starting object
@@ -599,7 +595,7 @@ function joinResponses(responseArray, fetchedResponseArray) { // Inputs array of
   return joinedArray;
 }
 
-// console.log('function:', joinResponses(response, fetchedArray))
+// console.log('function:', joinResponses(response.countries, fetchResponse.countries)[0].cities[2])
 // console.log('hard coded:', countriesAll.countries)
 
 // console.log(joinResponses(response, fetchedArray)[0].cities[0].name)
@@ -609,5 +605,5 @@ function joinResponses(responseArray, fetchedResponseArray) { // Inputs array of
 // console.log(joinResponses(response, fetchedArray) === countriesAll.countries)
 
 
-console.log(joinResponses(response, fetchedArray)[0].cities[0].newArr[0].prop1Array[0].prop1ArrObj[0].end)
+// console.log(joinResponses(response, fetchedArray)[0].cities[0].newArr[0].prop1Array[0].prop1ArrObj[0].end)
 
