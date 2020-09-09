@@ -7,6 +7,7 @@ export default class Quell {
     this.map = map;
     this.AST = parse(this.query);
     this.proto = this.parseAST(this.AST);
+    this.fieldsMap = {};
   }
 
   /**
@@ -37,7 +38,7 @@ export default class Quell {
         /**
          * Exclude SelectionSet nodes whose parents' are not of the kind 
          * 'Field' to exclude nodes that do not contain information about
-         * queried fields.
+         *  queried fields.
          */
         if(parent.kind === 'Field') {
           
@@ -86,59 +87,64 @@ export default class Quell {
   });
 
   return prototype;
-  }
+  };
 
-  buildFromCache() {
-    /** Helper function that loops over a collection of references,
+  /** Helper function that loops over a collection of references,
      *  calling another helper function -- buildItem() -- on each. Returns an
      *  array of those collected items.
      */
-    function buildArray(prototype, map, collection) {
-      let response = [];
-      
-      for (let query in prototype) {
-        collection = collection || dummyCache[map[query]] || [];
-        for (let item of collection) {
-          response.push(buildItem(prototype[query], dummyCache[item]))
-        }
-      }
-      
-      return response;
-    };
+  buildArray(prototype, map, collection) {
+    let response = [];
     
-    /** Helper function that iterates through keys -- defined on passed-in
-     *  prototype object, which is always a fragment of this.proto, assigning
-     *  to tempObj the data at matching keys in passed-in item. If a key on 
-     *  the prototype has an object as its value, buildArray is
-     *   recursively called.
-     * 
-     *  If item does not have a key corresponding to prototype, that field
-     *  is toggled to false on prototype object. Data for that field will
-     *  need to be queried.
-     * 
-     */
+    for (let query in prototype) {
+      collection = collection || dummyCache[map[query]];
+      for (let item of collection) {
+        response.push(this.buildItem(prototype[query], dummyCache[item]))
+      }
+    }
+    
+    return response;
+  };
 
-    function buildItem(prototype, item) {
-      
-      let tempObj = {};
-      
-      for (let key in prototype) {
-        if (typeof prototype[key] === 'object') {
-          let prototypeAtKey = {[key]: prototype[key]}
-          tempObj[key] = buildArray(prototypeAtKey, map, item[key])
-        } else if (prototype[key]) {
-          if (item[key] !== undefined) {
-            tempObj[key] = item[key];
-          } else {
-            prototype[key] = false;
-          }
+  /** Helper function that iterates through keys -- defined on passed-in
+   *  prototype object, which is always a fragment of this.proto, assigning
+   *  to tempObj the data at matching keys in passed-in item. If a key on 
+   *  the prototype has an object as its value, buildArray is
+   *   recursively called.
+   * 
+   *  If item does not have a key corresponding to prototype, that field
+   *  is toggled to false on prototype object. Data for that field will
+   *  need to be queried.
+   * 
+   */
+  buildItem(prototype, item) {
+    let tempObj = {};
+    
+    for (let key in prototype) {
+      if (typeof prototype[key] === 'object') {
+        let prototypeAtKey = {[key]: prototype[key]}
+        tempObj[key] = this.buildArray(prototypeAtKey, map, item[key])
+
+        /** The fieldsMap property stores a mapping of field names to collection
+         *  names, used when normalizes responses for caching. For example: a 'cities'
+         *  field might contain an array of City objects. When caching, this array should
+         *  contain unique references to the corresponding object stored in the cached City
+         *  array.
+         * 
+         *  Slicing the reference at the first hyphen removes the object's unique identifier,
+         *  leaving only the collection name.
+        */
+        this.fieldsMap[key] = item[key][0].slice(0, item[key][0].indexOf('-'));
+      } else if (prototype[key]) {
+        if (item[key] !== undefined) {
+          tempObj[key] = item[key];
+        } else {
+          prototype[key] = false;
         }
       }
-      return tempObj;
     }
-
-    return buildArray(this.proto, map);
-  };
+    return tempObj;
+  }
 
   createQueryObj(map) {
     const output = {};
@@ -234,6 +240,55 @@ export default class Quell {
     }
     // return main output array
     return joinedArray;
+  };
+
+  buildFromCache() {
+    return this.buildArray(this.proto, map);
+  };
+
+  generateId(collection, item) {
+    const identifier = item.id || item._id || 'uncacheable';
+    return collection + '-' + identifier.toString();
+  };
+
+  writeToCache(key, item) {
+    if (!key.includes('uncacheable')) {
+      // sessionStorage.set(key, JSON.stringify(item));
+      mockCache[key] = JSON.stringify(item);
+    } 
+  };
+
+  replaceItemsWithReferences(field, array) {
+    const arrayOfReferences = [];
+    const collectionName = this.fieldsMap[field];
+
+    for (const item of array) {
+      this.writeToCache(this.generateId(collectionName, item), item);
+      arrayOfReferences.push(this.generateId(collectionName, item));
+    }
+
+    return arrayOfReferences;
+  };
+  
+  normalizeForCache(response) {
+    const queryName = Object.keys(response)[0];
+    const collectionName = this.map[queryName]
+    const collection = response[queryName];
+    
+    const referencesToCache = [];
+
+    for (const item of collection) {
+      const itemKeys = Object.keys(item);
+      for (const key of itemKeys) {
+        if (Array.isArray(item[key])) {
+          item[key] = this.replaceItemsWithReferences(key, item[key]);
+        }
+      }
+      this.writeToCache(this.generateId(collectionName, item), item);
+      referencesToCache.push(this.generateId(collectionName, item));
+    }
+    
+    this.writeToCache(collectionName, referencesToCache);
   };
 
 };
