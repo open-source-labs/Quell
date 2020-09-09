@@ -189,6 +189,13 @@ button {
   font-size: 3.5em;
 }
 
+.trend {
+  background: $app-background;
+  border: 1px solid $app-background;
+  border-radius: 5px;
+  height: 30vh;
+}
+
 footer {
   min-height: 50px;
 }

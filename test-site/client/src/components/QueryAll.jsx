@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import Trend from 'react-trend';
 import Quell from '../quell-client.js'
 
 // component to get ALL data from our created DB
@@ -6,6 +7,7 @@ const QueryAll = () => {
   const [queryResponse, setQueryResponse] = useState({});
   const [storageSpace, setStorageSpace] = useState('0 KB');
   const [fetchTime, setFetchTime] = useState('0.00 ms');
+  const [fetchTimeIntegers, setFetchTimeIntegers] = useState([0,0]);
   const [cacheStatus, setCacheStatus] = useState('');
 
   // query for full dataset
@@ -55,8 +57,13 @@ const QueryAll = () => {
         setStorageSpace(Quell.calculateSessionStorage());
 
         // timer state
-        const fTime = formatTimer(Quell.performanceTime);
+        const rawTime = Quell.performanceTime;
+        const fTime = formatTimer(rawTime);
         setFetchTime(fTime);
+
+        // line graph
+        const newTime = Number(rawTime.toFixed(3));
+        setFetchTimeIntegers([...fetchTimeIntegers, newTime])
       })
       .catch(err => console.log(err))
   }
@@ -66,7 +73,11 @@ const QueryAll = () => {
     setStorageSpace('0');
     setFetchTime('0.00 ms');
     let date = new Date();
+    console.log(date)
     setCacheStatus(date.toString());
+
+    // line graph
+    setFetchTimeIntegers([0,0]);
   }
 
   return(
@@ -121,6 +132,19 @@ const QueryAll = () => {
         {/*Line graph*/}
         {/* <div className="graph">Line graph here:</div> */}
         <h3>Speed Graph:</h3>
+        <Trend
+          className="trend"
+          // smooth
+          // autoDraw
+          // autoDrawDuration={3000}
+          // autoDrawEasing="ease-out"
+          // data={[5.6,0.25,0.16,0.25,0.04,0.05]}
+          data={fetchTimeIntegers}
+          gradient={['#1feaea', '#ffd200', '#f72047']}
+          radius={0.9}
+          strokeWidth={3.2}
+          strokeLinecap={'round'}
+        />
       </div>
       
     </div>
