@@ -7,6 +7,7 @@ export default class Quell {
     this.map = map;
     this.AST = parse(this.query);
     this.proto = this.parseAST(this.AST);
+    this.fieldsMap = {};
   }
 
   /**
@@ -86,57 +87,208 @@ export default class Quell {
   });
 
   return prototype;
-  }
+  };
 
-  buildFromCache() {
-    /** Helper function that loops over a collection of references,
+  /** Helper function that loops over a collection of references,
      *  calling another helper function -- buildItem() -- on each. Returns an
      *  array of those collected items.
      */
-    function buildArray(prototype, map, collection) {
-      let response = [];
-      
-      for (let query in prototype) {
-        collection = collection || dummyCache[map[query]];
-        for (let item of collection) {
-          response.push(buildItem(prototype[query], dummyCache[item]))
+  buildArray(prototype, map, collection) {
+    let response = [];
+    
+    for (let query in prototype) {
+      collection = collection || dummyCache[map[query]];
+      for (let item of collection) {
+        response.push(this.buildItem(prototype[query], dummyCache[item]))
+      }
+    }
+    
+    return response;
+  };
+
+  /** Helper function that iterates through keys -- defined on passed-in
+   *  prototype object, which is always a fragment of this.proto, assigning
+   *  to tempObj the data at matching keys in passed-in item. If a key on 
+   *  the prototype has an object as its value, buildArray is
+   *   recursively called.
+   * 
+   *  If item does not have a key corresponding to prototype, that field
+   *  is toggled to false on prototype object. Data for that field will
+   *  need to be queried.
+   * 
+   */
+  buildItem(prototype, item) {
+    let tempObj = {};
+    
+    for (let key in prototype) {
+      if (typeof prototype[key] === 'object') {
+        let prototypeAtKey = {[key]: prototype[key]}
+        tempObj[key] = this.buildArray(prototypeAtKey, map, item[key])
+
+        /** The fieldsMap property stores a mapping of field names to collection
+         *  names, used when normalizes responses for caching. For example: a 'cities'
+         *  field might contain an array of City objects. When caching, this array should
+         *  contain unique references to the corresponding object stored in the cached City
+         *  array.
+         * 
+         *  Slicing the reference at the first hyphen removes the object's unique identifier,
+         *  leaving only the collection name.
+        */
+        this.fieldsMap[key] = item[key][0].slice(0, item[key][0].indexOf('-'));
+      } else if (prototype[key]) {
+        if (item[key] !== undefined) {
+          tempObj[key] = item[key];
+        } else {
+          prototype[key] = false;
         }
       }
-      
-      return response;
-    };
-    
-    /** Helper function that iterates through keys -- defined on passed-in
-     *  prototype object, which is always a fragment of this.proto, assigning
-     *  to tempObj the data at matching keys in passed-in item. If a key on 
-     *  the prototype has an object as its value, buildArray is
-     *   recursively called.
-     * 
-     *  If item does not have a key corresponding to prototype, that field
-     *  is toggled to false on prototype object. Data for that field will
-     *  need to be queried.
-     * 
-     */
+    }
+    return tempObj;
+  }
 
-    function buildItem(prototype, item) {
-      
-      let tempObj = {};
-      
-      for (let key in prototype) {
-        if (typeof prototype[key] === 'object') {
-          let prototypeAtKey = {[key]: prototype[key]}
-          tempObj[key] = buildArray(prototypeAtKey, map, item[key])
-        } else if (prototype[key]) {
-          if (item[key] !== undefined) {
-            tempObj[key] = item[key];
-          } else {
-            prototype[key] = false;
+  createQueryObj(map) {
+    const output = {};
+    // !! assumes there is only ONE main query, and not multiples !!
+    for (let key in map) {
+      output[key] = reducer(map[key]);
+    }
+  
+    function reducer(obj) {
+      const fields = [];
+  
+      for (let key in obj) {
+        // For each property, determine if the property is a false value...
+        if (obj[key] === false) fields.push(key);
+        // ...or another object type
+        if (typeof obj[key] === 'object') {
+          let newObjType = {};
+          newObjType[key] = reducer(obj[key]);
+          fields.push(newObjType);
+        }
+      }
+      return fields;
+    }
+    return output;
+  };
+ 
+  createQueryStr(queryObject) {
+    const openCurl = ' { ';
+    const closedCurl = ' } ';
+  
+    let mainStr = '';
+  
+    for (let key in queryObject) {
+      mainStr += key + openCurl + stringify(queryObject[key]) + closedCurl;
+    }
+  
+    function stringify(fieldsArray) {
+      let innerStr = '';
+      for (let i = 0; i < fieldsArray.length; i++) {
+        if (typeof fieldsArray[i] === 'string') {
+          innerStr += fieldsArray[i] + ' ';
+        }
+        if (typeof fieldsArray[i] === 'object') {
+          for (let key in fieldsArray[i]) {
+            innerStr += key + openCurl + stringify(fieldsArray[i][key]);
+            innerStr += closedCurl;
           }
         }
       }
-      return tempObj;
+      return innerStr;
+    }
+    return openCurl + mainStr + closedCurl;
+  };
+
+  joinResponses(responseArray, fetchedResponseArray) { // Inputs array of objects containing cached fields & array of objects containing newly query fields
+    // main output that will contain objects with combined fields
+    const joinedArray = [];
+    // iterate over each response array object (i.e. objects containing cached fields)
+    for (let i = 0; i < responseArray.length; i++) {
+      // set corresponding objects in each array to combine (NOTE: ASSUMED THAT FETCH ARRAY WILL BE SORTED THE SAME AS CACHED ARRAY)
+      const responseItem = responseArray[i];
+      const fetchedItem = fetchedResponseArray[i];
+      // recursive helper function to add fields of second argument to first argument
+      function fieldRecurse(objStart, objAdd) {
+        // traverse object properties to add
+        for (let field in objAdd) {
+          // if field is an object (i.e. non-scalar), 1. set new field as empty array, 2. iterate over array, 3. create new objects , 4. push new objects to empty array
+          if (typeof objAdd[field] === 'object') {
+            // WOULD DATA TYPE BE AN {} ????
+            // if type is []
+            // set new field on new object equal empty array
+            const newObj = {};
+            newObj[field] = [];
+            // declare variable eual to array of items to add from
+            const objArr = objAdd[field];
+            // iterate over array
+            for (let j = 0; j < objArr.length; j++) {
+              // push to new array the return value of invoking this same fieldRecurse() function.  fieldRecurse() will combine the nested array elements with the new obj field.
+              newObj[field].push(fieldRecurse(objStart[field][j], objArr[j]));
+            }
+          } else {
+            // if field is scalar, simplay add key/value pair add to starting object
+            objStart[field] = objAdd[field]; 
+          }
+        }
+        // return combined object
+        return objStart;
+      }
+      // outputs an object based on adding second argument to first argument
+      fieldRecurse(responseItem, fetchedItem); 
+      // push combined object into main output array
+      joinedArray.push(responseItem);
+    }
+    // return main output array
+    return joinedArray;
+  };
+
+  buildFromCache() {
+    return this.buildArray(this.proto, map);
+  };
+
+  generateId(collection, item) {
+    const identifier = item.id || item._id || 'uncacheable';
+    return collection + '-' + identifier.toString();
+  };
+
+  writeToCache(key, item) {
+    if (!key.includes('uncacheable')) {
+      // sessionStorage.set(key, JSON.stringify(item));
+      mockCache[key] = JSON.stringify(item);
+    } 
+  };
+
+  replaceItemsWithReferences(field, array) {
+    const arrayOfReferences = [];
+    const collectionName = this.fieldsMap[field];
+
+    for (const item of array) {
+      this.writeToCache(this.generateId(collectionName, item), item);
+      arrayOfReferences.push(this.generateId(collectionName, item));
     }
 
-    return buildArray(this.proto, map);
+    return arrayOfReferences;
+  };
+  
+  normalizeForCache(response) {
+    const queryName = Object.keys(response)[0];
+    const collectionName = this.map[queryName]
+    const collection = response[queryName];
+    
+    const referencesToCache = [];
+
+    for (const item of collection) {
+      const itemKeys = Object.keys(item);
+      for (const key of itemKeys) {
+        if (Array.isArray(item[key])) {
+          item[key] = this.replaceItemsWithReferences(key, item[key]);
+        }
+      }
+      this.writeToCache(this.generateId(collectionName, item), item);
+      referencesToCache.push(this.generateId(collectionName, item));
     }
+    
+    this.writeToCache(collectionName, referencesToCache);
+  };
+
 };
