@@ -140,3 +140,5 @@ parseAST() {
   return buildArray();
   }
 }
+
+console.log(buildArray())
