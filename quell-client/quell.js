@@ -37,7 +37,7 @@ export default class Quell {
         /**
          * Exclude SelectionSet nodes whose parents' are not of the kind 
          * 'Field' to exclude nodes that do not contain information about
-         *  queried fields.
+         * queried fields.
          */
         if(parent.kind === 'Field') {
           
@@ -97,7 +97,7 @@ export default class Quell {
       let response = [];
       
       for (let query in prototype) {
-        collection = collection || dummyCache[map[query]];
+        collection = collection || dummyCache[map[query]] || [];
         for (let item of collection) {
           response.push(buildItem(prototype[query], dummyCache[item]))
         }
@@ -138,5 +138,102 @@ export default class Quell {
     }
 
     return buildArray(this.proto, map);
+  };
+
+  createQueryObj(map) {
+    const output = {};
+    // !! assumes there is only ONE main query, and not multiples !!
+    for (let key in map) {
+      output[key] = reducer(map[key]);
     }
+  
+    function reducer(obj) {
+      const fields = [];
+  
+      for (let key in obj) {
+        // For each property, determine if the property is a false value...
+        if (obj[key] === false) fields.push(key);
+        // ...or another object type
+        if (typeof obj[key] === 'object') {
+          let newObjType = {};
+          newObjType[key] = reducer(obj[key]);
+          fields.push(newObjType);
+        }
+      }
+      return fields;
+    }
+    return output;
+  };
+ 
+  createQueryStr(queryObject) {
+    const openCurl = ' { ';
+    const closedCurl = ' } ';
+  
+    let mainStr = '';
+  
+    for (let key in queryObject) {
+      mainStr += key + openCurl + stringify(queryObject[key]) + closedCurl;
+    }
+  
+    function stringify(fieldsArray) {
+      let innerStr = '';
+      for (let i = 0; i < fieldsArray.length; i++) {
+        if (typeof fieldsArray[i] === 'string') {
+          innerStr += fieldsArray[i] + ' ';
+        }
+        if (typeof fieldsArray[i] === 'object') {
+          for (let key in fieldsArray[i]) {
+            innerStr += key + openCurl + stringify(fieldsArray[i][key]);
+            innerStr += closedCurl;
+          }
+        }
+      }
+      return innerStr;
+    }
+    return openCurl + mainStr + closedCurl;
+  };
+
+  joinResponses(responseArray, fetchedResponseArray) { // Inputs array of objects containing cached fields & array of objects containing newly query fields
+    // main output that will contain objects with combined fields
+    const joinedArray = [];
+    // iterate over each response array object (i.e. objects containing cached fields)
+    for (let i = 0; i < responseArray.length; i++) {
+      // set corresponding objects in each array to combine (NOTE: ASSUMED THAT FETCH ARRAY WILL BE SORTED THE SAME AS CACHED ARRAY)
+      const responseItem = responseArray[i];
+      const fetchedItem = fetchedResponseArray[i];
+      // recursive helper function to add fields of second argument to first argument
+      function fieldRecurse(objStart, objAdd) {
+        // traverse object properties to add
+        for (let field in objAdd) {
+          // if field is an object (i.e. non-scalar), 1. set new field as empty array, 2. iterate over array, 3. create new objects , 4. push new objects to empty array
+          if (typeof objAdd[field] === 'object') {
+            // WOULD DATA TYPE BE AN {} ????
+            // if type is []
+            // set new field on new object equal empty array
+            const newObj = {};
+            newObj[field] = [];
+            // declare variable eual to array of items to add from
+            const objArr = objAdd[field];
+            // iterate over array
+            for (let j = 0; j < objArr.length; j++) {
+              // push to new array the return value of invoking this same fieldRecurse() function.  fieldRecurse() will combine the nested array elements with the new obj field.
+              newObj[field].push(fieldRecurse(objStart[field][j], objArr[j]));
+            }
+          } else {
+            // if field is scalar, simplay add key/value pair add to starting object
+            objStart[field] = objAdd[field]; 
+          }
+        }
+        // return combined object
+        return objStart;
+      }
+      // outputs an object based on adding second argument to first argument
+      fieldRecurse(responseItem, fetchedItem); 
+      // push combined object into main output array
+      joinedArray.push(responseItem);
+    }
+    // return main output array
+    return joinedArray;
+  };
+
 };
