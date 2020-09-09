@@ -537,16 +537,16 @@ const fetchResponse = // capital & cities
 const fetchedArray = fetchResponse.countries;
 
 // function joinResponses(responseArray, fetchedResponseArray) {
-//   // // create new array and create new object items by joining original response items with fetched response items
-//   // return responseArray.map((response, index) => {
-//   //   return Object.assign(response, fetchedResponseArray[index]);
-//   // })
+  // // create new array and create new object items by joining original response items with fetched response items
+  // return responseArray.map((response, index) => {
+  //   return Object.assign(response, fetchedResponseArray[index]);
+  // })
 
-//   const joinedArray = [];
-//   for (let i = 0; i < responseArray.length; i++) {
-//     joinedArray.push(Object.assign(responseArray[i], fetchedResponseArray[i]));
-//   }
-//   return joinedArray;
+  // const joinedArray = [];
+  // for (let i = 0; i < responseArray.length; i++) {
+  //   joinedArray.push(Object.assign(responseArray[i], fetchedResponseArray[i]));
+  // }
+  // return joinedArray;
 // }
 
 // console.log(joinResponses(response, fetchedArray)[0].cities[0].newArr[0].prop1Array[0].prop1ArrObj)
@@ -558,7 +558,7 @@ function joinResponses(responseArray, fetchedResponseArray) { // Inputs array of
   
   // iterate over each response array object (i.e. objects containing cached fields)
   for (let i = 0; i < responseArray.length; i++) {
-    // set corresponding objects in each array to combine (NOTE: Assumed that fetch results array will be sorted the same as cached array.)
+    // set corresponding objects in each array to combine (NOTE: ASSUMED THAT FETCH ARRAY WILL BE SORTED THE SAME AS CACHED ARRAY)
     const responseItem = responseArray[i];
     const fetchedItem = fetchedResponseArray[i];
 
@@ -568,7 +568,7 @@ function joinResponses(responseArray, fetchedResponseArray) { // Inputs array of
       for (let field in objAdd) {
         // if field is an object (i.e. non-scalar), 1. set new field as empty array, 2. iterate over array, 3. create new objects , 4. push new objects to empty array
         if (typeof objAdd[field] === 'object') {
-          // if type is {}
+          // WOULD DATA TYPE BE AN {} ????
           
           // if type is []
           // set new field on starting object equal empty array
@@ -599,14 +599,14 @@ function joinResponses(responseArray, fetchedResponseArray) { // Inputs array of
   return joinedArray;
 }
 
-console.log('function:', joinResponses(response, fetchedArray))
-console.log('hard coded:', countriesAll.countries)
+// console.log('function:', joinResponses(response, fetchedArray))
+// console.log('hard coded:', countriesAll.countries)
 
-console.log(joinResponses(response, fetchedArray)[0].cities[0].name)
-console.log(countriesAll.countries[0].cities[0].name)
-console.log(joinResponses(response, fetchedArray)[0].cities[0].name === countriesAll.countries[0].cities[0].name)
+// console.log(joinResponses(response, fetchedArray)[0].cities[0].name)
+// console.log(countriesAll.countries[0].cities[0].name)
+// console.log(joinResponses(response, fetchedArray)[0].cities[0].name === countriesAll.countries[0].cities[0].name)
 
-console.log(joinResponses(response, fetchedArray) === countriesAll.countries)
+// console.log(joinResponses(response, fetchedArray) === countriesAll.countries)
 
 
 console.log(joinResponses(response, fetchedArray)[0].cities[0].newArr[0].prop1Array[0].prop1ArrObj[0].end)
