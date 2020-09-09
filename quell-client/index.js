@@ -71,7 +71,7 @@ visit(AST, {
   }
 });
 
-console.log(prototype);
+// console.log(prototype);
 
 // // Alternate way of nesting objects
 // let keys = Object.keys(prototype);
@@ -151,4 +151,4 @@ function buildItem(prototype, item) {
   return tempObj;
 }
 
-// console.log(handleTopLevel(prototype, map));
+console.log(handleTopLevel(prototype, map));
