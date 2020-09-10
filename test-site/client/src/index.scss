@@ -1,26 +1,26 @@
 @import url('https://fonts.googleapis.com/css2?family=Alegreya+Sans+SC:wght@300&family=Julius+Sans+One&family=Baloo+Tamma+2&family=Poiret+One&display=swap');
 
+@import url('https://fonts.googleapis.com/css2?family=Rubik:wght@300;400;500&display=swap');
+
+$div-background: #7878805b; /*placeholder color*/
+$app-background: #2c2c2eff;
+
 * {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
 }
 
-body {
-  font-family: 'Baloo Tamma 2';
-  background: #f1f1f1b9;
-  background-image: linear-gradient(to bottom, white, #171E26);
-}
 
 .App {
-  margin: auto;
-  padding: 5%;
-  width: 80%;
-  background: white;
+  color: #ffffff;
+  background: $app-background;
   border: 1px solid #e7e7e7;
   box-shadow: 5px 5px 40px 5px #cecece;
-  border-radius: 20px;
-  
+  border-radius: 5px;
+  margin: auto;
+  padding: 1%;
+  width: 90%;
 }
 
 .App h1 {
@@ -29,47 +29,175 @@ body {
   font-family: 'Alegreya Sans SC';
   letter-spacing: 6px;
   font-size: 60px;
-  color: rgb(66, 66, 66);
 }
 
-.query-container {
+body {
+  font-family: 'Baloo Tamma 2';
+  background-image: linear-gradient(to bottom, white, #171E26);
+}
+
+.query-div-title {
+  font-size: 2em;
+}
+
+.dashboard-grid {
+  border-radius: 5px;
   margin-top: 5vh;
+  padding: 10px;
+}
+
+.dashboard-grid > div {
+  background: $div-background; /*placeholder color*/
+  border-radius: 5px;
+  padding: 10px;
+}
+
+.timer-div, .cache-storage-div {
+  font-family: 'Rubik', sans-serif;
+  background: #3c3c3c;
+  border: 1px solid #141415;
+  border-radius: 5px;
+  padding: 50px 2px;
+  min-width: 15vw;
+  min-height: 15vh;
+}
+
+@media screen and (min-width: 568px) { 
+  /* Dashboard Grid */
+  .dashboard-grid {
+    // display: flex;
+    display: grid;
+    grid-template: auto/repeat(2, 1fr);
+    grid-gap: 10px;
+    grid-template-areas: 
+      "query metrics"
+      "button-query button-cache"
+      "results graph";
+  }
+
+/* dashboard divs */
+  .query-div {
+    grid-area: query;
+  }
+
+  .button-query-div {
+    grid-area: button-query;
+    padding: 0 !important;
+  }
+
+  .results-div {
+    grid-area: results;
+  }
+
+  .metrics-div {
+    grid-area: metrics;
+  }
+
+  .button-cache-div {
+    grid-area: button-cache;
+    padding: 0 !important;
+  }
+
+  .graph-div {
+    grid-area: graph;
+  }
+
+  /* Metrics Grid */
+  .metrics-grid {
+    display: grid;
+    grid-template: auto/repeat(2, 1fr);
+    grid-gap: 10px;
+    grid-template-areas: 
+      "timer-div cache-storage-div";
+  }
+
+  .timer-div {
+    grid-area: timer-div;
+  }
+  
+  .cache-storage-div {
+    grid-area: cache-storage-div;
+  }
 }
 
 textarea {
+  background: #dcdcdc;
+  color: #3c3c3c;
+  font-size: 16px;
   outline: none;
-  padding: 5px;
-  width: 50%;
-  height: 30%;
+  border: 1px solid #888888;
+  border-radius: 2px;
+  width: 100%;
+  // height: 30vh;
+  height: 12vh;
+  padding: 10px;
 }
 
 button {
+  font-size: 20px;
+  font-weight: bold;
+  color: #ffffff;
   border-radius: 6px;
   border: 1px solid #566f8b;
-  margin: 10px 0;
+  width: 100%;
+  height: 50px;
+  // margin: 10px 0;
   padding: 5px;
-  background-color: white;
-  color: #171E26;
   outline: none;
 }
 
-button:hover {
-  background-color: #566f8b;
-  color: white;
+/* Button - Run Query */
+.button-query {
+  background: #21983f;
 }
 
-button:active {
-  background-color: #273341;
-  color: white;
+.button-query:hover {
+  background: #2cbd50;
+  cursor: pointer;
+}
+
+.button-query:active {
+  background: #21983f;
+}
+
+/* Button - Clear Cache */
+.button-cache {
+  background: #c67906;
+}
+
+.button-cache:hover {
+  background: #f09308;
+  cursor: pointer;
+}
+
+.button-cache:active {
+  background: #c67906;
 }
 
 .results-view {
-  border: 1px solid black;
-  height: 250px;
+  background: #3c3c3c;
+  color: #85e6e1;
+  font-size: 16px;
+  border: 1px solid #2c2c2eff;
+  border-radius: 2px;
+  width: 100%;
+  height: 30vh;
   padding: 10px;
-  overflow: auto;
+  overflow-y: scroll;
+}
+
+.metric-value {
+  font-size: 3.5em;
+}
+
+.trend {
+  background: $app-background;
+  border: 1px solid $app-background;
+  border-radius: 5px;
+  height: 30vh;
 }
 
 footer {
   min-height: 50px;
 }
+

@@ -6,19 +6,23 @@ quell.quellFetch = (query, endpoint = '/graphql') => {
     startTime = performance.now();
 
     const promise = new Promise((resolve, reject) => {
+        // remove whitespace in query to convert to sessionStorage key
+        const stringifyQuery = JSON.stringify(query.replace(/\s/g, ''));
+        // search query key in sessionStorage
+        const inSessionStorage = sessionStorage.getItem(stringifyQuery);
 
-        const inSessionStorage = sessionStorage.getItem(query);
-
+        // if query key value exists in cache, return that value
         if (inSessionStorage) {
-            console.log('serving from cache')
-
             // timer End
             endTime = performance.now();
             quell.performanceTime = endTime - startTime;
 
+            // return query value
+            console.log('Serving from Cache:')
             return resolve(inSessionStorage);
         }
 
+        // if query value does not exist in cache - fetch GQL request > save response to cache > return response value
         fetch(endpoint, {
             method: 'POST',
             headers: {
@@ -26,16 +30,21 @@ quell.quellFetch = (query, endpoint = '/graphql') => {
             },
             body: JSON.stringify({ query: query })
         })
-            .then(res => res.json())
+            .then(res => res.json()) // parse the server response
             .then(res => {
+                // set sessionStorage key by removing whitespace from query 
+                const stringifyQuery = JSON.stringify(query.replace(/\s/g, ''));
+                // set sessionStorage value by stringifying data property on res object
                 const responseData = JSON.stringify(res.data);
-                console.log('Serving from Fetch:')
-                sessionStorage.setItem(query, responseData);
+                // save query to session Storage
+                sessionStorage.setItem(stringifyQuery, responseData);
 
                 // timer End
                 endTime = performance.now();
                 quell.performanceTime = endTime - startTime;
                 
+                // return fetch res value
+                console.log('Serving from Fetch:')
                 return resolve(responseData);
             })
             .catch(err => reject(err))
