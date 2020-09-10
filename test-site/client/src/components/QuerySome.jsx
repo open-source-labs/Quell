@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import Trend from 'react-trend';
-import Quell from '../quell-client.js'
+// import OtherQuell from '../quell-client.js'
+import Quell from '../../../../quell-client/quell';
 
 // component to get ALL data from our created DB
 const QuerySome = () => {
@@ -8,36 +9,46 @@ const QuerySome = () => {
   const [queryResponse, setQueryResponse] = useState({});
   // const [queryResponseError, setQueryResponseError] = useState('');
   const [storageSpace, setStorageSpace] = useState('0 KB');
-  const [fetchTime, setFetchTime] = useState('0.00 ms');
-  const [fetchTimeIntegers, setFetchTimeIntegers] = useState([0,0]);
+  // const [fetchTime, setFetchTime] = useState('0.00 ms');
+  // const [fetchTimeIntegers, setFetchTimeIntegers] = useState([0,0]);
   const [cacheStatus, setCacheStatus] = useState('');
 
   const handleChange = e => {
     setQueryInput(e.target.value)
   }
 
-  const formatTimer = (time) => {
-    return time.toFixed(2) + ' ms'
-  }
+  // const formatTimer = (time) => {
+  //   return time.toFixed(2) + ' ms'
+  // }
 
   const handleFetchClick = () => {
-    Quell.quellFetch(queryInput)
-      .then(res => JSON.parse(res))
+    // Quell.quellFetch(queryInput)
+    const quell = new Quell(queryInput, {
+      countries: 'Country',
+      country: 'Country',
+      citiesByCountryId: 'City',
+      cities: 'City'
+    });
+    quell.fetch('/graphql') // looks to quell-client.js
+      .then(res => {
+        console.log('res', res)
+        // JSON.parse(res)
+      })
       .then(res => {
         // query response state
         setQueryResponse(res);
 
         // storage state
-        setStorageSpace(Quell.calculateSessionStorage());
+        // setStorageSpace(OtherQuell.calculateSessionStorage());
 
-        // timer state
-        const rawTime = Quell.performanceTime;
-        const fTime = formatTimer(rawTime);
-        setFetchTime(fTime);
+        // // timer state
+        // const rawTime = OtherQuell.performanceTime;
+        // const fTime = formatTimer(rawTime);
+        // setFetchTime(fTime);
 
-        // line graph
-        const newTime = Number(rawTime.toFixed(3));
-        setFetchTimeIntegers([...fetchTimeIntegers, newTime])
+        // // line graph
+        // const newTime = Number(rawTime.toFixed(3));
+        // setFetchTimeIntegers([...fetchTimeIntegers, newTime])
       })
       .catch(err => console.log(err))
   }
@@ -45,12 +56,12 @@ const QuerySome = () => {
   const handleClearClick = () => {
     sessionStorage.clear();
     setStorageSpace('0');
-    setFetchTime('0.00 ms');
+    // setFetchTime('0.00 ms');
     let date = new Date();
     setCacheStatus(date.toString());
 
-    // line graph - zero out
-    setFetchTimeIntegers([0,0]);
+    // // line graph - zero out
+    // setFetchTimeIntegers([0,0]);
   }
 
   return(
@@ -88,7 +99,7 @@ const QuerySome = () => {
         <h3>Metrics:</h3>
         <div className="metrics-grid">
           <div className="timer-div">
-            <div className="metric-value">{fetchTime}</div>
+            {/* <div className="metric-value">{fetchTime}</div> */}
             <div className="metric-label">Fetch Time</div>
             <div></div>
           </div>
@@ -108,19 +119,20 @@ const QuerySome = () => {
         {/*Line graph*/}
         {/* <div className="graph">Line graph here:</div> */}
         <h3>Speed Graph:</h3>
-        <Trend
+        {/* <Trend
           className="trend"
           // smooth
           // autoDraw
           // autoDrawDuration={3000}
           // autoDrawEasing="ease-out"
           // data={[5.6,0.25,0.16,0.25,0.04,0.05]}
+
           data={fetchTimeIntegers}
           gradient={['#1feaea', '#ffd200', '#f72047']}
           radius={0.9}
           strokeWidth={3.2}
           strokeLinecap={'round'}
-        />
+        /> */}
       </div>
 
     </div>
