@@ -9,17 +9,17 @@ const QuerySome = () => {
   const [queryResponse, setQueryResponse] = useState({});
   // const [queryResponseError, setQueryResponseError] = useState('');
   const [storageSpace, setStorageSpace] = useState('0 KB');
-  // const [fetchTime, setFetchTime] = useState('0.00 ms');
-  // const [fetchTimeIntegers, setFetchTimeIntegers] = useState([0,0]);
+  const [fetchTime, setFetchTime] = useState('0.00 ms');
+  const [fetchTimeIntegers, setFetchTimeIntegers] = useState([0,0]);
   const [cacheStatus, setCacheStatus] = useState('');
 
   const handleChange = e => {
     setQueryInput(e.target.value)
   }
 
-  // const formatTimer = (time) => {
-  //   return time.toFixed(2) + ' ms'
-  // }
+  const formatTimer = (time) => {
+    return time.toFixed(2) + ' ms'
+  }
 
   const handleFetchClick = () => {
     // Quell.quellFetch(queryInput)
@@ -36,20 +36,20 @@ const QuerySome = () => {
       // })
       .then(res => {
         // query response state
-        console.log(typeof res)
         setQueryResponse(res.data);
-
+        console.log('state', queryResponse)
         // storage state
-        // setStorageSpace(OtherQuell.calculateSessionStorage());
+        setStorageSpace(quell.calculateSessionStorage());
 
-        // // timer state
-        // const rawTime = OtherQuell.performanceTime;
-        // const fTime = formatTimer(rawTime);
-        // setFetchTime(fTime);
+        // timer state
+        const rawTime = quell.time;
+        console.log(rawTime)
+        const fTime = formatTimer(rawTime);
+        setFetchTime(fTime);
 
-        // // line graph
-        // const newTime = Number(rawTime.toFixed(3));
-        // setFetchTimeIntegers([...fetchTimeIntegers, newTime])
+        // line graph
+        const newTime = Number(rawTime.toFixed(3));
+        setFetchTimeIntegers([...fetchTimeIntegers, newTime])
       })
       .catch(err => console.log(err))
   }
@@ -71,7 +71,7 @@ const QuerySome = () => {
       <div className="query-div">
         {/*Query Main*/}
         {/* <h1>Query Some</h1> */}
-        <div className="query-div-title">Query Some</div>
+        <div className="query-div-title">Query</div>
         <div className="text-area">
           <label htmlFor="custom-query">Query Input:</label><br/>
           <textarea id="custom-query" placeholder="Enter query..." onChange={handleChange}></textarea><br/>
@@ -100,7 +100,7 @@ const QuerySome = () => {
         <h3>Metrics:</h3>
         <div className="metrics-grid">
           <div className="timer-div">
-            {/* <div className="metric-value">{fetchTime}</div> */}
+            <div className="metric-value">{fetchTime}</div>
             <div className="metric-label">Fetch Time</div>
             <div></div>
           </div>
@@ -120,7 +120,7 @@ const QuerySome = () => {
         {/*Line graph*/}
         {/* <div className="graph">Line graph here:</div> */}
         <h3>Speed Graph:</h3>
-        {/* <Trend
+        <Trend
           className="trend"
           // smooth
           // autoDraw
@@ -133,7 +133,7 @@ const QuerySome = () => {
           radius={0.9}
           strokeWidth={3.2}
           strokeLinecap={'round'}
-        /> */}
+        />
       </div>
 
     </div>

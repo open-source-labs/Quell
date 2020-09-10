@@ -8,9 +8,15 @@ export default class Quell {
     this.AST = parse(this.query);
     this.proto = this.parseAST(this.AST);
     this.fieldsMap = fieldsMap;
+    // timer
+    this.time = 0;
   }
 
   async fetch(endPoint) {
+    // timer Start
+    let startTime, endTime;
+    startTime = performance.now();
+
     const responseFromCache = this.buildFromCache() // returns something like: [{name: 'Bobby'}, {id: '2'}]
 
     if (responseFromCache.length === 0) { // if nothing in cache
@@ -25,6 +31,10 @@ export default class Quell {
       const responseFromFetch = await fetch(endPoint, fetchOptions);
       const parsedData = await responseFromFetch.json();
       this.normalizeForCache(parsedData.data);
+
+      // timer End
+      endTime = performance.now();
+      this.time = endTime - startTime;
 
       // return parsedData
       return new Promise((resolve, reject) => resolve(parsedData));
@@ -55,6 +65,11 @@ export default class Quell {
 
     const formattedMergedResponse = {data: { [queryName]: mergedResponse} };
     this.normalizeForCache(formattedMergedResponse.data);
+    
+    // timer End
+    endTime = performance.now();
+    this.time = endTime - startTime;
+
     // return formattedMergedResponse;
     return new Promise((resolve, reject) => resolve(formattedMergedResponse));
   }
@@ -349,6 +364,20 @@ export default class Quell {
     
     this.writeToCache(collectionName, referencesToCache);
   };
+
+  calculateSessionStorage() {
+    var _lsTotal = 0,
+        _xLen, _x;
+    for (_x in sessionStorage) {
+        if (!sessionStorage.hasOwnProperty(_x)) {
+            continue;
+        }
+        _xLen = ((sessionStorage[_x].length + _x.length) * 2);
+        _lsTotal += _xLen;
+        // console.log(_x.substr(0, 50) + " = " + (_xLen / 1024).toFixed(2) + " KB")
+    };
+    return ((_lsTotal / 1024).toFixed(2) + " KB");
+  }
 
 };
 

@@ -8,7 +8,7 @@ const Main = () => {
   return(
     <div className="main">
       <Header />
-      <QueryAll />
+      {/* <QueryAll /> */}
       <QuerySome />
       <Footer />
     </div>
