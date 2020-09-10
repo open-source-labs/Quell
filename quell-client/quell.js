@@ -26,7 +26,8 @@ export default class Quell {
       const parsedData = await responseFromFetch.json();
       this.normalizeForCache(parsedData.data);
 
-      return parsedData
+      // return parsedData
+      return new Promise((resolve, reject) => resolve(parsedData));
     }
 
     let mergedResponse;
@@ -54,8 +55,8 @@ export default class Quell {
 
     const formattedMergedResponse = {data: { [queryName]: mergedResponse} };
     this.normalizeForCache(formattedMergedResponse.data);
-    return formattedMergedResponse;
-    // return new Promise((resolve, reject) => resolve(mergedResponse));
+    // return formattedMergedResponse;
+    return new Promise((resolve, reject) => resolve(formattedMergedResponse));
   }
   
   

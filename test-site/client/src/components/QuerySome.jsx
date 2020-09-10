@@ -36,7 +36,7 @@ const QuerySome = () => {
       // })
       .then(res => {
         // query response state
-        console.log(quell.fieldsMap)
+        console.log(typeof res)
         setQueryResponse(res.data);
 
         // storage state
