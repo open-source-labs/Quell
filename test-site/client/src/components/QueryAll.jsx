@@ -25,7 +25,15 @@ const QueryAll = () => {
       }
     }
     countries{
+      id
       name
+      capital
+      cities{
+        country_id
+        id
+        name
+        population
+      }
     }
     citiesByCountry(country_id: "3"){
       country_id
@@ -73,10 +81,9 @@ const QueryAll = () => {
     setStorageSpace('0');
     setFetchTime('0.00 ms');
     let date = new Date();
-    console.log(date)
     setCacheStatus(date.toString());
 
-    // line graph
+    // line graph - zero out
     setFetchTimeIntegers([0,0]);
   }
 
