@@ -10,12 +10,56 @@ export default class Quell {
     this.fieldsMap = {};
   }
 
+  
+  async fetch() {
+    const responseFromCache = this.buildFromCache()
+
+    if (responseFromCache.length === 0) {
+      const fetchOptions = {
+        method: 'POST',
+        headers:{
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(this.query)
+      };
+      
+      const responseFromFetch = await fetch('/graphql', fetchOptions)
+      this.normalizeForCache(responseFromFetch);
+
+      return responseFromFetch
+    }
+
+    let mergedResponse;
+    const queryObject = this.createQueryObj(this.proto);
+
+    if (Object.keys(queryObject).length > 0) {
+      const newQuery = this.createQueryStr(queryObject);
+      const fetchOptions = {
+        method: 'POST',
+        headers:{
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(newQuery)
+      };
+  
+      const responseFromFetch = await fetch('/graphql', fetchOptions);
+      mergedResponse = this.joinResponses(responseFromCache, responseFromFetch);
+    } else {
+      mergedResponse = responseFromCache;
+    }
+
+    this.normalizeForCache(mergedResponse);
+    return mergedResponse
+    // return new Promise((resolve, reject) => resolve(mergedResponse));
+  }
+  
+  
   /**
-   * 
-   * @param {*} AST
+   * parseAST traverses the abstract syntax tree and creates a prototype object
+   * representing all the queried fields nested as they are in the query.
    */
-  parseAST(AST) {
-    const queryRoot = AST.definitions[0];
+  parseAST() {
+    const queryRoot = this.AST.definitions[0];
     
     if (queryRoot.operation !== 'query') {
       console.log(`Error: Quell does not currently support ${queryRoot.operation} operations.`);
@@ -33,7 +77,7 @@ export default class Quell {
   // visit() will build the prototype, declared here and returned from the function
     const prototype = {};
     
-    visit(AST, {
+    visit(this.AST, {
       SelectionSet(node, key, parent, path, ancestors) {
         /**
          * Exclude SelectionSet nodes whose parents' are not of the kind 
@@ -97,9 +141,10 @@ export default class Quell {
     let response = [];
     
     for (let query in prototype) {
-      collection = collection || dummyCache[map[query]];
+      collection = collection || sessionStorage.get(map[query]) || [];
       for (let item of collection) {
-        response.push(this.buildItem(prototype[query], dummyCache[item]))
+        // response.push(this.buildItem(prototype[query], dummyCache[item]));
+        response.push(this.buildItem(prototype[query], sessionStorage.get(item)));
       }
     }
     
@@ -123,7 +168,7 @@ export default class Quell {
     for (let key in prototype) {
       if (typeof prototype[key] === 'object') {
         let prototypeAtKey = {[key]: prototype[key]}
-        tempObj[key] = this.buildArray(prototypeAtKey, map, item[key])
+        tempObj[key] = this.buildArray(prototypeAtKey, this.map, item[key])
 
         /** The fieldsMap property stores a mapping of field names to collection
          *  names, used when normalizes responses for caching. For example: a 'cities'
@@ -150,7 +195,10 @@ export default class Quell {
     const output = {};
     // !! assumes there is only ONE main query, and not multiples !!
     for (let key in map) {
-      output[key] = reducer(map[key]);
+      const reduced = reducer(map[key]);
+      if (reduced.length > 0) {
+        output[key] = reduced;
+      }
     }
   
     function reducer(obj) {
@@ -162,10 +210,14 @@ export default class Quell {
         // ...or another object type
         if (typeof obj[key] === 'object') {
           let newObjType = {};
-          newObjType[key] = reducer(obj[key]);
-          fields.push(newObjType);
+          let reduced = reducer(obj[key]);
+          if (reduced.length > 0) { 
+            newObjType[key] = reduced;
+            fields.push(newObjType);
+          }
         }
       }
+    
       return fields;
     }
     return output;
@@ -243,7 +295,7 @@ export default class Quell {
   };
 
   buildFromCache() {
-    return this.buildArray(this.proto, map);
+    return this.buildArray(this.proto, this.map);
   };
 
   generateId(collection, item) {
@@ -253,8 +305,8 @@ export default class Quell {
 
   writeToCache(key, item) {
     if (!key.includes('uncacheable')) {
-      // sessionStorage.set(key, JSON.stringify(item));
-      mockCache[key] = JSON.stringify(item);
+      sessionStorage.set(key, JSON.stringify(item));
+      // mockCache[key] = JSON.stringify(item);
     } 
   };
 
@@ -292,3 +344,60 @@ export default class Quell {
   };
 
 };
+
+// ORIGINAL TEST QUERY
+const query = `
+{
+  countries{
+    id
+    name
+    capital
+    cities{
+      country_id
+      id
+      name
+      population
+    }
+  }
+}
+`
+
+// RETURN FROM INTROSPECTION QUERY?
+const dummyMap = {
+  countries: 'Country',
+  country: 'Country',
+  citiesByCountryId: 'City',
+  cities: 'City'
+}
+
+// const dummyCache = {}
+const dummyCache = {
+  'Country': ['Country-1', 'Country-2', 'Country-3', 'Country-4', 'Country-5'],
+  'City': ['City-1', 'City-2', 'City-3', 'City-4', 'City-5', 'City-6', 'City-7', 'City-8','City-9', 'City-10'],
+  'Country-1': {'id': 1, 'name': 'Andorra', 'capital': 'Andorra la Vella', 'cities': ['City-1', 'City-2']},
+  'Country-2': {'id': 2, 'name': 'Bolivia', 'capital': 'Sucre', 'cities': ['City-5', 'City-7']},
+  'Country-3': {'id': 3, 'name': 'Armenia', 'capital': 'Yerevan', 'cities': ['City-3', 'City-6']},
+  'Country-4': {'id': 4, 'name': 'American Samoa', 'capital': 'Pago Pago', 'cities': ['City-8', 'City-4']},
+  'Country-5': {'id': 5, 'name': 'Aruba', 'capital': 'Oranjestad', 'cities': ['City-9', 'City-10']},
+  'City-1': {"id": 1, "country_id": 1, "name": "El Tarter", "population": 1052},
+  'City-2': {"id": 2,"country_id": 1, "name": "SomeCity", "population": 7211},
+  'City-3': {"id":3,"country_id":3,"name":"Canillo","population":3292},
+  'City-4': {"id":4,"country_id":4,"name":"Andorra la Vella","population":20430},
+  'City-5': {"id":5,"country_id":2,"name":"Jorochito","population":4013},
+  'City-6': {"id":6,"country_id":3,"name":"Tupiza","population":22233},
+  'City-7': {"id":7,"country_id":2,"name":"Puearto Pailas","population":0},
+  'City-8': {"id":8,"country_id":4,"name":"Capinota","population":5157},
+  'City-9': {"id":9,"country_id":5,"name":"Camargo","population":4715},
+  'City-10': {"id":10,"country_id":5,"name":"Villa Serrano","population":0}
+};
+
+// CREATE INSTANCE
+
+// const quellTest = new Quell(query, dummyMap)
+
+// console.log(quellTest.buildFromCache())
+
+// console.log(quellTest.proto)
+
+// console.log(quellTest.createQueryObj(quellTest.proto))
+// console.log(quellTest.createQueryStr(quellTest.createQueryObj(quellTest.proto)))
