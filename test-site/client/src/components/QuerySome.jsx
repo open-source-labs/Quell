@@ -28,15 +28,16 @@ const QuerySome = () => {
       country: 'Country',
       citiesByCountryId: 'City',
       cities: 'City'
-    });
+    }, {cities: 'City'});
     quell.fetch('/graphql') // looks to quell-client.js
-      .then(res => {
-        console.log('res', res)
-        // JSON.parse(res)
-      })
+      // .then(res => {
+      //   console.log('res', typeof res)
+      //   // console.log(JSON.parse(res))
+      // })
       .then(res => {
         // query response state
-        setQueryResponse(res);
+        console.log(quell.fieldsMap)
+        setQueryResponse(res.data);
 
         // storage state
         // setStorageSpace(OtherQuell.calculateSessionStorage());
