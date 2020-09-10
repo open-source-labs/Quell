@@ -23,7 +23,10 @@ export default class Quell {
         body: JSON.stringify(this.query)
       };
       
-      return fetch('/graphql', fetchOptions)
+      const responseFromFetch = await fetch('/graphql', fetchOptions)
+      this.normalizeForCache(responseFromFetch);
+
+      return responseFromFetch
     }
 
     let mergedResponse;
@@ -138,9 +141,10 @@ export default class Quell {
     let response = [];
     
     for (let query in prototype) {
-      collection = collection || dummyCache[map[query]] || [];
+      collection = collection || sessionStorage.get(map[query]) || [];
       for (let item of collection) {
-        response.push(this.buildItem(prototype[query], dummyCache[item]))
+        // response.push(this.buildItem(prototype[query], dummyCache[item]));
+        response.push(this.buildItem(prototype[query], sessionStorage.get(item)));
       }
     }
     
@@ -301,8 +305,8 @@ export default class Quell {
 
   writeToCache(key, item) {
     if (!key.includes('uncacheable')) {
-      // sessionStorage.set(key, JSON.stringify(item));
-      mockCache[key] = JSON.stringify(item);
+      sessionStorage.set(key, JSON.stringify(item));
+      // mockCache[key] = JSON.stringify(item);
     } 
   };
 
@@ -389,11 +393,11 @@ const dummyCache = {
 
 // CREATE INSTANCE
 
-const quellTest = new Quell(query, dummyMap)
+// const quellTest = new Quell(query, dummyMap)
 
-console.log(quellTest.buildFromCache())
+// console.log(quellTest.buildFromCache())
 
-console.log(quellTest.proto)
+// console.log(quellTest.proto)
 
-console.log(quellTest.createQueryObj(quellTest.proto))
-console.log(quellTest.createQueryStr(quellTest.createQueryObj(quellTest.proto)))
+// console.log(quellTest.createQueryObj(quellTest.proto))
+// console.log(quellTest.createQueryStr(quellTest.createQueryObj(quellTest.proto)))
