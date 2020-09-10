@@ -56,7 +56,7 @@ const QuerySome = () => {
 
   const handleClearClick = () => {
     sessionStorage.clear();
-    setStorageSpace('0');
+    setStorageSpace('0 KB');
     // setFetchTime('0.00 ms');
     let date = new Date();
     setCacheStatus(date.toString());
