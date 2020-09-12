@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import Trend from 'react-trend';
-import Quell from '../quell-client.js'
+// import OtherQuell from '../quell-client.js'
+import Quell from '../../../../quell-client/quell';
 
 // component to get ALL data from our created DB
 const QuerySome = () => {
@@ -21,17 +22,28 @@ const QuerySome = () => {
   }
 
   const handleFetchClick = () => {
-    Quell.quellFetch(queryInput)
-      .then(res => JSON.parse(res))
+    // Quell.quellFetch(queryInput)
+    const quell = new Quell(queryInput, {
+      countries: 'Country',
+      country: 'Country',
+      citiesByCountryId: 'City',
+      cities: 'City'
+    }, {cities: 'City'});
+    quell.fetch('/graphql') // looks to quell-client.js
+      // .then(res => {
+      //   console.log('res', typeof res)
+      //   // console.log(JSON.parse(res))
+      // })
       .then(res => {
         // query response state
-        setQueryResponse(res);
-
+        setQueryResponse(res.data);
+        console.log('state', queryResponse)
         // storage state
-        setStorageSpace(Quell.calculateSessionStorage());
+        setStorageSpace(quell.calculateSessionStorage());
 
         // timer state
-        const rawTime = Quell.performanceTime;
+        const rawTime = quell.time;
+        console.log(rawTime)
         const fTime = formatTimer(rawTime);
         setFetchTime(fTime);
 
@@ -44,13 +56,13 @@ const QuerySome = () => {
 
   const handleClearClick = () => {
     sessionStorage.clear();
-    setStorageSpace('0');
-    setFetchTime('0.00 ms');
+    setStorageSpace('0 KB');
+    // setFetchTime('0.00 ms');
     let date = new Date();
     setCacheStatus(date.toString());
 
-    // line graph - zero out
-    setFetchTimeIntegers([0,0]);
+    // // line graph - zero out
+    // setFetchTimeIntegers([0,0]);
   }
 
   return(
@@ -59,7 +71,7 @@ const QuerySome = () => {
       <div className="query-div">
         {/*Query Main*/}
         {/* <h1>Query Some</h1> */}
-        <div className="query-div-title">Query Some</div>
+        <div className="query-div-title">Query</div>
         <div className="text-area">
           <label htmlFor="custom-query">Query Input:</label><br/>
           <textarea id="custom-query" placeholder="Enter query..." onChange={handleChange}></textarea><br/>
@@ -115,6 +127,7 @@ const QuerySome = () => {
           // autoDrawDuration={3000}
           // autoDrawEasing="ease-out"
           // data={[5.6,0.25,0.16,0.25,0.04,0.05]}
+
           data={fetchTimeIntegers}
           gradient={['#1feaea', '#ffd200', '#f72047']}
           radius={0.9}

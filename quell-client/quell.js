@@ -2,55 +2,76 @@ import { parse } from 'graphql/language/parser';
 import { visit } from 'graphql/language/visitor';
 
 export default class Quell {
-  constructor(query, map) {
+  constructor(query, map, fieldsMap) {
     this.query = query;
     this.map = map;
     this.AST = parse(this.query);
     this.proto = this.parseAST(this.AST);
-    this.fieldsMap = {};
+    this.fieldsMap = fieldsMap;
+    // timer
+    this.time = 0;
   }
 
-  
-  async fetch() {
-    const responseFromCache = this.buildFromCache()
+  async fetch(endPoint) {
+    // timer Start
+    let startTime, endTime;
+    startTime = performance.now();
 
-    if (responseFromCache.length === 0) {
+    const responseFromCache = this.buildFromCache() // returns something like: [{name: 'Bobby'}, {id: '2'}]
+
+    if (responseFromCache.length === 0) { // if nothing in cache
       const fetchOptions = {
         method: 'POST',
         headers:{
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify(this.query)
+        body: JSON.stringify({ query: this.query })
       };
       
-      const responseFromFetch = await fetch('/graphql', fetchOptions)
-      this.normalizeForCache(responseFromFetch);
+      const responseFromFetch = await fetch(endPoint, fetchOptions);
+      const parsedData = await responseFromFetch.json();
+      this.normalizeForCache(parsedData.data);
 
-      return responseFromFetch
+      // timer End
+      endTime = performance.now();
+      this.time = endTime - startTime;
+
+      // return parsedData
+      return new Promise((resolve, reject) => resolve(parsedData));
     }
 
     let mergedResponse;
     const queryObject = this.createQueryObj(this.proto);
+    const queryName = Object.keys(this.proto)[0];
 
-    if (Object.keys(queryObject).length > 0) {
+    if (Object.keys(queryObject).length > 0) { // if something in cache
       const newQuery = this.createQueryStr(queryObject);
       const fetchOptions = {
         method: 'POST',
         headers:{
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify(newQuery)
+        body: JSON.stringify({ query: newQuery })
       };
   
-      const responseFromFetch = await fetch('/graphql', fetchOptions);
-      mergedResponse = this.joinResponses(responseFromCache, responseFromFetch);
+      const responseFromFetch = await fetch(endPoint, fetchOptions);
+      const parsedData = await responseFromFetch.json();
+
+      
+      mergedResponse = this.joinResponses(responseFromCache, parsedData.data[queryName]);
     } else {
       mergedResponse = responseFromCache;
     }
 
-    this.normalizeForCache(mergedResponse);
-    return mergedResponse
-    // return new Promise((resolve, reject) => resolve(mergedResponse));
+    const formattedMergedResponse = {data: { [queryName]: mergedResponse} };
+    this.normalizeForCache(formattedMergedResponse.data);
+    
+    // timer End
+    endTime = performance.now();
+    this.time = endTime - startTime;
+
+    // return formattedMergedResponse;
+    return new Promise((resolve, reject) => resolve(formattedMergedResponse));
   }
   
   
@@ -141,10 +162,10 @@ export default class Quell {
     let response = [];
     
     for (let query in prototype) {
-      collection = collection || sessionStorage.get(map[query]) || [];
-      for (let item of collection) {
+      collection = collection || JSON.parse(sessionStorage.getItem(map[query])) || [];
+      for (let item of collection) { // item is like "Country-1"
         // response.push(this.buildItem(prototype[query], dummyCache[item]));
-        response.push(this.buildItem(prototype[query], sessionStorage.get(item)));
+        response.push(this.buildItem(prototype[query], JSON.parse(sessionStorage.getItem(item)))); 
       }
     }
     
@@ -163,12 +184,12 @@ export default class Quell {
    * 
    */
   buildItem(prototype, item) {
-    let tempObj = {};
+    let tempObj = {}; // gets all the in-cache data
     
-    for (let key in prototype) {
+    for (let key in prototype) { // if key points to an object ("a nested query, like "cities" in a "country"")
       if (typeof prototype[key] === 'object') {
         let prototypeAtKey = {[key]: prototype[key]}
-        tempObj[key] = this.buildArray(prototypeAtKey, this.map, item[key])
+        tempObj[key] = this.buildArray(prototypeAtKey, this.map, item[key]) // returns something like: tempObj['cities'] = [{name: 'Bobby'}, {id: '2'}]
 
         /** The fieldsMap property stores a mapping of field names to collection
          *  names, used when normalizes responses for caching. For example: a 'cities'
@@ -179,7 +200,7 @@ export default class Quell {
          *  Slicing the reference at the first hyphen removes the object's unique identifier,
          *  leaving only the collection name.
         */
-        this.fieldsMap[key] = item[key][0].slice(0, item[key][0].indexOf('-'));
+        // this.fieldsMap[key] = item[key][0].slice(0, item[key][0].indexOf('-'));
       } else if (prototype[key]) {
         if (item[key] !== undefined) {
           tempObj[key] = item[key];
@@ -295,7 +316,7 @@ export default class Quell {
   };
 
   buildFromCache() {
-    return this.buildArray(this.proto, this.map);
+    return this.buildArray(this.proto, this.map); // returns something like: [{name: 'Bobby'}, {id: '2'}]
   };
 
   generateId(collection, item) {
@@ -305,7 +326,7 @@ export default class Quell {
 
   writeToCache(key, item) {
     if (!key.includes('uncacheable')) {
-      sessionStorage.set(key, JSON.stringify(item));
+      sessionStorage.setItem(key, JSON.stringify(item));
       // mockCache[key] = JSON.stringify(item);
     } 
   };
@@ -325,10 +346,11 @@ export default class Quell {
   normalizeForCache(response) {
     const queryName = Object.keys(response)[0];
     const collectionName = this.map[queryName]
-    const collection = response[queryName];
+    console.log(response)
+    const collection = JSON.parse(JSON.stringify(response[queryName]));
     
     const referencesToCache = [];
-
+    console.log('collection:', collection)
     for (const item of collection) {
       const itemKeys = Object.keys(item);
       for (const key of itemKeys) {
@@ -342,6 +364,20 @@ export default class Quell {
     
     this.writeToCache(collectionName, referencesToCache);
   };
+
+  calculateSessionStorage() {
+    var _lsTotal = 0,
+        _xLen, _x;
+    for (_x in sessionStorage) {
+        if (!sessionStorage.hasOwnProperty(_x)) {
+            continue;
+        }
+        _xLen = ((sessionStorage[_x].length + _x.length) * 2);
+        _lsTotal += _xLen;
+        // console.log(_x.substr(0, 50) + " = " + (_xLen / 1024).toFixed(2) + " KB")
+    };
+    return ((_lsTotal / 1024).toFixed(2) + " KB");
+  }
 
 };
 
