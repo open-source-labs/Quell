@@ -3,7 +3,7 @@ import React from 'react'
 const Header = () => {
   return (
     <header>
-      <h1>What the Quell are you doing?!</h1>
+      <h1>Quell</h1>
     </header>
   )
 }

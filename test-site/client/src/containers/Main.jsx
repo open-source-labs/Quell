@@ -1,15 +1,13 @@
 import React from 'react';
-import Header from '../components/Header.jsx'
-import QueryAll from '../components/QueryAll.jsx'
-import QuerySome from '../components/QuerySome.jsx'
-import Footer from '../components/Footer.jsx'
+import Header from './Header.jsx'
+import Demo from './Demo.jsx'
+import Footer from './Footer.jsx'
 
 const Main = () => {
   return(
     <div className="main">
       <Header />
-      <QueryAll />
-      <QuerySome />
+      <Demo />
       <Footer />
     </div>
   )
