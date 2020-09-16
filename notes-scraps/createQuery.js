@@ -45,7 +45,6 @@ function createQueryObj(map) {
 }
 
 const queryObject = createQueryObj(map);
-console.log(JSON.stringify(queryObject));
 
 /* 
 =======EXPECTED RESULT=======
@@ -84,8 +83,6 @@ function createQueryStr(queryObject) {
   }
   return openCurl + mainStr + closedCurl;
 }
-
-console.log(createQueryStr(queryObject));
 
 /* 
 =======EXPECTED RESULT=======

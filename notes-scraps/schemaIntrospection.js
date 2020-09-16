@@ -6,5 +6,3 @@ const queryObjectTypes = listOfQueries.map((query) => {
   let objectType = query.type.ofType ? query.type.ofType.name : null;
   return { name, objectType }
 });
-
-console.log(queryObjectTypes);

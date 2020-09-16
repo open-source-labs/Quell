@@ -5,7 +5,7 @@ import QueryResults from '../components/QueryResults';
 import Metrics from '../components/Metrics';
 import ButtonClearCache from '../components/ButtonClearCache';
 import Graph from '../components/Graph';
-import Quell from '../../../../quell-client/quell';
+import Quell from '../../../../quell-client/Quellify';
 
 const Demo = () => {
   const [queryInput, setQueryInput] = useState('');
@@ -28,7 +28,7 @@ const Demo = () => {
   const handleRunQueryClick = () => {
     let startTime, endTime;
     startTime = performance.now();
-
+    // Quell(endPoint, query, map, fieldsMap):
     Quell('/graphql', refInput.current.value, { // Replace refInput.current.value with queryInput to remove default
       countries: 'Country',
       country: 'Country',
