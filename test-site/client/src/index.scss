@@ -1,9 +1,16 @@
 @import url('https://fonts.googleapis.com/css2?family=Alegreya+Sans+SC:wght@300&family=Julius+Sans+One&family=Baloo+Tamma+2&family=Poiret+One&display=swap');
-
 @import url('https://fonts.googleapis.com/css2?family=Rubik:wght@300;400;500&display=swap');
 
-$div-background: #7878805b; /*placeholder color*/
-$app-background: #2c2c2eff;
+$div-background: #7dd0e9; /*placeholder color*/
+// $app-background: #2c2c2eff;
+$app-background: white;
+
+//Quell Palette
+$quell-lightest: #d0e4ea;
+$quell-light: #a6d1dc;
+$quell-medium: #7dd0e9;
+$quell-dark: #40677a;
+$quell-darkest: #082032;
 
 * {
   margin: 0;
@@ -11,29 +18,93 @@ $app-background: #2c2c2eff;
   box-sizing: border-box;
 }
 
-
-.App {
-  color: #ffffff;
-  background: $app-background;
-  border: 1px solid #e7e7e7;
-  box-shadow: 5px 5px 40px 5px #cecece;
-  border-radius: 5px;
-  margin: auto;
-  padding: 1%;
-  width: 90%;
-}
-
-.App h1 {
-  margin: 40px auto;
-  text-align: center;
-  font-family: 'Alegreya Sans SC';
-  letter-spacing: 6px;
-  font-size: 60px;
-}
-
 body {
-  font-family: 'Baloo Tamma 2';
-  background-image: linear-gradient(to bottom, white, #171E26);
+  font-family: 'Avenir';
+  color: $quell-darkest;
+}
+
+body h1 {
+  color: $quell-medium;
+  margin: 3% 0;
+  text-align: center;
+  font-family: 'Avenir';
+  letter-spacing: 10px;
+  font-size: 60px;
+  font-weight: 100;
+}
+
+header {
+  border-bottom: 2px solid $quell-light;
+}
+
+.custom-headers {
+  width: 50%;
+  margin: 20px auto;
+}
+
+#demo-header-container {
+  display: flex;
+}
+
+#logo-main {
+  width: 95%;
+  padding: 2%;
+  margin-bottom: 2%;
+}
+
+#quail-only {
+  width: 25%;
+}
+
+#team {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.team-member-name {
+  font-weight: bold;
+  margin-bottom: 10px;
+}
+
+.profile-pics {
+  width: 55%;
+  max-width: 400px;
+  margin-bottom: 4%;
+}
+
+.profile-pics img {
+  margin-bottom: 4%;
+  // width: 55%;
+}
+
+.header-links {
+  display: flex;
+  justify-content: space-around;
+  list-style-type: none;
+  margin-bottom: 2%;
+}
+
+.header-links li a {
+  text-decoration: none;
+  color: $quell-dark;
+}
+
+.header-links li a:hover {
+  text-decoration: underline;
+}
+
+#team-quell {
+  width: 90%;
+  padding: 2%;
+  margin-bottom: 10%;
+}
+
+.info-container {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 0 10px;
 }
 
 .query-div-title {
@@ -42,40 +113,41 @@ body {
 
 .dashboard-grid {
   border-radius: 5px;
-  margin-top: 5vh;
+  // margin-top: 5vh;
   padding: 10px;
 }
 
 .dashboard-grid > div {
-  background: $div-background; /*placeholder color*/
+  background: $quell-lightest;
   border-radius: 5px;
   padding: 10px;
 }
 
-.timer-div, .cache-storage-div {
+.timer-div,
+.cache-storage-div {
   font-family: 'Rubik', sans-serif;
-  background: #3c3c3c;
-  border: 1px solid #141415;
+  background: white;
+  // border: 1px solid #141415;
   border-radius: 5px;
   padding: 50px 2px;
   min-width: 15vw;
   min-height: 15vh;
 }
 
-@media screen and (min-width: 568px) { 
+@media screen and (min-width: 568px) {
   /* Dashboard Grid */
   .dashboard-grid {
     // display: flex;
     display: grid;
     grid-template: auto/repeat(2, 1fr);
     grid-gap: 10px;
-    grid-template-areas: 
-      "query metrics"
-      "button-query button-cache"
-      "results graph";
+    grid-template-areas:
+      'query metrics'
+      'button-query button-cache'
+      'results graph';
   }
 
-/* dashboard divs */
+  /* dashboard divs */
   .query-div {
     grid-area: query;
   }
@@ -107,21 +179,24 @@ body {
     display: grid;
     grid-template: auto/repeat(2, 1fr);
     grid-gap: 10px;
-    grid-template-areas: 
-      "timer-div cache-storage-div";
+    grid-template-areas: 'timer-div cache-storage-div';
   }
 
   .timer-div {
     grid-area: timer-div;
   }
-  
+
   .cache-storage-div {
     grid-area: cache-storage-div;
   }
+
+  // .profile-pics {
+  //   max-width: 60%;
+  // }
 }
 
 textarea {
-  background: #dcdcdc;
+  // background: #dcdcdc;
   color: #3c3c3c;
   font-size: 16px;
   outline: none;
@@ -197,7 +272,6 @@ button {
   height: 30vh;
 }
 
-footer {
-  min-height: 50px;
+#demo {
+  margin-bottom: 10%;
 }
-

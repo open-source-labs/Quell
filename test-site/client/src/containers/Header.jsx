@@ -1,12 +1,30 @@
-import React from 'react'
+import React from 'react';
 
 const Header = () => {
   return (
     <header>
-      <h1>Quell</h1>
+      <div>
+        <img id='logo-main' src='../images/quell_logos/QUELL-long.svg'></img>
+      </div>
+
+      <ul className='header-links'>
+        <li>
+          <a href='#info'>INFO</a>
+        </li>
+        <li>
+          <a href='#demo'>DEMO</a>
+        </li>
+        <li>
+          <a href='#team'>TEAM</a>
+        </li>
+        <li>
+          <a href='https://github.com/oslabs-beta/Quell' target='_blank'>
+            GITHUB
+          </a>
+        </li>
+      </ul>
     </header>
-  )
-}
+  );
+};
 
-
-export default Header
+export default Header;
