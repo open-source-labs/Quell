@@ -77,7 +77,7 @@ const Demo = () => {
     <div id='demo'>
       <div id='demo-header-container'>
         <img
-          className='custom-headers'
+          id='demo-header'
           src='../images/headers/QUELL-headers-demo w lines.svg'
         ></img>
       </div>

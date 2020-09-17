@@ -3,10 +3,13 @@ import React from 'react';
 const Info = () => {
   return (
     <div className='info-container'>
-      <img
-        className='custom-headers'
-        src='../images/headers/QUELL-headers-info w lines_2.svg'
-      ></img>
+      <div id='info-header-container'>
+        <img
+          id='info-header'
+          src='../images/headers/QUELL-headers-info w lines_2.svg'
+        ></img>
+      </div>
+
       <p>
         Elit adipisicing elit et occaecat fugiat velit aliqua sit proident. Aute
         magna culpa minim ad deserunt adipisicing quis elit excepteur quis.

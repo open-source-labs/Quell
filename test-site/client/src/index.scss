@@ -1,8 +1,7 @@
 @import url('https://fonts.googleapis.com/css2?family=Alegreya+Sans+SC:wght@300&family=Julius+Sans+One&family=Baloo+Tamma+2&family=Poiret+One&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Rubik:wght@300;400;500&display=swap');
 
-$div-background: #7dd0e9; /*placeholder color*/
-// $app-background: #2c2c2eff;
+$div-background: #7dd0e9;
 $app-background: white;
 
 //Quell Palette
@@ -23,27 +22,11 @@ body {
   color: $quell-darkest;
 }
 
-body h1 {
-  color: $quell-medium;
-  margin: 3% 0;
-  text-align: center;
-  font-family: 'Avenir';
-  letter-spacing: 10px;
-  font-size: 60px;
-  font-weight: 100;
-}
+// ====== TOP HEADER SECTION ======
 
-header {
-  border-bottom: 2px solid $quell-light;
-}
-
-.custom-headers {
-  width: 40%;
-  margin: 20px auto;
-}
-
-#demo-header-container {
+#logo-main-container {
   display: flex;
+  justify-content: center;
 }
 
 #logo-main {
@@ -52,36 +35,8 @@ header {
   margin-bottom: 2%;
 }
 
-#quail-only {
-  width: 25%;
-}
-
-#team {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
-
-.team-member-name {
-  font-weight: bold;
-  margin-bottom: 10px;
-}
-
-.profile-pics {
-  width: 55%;
-  max-width: 400px;
-  margin-bottom: 4%;
-}
-
-.profile-pics img {
-  margin-bottom: 4%;
-  // width: 55%;
-}
-
-.social-icons img {
-  width: 10%;
-  margin-top: 10px;
-  margin-left: 10px;
+header {
+  border-bottom: 2px solid $quell-light;
 }
 
 .header-links {
@@ -100,10 +55,15 @@ header {
   text-decoration: underline;
 }
 
-#team-quell {
-  width: 90%;
-  padding: 2%;
-  margin-bottom: 10%;
+// ====== INFO SECTION ======
+
+#info-header-container {
+  display: flex;
+}
+
+#info-header {
+  width: 40%;
+  margin: 20px auto;
 }
 
 .info-container {
@@ -111,6 +71,21 @@ header {
   flex-direction: column;
   justify-content: center;
   padding: 0 10px;
+}
+
+// ====== DEMO SECTION ======
+
+#demo {
+  margin-bottom: 10%;
+}
+
+#demo-header-container {
+  display: flex;
+}
+
+#demo-header {
+  width: 50%;
+  margin: 20px auto;
 }
 
 .query-div-title {
@@ -138,67 +113,6 @@ header {
   padding: 50px 2px;
   min-width: 15vw;
   min-height: 15vh;
-}
-
-@media screen and (min-width: 568px) {
-  /* Dashboard Grid */
-  .dashboard-grid {
-    // display: flex;
-    display: grid;
-    grid-template: auto/repeat(2, 1fr);
-    grid-gap: 10px;
-    grid-template-areas:
-      'query metrics'
-      'button-query button-cache'
-      'results graph';
-  }
-
-  /* dashboard divs */
-  .query-div {
-    grid-area: query;
-  }
-
-  .button-query-div {
-    grid-area: button-query;
-    padding: 0 !important;
-  }
-
-  .results-div {
-    grid-area: results;
-  }
-
-  .metrics-div {
-    grid-area: metrics;
-  }
-
-  .button-cache-div {
-    grid-area: button-cache;
-    padding: 0 !important;
-  }
-
-  .graph-div {
-    grid-area: graph;
-  }
-
-  /* Metrics Grid */
-  .metrics-grid {
-    display: grid;
-    grid-template: auto/repeat(2, 1fr);
-    grid-gap: 10px;
-    grid-template-areas: 'timer-div cache-storage-div';
-  }
-
-  .timer-div {
-    grid-area: timer-div;
-  }
-
-  .cache-storage-div {
-    grid-area: cache-storage-div;
-  }
-
-  // .profile-pics {
-  //   max-width: 60%;
-  // }
 }
 
 textarea {
@@ -273,11 +187,134 @@ button {
 
 .trend {
   background: $app-background;
-  border: 1px solid $app-background;
+  border: 1px solid $quell-medium;
   border-radius: 5px;
   height: 30vh;
 }
 
-#demo {
+// ====== TEAM SECTION ======
+
+#team-quell {
+  width: 75%;
+  padding: 2%;
   margin-bottom: 10%;
+}
+
+#team {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.profile-pics {
+  width: 55%;
+  max-width: 400px;
+  margin-bottom: 4%;
+}
+
+.profile-pics img {
+  margin-bottom: 4%;
+}
+
+.team-member-name {
+  font-weight: bold;
+  margin-bottom: 10px;
+}
+
+.social-icons img {
+  width: 15%;
+  margin-top: 10px;
+  margin-left: 10px;
+}
+
+// ================= LARGE VIEWPORT ====================
+
+@media screen and (min-width: 568px) {
+  // ====== TOP HEADER SECTION ======
+
+  #logo-main {
+    max-width: 800px;
+  }
+
+  // ====== INFO SECTION ======
+
+  #info-header {
+    max-width: 250px;
+  }
+
+  // ====== DEMO SECTION ======
+
+  #demo {
+    margin-bottom: 50px;
+  }
+
+  #demo-header {
+    max-width: 310px;
+  }
+
+  /* Dashboard Grid */
+  .dashboard-grid {
+    // display: flex;
+    display: grid;
+    grid-template: auto/repeat(2, 1fr);
+    grid-gap: 10px;
+    grid-template-areas:
+      'query metrics'
+      'button-query button-cache'
+      'results graph';
+  }
+
+  /* dashboard divs */
+  .query-div {
+    grid-area: query;
+  }
+
+  .button-query-div {
+    grid-area: button-query;
+    padding: 0 !important;
+  }
+
+  .results-div {
+    grid-area: results;
+  }
+
+  .metrics-div {
+    grid-area: metrics;
+  }
+
+  .button-cache-div {
+    grid-area: button-cache;
+    padding: 0 !important;
+  }
+
+  .graph-div {
+    grid-area: graph;
+  }
+
+  /* Metrics Grid */
+  .metrics-grid {
+    display: grid;
+    grid-template: auto/repeat(2, 1fr);
+    grid-gap: 10px;
+    grid-template-areas: 'timer-div cache-storage-div';
+  }
+
+  .timer-div {
+    grid-area: timer-div;
+  }
+
+  .cache-storage-div {
+    grid-area: cache-storage-div;
+  }
+
+  // ====== TEAM SECTION ======
+
+  #team-quell {
+    max-width: 450px;
+    margin-bottom: 50px;
+  }
+
+  .profile-pics {
+    max-width: 250px;
+  }
 }

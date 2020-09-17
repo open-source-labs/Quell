@@ -7,7 +7,7 @@ function smoothScroll(element) {
 const Header = () => {
   return (
     <header>
-      <div>
+      <div id='logo-main-container'>
         <img id='logo-main' src='../images/quell_logos/QUELL-long.svg'></img>
       </div>
 
