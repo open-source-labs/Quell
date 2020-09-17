@@ -1,5 +1,9 @@
 import React from 'react';
 
+function smoothScroll(element) {
+  document.getElementById(element).scrollIntoView({ behavior: 'smooth' });
+}
+
 const Header = () => {
   return (
     <header>

@@ -6,6 +6,8 @@ const justin = {
   src: '../images/profile_pics/QUELL-headshot w border-Justin.svg',
   bio:
     'Id ad cillum enim sint sit enim deserunt dolor. Irure anim laborum consequat eu adipisicing culpa cupidatat reprehenderit aliquip officia sunt voluptate. Ipsum est nostrud incididunt irure velit. Voluptate irure ullamco excepteur cupidatat.',
+  linkedin: 'https://www.linkedin.com/in/justin-jaeger-81a805b5/',
+  github: 'https://github.com/justinjaeger',
 };
 
 const mike = {
@@ -13,6 +15,8 @@ const mike = {
   src: '../images/profile_pics/QUELL-headshot w border-Mike.svg',
   bio:
     'Do excepteur sint sit non id laboris velit nostrud sit do. Incididunt tempor velit ex magna est labore officia excepteur velit irure consectetur. Excepteur dolor occaecat amet laborum commodo Lorem veniam.',
+  linkedin: 'https://www.linkedin.com/in/mlauri/',
+  github: 'https://github.com/MichaelLauri',
 };
 
 const nick = {
@@ -20,6 +24,8 @@ const nick = {
   src: '../images/profile_pics/QUELL-headshot w border-Nick.svg',
   bio:
     'Ullamco et aliqua ut pariatur duis nostrud. Occaecat aute minim duis mollit. Labore laborum sit quis officia nostrud deserunt qui duis aute in minim fugiat.',
+  linkedin: 'https://www.linkedin.com/in/nicholaskruckenberg/',
+  github: 'https://github.com/kruckenberg',
 };
 
 const rob = {
@@ -27,6 +33,8 @@ const rob = {
   src: '../images/profile_pics/QUELL-headshot w border-Rob.svg',
   bio:
     'Non esse occaecat ipsum incididunt sunt dolore magna tempor ut. Voluptate commodo duis laboris Lorem aliquip esse consequat fugiat magna ad ad voluptate irure et. Tempor cupidatat tempor ipsum consectetur eiusmod adipisicing id in ex anim pariatur. Enim minim est amet aliquip cillum do sunt elit non.',
+  linkedin: 'https://www.linkedin.com/in/robertnobile/',
+  github: 'https://github.com/RobNobile',
 };
 
 const Team = () => {
@@ -34,12 +42,36 @@ const Team = () => {
     <div id='team'>
       <img
         id='team-quell'
-        src='../images/quell_logos/QUELL-team quell.svg'
+        src='../images/headers/QUELL-team quell-2color_1.svg'
       ></img>
-      <TeamMember src={nick.src} bio={nick.bio} name={nick.name} />
-      <TeamMember src={rob.src} bio={rob.bio} name={rob.name} />
-      <TeamMember src={mike.src} bio={mike.bio} name={mike.name} />
-      <TeamMember src={justin.src} bio={justin.bio} name={justin.name} />
+      <TeamMember
+        src={nick.src}
+        bio={nick.bio}
+        name={nick.name}
+        linkedin={nick.linkedin}
+        github={nick.github}
+      />
+      <TeamMember
+        src={mike.src}
+        bio={mike.bio}
+        name={mike.name}
+        linkedin={mike.linkedin}
+        github={mike.github}
+      />
+      <TeamMember
+        src={rob.src}
+        bio={rob.bio}
+        name={rob.name}
+        linkedin={rob.linkedin}
+        github={rob.github}
+      />
+      <TeamMember
+        src={justin.src}
+        bio={justin.bio}
+        name={justin.name}
+        linkedin={justin.linkedin}
+        github={justin.github}
+      />
     </div>
   );
 };
