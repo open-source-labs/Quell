@@ -1,3 +1,7 @@
+/**
+ joinResponses combines two arrays containing results from the cached response and fetched (uncached) and outputs a single array response that will ultimately be formatted and delivered to the client.
+ */
+
 function joinResponses(responseArray, fetchedResponseArray) { // Inputs array of objects containing cached fields & array of objects containing newly query fields
   // main output that will contain objects with combined fields
   const joinedArray = [];

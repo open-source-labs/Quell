@@ -1,3 +1,7 @@
+/**
+ createQueryStr converts the query object into a formal GCL query string.
+ */
+
 function createQueryStr(queryObject) {
   const openCurl = ' { ';
   const closedCurl = ' } ';
