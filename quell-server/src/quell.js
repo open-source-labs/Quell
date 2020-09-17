@@ -1,3 +1,21 @@
+/**
+ * CONNECTING TO REDIS SERVER:
+ * I need to research this more. For now, I'm going to create a cache object to 
+ * serve as a dummy cache. I'll need to replace those parts with the actual commands 
+ * to read from and write to the redis cache.
+ * The trunQ approach: they require in redis library and create a client.
+ */
+
+const dummyCache = {};
+
+dummyCache.prototype.get = (key) => {
+  return this[key];
+};
+
+dummyCache.prototype.set = (key, value) => {
+  this[key] = value;
+};
+
 const mockSchema = require('./mockSchema');
 const mockQuery = require('./mockQuery');
 const { parse } = require('graphql/language/parser');
@@ -14,10 +32,10 @@ class QuellCache {
   }
 
   
-  query(req, res, next) {
+  async query(req, res, next) {
     // handle request without query
     if (!req.body.query) {
-      return next('Error: no GraphQL query found on request body')
+      return next('Error: no GraphQL query found on request body');
     };
 
     // retrieve GraphQL query string from request object; 
@@ -30,7 +48,7 @@ class QuellCache {
     const proto = parseAST(AST);
     // handle error
     if (proto === 'error') {
-      return next('Error: Quell currently only supports GraphQL queries')
+      return next('Error: Quell currently only supports GraphQL queries');
     }
 
     // build response from cache
@@ -187,6 +205,13 @@ class QuellCache {
     return prototype;
   };
   
+  buildFromCache(proto, collection) {
+    const response = [];
+
+    for (const superField in prototype) {
+      if (!collection) collection = JSON.parse(dummyCache[])
+    }
+  }
 
 };
 
