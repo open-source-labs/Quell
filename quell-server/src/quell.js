@@ -1,4 +1,7 @@
-const mockSchema = require('./mockSchema')
+const mockSchema = require('./mockSchema');
+const mockQuery = require('./mockQuery');
+const { parse } = require('graphql/language/parser');
+const { visit } = require('graphql/language/visitor');
 
 class QuellCache {
   constructor (schema, redisPort, cacheExpiration = 1000) {
@@ -10,6 +13,33 @@ class QuellCache {
 
   }
 
+  
+  query(req, res, next) {
+    // handle request without query
+    if (!req.body.query) {
+      return next('Error: no GraphQL query found on request body')
+    };
+
+    // retrieve GraphQL query string from request object; 
+    const queryString = req.body.query;
+    
+    // create abstract syntax tree with graphql-js parser
+    const AST = parse(queryString);
+
+    // create response prototype
+    const proto = parseAST(AST);
+    // handle error
+    if (proto === 'error') {
+      return next('Error: Quell currently only supports GraphQL queries')
+    }
+
+    // build response from cache
+    const responseFromCache = buildFromCache(proto);
+
+
+  };
+  
+  
   /**
    *  getQueryMap generates a map of queries to GraphQL object types. This mapping is used
    *  to identify and create references to cached data.
@@ -72,5 +102,95 @@ class QuellCache {
     }
 
     return fieldsMap;
-  }
+  };
+
+  /**
+   * parseAST traverses the abstract syntax tree and creates a prototype object
+   * representing all the queried fields nested as they are in the query. The
+   * prototype object is used as
+   *  (1) a model guiding the construction of responses from cache
+   *  (2) a record of which fields were not present in cache and therefore need to be queried
+   *  (3) a model guiding the construction of a new, partial GraphQL query 
+   */
+  parseAST(AST) {
+    const queryRoot = AST.definitions[0];
+
+    // limit operations: Quell currently only supports GraphQL queries
+    if (queryRoot.operation !== 'query') {
+      return 'error';
+    }
+
+    // initialize prototype as empty object
+    const prototype = {};
+
+    /**
+     * visit is a utility provided in the graphql-JS library. It performs a
+     * depth-first traversal of the abstract syntax tree, invoking a callback
+     * when each SelectionSet node is entered. That function builds the prototype.
+     * 
+     * Find documentation at:
+     * https://graphql.org/graphql-js/language/#visit
+     */
+    visit (AST, {
+      SelectionSet(node, key, parent, path, ancestors) {
+        /** Helper function to convert array of ancestor fields into a
+         *  path at which to assign the `collectFields` object.
+         */
+        function setProperty(path, obj, value) {
+          return path.reduce((prev, curr, index) => {
+            return (index + 1 === path.length) // if last item in path
+              ? prev[curr] = value // set value
+              : prev[curr] = prev[curr] || {};
+            // otherwise, if index exists, keep value or set to empty object if index does not exist
+          }, obj);
+        };
+        
+        /**
+         * Exclude SelectionSet nodes whose parents' are not of the kind 
+         * 'Field' to exclude nodes that do not contain information about
+         *  queried fields.
+         */
+        if (parent.kind === 'Field') {
+
+          /** GraphQL ASTs are structured such that a field's parent field
+           *  is found three three ancestors back. Hence, subtract three. 
+           */
+          let depth = ancestors.length - 3;
+          let objPath = [parent.name.value];
+
+          /** Loop through ancestors to gather all ancestor nodes. This array
+           * of nodes will be necessary for properly nesting each field in the
+           * prototype object.
+           */
+          while (depth >= 5) {
+            let parentNodes = ancestors[depth - 1];
+            let { length } = parentNodes;
+            objPath.unshift(parentNodes[length - 1].name.value);
+            depth -= 3;
+          }
+
+          /** Loop over the array of fields at current node, adding each to
+           *  an object that will be assigned to the prototype object at the
+           *  position determined by the above array of ancestor fields.
+           */
+          const collectFields = {};
+          for (let field of node.selections) {
+            collectFields[field.name.value] = true;
+          }
+          
+          // use helper function to update prototype
+          setProperty(objPath, prototype, collectFields);
+        }
+      }
+    });
+
+    return prototype;
+  };
+  
+
 };
+
+const quell = new QuellCache(mockSchema, 1000, 1000);
+console.log('query map:  ', quell.queryMap);
+console.log('fields map:  ', quell.fieldsMap);
+console.log('AST:   ', quell.parseAST(parse(mockQuery)));
