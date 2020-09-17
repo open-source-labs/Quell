@@ -33,28 +33,22 @@ module.exports = {
       },
       {
         test: /.(css|scss)$/,
-        use: [
-          'style-loader',
-          'css-loader',
-          'sass-loader'
-        ]
+        use: ['style-loader', 'css-loader', 'sass-loader'],
       },
       {
         test: /.(png|svg|jpg|gif|woff|ico|woff2|eot|ttf|otf)$/,
-        use: [
-          'file-loader',
-        ],
+        use: ['file-loader'],
       },
-    ]
+    ],
   },
   resolve: {
-    extensions: ['.js', '.jsx',]
+    extensions: ['.js', '.jsx'],
   },
   plugins: [
     new HtmlWebpackPlugin({
       template: './client/src/index.html',
-      favicon: './client/src/favicon.ico'
+      favicon: './client/src/favicon.ico',
     }),
     new CleanWebpackPlugin(),
-  ]
-}
+  ],
+};
