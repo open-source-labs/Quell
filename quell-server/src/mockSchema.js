@@ -93,41 +93,41 @@ const RootQuery = new GraphQLObjectType({
   }
 });
 
-const mapQueries = (rootQuery) => {
-  const queryMap = {};
+// const mapQueries = (rootQuery) => {
+//   const queryMap = {};
   
-  rootQuery = (typeof rootQuery === 'string') ? buildSchema(rootQuery)._queryType : rootQuery;
+//   rootQuery = (typeof rootQuery === 'string') ? buildSchema(rootQuery)._queryType : rootQuery;
 
-  const rootQueryObject = (typeof rootQuery._fields === 'function') ? rootQuery._fields() : rootQuery._fields; 
-  // console.log(rootQueryObject)
-  for (const query in rootQueryObject) {
-    const mappedValue = rootQueryObject[query].type.name || rootQueryObject[query].type.ofType.name;
-    queryMap[query] = { objectType: mappedValue.toString() };
-  }
+//   const rootQueryObject = (typeof rootQuery._fields === 'function') ? rootQuery._fields() : rootQuery._fields; 
+//   // console.log(rootQueryObject)
+//   for (const query in rootQueryObject) {
+//     const mappedValue = rootQueryObject[query].type.name || rootQueryObject[query].type.ofType.name;
+//     queryMap[query] = { objectType: mappedValue.toString() };
+//   }
   
-  return queryMap;
-}
+//   return queryMap;
+// }
 
-// mapQueries(RootQuery);
+// // mapQueries(RootQuery);
 
-const mapFields = (typeDefs) => {
+// const mapFields = (typeDefs) => {
   
-  const fieldMap = {}
+//   const fieldMap = {}
 
-  for (const type of typeDefs) {
-    const fieldsObject = {};
-    const fieldDetails = (typeof type._fields === 'function') ? type._fields() : type._fields;
-    for (const field in fieldDetails) {
-      const key = fieldDetails[field].name;
-      fieldsObject[key] = fieldDetails[field].type.ofType || fieldDetails[field].type;
-    }
+//   for (const type of typeDefs) {
+//     const fieldsObject = {};
+//     const fieldDetails = (typeof type._fields === 'function') ? type._fields() : type._fields;
+//     for (const field in fieldDetails) {
+//       const key = fieldDetails[field].name;
+//       fieldsObject[key] = fieldDetails[field].type.ofType || fieldDetails[field].type;
+//     }
     
-    fieldMap[type.name] = fieldsObject;
-  }
+//     fieldMap[type.name] = fieldsObject;
+//   }
 
-  console.log(typeof fieldMap.Country.cities);
-  return fieldMap;
-}
+//   console.log(typeof fieldMap.Country.cities);
+//   return fieldMap;
+// }
 
 // mapFields([CountryType, CityType]);
 
@@ -160,7 +160,7 @@ const sdl = `
 // console.log(mapQueries(sdl));
 // console.log(mapQueries(RootQuery));
 
-// ['String', 'Int', 'Boolean', 'ID', 'Query', '__Type', '__Field', '__EnumValue', '__DirectiveLocation', '__Schema', '__TypeKind', '__InputValue', '__Directive']
+// 
 
 module.exports = new GraphQLSchema({
   query: RootQuery,
