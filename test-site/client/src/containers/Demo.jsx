@@ -41,6 +41,7 @@ const Demo = () => {
         
         // Query Response state
         setQueryResponse(res.data);
+        
         // // storage state
         // setStorageSpace(quell.calculateSessionStorage());
 
