@@ -1,0 +1,14 @@
+{
+  "name": "quell-server",
+  "version": "1.0.0",
+  "description": "GraphQL caching middleware for NodeJS/Express",
+  "main": "quell.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Quell",
+  "license": "ISC",
+  "dependencies": {
+    "graphql": "^15.3.0"
+  }
+}
