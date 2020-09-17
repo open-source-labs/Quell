@@ -18,29 +18,36 @@ const Demo = () => {
   // const [storageSpace, setStorageSpace] = useState('0 KB');
 
   const handleChange = (e) => {
-    setQueryInput(e.target.value)
-  }
+    setQueryInput(e.target.value);
+  };
 
   const formatTimer = (time) => {
-    return time.toFixed(2) + ' ms'
-  }
+    return time.toFixed(2) + ' ms';
+  };
 
   const handleRunQueryClick = () => {
     let startTime, endTime;
     startTime = performance.now();
 
-    Quell('/graphql', refInput.current.value, { // Replace refInput.current.value with queryInput to remove default
-      countries: 'Country',
-      country: 'Country',
-      citiesByCountryId: 'City',
-      cities: 'City'
-    }, { cities: 'City' })
-      .then(res => {
+    Quell(
+      '/graphql',
+      refInput.current.value,
+      {
+        // Replace refInput.current.value with queryInput to remove default
+        countries: 'Country',
+        country: 'Country',
+        citiesByCountryId: 'City',
+        cities: 'City',
+      },
+      { cities: 'City' }
+    )
+      .then((res) => {
         endTime = performance.now();
         const time = endTime - startTime;
-        
+
         // Query Response state
         setQueryResponse(res.data);
+        
         // // storage state
         // setStorageSpace(quell.calculateSessionStorage());
 
@@ -51,10 +58,10 @@ const Demo = () => {
 
         // Line Graph
         const newTime = Number(rawTime.toFixed(3));
-        setFetchTimeIntegers([...fetchTimeIntegers, newTime])
+        setFetchTimeIntegers([...fetchTimeIntegers, newTime]);
       })
-      .catch(err => console.log(err))
-  }
+      .catch((err) => console.log(err));
+  };
 
   const handleClearCacheClick = () => {
     sessionStorage.clear();
@@ -64,33 +71,31 @@ const Demo = () => {
     setCacheStatus(date.toString());
 
     // Zero-out line graph
-    setFetchTimeIntegers([0,0]);
-  }
+    setFetchTimeIntegers([0, 0]);
+  };
 
   return (
-    <div className="dashboard-grid">
-      <QueryInput 
-        forwardRef={refInput} // Remove useRef to remove default
-        handleChange={handleChange}
-      />
-      <ButtonRunQuery
-        handleRunQueryClick={handleRunQueryClick}
-      />
-      <QueryResults 
-        queryResponse={queryResponse}
-      />
-      <Metrics 
-        fetchTime={fetchTime}
-        cacheStatus={cacheStatus}
-      />
-      <ButtonClearCache
-        handleClearCacheClick={handleClearCacheClick}
-      />
-      <Graph 
-        fetchTimeIntegers={fetchTimeIntegers}
-      />
+    <div id='demo'>
+      <div id='demo-header-container'>
+        <img
+          id='demo-header'
+          src='../images/headers/QUELL-headers-demo w lines.svg'
+        ></img>
+      </div>
+
+      <div className='dashboard-grid'>
+        <QueryInput
+          forwardRef={refInput} // Remove useRef to remove default
+          handleChange={handleChange}
+        />
+        <ButtonRunQuery handleRunQueryClick={handleRunQueryClick} />
+        <QueryResults queryResponse={queryResponse} />
+        <Metrics fetchTime={fetchTime} cacheStatus={cacheStatus} />
+        <ButtonClearCache handleClearCacheClick={handleClearCacheClick} />
+        <Graph fetchTimeIntegers={fetchTimeIntegers} />
+      </div>
     </div>
-  )
-}
+  );
+};
 
 export default Demo;
