@@ -26,8 +26,9 @@ function joinResponses(responseArray, fetchedResponseArray) { // Inputs array of
           // iterate over array
           for (let j = 0; j < objArr.length; j++) {
             // push to new array the return value of invoking this same fieldRecurse() function.  fieldRecurse() will combine the nested array elements with the new obj field.
-            newObj[field].push(fieldRecurse(objStart[field][j], objArr[j]));
-          }
+            newObj[field].push(fieldRecurse({}, objArr[j]));
+          };
+          objStart[field] = newObj[field];
         } else {
           // if field is scalar, simplay add key/value pair add to starting object
           objStart[field] = objAdd[field];

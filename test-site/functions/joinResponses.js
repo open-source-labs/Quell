@@ -26,8 +26,9 @@ function joinResponses(responseArray, fetchedResponseArray) { // Inputs array of
           // iterate over array
           for (let j = 0; j < objArr.length; j++) {
             // push to new array the return value of invoking this same fieldRecurse() function.  fieldRecurse() will combine the nested array elements with the new obj field.
-            newObj[field].push(fieldRecurse(objStart[field][j], objArr[j]));
-          }
+            newObj[field].push(fieldRecurse({}, objArr[j]));
+          };
+          objStart[field] = newObj[field];
         } else {
           // if field is scalar, simplay add key/value pair add to starting object
           objStart[field] = objAdd[field];
@@ -45,38 +46,4 @@ function joinResponses(responseArray, fetchedResponseArray) { // Inputs array of
   return joinedArray;
 };
 
-console.log(joinResponses(
-  [
-    {id: "1", name: "John Coltrane", instrument: "saxophone"}, 
-    {id: "2", name: "Miles Davis", instrument: "trumpet"},
-    {id: "3", name: "Thelonious Monk", instrument: "piano"},
-  ],
-  [
-    {albums:[
-      {album_id:"1", id:"101", name: "Blue Train", release_year: 1957},
-      {album_id:"2", id:"201", name: "Giant Steps", release_year: 1965},
-    ]},
-    {albums:[
-      {album_id:"3", id:"301", name: "Kind of Blue", release_year: 1959},
-      {album_id:"4", id:"401", name: "In a Silent Way", release_year: 1969},
-    ]},
-    {albums:[
-      {album_id:"5", id:"501", name: "Brilliant Corners", release_year: 1957},
-      {album_id:"6", id:"601", name: "Monks Dream", release_year: 1963},
-    ]},
-  ]
-))
-
-// console.log(joinResponses(
-//   [
-//     {id: "1", name: "John Coltrane"}, 
-//     {id: "2", name: "Miles Davis"},
-//     {id: "3", name: "Thelonious Monk"},
-//   ],
-//   [
-//     {instrument: "saxophone"},
-//     {instrument: "trumpet"},
-//     {instrument: "piano"},
-//   ]
-// ))
-// export default joinResponses
+export default joinResponses
