@@ -1,19 +1,20 @@
-import React, { useState, useRef } from 'react'; // Remove useRef to remove default
-import QueryInput from '../components/QueryInput';
-import ButtonRunQuery from '../components/ButtonRunQuery';
-import QueryResults from '../components/QueryResults';
-import Metrics from '../components/Metrics';
-import ButtonClearCache from '../components/ButtonClearCache';
-import Graph from '../components/Graph';
-import Quell from '../../../../quell-client/quell';
+import React, { useState, useRef } from "react"; // Remove useRef to remove default
+import QueryInput from "../components/QueryInput";
+import DemoInput from "./DemoInput";
+import ButtonRunQuery from "../components/ButtonRunQuery";
+import QueryResults from "../components/QueryResults";
+import Metrics from "../components/Metrics";
+import ButtonClearCache from "../components/ButtonClearCache";
+import Graph from "../components/Graph";
+import Quell from "../../../../quell-client/quell";
 
 const Demo = () => {
-  const [queryInput, setQueryInput] = useState('');
+  const [queryInput, setQueryInput] = useState("");
   const [queryResponse, setQueryResponse] = useState({});
-  const [fetchTime, setFetchTime] = useState('0.00 ms');
+  const [fetchTime, setFetchTime] = useState("0.00 ms");
   const [fetchTimeIntegers, setFetchTimeIntegers] = useState([0, 0]);
-  const [cacheStatus, setCacheStatus] = useState('');
-  const refInput = useRef(''); // Remove useRef to remove default
+  const [cacheStatus, setCacheStatus] = useState("");
+  const refInput = useRef(""); // Remove useRef to remove default
   // const [queryResponseError, setQueryResponseError] = useState('');
   // const [storageSpace, setStorageSpace] = useState('0 KB');
 
@@ -22,7 +23,7 @@ const Demo = () => {
   };
 
   const formatTimer = (time) => {
-    return time.toFixed(2) + ' ms';
+    return time.toFixed(2) + " ms";
   };
 
   const handleRunQueryClick = () => {
@@ -30,16 +31,16 @@ const Demo = () => {
     startTime = performance.now();
 
     Quell(
-      '/graphql',
+      "/graphql",
       refInput.current.value,
       {
         // Replace refInput.current.value with queryInput to remove default
-        countries: 'Country',
-        country: 'Country',
-        citiesByCountryId: 'City',
-        cities: 'City',
+        countries: "Country",
+        country: "Country",
+        citiesByCountryId: "City",
+        cities: "City",
       },
-      { cities: 'City' }
+      { cities: "City" }
     )
       .then((res) => {
         endTime = performance.now();
@@ -47,7 +48,7 @@ const Demo = () => {
 
         // Query Response state
         setQueryResponse(res.data);
-        
+
         // // storage state
         // setStorageSpace(quell.calculateSessionStorage());
 
@@ -66,7 +67,7 @@ const Demo = () => {
   const handleClearCacheClick = () => {
     sessionStorage.clear();
     // setStorageSpace('0 KB');
-    setFetchTime('0.00 ms');
+    setFetchTime("0.00 ms");
     let date = new Date();
     setCacheStatus(date.toString());
 
@@ -75,19 +76,20 @@ const Demo = () => {
   };
 
   return (
-    <div id='demo'>
-      <div id='demo-header-container'>
+    <div id="demo">
+      <div id="demo-header-container">
         <img
-          id='demo-header'
-          src='../images/headers/QUELL-headers-demo w lines.svg'
+          id="demo-header"
+          src="../images/headers/QUELL-headers-demo w lines.svg"
         ></img>
       </div>
 
-      <div className='dashboard-grid'>
-        <QueryInput
+      <div className="dashboard-grid">
+        {/* <QueryInput
           forwardRef={refInput} // Remove useRef to remove default
           handleChange={handleChange}
-        />
+        /> */}
+        <DemoInput />
         <ButtonRunQuery handleRunQueryClick={handleRunQueryClick} />
         <QueryResults queryResponse={queryResponse} />
         <Metrics fetchTime={fetchTime} cacheStatus={cacheStatus} />

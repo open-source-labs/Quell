@@ -1,16 +1,17 @@
-import React from 'react';
+import React from "react";
 
 const DropdownItem = (props) => {
-
-  const { func, item } = props
+  const { func, item } = props;
 
   // Render each dropdown item
   // onClick will trigger whatever func was passed into props with "item" passed in
-  return(
+  return (
     <>
-      <button className="dropdownItem" onClick={() => func(item)} >{item}</button>
+      <button className="dropdown-items" onClick={() => func(item)}>
+        {item}
+      </button>
     </>
-  )
-}
+  );
+};
 
 export default DropdownItem;

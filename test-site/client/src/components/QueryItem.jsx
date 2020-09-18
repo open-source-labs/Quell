@@ -1,21 +1,24 @@
-import React from 'react';
+import React from "react";
 
 // component to get ALL data from our created DB
 const QueryItem = (props) => {
-  const { item, deleteItem, sub } = props
+  const { item, deleteItem, sub } = props;
 
-  const tab = <span>&nbsp;&nbsp;&nbsp;&nbsp;</span>
-  return(
+  const tab = <span>&nbsp;&nbsp;&nbsp;&nbsp;</span>;
+  return (
     <>
       <div className="queryLine">
-      {tab}{tab}{sub && <>{tab}</>}
-        <button className="minusButton"
+        {tab}
+        {tab}
+        {sub && <>{tab}</>}
+        <button
+          className="minus-button"
           onClick={() => deleteItem(item)}
-        >-</button>
+        ></button>
         {item}
       </div>
     </>
-  )
-}
+  );
+};
 
 export default QueryItem;
