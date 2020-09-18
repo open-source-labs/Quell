@@ -14,7 +14,6 @@ const QueryDisplay = (props) => {
   // functions to run upon update
   useEffect(() => {
     setAvailableList(initialAvailableList());
-    console.log("availableList", availableList);
   }, []);
 
   const cityItems = [
@@ -56,7 +55,7 @@ const QueryDisplay = (props) => {
 
   //======= DELETE FUNCTIONALITY ========//
   function deleteItem(item) {
-    console.log("DELETE ITEM FIRED");
+    // console.log("DELETE ITEM FIRED");
 
     // removes item from queryList
     const newList = [...queryList];
@@ -79,7 +78,7 @@ const QueryDisplay = (props) => {
 
   //======= ADD FUNCTIONALITY ========//
   function addItem(item) {
-    console.log("ADD ITEM FIRED");
+    // console.log("ADD ITEM FIRED");
 
     // adds item to queryList
     const newList = [...queryList];
@@ -170,7 +169,7 @@ const QueryDisplay = (props) => {
         onClick={() => togglePlusDropdown(!plusDropdown)}
       ></button>
       {/* Where the plus dropdown appears on click */}
-      {plusDropdown && <div id="dropdown-menu">{dropdown}</div>}
+      {plusDropdown && <div className="dropdown-menu">{dropdown}</div>}
     </>
   );
 };

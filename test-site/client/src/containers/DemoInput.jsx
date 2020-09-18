@@ -3,7 +3,9 @@ import QueryDisplay from "../components/QueryDisplay.jsx";
 import DropdownItem from "../components/DropdownItem.jsx";
 import { ResultsHelper } from "../helper-functions/HelperFunctions.js";
 
-const DemoInput = () => {
+const DemoInput = (props) => {
+  const { output, setOutput } = props
+
   // const [count, setCount] = useState(0) // purely for testing
   const [query, setQuery] = useState("countries"); // set the kind of query you want
   const [type, setType] = useState("Country"); // is it a 'Country' or a 'City'?
@@ -12,32 +14,31 @@ const DemoInput = () => {
   const [idDropdown, setIdDropdown] = useState(false); // show an id dropdown
   const [selectedId, setSelectedId] = useState(1); // display id
   const [idDropdownMenu, toggleIdDropdownMenu] = useState(false); // toggle id dropdown menu
-  const [output, setOutput] = useState({ Country: ["id"] }); // looks like: { QUERY: ['item1', 'item2', {'cities': ['item1', 'item2']}] }
-  console.log("RESULT:", output);
+  // const [output, setOutput] = useState({ Country: ["id"] }); // looks like: { QUERY: ['item1', 'item2', {'cities': ['item1', 'item2']}] }
+  // console.log("RESULT:", output);
 
   // All changes to final query are routed here
   const outputFunction = (newList, sub, query, id) => {
     const newOutput = ResultsHelper(newList, sub, query, id, output);
-    setOutput[newOutput];
+    setOutput(newOutput);
   };
 
   // Change Query Selection - fires from DropdownItem child - comes in like ('Countries')
   const selectQuery = (selection) => {
     setQuery(selection);
-    outputFunction(0, 0, selection);
+    outputFunction(0, 0, selection)
 
-    if (selection === "countries" || selection === "country by id") {
-      setType("Country");
-    }
-    if (selection === "cities" || selection === "city by id") {
-      setType("City");
-    }
-    if (selection === "country by id" || selection === "city by id") {
-      setIdDropdown(true);
-      outputFunction(0, 0, 0, 1);
-    } else setIdDropdown(false);
-    toggleDropdown(false);
-  };
+    if (selection === 'countries' || selection === 'country by id') {
+      setType('Country');
+    };
+    if (selection === 'cities' || selection === 'cities by country id') {
+      setType('City');
+    };
+    if (selection === 'country by id' || selection === 'cities by country id') {
+      setIdDropdown(true)
+    } else setIdDropdown(false)
+    toggleDropdown(false)
+  }
 
   const selectDropdownId = (item) => {
     // item comes in as number (2)
@@ -47,7 +48,7 @@ const DemoInput = () => {
   };
 
   // Array of queries to choose from
-  const dropdownList = ["countries", "country by id", "cities", "city by id"];
+  const dropdownList = ["countries", "country by id", "cities", "cities by country id"];
   // Creates dropdown menu from the above array ^^
   const dropdownMenu = dropdownList.map((item, i) => {
     return (
@@ -56,9 +57,8 @@ const DemoInput = () => {
   });
 
   // choose how many id numbers to choose from and generate list
-  const idMenuSelection = type === "Country" ? 5 : 10;
   const idDropMenu = [];
-  for (let i = 1; i <= idMenuSelection; i++) {
+  for (let i = 1; i <= 5; i++) {
     idDropMenu.push(
       <DropdownItem func={selectDropdownId} item={i} key={"ID" + i} />
     );
@@ -83,12 +83,14 @@ const DemoInput = () => {
         {query}
         {/* Id Dropdown (conditional) */}
         {idDropdown && (
-          <button
-            className="dropdown-button"
-            onClick={() => toggleIdDropdownMenu(!idDropdownMenu)}
-          >
-            ▾{idDropdown && selectedId}
-          </button>
+          <span>{space}
+            <button
+              className="dropdown-button"
+              onClick={() => toggleIdDropdownMenu(!idDropdownMenu)}
+            >
+              ▾{idDropdown && selectedId}
+            </button>
+          </span>
         )}
         {space}
         {ob}

@@ -7,6 +7,7 @@ import Metrics from "../components/Metrics";
 import ButtonClearCache from "../components/ButtonClearCache";
 import Graph from "../components/Graph";
 import Quell from "../../../../quell-client/quell";
+import { ResultsParser, CreateQueryStr } from "../helper-functions/HelperFunctions.js";
 
 const Demo = () => {
   const [queryInput, setQueryInput] = useState("");
@@ -15,6 +16,8 @@ const Demo = () => {
   const [fetchTimeIntegers, setFetchTimeIntegers] = useState([0, 0]);
   const [cacheStatus, setCacheStatus] = useState("");
   const refInput = useRef(""); // Remove useRef to remove default
+  
+  const [output, setOutput] = useState({ countries: ["id"] });
   // const [queryResponseError, setQueryResponseError] = useState('');
   // const [storageSpace, setStorageSpace] = useState('0 KB');
 
@@ -27,12 +30,18 @@ const Demo = () => {
   };
 
   const handleRunQueryClick = () => {
+    // run ResultsParser on output to get the query
+    console.log('NON-PARSED RESULT', output)
+    const parsedResult = CreateQueryStr(output)
+    console.log('PARSED RESULT:', parsedResult)
+
     let startTime, endTime;
     startTime = performance.now();
 
     Quell(
       "/graphql",
-      refInput.current.value,
+      // refInput.current.value,
+      parsedResult,
       {
         // Replace refInput.current.value with queryInput to remove default
         countries: "Country",
@@ -89,7 +98,7 @@ const Demo = () => {
           forwardRef={refInput} // Remove useRef to remove default
           handleChange={handleChange}
         /> */}
-        <DemoInput />
+        <DemoInput output={output} setOutput={setOutput}/> 
         <ButtonRunQuery handleRunQueryClick={handleRunQueryClick} />
         <QueryResults queryResponse={queryResponse} />
         <Metrics fetchTime={fetchTime} cacheStatus={cacheStatus} />
