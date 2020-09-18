@@ -2,6 +2,7 @@ import sum from '../functions/sum';
 import createQueryObj from '../functions/createQueryObj';
 import createQueryStr from '../functions/createQueryStr';
 import joinResponses from '../functions/joinResponses';
+import normalizeForCache from '../functions/normalizeForCache';
 
 // describe('Query Construct', () => {
 //   test('adds 1 + 2 to equal 3', () => {
@@ -89,11 +90,6 @@ import joinResponses from '../functions/joinResponses';
 //   });
 // });
 
-test('adds 1 + 2 to equal 3', () => {
-  expect(sum(1, 2)).toBe(3);
-});
-
-describe('Query Construct', () => {
   // const map = { 
   //   countries: 'Country',
   //   country: 'Country',
@@ -111,69 +107,71 @@ describe('Query Construct', () => {
   //     arg3)).toEqual
   // });
 
-  describe('createQueryObj', () => {
-    let prototype;
 
-    beforeEach(() => {
-      prototype = {
-        artists: {
+
+describe('createQueryObj', () => {
+  let prototype;
+
+  beforeEach(() => {
+    prototype = {
+      artists: {
+        id: true, 
+        name: true, 
+        instrument: true, 
+        albums: {
+          album_id: true, 
           id: true, 
           name: true, 
-          instrument: true, 
-          albums: {
-            album_id: true, 
-            id: true, 
-            name: true, 
-            release_year: true
-          },
-        }};
-    });
-
-    it('inputs prototype w/ all true and outputs empty object', () => {
-      expect(createQueryObj(prototype)).toEqual({});
-    });
-
-    it('inputs prototype w/ true/false for only scalar types and outputs object for false only', () => {
-      prototype.artists.id = false;
-      prototype.artists.name = false;
-      prototype.artists.instrument = false;
-      expect(createQueryObj(prototype)).toEqual({ artists: [ 'id', 'name', 'instrument' ] });
-    });
-    
-    it('inputs prototype w/ true/false for only object types and outputs object for false only', () => {
-      prototype.artists.albums.album_id = false;
-      prototype.artists.albums.id = false;
-      prototype.artists.albums.name = false;
-      prototype.artists.albums.release_year = false;
-      expect(createQueryObj(prototype)).toEqual({ artists: [{ albums: ['album_id', 'id', 'name', 'release_year'] }] });
-    });
-    
-    it('inputs prototype w/ true/false for both scalar & object types and outputs object for all false', () => {
-      prototype.artists.id = false;
-      prototype.artists.name = false;
-      prototype.artists.albums.album_id = false;
-      prototype.artists.albums.release_year = false;
-      expect(createQueryObj(prototype)).toEqual({ artists: ['id', 'name', { albums: ['album_id', 'release_year'] }] });
-    });
+          release_year: true
+        },
+      }};
   });
 
-  describe('createQueryStr', () => {
-    const scalar = { artists: [ 'id', 'name', 'instrument' ] };
-    it('inputs query object w/ only scalar types and outputs GCL query string', () => {
-      expect(createQueryStr(scalar)).toMatch( ' { artists { id name instrument  }  } ' );
-    });
-    
-    const object = { artists: [{ albums: ['album_id', 'id', 'name', 'release_year'] }] }
-    it('inputs query object w/ only object types and outputs GCL query string', () => {
-      expect(createQueryStr(object)).toMatch( ' { artists { albums { album_id id name release_year  }  }  } ' );
-    });
-    
-    const both = { artists: ['id', 'name', { albums: ['album_id', 'release_year'] }] }
-    it('inputs query object w/ both scalar & object types and outputs GCL query string', () => {
-      expect(createQueryStr(both)).toMatch( ' { artists { id name albums { album_id release_year  }  }  } ' );
-    });
+  it('inputs prototype w/ all true and outputs empty object', () => {
+    expect(createQueryObj(prototype)).toEqual({});
+  });
+
+  it('inputs prototype w/ true/false for only scalar types and outputs object for false only', () => {
+    prototype.artists.id = false;
+    prototype.artists.name = false;
+    prototype.artists.instrument = false;
+    expect(createQueryObj(prototype)).toEqual({ artists: [ 'id', 'name', 'instrument' ] });
+  });
+  
+  it('inputs prototype w/ true/false for only object types and outputs object for false only', () => {
+    prototype.artists.albums.album_id = false;
+    prototype.artists.albums.id = false;
+    prototype.artists.albums.name = false;
+    prototype.artists.albums.release_year = false;
+    expect(createQueryObj(prototype)).toEqual({ artists: [{ albums: ['album_id', 'id', 'name', 'release_year'] }] });
+  });
+  
+  it('inputs prototype w/ true/false for both scalar & object types and outputs object for all false', () => {
+    prototype.artists.id = false;
+    prototype.artists.name = false;
+    prototype.artists.albums.album_id = false;
+    prototype.artists.albums.release_year = false;
+    expect(createQueryObj(prototype)).toEqual({ artists: ['id', 'name', { albums: ['album_id', 'release_year'] }] });
   });
 });
+
+describe('createQueryStr', () => {
+  it('inputs query object w/ only scalar types and outputs GCL query string', () => {
+    const scalar = { artists: [ 'id', 'name', 'instrument' ] };
+    expect(createQueryStr(scalar)).toMatch( ' { artists { id name instrument  }  } ' );
+  });
+  
+  it('inputs query object w/ only object types and outputs GCL query string', () => {
+    const object = { artists: [{ albums: ['album_id', 'id', 'name', 'release_year'] }] }
+    expect(createQueryStr(object)).toMatch( ' { artists { albums { album_id id name release_year  }  }  } ' );
+  });
+  
+  it('inputs query object w/ both scalar & object types and outputs GCL query string', () => {
+    const both = { artists: ['id', 'name', { albums: ['album_id', 'release_year'] }] }
+    expect(createQueryStr(both)).toMatch( ' { artists { id name albums { album_id release_year  }  }  } ' );
+  });
+});
+
 
 describe('joinResponses', () => {
   it('inputs two arrays (scalar <<< scalar) and outputs combined array', () => {
@@ -230,6 +228,7 @@ describe('joinResponses', () => {
         {album_id:"6", id:"601", name: "Monks Dream", release_year: 1963},
       ], instrument: "piano", id: "3", name: "Thelonious Monk"},
     ];
+
     expect(joinResponses(nonScalar2, scalar2)).toEqual(result2);
   });
 
@@ -269,7 +268,13 @@ describe('joinResponses', () => {
         {album_id:"6", id:"601", name: "Monks Dream", release_year: 1963},
       ], instrument: "piano"},
     ];
+
     expect(joinResponses(scalar3, nonScalar3)).toEqual(result3);
   });
-
 });
+
+describe('normalizeForCache', () => {
+  it('inputs response-data, map, fields-map and outputs ', () => {
+
+  });
+});    
