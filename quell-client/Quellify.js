@@ -79,7 +79,10 @@ async function Quellify(endPoint, query, map, fieldsMap) {
     console.log('parsedData:', parsedData)
 
     // Stitch together cached response and the newly fetched data and assign to variable
+    console.log('responseFromCache: ', responseFromCache)
+    console.log('responseFromFetch: ', parsedData.data[queryName])
     mergedResponse = joinResponses(responseFromCache, parsedData.data[queryName]);
+    console.log('joinRes: ', mergedResponse)
   } else {
     mergedResponse = responseFromCache; // If everything needed was already in cache, only assign cached response to variable
   }
