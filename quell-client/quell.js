@@ -284,44 +284,52 @@ function createQueryStr(queryObject) {
   return openCurl + mainStr + closedCurl;
 };
 
-function joinResponses(responseArray, fetchedResponseArray) { // Inputs array of objects containing cached fields & array of objects containing newly query fields
-  // main output that will contain objects with combined fields
+function joinResponses(responseArray, fetchedResponseArray) { 
+  // main output array that will contain objects with combined fields
   const joinedArray = [];
-  // iterate over each response array object (i.e. objects containing cached fields)
+  // iterate over response containing cached fields
   for (let i = 0; i < responseArray.length; i++) {
-    // set corresponding objects in each array to combine (NOTE: ASSUMED THAT FETCH ARRAY WILL BE SORTED THE SAME AS CACHED ARRAY)
+    // set corresponding objects in each array to combine
     const responseItem = responseArray[i];
     const fetchedItem = fetchedResponseArray[i];
     // recursive helper function to add fields of second argument to first argument
     function fieldRecurse(objStart, objAdd) {
       // traverse object properties to add
       for (let field in objAdd) {
-        // if field is an object (i.e. non-scalar), 1. set new field as empty array, 2. iterate over array, 3. create new objects , 4. push new objects to empty array
+        // if field non-scalar:
         if (typeof objAdd[field] === 'object') {
-          // WOULD DATA TYPE BE AN {} ????
-          // if type is []
-          // set new field on new object equal empty array
-          const newObj = {};
-          newObj[field] = [];
-          // declare variable eual to array of items to add from
-          const objArr = objAdd[field];
-          // iterate over array
-          for (let j = 0; j < objArr.length; j++) {
-            // push to new array the return value of invoking this same fieldRecurse() function.  fieldRecurse() will combine the nested array elements with the new obj field.
-            newObj[field].push(fieldRecurse(objStart[field][j], objArr[j]));
+          // if objStart[field] already exists:
+          if (objStart[field]) {
+            // create temporary array to take in new objects
+            const arrReplacement = []
+            // declare variable equal to array of items to add from
+            const objArr = objAdd[field];
+            for (let j = 0; j < objArr.length; j++) {
+              // input preexisting obj and new obj and push to new array 
+              arrReplacement.push(fieldRecurse(objStart[field][j], objArr[j]));
+            };
+            // replace preexisting array with new array
+            objStart[field] = arrReplacement;
+          } else { // if objStart[field] does not already exist:
+            // replace preexisting array with new empty array to take in new objects
+            objStart[field] = [];
+            // declare variable equal to array of items to add from
+            const objArr = objAdd[field];
+            for (let j = 0; j < objArr.length; j++) {
+              // input empty obj and new obj and push to empty array 
+              objStart[field].push(fieldRecurse({}, objArr[j]));
+            };
           }
         } else {
-          // if field is scalar, simplay add key/value pair add to starting object
+          // if field is scalar, add to starting object
           objStart[field] = objAdd[field];
         }
       }
       // return combined object
       return objStart;
     }
-    // outputs an object based on adding second argument to first argument
-    fieldRecurse(responseItem, fetchedItem);
     // push combined object into main output array
-    joinedArray.push(responseItem);
+    joinedArray.push(fieldRecurse(responseItem, fetchedItem));
   }
   // return main output array
   return joinedArray;
