@@ -1,6 +1,7 @@
 const express = require('express');
 const path = require('path');
 const schema = require('./schema/schema');
+const {graphqlHTTP} = require('express-graphql')
 const { quell } = require('./controllers/quellController');
 
 const app = express();
@@ -21,6 +22,12 @@ if (process.env.NODE_ENV === 'production') {
       .sendFile(path.resolve(__dirname, '../client/src/index.html'));
   });
 }
+
+// just putting this here for access to the graphiql playground
+app.use('/g', graphqlHTTP({
+  schema: schema,
+  graphiql: true
+}))
 
 // GraphQL route
 app.use('/graphql', quell(schema), (req, res) => {
