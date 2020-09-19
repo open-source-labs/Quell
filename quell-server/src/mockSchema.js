@@ -7,7 +7,8 @@ const {
   GraphQLID, 
   GraphQLString, 
   GraphQLInt, 
-  buildSchema} = require('graphql');
+  buildSchema,
+  GraphQLFloat} = require('graphql');
 
 const CountryType = new GraphQLObjectType({
   name: 'Country',
@@ -34,9 +35,18 @@ const CityType = new GraphQLObjectType({
     country_id: { type: GraphQLString },
     id: { type: GraphQLID },
     name: { type: GraphQLString },
-    population: { type: GraphQLInt }
+    population: { type: GraphQLInt },
+    // longlat: { type: CoordinatesType },
   })
 });
+
+// const CoordinatesType = new GraphQLObjectType({
+//   name: 'Coordinates',
+//   fields: () => ({
+//     latitude: { type: GraphQLFloat },
+//     longitude: { type: GraphQLFloat },
+//   })
+// });
 
 // ADD LANGUAGES TYPE HERE
 

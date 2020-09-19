@@ -6,14 +6,16 @@
  * The trunQ approach: they require in redis library and create a client.
  */
 
-const dummyCache = {};
+function dummyCache() {
+  this.cache = {};
+};
 
 dummyCache.prototype.get = (key) => {
-  return this[key];
+  return this.cache[key];
 };
 
 dummyCache.prototype.set = (key, value) => {
-  this[key] = value;
+  this.cache[key] = value;
 };
 
 const mockSchema = require('./mockSchema');
@@ -45,16 +47,19 @@ class QuellCache {
     const AST = parse(queryString);
 
     // create response prototype
-    const proto = parseAST(AST);
+    const proto = this.parseAST(AST);
     // handle error
     if (proto === 'error') {
       return next('Error: Quell currently only supports GraphQL queries');
     }
 
+    const queryName = Object.keys(proto)[0];
+    const queriedCollection = this.map[queryName];
+
     // build response from cache
-    const responseFromCache = buildFromCache(proto);
+    const responseFromCache = this.buildFromCache(proto, this.queryMap, queriedCollection);
 
-
+    return proto;
   };
   
   
@@ -88,7 +93,8 @@ class QuellCache {
     const typesList = schema._typeMap;
     const builtInTypes = [
       'String', 
-      'Int', 
+      'Int',
+      'Float', 
       'Boolean', 
       'ID', 
       'Query', 
@@ -205,17 +211,49 @@ class QuellCache {
     return prototype;
   };
   
-  buildFromCache(proto, collection) {
+  toggleFields(proto) {
+    for (const key in proto) {
+      if (Object.keys(proto[key]) > 0) this.toggleFields(proto[key]);
+      proto[key] = false;
+    }
+  };
+  
+  buildFromCache(proto, map, queriedCollection, collection) {
     const response = [];
 
     for (const superField in prototype) {
-      if (!collection) collection = JSON.parse(dummyCache[])
+      if (!collection) collection = JSON.parse(dummyCache.get(map[superField])) || [];
+      if (collection.length === 0) this.toggleFields(proto);
+      for (const item of collection) {
+        response.push(this.buildItem(proto[superField], this.fieldsMap[queriedCollection], JSON.parse(dummyCache.get(item))));
+      }
     }
-  }
 
+    return response;
+  };
+
+  buildItem(proto, fieldsMap, item) {
+    const nodeObject = {};
+
+    for (const key in proto) {
+      if (typeof proto[key] === 'object') {
+        const protoAtKey = { [key]: prototype[key] };
+        nodeObject[key] = buildArray(protoAtKey, fieldsMap, item[key])
+      } else if (proto[key]) {
+        if (item[key] !== undefined) nodeObject[key] = item[key];
+        else proto[key] = false;
+      }
+    };
+
+    return nodeObject;
+  };
 };
 
 const quell = new QuellCache(mockSchema, 1000, 1000);
-console.log('query map:  ', quell.queryMap);
-console.log('fields map:  ', quell.fieldsMap);
-console.log('AST:   ', quell.parseAST(parse(mockQuery)));
+// console.log('query map:  ', quell.queryMap);
+// console.log('fields map:  ', quell.fieldsMap);
+// console.log('proto:   ', quell.parseAST(parse(mockQuery)));
+console.log(quell.query({body: { query: "query { countries: { name id cities { name }}" }}));
+
+
+module.exports = QuellCache;
