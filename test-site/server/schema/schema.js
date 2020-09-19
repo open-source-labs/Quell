@@ -26,12 +26,11 @@ const CountryType = new GraphQLObjectType({
       type: new GraphQLList(CityType),
       async resolve(parent, args) {
         const citiesList = await db.query(`
-          SELECT * FROM cities WHERE country_id = $1`, [Number(parent.id)]) // need to dynamically resolve this
+          SELECT * FROM cities WHERE country_id = $1`, [Number(parent.id)]) 
         
         return citiesList.rows
       }
     }
-    // add languages query here
   })
 });
 
@@ -60,7 +59,7 @@ const RootQuery = new GraphQLObjectType({
       args: { id: { type: GraphQLID } },
       async resolve(parent, args) {
         const country = await db.query(`
-          SELECT * FROM countries WHERE id = $1`, [Number(args.id)]); // need to dynamically resolve this
+          SELECT * FROM countries WHERE id = $1`, [Number(args.id)]);
         
         return country.rows[0];
       }

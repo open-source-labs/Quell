@@ -18,6 +18,10 @@ $quell-darkest: #082032;
   box-sizing: border-box;
 }
 
+.tool-tip {
+  color: red;
+}
+
 body {
   font-family: "Avenir";
   color: $quell-darkest;
@@ -38,6 +42,8 @@ body {
 
 header {
   border-bottom: 2px solid $quell-light;
+  margin-bottom: 50px;
+
 }
 
 .header-links {
@@ -45,6 +51,7 @@ header {
   justify-content: space-around;
   list-style-type: none;
   margin-bottom: 2%;
+
 }
 
 .header-links li a {
@@ -60,6 +67,7 @@ header {
 
 #info-header-container {
   display: flex;
+  margin-bottom: 50px;
 }
 
 #info-header {
@@ -72,6 +80,13 @@ header {
   flex-direction: column;
   justify-content: center;
   padding: 0 10px;
+  margin-bottom: 50px;
+  font-size: 20px;
+}
+
+.info-text {
+  margin: 0 auto;
+  max-width: 90%;
 }
 
 // ====== DEMO SECTION ======
@@ -82,6 +97,7 @@ header {
 
 #demo-header-container {
   display: flex;
+  margin-bottom: 50px;
 }
 
 #demo-header {
@@ -179,37 +195,60 @@ textarea {
 
 /* Button - Query playground */
 .dropdown-button {
-  font-family: "Avenir";
-  margin-right: 5px;
-  padding: 5px;
-  background: $quell-medium;
-  color: white;
-  border-radius: 5px;
-  border: none;
+  padding-left: 10px;
+  border-radius: 50%;
+  // background-color: limegreen;
+  // height: 15px;
+  // width: 15px;
+  position: absolute;
+  background-color: white;
   outline: none;
+  border: none;
 }
-
 .dropdown-button:hover {
-  background: $quell-light;
+  // background: $quell-light;
+  cursor: pointer;
+}
+.dropdown-items:hover {
+  cursor: pointer;
+}
+.display-id {
+  background-color: none;
+  position: relative;
+  top: -3px;
 }
 
 .dropdown-menu {
   display: flex;
   flex-direction: column;
-  border: 1px solid $quell-dark;
+  position: absolute;
+  font-size: 20px;
+  border: 2px solid $quell-medium;
+  border-radius: 4px;
   margin-top: 10px;
+  padding: 3px;
+  background: $off-white;
+  white-space: nowrap;
+  overflow: hidden;
+  z-index: 2;
 }
 
 .dropdown-items {
   // display: inline-block;
-  display: block;
+  display: flex;
   font-family: "Avenir";
   border: none;
-  background: white;
+  border-radius: 4px;
+  padding: 3px;
+  text-align: left;
+  flex-wrap: nowrap;
+  background: $off-white;
+  color: $quell-darkest;
 }
 
 .dropdown-items:hover {
-  background: $quell-lightest;
+  color: white;
+  background: $quell-medium;
 }
 
 .dropdown-items:active {
@@ -217,33 +256,59 @@ textarea {
 }
 
 .plus-button {
-  font-family: "Avenir";
   border-radius: 50%;
-  background-color: limegreen;
+  // background-color: limegreen;
   margin-right: 5px;
   height: 15px;
   width: 15px;
+  background-color: white;
   outline: none;
   border: none;
 }
 
 .plus-button:hover {
-  background-color: rgb(128, 203, 128);
+  // background-color: rgb(128, 203, 128);
+  cursor: pointer;
 }
 
 .minus-button {
   font-family: "Avenir";
   border-radius: 50%;
-  background-color: red;
+  // background-color: red;
   margin-right: 5px;
   height: 15px;
   width: 15px;
   outline: none;
   border: none;
+  background-color: white;
 }
 
 .minus-button:hover {
-  background-color: rgb(248, 124, 124);
+  // background-color: rgb(248, 124, 124);
+  cursor: pointer;
+}
+
+.plus-minus-icons {
+  display: inline-block;
+  position: relative;
+  top: 2px;
+  width: 20px;
+  // background: url("images/buttons/plus-button.svg") no-repeat;
+}
+.plus-minus-icons .hover-button{
+  display: none;
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 1;
+}
+.plus-minus-icons:hover .hover-button {
+  display: inline;
+  // background: url("images/buttons/plus-button-hover.svg") no-repeat;
+}
+.dropdown-icon {
+  top: 5px;
+  left: -5px;
 }
 
 .results-view {

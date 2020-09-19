@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+
 import QueryDisplay from "../components/QueryDisplay.jsx";
 import DropdownItem from "../components/DropdownItem.jsx";
 import { ResultsHelper } from "../helper-functions/HelperFunctions.js";
@@ -72,35 +73,45 @@ const DemoInput = (props) => {
     <div className="query-div">
       <div className="queryLine">{ob}</div>
       <div className="queryLine">
-        {tab}
+        {space}
         {/* Dropdown appears on click */}
-        <button
-          className="dropdown-button"
-          onClick={() => toggleDropdown(!queryDropdown)}
-        >
-          ▾
-        </button>
+        <span>
+          <button
+            className="dropdown-button"
+            onClick={() => toggleDropdown(!queryDropdown)}
+          >
+            <div className="plus-minus-icons dropdown-icon">
+              <img src="../images/buttons/dropdown-button.svg" />
+              <img src="../images/buttons/dropdown-button-hover.svg" class="hover-button"/>
+            </div>
+            {/* Query Dropdown Menu */}
+            {queryDropdown && <div className="dropdown-menu">{dropdownMenu}</div>}
+          </button>
+        </span>
+        {tab}
         {query}
+
         {/* Id Dropdown (conditional) */}
         {idDropdown && (
           <span>{space}
             <button
-              className="dropdown-button"
+              className="dropdown-button display-id"
               onClick={() => toggleIdDropdownMenu(!idDropdownMenu)}
             >
-              ▾{idDropdown && selectedId}
+              <div className="plus-minus-icons dropdown-icon">
+                <img src="../images/buttons/dropdown-button.svg" />
+                <img src="../images/buttons/dropdown-button-hover.svg" class="hover-button"/>
+              </div>
+              
+              {/* Id Dropdown Menu */}
+              {idDropdownMenu && <div className="dropdown-menu">{idDropMenu}</div>}
             </button>
+            {idDropdown && selectedId}
           </span>
         )}
         {space}
         {ob}
       </div>
-
-      {/* Where the id dropdown appears */}
-      {idDropdownMenu && <div className="dropdown-menu">{idDropMenu}</div>}
-
-      {/* Where the dropdown appears */}
-      {queryDropdown && <div className="dropdown-menu">{dropdownMenu}</div>}
 
       <div className="the-rest-of-the-lines">
         <QueryDisplay

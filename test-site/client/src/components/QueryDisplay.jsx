@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import QueryItem from "./QueryItem.jsx";
 import DropdownItem from "./DropdownItem.jsx";
+import AddCircleIcon from '@material-ui/icons/AddCircle';
 
 // component to get ALL data from our created DB
 const QueryDisplay = (props) => {
@@ -53,7 +54,7 @@ const QueryDisplay = (props) => {
     return noDuplicates;
   };
 
-  //======= DELETE FUNCTIONALITY ========//
+  //======= DELETE BUTTON ========//
   function deleteItem(item) {
     // console.log("DELETE ITEM FIRED");
 
@@ -76,7 +77,7 @@ const QueryDisplay = (props) => {
     setAvailableList(newAvailableList); // change available list
   }
 
-  //======= ADD FUNCTIONALITY ========//
+  //======= ADD BUTTON ========//
   function addItem(item) {
     // console.log("ADD ITEM FIRED");
 
@@ -116,9 +117,12 @@ const QueryDisplay = (props) => {
             {tab}
             {tab}
             <button className="minus-button" onClick={() => deleteItem(item)}>
-              -
+            <div className="plus-minus-icons">
+              <img src="../images/buttons/minus-button.svg" />
+              <img src="../images/buttons/minus-button-hover.svg" class="hover-button"/>
+            </div>
             </button>
-            {ob} cities{space}
+            {space}{ob} cities{space}
           </div>
           <div className="queryLine">
             <QueryDisplay
@@ -167,9 +171,14 @@ const QueryDisplay = (props) => {
       <button
         className="plus-button"
         onClick={() => togglePlusDropdown(!plusDropdown)}
-      ></button>
+      >
+      <div className="plus-minus-icons">
+        <img src="../images/buttons/plus-button.svg" />
+        <img src="../images/buttons/plus-button-hover.svg" class="hover-button"/>
+      </div>
       {/* Where the plus dropdown appears on click */}
       {plusDropdown && <div className="dropdown-menu">{dropdown}</div>}
+      </button>
     </>
   );
 };
