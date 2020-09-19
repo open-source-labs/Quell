@@ -6,17 +6,20 @@
  * The trunQ approach: they require in redis library and create a client.
  */
 
-function dummyCache() {
-  this.cache = {};
+const createCache = function() {
+  this.cache = {}
 };
 
-dummyCache.prototype.get = (key) => {
-  return this.cache[key];
+
+createCache.prototype.get = function (key) {
+  return this.cache[key] || null;
 };
 
-dummyCache.prototype.set = (key, value) => {
+createCache.prototype.set = function (key, value) {
   this.cache[key] = value;
 };
+
+const dummyCache = new createCache();
 
 const mockSchema = require('./mockSchema');
 const mockQuery = require('./mockQuery');
@@ -34,7 +37,7 @@ class QuellCache {
   }
 
   
-  async query(req, res, next) {
+  query(req, res, next) {
     // handle request without query
     if (!req.body.query) {
       return next('Error: no GraphQL query found on request body');
@@ -54,12 +57,12 @@ class QuellCache {
     }
 
     const queryName = Object.keys(proto)[0];
-    const queriedCollection = this.map[queryName];
+    const queriedCollection = this.queryMap[queryName];
 
     // build response from cache
     const responseFromCache = this.buildFromCache(proto, this.queryMap, queriedCollection);
 
-    return proto;
+    return responseFromCache;
   };
   
   
@@ -211,19 +214,19 @@ class QuellCache {
     return prototype;
   };
   
-  toggleFields(proto) {
+  toggleProto(proto) {
     for (const key in proto) {
-      if (Object.keys(proto[key]) > 0) this.toggleFields(proto[key]);
-      proto[key] = false;
+      if (Object.keys(proto[key]).length > 0) this.toggleProto(proto[key]);
+      else proto[key] = false;
     }
   };
   
   buildFromCache(proto, map, queriedCollection, collection) {
     const response = [];
-
-    for (const superField in prototype) {
+    
+    for (const superField in proto) {
       if (!collection) collection = JSON.parse(dummyCache.get(map[superField])) || [];
-      if (collection.length === 0) this.toggleFields(proto);
+      if (collection.length === 0) this.toggleProto(proto);
       for (const item of collection) {
         response.push(this.buildItem(proto[superField], this.fieldsMap[queriedCollection], JSON.parse(dummyCache.get(item))));
       }
@@ -237,8 +240,8 @@ class QuellCache {
 
     for (const key in proto) {
       if (typeof proto[key] === 'object') {
-        const protoAtKey = { [key]: prototype[key] };
-        nodeObject[key] = buildArray(protoAtKey, fieldsMap, item[key])
+        const protoAtKey = { [key]: proto[key] };
+        nodeObject[key] = this.buildFromCache(protoAtKey, fieldsMap, fieldsMap[key], item[key]);
       } else if (proto[key]) {
         if (item[key] !== undefined) nodeObject[key] = item[key];
         else proto[key] = false;
@@ -253,7 +256,32 @@ const quell = new QuellCache(mockSchema, 1000, 1000);
 // console.log('query map:  ', quell.queryMap);
 // console.log('fields map:  ', quell.fieldsMap);
 // console.log('proto:   ', quell.parseAST(parse(mockQuery)));
-console.log(quell.query({body: { query: "query { countries: { name id cities { name }}" }}));
 
+const fakeData = {
+  'Country': ['Country-1', 'Country-2', 'Country-3', 'Country-4', 'Country-5'],
+  'City': ['City-1', 'City-2', 'City-3', 'City-4', 'City-5', 'City-6', 'City-7', 'City-8','City-9', 'City-10'],
+  'Country-1': {'id': 1, 'name': 'Andorra', 'capital': 'Andorra la Vella', 'cities': ['City-1', 'City-2']},
+  'Country-2': {'id': 2, 'name': 'Bolivia', 'capital': 'Sucre', 'cities': ['City-5', 'City-7']},
+  'Country-3': {'id': 3, 'name': 'Armenia', 'capital': 'Yerevan', 'cities': ['City-3', 'City-6']},
+  'Country-4': {'id': 4, 'name': 'American Samoa', 'capital': 'Pago Pago', 'cities': ['City-8', 'City-4']},
+  'Country-5': {'id': 5, 'name': 'Aruba', 'capital': 'Oranjestad', 'cities': ['City-9', 'City-10']},
+  'City-1': {"id": 1, "country_id": 1, "name": "El Tarter", "population": 1052},
+  'City-2': {"id": 2,"country_id": 1, "name": "La Massana", "population": 7211},
+  'City-3': {"id":3,"country_id":3,"name":"Canillo","population":3292},
+  'City-4': {"id":4,"country_id":4,"name":"Andorra la Vella","population":20430},
+  'City-5': {"id":5,"country_id":2,"name":"Jorochito","population":4013},
+  'City-6': {"id":6,"country_id":3,"name":"Tupiza","population":22233},
+  'City-7': {"id":7,"country_id":2,"name":"Puearto Pailas","population":0},
+  'City-8': {"id":8,"country_id":4,"name":"Capinota","population":5157},
+  'City-9': {"id":9,"country_id":5,"name":"Camargo","population":4715},
+  'City-10': {"id":10,"country_id":5,"name":"Villa Serrano","population":0}
+};
+
+for (const key in fakeData) {
+  dummyCache.set(key, JSON.stringify(fakeData[key]));
+};
+console.log(quell.query({body: { query: "{countries{id name test cities { id nestedTest name } nest { even further how { deep are } }}}" }}));
 
 module.exports = QuellCache;
+
+// {query: "{countries{id name capital cities{ id name }}}"}
