@@ -25,6 +25,8 @@ const mockSchema = require('./mockSchema');
 const mockQuery = require('./mockQuery');
 const { parse } = require('graphql/language/parser');
 const { visit } = require('graphql/language/visitor');
+const { graphql } = require('graphql');
+const { stringify } = require('querystring');
 
 class QuellCache {
   constructor (schema, redisPort, cacheExpiration = 1000) {
@@ -37,7 +39,7 @@ class QuellCache {
   }
 
   
-  query(req, res, next) {
+  async query(req, res, next) {
     // handle request without query
     if (!req.body.query) {
       return next('Error: no GraphQL query found on request body');
@@ -62,10 +64,39 @@ class QuellCache {
     // build response from cache
     const responseFromCache = this.buildFromCache(proto, this.queryMap, queriedCollection);
 
-    return responseFromCache;
+    let fullResponse;
+    const queryName = Object.keys(proto)[0];
+
+    if (responseFromCache.length === 0) {
+      fullResponse = await this.graphQLHandoff(queryString);
+    } else {
+      const queryObject = createQueryObj(proto);
+      
+      if (Object.keys(queryObject).length > 0) {
+        const newQueryString = createQueryStr(queryObject);
+        const uncachedResponse = await this.graphQLHandoff(newQueryString);
+        fullResponse = joinResponses(responseFromCache, uncachedResponse);
+      } else {
+        fullResponse = responseFromCache;
+      }
+    }
+
+    cache({ [queryName]: fullResponse);
+
+    res.locals.queryResponse = { data: { [queryName]: fullResponse }};
+    return next();
   };
-  
-  
+
+  async graphQLHandoff(query) {
+    graphql(this.schema, query)
+      .then((results) => {
+        return results;
+      })
+      .catch((error) => {
+        return `Error in graphQLHandoff: ${error}`
+      });
+  };
+
   /**
    *  getQueryMap generates a map of queries to GraphQL object types. This mapping is used
    *  to identify and create references to cached data.
@@ -250,6 +281,61 @@ class QuellCache {
 
     return nodeObject;
   };
+
+  createQueryObj(proto) {
+    const queryObj = {};
+    for (const key in proto) {
+      const reduced = this.protoReducer(proto[key]);
+      if (reduced.length > 0) queryObj[key] = reduced;
+    }
+    return queryObj;
+  };
+
+  protoReducer(proto) {
+    const fields = [];
+    for (const key in proto) {
+      if (proto[key] === false) fields.push(key);
+      if (typeof proto[key] === 'object') {
+        const nestedObj = {};
+        const reduced = this.protoReducer(proto[key]);
+        if (reduced.length > 0) {
+          nestedObj[key] = reduced;
+          fields.push(nestedObj);
+        }
+      }
+    }
+    return fields;
+  };
+
+  createQueryStr(queryObject) {
+    const openCurl = ' { ';
+    const closedCurl = ' } ';
+
+    let queryString = '';
+
+    for (const key in queryObject) {
+      queryString += key + openCurl + this.queryStringify(queryObject[key]) + closedCurl;
+    }
+
+    return openCurl + queryString + closedCurl;
+  };
+
+  queryStringify(fieldsArray) {
+    let innerStr = '';
+    for (let i = 0; i < fieldsArray.length; i += 1) {
+      if (typeof fieldsArray[i] === 'string') {
+        innerStr += fieldsArray[i] + ' ';
+      }
+      if (typeof fieldsArray[i] === 'object') {
+        for (const key in fieldsArray[i]) {
+          innerStr += key + openCurl + this.queryStringify(fieldsArray[i][key]) + closedCurl;
+        }
+      }
+    }
+    return innerStr;
+  };
+
+  
 };
 
 const quell = new QuellCache(mockSchema, 1000, 1000);
@@ -280,7 +366,7 @@ const fakeData = {
 for (const key in fakeData) {
   dummyCache.set(key, JSON.stringify(fakeData[key]));
 };
-console.log(quell.query({body: { query: "{countries{id name test cities { id nestedTest name } nest { even further how { deep are } }}}" }}));
+console.log(quell.query({body: { query: "{countries{id name cities { id name }}}" }}));
 
 module.exports = QuellCache;
 
