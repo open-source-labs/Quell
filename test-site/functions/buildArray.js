@@ -6,7 +6,7 @@
     let response = [];
   
     for (let query in prototype) {
-      // collection = 1.OBject type field passed into buildArray() when called from buildItem() or 2.Obtained item from cache or 3.Empty array
+      // collection = 1.Object type field passed into buildArray() when called from buildItem() or 2.Obtained item from cache or 3.Empty array
       collection = collection || JSON.parse(sessionStorage.getItem(map[query])) || [];
       for (let item of collection) {
         response.push(buildItem(prototype[query], JSON.parse(sessionStorage.getItem(item)), map));
@@ -56,4 +56,66 @@
     return tempObj;
   }
 
-  export default buildArray
+  let sessionStorage = {
+    storage: {},
+    setItem: function(field, value) {
+      this.storage[field] = value;
+    },
+    getItem: function(field) {
+      return this.storage[field];
+    }
+  };
+  // module.exports = sessionStorage;
+
+  // sessionStorage.setItem('City-4',	'{"country_id":"1","id":"4"}');
+  sessionStorage.storage = {
+    'Country': '["Country-1","Country-2","Country-3"]',
+    'Country-1':	'{"id":"1","name":"Andorra","cities":["City-1","City-2"]}',
+    'City-1':	'{"country_id":"1","id":"1"}',
+    'City-2':	'{"country_id":"1","id":"2"}',
+    'Country-2':	'{"id":"2","name":"Bolivia","cities":["City-3","City-4"]}',
+    'City-3':	'{"country_id":"2","id":"3"}',
+    'City-4':	'{"country_id":"2","id":"4"}',
+    'Country-3':	'{"id":"3","name":"Armenia","cities":["City-5","City-6"]}',
+    'City-5':	'{"country_id":"3","id":"5"}',
+    'City-6':	'{"country_id":"3","id":"6"}',
+  }
+  
+  console.log(JSON.parse(sessionStorage.getItem('Country-1')))
+
+  // console.log(buildArray(
+  //   {
+  //     countries: {
+  //       id: true, 
+  //       name: true, 
+	//       capital: true,
+  //       cities: {
+  //         country_id: true, 
+  //         id: true, 
+	//         name: true,
+	//         population: true,
+  //       },
+  //     }
+  //   },
+  //   {
+  //     countries: 'Country',
+  //     country: 'Country',
+  //     citiesByCountryId: 'City',
+  //     cities: 'City',
+  //   },
+  // ))
+
+  console.log(buildArray(
+    {
+      cities: {
+        country_id: true, 
+        id: true, 
+        name: true,
+        population: true,
+      }
+    },
+    { cities: 'City' },
+    ["City-1","City-2"]
+  ))
+
+  // export default buildArray

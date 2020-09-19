@@ -286,7 +286,7 @@ export default Quellify
 
 
 
-// ============= MOVED TO createQueryObj.js  ============= //
+// ============= MOVED TO createQueryStr.js  ============= //
 // function createQueryStr(queryObject) {
 //   const openCurl = ' { ';
 //   const closedCurl = ' } ';

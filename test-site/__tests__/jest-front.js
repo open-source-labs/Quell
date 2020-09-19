@@ -1,30 +1,18 @@
-import sum from '../functions/sum';
 import createQueryObj from '../functions/createQueryObj';
 import createQueryStr from '../functions/createQueryStr';
 import joinResponses from '../functions/joinResponses';
+import buildArray from '../functions/buildArray';
 import normalizeForCache from '../functions/normalizeForCache';
-
-// describe('Query Construct', () => {
-//   test('adds 1 + 2 to equal 3', () => {
-//     expect(sum(1, 2)).toBe(3);
+// import sum from '../functions/sum';
+// describe('sum', () => {
+//   test('adds 4 + 6 to equal 10', () => {
+//     expect(sum()).toBe(10);
 //   });
+// });
 
-//   // const map = { 
-//   //   countries: 'Country',
-//   //   country: 'Country',
-//   //   citiesByCountryId: 'City',
-//   //   cities: 'City'
-//   // };
-  
-//   // const fieldsMap = { cities: 'City' };
 
-//   // // prototype, map, collection
-//   // describe('buildArray', () => {
-//   //   expect(buildArray(
-//   //     arg1,
-//   //     arg2,
-//   //     arg3)).toEqual
-//   // });
+
+
 
 //   describe('createQueryObj', () => {
 //     let prototype;
@@ -90,24 +78,40 @@ import normalizeForCache from '../functions/normalizeForCache';
 //   });
 // });
 
-  // const map = { 
-  //   countries: 'Country',
-  //   country: 'Country',
-  //   citiesByCountryId: 'City',
-  //   cities: 'City'
-  // };
-  
+
+
+
+
+
+
+describe('buildArray', () => {
+  const proto = {
+    artists: {
+      id: true, 
+      name: true, 
+      instrument: true, 
+      albums: {
+        album_id: true, 
+        id: true, 
+        name: true, 
+        release_year: true
+      },
+    }
+  };
+
+  const map = { 
+    artists: 'Artist',
+    artist: 'Artist',
+    albumsByArtistId: 'Album',
+    albums: 'Album'
+  };
+
   // const fieldsMap = { cities: 'City' };
 
-  // // prototype, map, collection
-  // describe('buildArray', () => {
-  //   expect(buildArray(
-  //     arg1,
-  //     arg2,
-  //     arg3)).toEqual
-  // });
-
-
+  it('inputs prototype, map, and empty array and outputs aempty array', () => {
+    expect(buildArray(proto, map)).toEqual([]);
+  });
+});
 
 describe('createQueryObj', () => {
   let prototype;
@@ -124,7 +128,8 @@ describe('createQueryObj', () => {
           name: true, 
           release_year: true
         },
-      }};
+      }
+    };
   });
 
   it('inputs prototype w/ all true and outputs empty object', () => {
@@ -155,7 +160,7 @@ describe('createQueryObj', () => {
   });
 });
 
-describe('createQueryStr', () => {
+xdescribe('createQueryStr', () => {
   it('inputs query object w/ only scalar types and outputs GCL query string', () => {
     const scalar = { artists: [ 'id', 'name', 'instrument' ] };
     expect(createQueryStr(scalar)).toMatch( ' { artists { id name instrument  }  } ' );
@@ -173,7 +178,7 @@ describe('createQueryStr', () => {
 });
 
 
-describe('joinResponses', () => {
+xdescribe('joinResponses', () => {
   it('inputs two arrays (scalar <<< scalar) and outputs combined array', () => {
     const scalar1 = [
       {id: "1", name: "John Coltrane"}, 
@@ -273,8 +278,8 @@ describe('joinResponses', () => {
   });
 });
 
-describe('normalizeForCache', () => {
-  it('inputs response-data, map, fields-map and outputs ', () => {
+// describe('normalizeForCache', () => {
+//   it('inputs response-data, map, fields-map and outputs ', () => {
 
-  });
-});    
+//   });
+// });    
