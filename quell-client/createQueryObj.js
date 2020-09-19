@@ -34,4 +34,4 @@ function createQueryObj(map) {
   return output;
 };
 
-export default createQueryObj
+module.exports = createQueryObj;

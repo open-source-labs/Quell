@@ -53,4 +53,4 @@ function joinResponses(responseArray, fetchedResponseArray) {
   return joinedArray;
 };
 
-export default joinResponses
+module.exports = joinResponses;

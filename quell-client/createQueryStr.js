@@ -30,4 +30,4 @@ function createQueryStr(queryObject) {
   return openCurl + mainStr + closedCurl;
 };
 
-export default createQueryStr
+module.exports = createQueryStr;

@@ -58,4 +58,4 @@ function writeToCache(key, item) {
   }
 };
 
-export default normalizeForCache
+module.exports = normalizeForCache;

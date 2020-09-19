@@ -1,9 +1,8 @@
+const { visit } = require('graphql/language/visitor');
 /**
  * parseAST traverses the abstract syntax tree and creates a prototype object
  * representing all the queried fields nested as they are in the query.
  */
-
-import { visit } from 'graphql/language/visitor';
 
 function parseAST(AST) {
   const queryRoot = AST.definitions[0];
@@ -80,4 +79,4 @@ function parseAST(AST) {
   return prototype;
 };
 
-export default parseAST
+module.exports = parseAST;

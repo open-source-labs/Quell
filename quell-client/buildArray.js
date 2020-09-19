@@ -56,4 +56,4 @@
     return tempObj;
   }
 
-  export default buildArray
+  module.exports = buildArray;

@@ -1,8 +1,8 @@
-import createQueryObj from '../functions/createQueryObj';
-import createQueryStr from '../functions/createQueryStr';
-import joinResponses from '../functions/joinResponses';
-import buildArray from '../functions/buildArray';
-import normalizeForCache from '../functions/normalizeForCache';
+const createQueryObj = require('../../quell-client/createQueryObj');
+const createQueryStr = require('../../quell-client/createQueryStr');
+const joinResponses = require('../../quell-client/joinResponses');
+const buildArray = require('../../quell-client/buildArray');
+
 // import sum from '../functions/sum';
 // describe('sum', () => {
 //   test('adds 4 + 6 to equal 10', () => {
