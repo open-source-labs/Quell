@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from "react";
-
+import React, { useState, useEffect, useRef, useCallback } from "react";
+import ClickAwayListener from '@material-ui/core/ClickAwayListener';
 import QueryDisplay from "../components/QueryDisplay.jsx";
 import DropdownItem from "../components/DropdownItem.jsx";
 import { ResultsHelper } from "../helper-functions/HelperFunctions.js";
@@ -17,6 +17,7 @@ const DemoInput = (props) => {
   const [idDropdownMenu, toggleIdDropdownMenu] = useState(false); // toggle id dropdown menu
   // const [output, setOutput] = useState({ Country: ["id"] }); // looks like: { QUERY: ['item1', 'item2', {'cities': ['item1', 'item2']}] }
   // console.log("RESULT:", output);
+
 
   // All changes to final query are routed here
   const outputFunction = (newList, sub, query, id) => {

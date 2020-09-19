@@ -18,12 +18,13 @@ $quell-darkest: #082032;
   box-sizing: border-box;
 }
 
-.tool-tip {
-  color: red;
-}
+// .tool-tip {
+//   color: red;
+// }
 
 body {
-  font-family: "Avenir";
+  font-family: "Avenir Next";
+  font-weight: lighter;
   color: $quell-darkest;
 }
 
@@ -35,14 +36,17 @@ body {
 }
 
 #logo-main {
-  width: 95%;
+  // width: 80%;
   padding: 2%;
   margin-bottom: 2%;
 }
 
 header {
   border-bottom: 2px solid $quell-light;
-  margin-bottom: 50px;
+  margin-bottom: 20px;
+  font-weight: normal;
+  letter-spacing: 7.2px;
+ 
 
 }
 
@@ -51,6 +55,8 @@ header {
   justify-content: space-around;
   list-style-type: none;
   margin-bottom: 2%;
+  // width: 80%;
+ 
 
 }
 
@@ -67,41 +73,67 @@ header {
 
 #info-header-container {
   display: flex;
-  margin-bottom: 50px;
+  margin-bottom: 20px;
 }
 
 #info-header {
-  width: 40%;
-  margin: 20px auto;
+  width: 30%;
+  margin: 10px auto;
 }
+
+.dots-container {
+  width: 50%;
+  margin: 5px auto;
+  margin-bottom: 30px;
+}
+
+
 
 .info-container {
   display: flex;
   flex-direction: column;
   justify-content: center;
   padding: 0 10px;
-  margin-bottom: 50px;
+  margin-bottom: 25px;
   font-size: 20px;
 }
 
 .info-text {
   margin: 0 auto;
-  max-width: 90%;
+  max-width: 80%;
+}
+
+.quell-graph-container {
+
+margin: 50px auto;
+
+}
+
+.quell-puzzle-container {
+  
+  margin: 50px auto;
+}
+
+.quell-airmail-container {
+  
+  margin: 0 auto;
+  margin-top: 50px;
 }
 
 // ====== DEMO SECTION ======
 
 #demo {
+  
   margin-bottom: 10%;
 }
 
 #demo-header-container {
   display: flex;
-  margin-bottom: 50px;
+  margin-bottom: 25px;
 }
 
 #demo-header {
-  width: 50%;
+  width: 40%;
   margin: 20px auto;
 }
 
@@ -118,13 +150,19 @@ header {
 .query-div {
   font-size: 25px;
   background-color: white;
+  font-family: "Avenir";
+  letter-spacing: 5px;
+  color: $quell-darkest;
 }
 
 .dashboard-grid > div {
   // background-color: $off-white;
   border: 1px solid $quell-darkest;
   border-radius: 5px;
+  color: $quell-darkest;
   padding: 10px;
+  font-family: "Avenir";
+  // letter-spacing: 5px;
 }
 
 .timer-div,
@@ -329,7 +367,7 @@ textarea {
 
 .trend {
   background: $app-background;
-  border: 1px solid $quell-medium;
+  border: 1px solid $quell-darkest;
   border-radius: 5px;
   height: 30vh;
 }
@@ -337,7 +375,7 @@ textarea {
 // ====== TEAM SECTION ======
 
 #team-quell {
-  width: 75%;
+  width: 60%;
   padding: 2%;
   margin-bottom: 10%;
 }
@@ -346,11 +384,12 @@ textarea {
   display: flex;
   flex-direction: column;
   align-items: center;
+  font-size: 18px;
 }
 
 .profile-pics {
-  width: 55%;
-  max-width: 400px;
+  width: 45%;
+  // max-width: 400px;
   margin-bottom: 4%;
 }
 
@@ -361,6 +400,7 @@ textarea {
 .team-member-name {
   font-weight: bold;
   margin-bottom: 10px;
+  letter-spacing: 5.2px;
 }
 
 .social-icons img {
@@ -375,14 +415,38 @@ textarea {
   // ====== TOP HEADER SECTION ======
 
   #logo-main {
-    max-width: 800px;
+  width: 600px;
   }
+
 
   // ====== INFO SECTION ======
 
   #info-header {
-    max-width: 250px;
+    max-width: 200px;
   }
+
+  .dots-container {
+    width: 300px;
+    margin: 40px auto;
+  }
+
+
+
+  .quell-graph-container {
+    max-width: 700px;
+    
+    
+    }
+    
+    .quell-puzzle-container {
+      max-width: 700px;
+      
+    }
+
+    .quell-airmail-container {
+      max-width: 700px;
+      
+    }
 
   // ====== DEMO SECTION ======
 
@@ -391,7 +455,7 @@ textarea {
   }
 
   #demo-header {
-    max-width: 310px;
+    max-width: 275px;
   }
 
   /* Dashboard Grid */
