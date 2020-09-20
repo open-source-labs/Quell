@@ -6,7 +6,7 @@
     let response = [];
   
     for (let query in prototype) {
-      // collection = 1.OBject type field passed into buildArray() when called from buildItem() or 2.Obtained item from cache or 3.Empty array
+      // collection = 1.Object type field passed into buildArray() when called from buildItem() or 2.Obtained item from cache or 3.Empty array
       collection = collection || JSON.parse(sessionStorage.getItem(map[query])) || [];
       for (let item of collection) {
         response.push(buildItem(prototype[query], JSON.parse(sessionStorage.getItem(item)), map));

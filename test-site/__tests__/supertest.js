@@ -1,10 +1,6 @@
 const request = require('supertest');
 const app = require('../server/server');
 
-// afterAll(() => {
-//     app.close()
-//   })
-
 describe('/graphql', () => {
   describe('POST', () => {
 
@@ -22,7 +18,6 @@ describe('/graphql', () => {
         .set('Content-Type', 'application/json')
         .send("Invalid query")
         .expect(400)
-        // .then((res) => app.close(res))
     });
 
   });
