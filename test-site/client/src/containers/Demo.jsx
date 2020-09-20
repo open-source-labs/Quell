@@ -6,7 +6,7 @@ import QueryResults from "../components/QueryResults";
 import Metrics from "../components/Metrics";
 import ButtonClearCache from "../components/ButtonClearCache";
 import Graph from "../components/Graph";
-import Quell from "../../../../quell-client/quell";
+import Quell from "../../../../quell-client/Quellify";
 import { ResultsParser, CreateQueryStr } from "../helper-functions/HelperFunctions.js";
 
 const Demo = () => {
