@@ -1,7 +1,8 @@
 const express = require('express');
 const path = require('path');
 const schema = require('./schema/schema');
-const { quell } = require('./controllers/quellController')
+const {graphqlHTTP} = require('express-graphql')
+const { quell } = require('./controllers/quellController');
 
 const app = express();
 // const PORT = process.env.PORT || 3000;
@@ -16,19 +17,26 @@ if (process.env.NODE_ENV === 'production') {
   app.use('/dist', express.static(path.resolve(__dirname, '../dist')));
   // serve index.html on the route '/'
   app.get('/', (req, res) => {
-    res.status(200).sendFile(path.resolve(__dirname, '../client/src/index.html'));
+    res
+      .status(200)
+      .sendFile(path.resolve(__dirname, '../client/src/index.html'));
   });
 }
 
+// just putting this here for access to the graphiql playground
+app.use('/g', graphqlHTTP({
+  schema: schema,
+  graphiql: true
+}))
+
 // GraphQL route
-app.use('/graphql', 
-  quell(schema),
-  (req, res) => { res.status(200).send(res.locals.value) }
-);
+app.use('/graphql', quell(schema), (req, res) => {
+  res.status(200).send(res.locals.value);
+});
 
 // catch-all endpoint handler
 app.use((req, res) => {
-  return res.status(400).send('Page not found.')
+  return res.status(400).send('Page not found.');
 });
 
 // global error handler
@@ -36,12 +44,12 @@ app.use((err, req, res, next) => {
   const defaultErr = {
     log: 'Express error handler caught unknown middleware error!',
     status: 500,
-    message: { err: 'An error occurred!' }
+    message: { err: 'An error occurred!' },
   };
   const errorObj = Object.assign(defaultErr, err);
   console.log(errorObj.log);
   return res.status(errorObj.status).json(errorObj.message);
-})
+});
 
 app.listen(PORT, () => {
   console.log('Magic happening on ' + PORT);
