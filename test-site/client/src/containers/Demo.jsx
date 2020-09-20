@@ -40,8 +40,8 @@ const Demo = () => {
 
     Quell(
       "/graphql",
-      // refInput.current.value,
-      parsedResult,
+      refInput.current.value, // --------------------->>> ROB: Comment this out and umcomment parsedResult (line below)
+      // parsedResult, 
       {
         // Replace refInput.current.value with queryInput to remove default
         countries: "Country",
@@ -94,11 +94,11 @@ const Demo = () => {
       </div>
 
       <div className="dashboard-grid">
-        {/* <QueryInput
+        <QueryInput // --------------------->>> ROB: Comment this out and umcomment <DemoInput>
           forwardRef={refInput} // Remove useRef to remove default
           handleChange={handleChange}
-        /> */}
-        <DemoInput output={output} setOutput={setOutput}/> 
+        />
+        {/* <DemoInput output={output} setOutput={setOutput}/>  */}
         <ButtonRunQuery handleRunQueryClick={handleRunQueryClick} />
         <QueryResults queryResponse={queryResponse} />
         <Metrics fetchTime={fetchTime} cacheStatus={cacheStatus} />
