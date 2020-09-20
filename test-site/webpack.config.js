@@ -7,7 +7,6 @@ module.exports = {
   output: {
     path: path.resolve(__dirname, 'dist'),
     filename: 'bundle.js',
-    // publicPath: '/dist/',
   },
   devServer: {
     port: 8080,
@@ -26,9 +25,6 @@ module.exports = {
         exclude: /node_modules/,
         use: {
           loader: 'babel-loader',
-          // options: {
-          //   presets: ['@babel/preset-react', '@babel/preset-env'],
-          // },
         },
       },
       {

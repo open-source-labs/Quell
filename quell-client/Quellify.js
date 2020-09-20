@@ -22,10 +22,6 @@ async function Quellify(endPoint, query, map, fieldsMap) {
   // Create object of "true" values from AST tree (w/ some eventually updated to "false" via buildItem())
   const proto = parseAST(AST);
   console.log('Proto:', proto)
-  // // Timer Start
-  // let time = 0;
-  // let startTime, endTime;
-  // startTime = performance.now();
 
   // Check cache for data and build array from that cached data
   const responseFromCache = buildArray(proto, map) // returns e.g. [{name: 'Bobby'}, {id: '2'}]
@@ -46,10 +42,6 @@ async function Quellify(endPoint, query, map, fieldsMap) {
     const parsedData = await responseFromFetch.json();
     // Normalize returned data into cache
     normalizeForCache(parsedData.data, map, fieldsMap);
-
-    // // Timer End
-    // endTime = performance.now();
-    // time = endTime - startTime;
 
     // Return response as a promise
     return new Promise((resolve, reject) => resolve(parsedData));
@@ -89,10 +81,6 @@ async function Quellify(endPoint, query, map, fieldsMap) {
   const formattedMergedResponse = { data: { [queryName]: mergedResponse } };
   // Cache newly stitched response
   normalizeForCache(formattedMergedResponse.data, map, fieldsMap);
-
-  // // Timer End
-  // endTime = performance.now();
-  // time = endTime - startTime;
 
   // Return formattedMergedResponse as a promise
   return new Promise((resolve, reject) => resolve(formattedMergedResponse));
