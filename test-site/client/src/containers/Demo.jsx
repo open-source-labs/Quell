@@ -10,7 +10,7 @@ import Quell from "../../../../quell-client/Quellify";
 import { ResultsParser, CreateQueryStr } from "../helper-functions/HelperFunctions.js";
 
 const Demo = () => {
-  const [queryInput, setQueryInput] = useState("");
+  // const [queryInput, setQueryInput] = useState("");
   const [queryResponse, setQueryResponse] = useState({});
   const [fetchTime, setFetchTime] = useState("0.00 ms");
   const [fetchTimeIntegers, setFetchTimeIntegers] = useState([0, 0]);
@@ -40,8 +40,8 @@ const Demo = () => {
 
     Quell(
       "/graphql",
-      refInput.current.value, // --------------------->>> ROB: Comment this out and umcomment parsedResult (line below)
-      // parsedResult, 
+      // refInput.current.value,
+      parsedResult, 
       {
         // Replace refInput.current.value with queryInput to remove default
         countries: "Country",
@@ -94,11 +94,11 @@ const Demo = () => {
       </div>
 
       <div className="dashboard-grid">
-        <QueryInput // --------------------->>> ROB: Comment this out and umcomment <DemoInput>
+        {/* <QueryInput
           forwardRef={refInput} // Remove useRef to remove default
           handleChange={handleChange}
-        />
-        {/* <DemoInput output={output} setOutput={setOutput}/>  */}
+        /> */}
+        <DemoInput output={output} setOutput={setOutput}/> 
         <ButtonRunQuery handleRunQueryClick={handleRunQueryClick} />
         <QueryResults queryResponse={queryResponse} />
         <Metrics fetchTime={fetchTime} cacheStatus={cacheStatus} />
