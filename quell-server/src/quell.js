@@ -1,28 +1,4 @@
-/**
- * CONNECTING TO REDIS SERVER:
- * I need to research this more. For now, I'm going to create a cache object to 
- * serve as a dummy cache. I'll need to replace those parts with the actual commands 
- * to read from and write to the redis cache.
- * The trunQ approach: they require in redis library and create a client.
- */
-
-const createCache = function() {
-  this.cache = {}
-};
-
-
-createCache.prototype.get = function (key) {
-  return this.cache[key] || null;
-};
-
-createCache.prototype.set = function (key, value) {
-  this.cache[key] = value;
-};
-
-const dummyCache = new createCache();
-
-const mockSchema = require('./mockSchema');
-const mockQuery = require('./mockQuery');
+const redis = require('redis');
 const { parse } = require('graphql/language/parser');
 const { visit } = require('graphql/language/visitor');
 const { graphql } = require('graphql');
@@ -34,11 +10,23 @@ class QuellCache {
     this.queryMap = this.getQueryMap(schema);
     this.fieldsMap = this.getFieldsMap(schema);
     this.redisPort = redisPort;
-    this.cacheExpiration = cacheExpiration
+    this.cacheExpiration = cacheExpiration;
+    this.redisCache = redis.createClient(redisPort);
+  };
 
-  }
-
-  
+  /**
+   * The class's controller method. It:
+   *    - reads the query string from the request object,
+   *    - tries to construct a response from cache, 
+   *    - reformulates a query for any data not in cache,
+   *    - passes the reformulated query to the graphql library to resolve,
+   *    - joins the cached and uncached responses,
+   *    - decomposes and caches the joined query, and
+   *    - attaches the joined response to the response object before passing control to the next middleware.
+   *  @param {Object} req - Express request object, including request body with GraphQL query string
+   *  @param {Object} res - Express response object, will carry query response to next middleware
+   *  @param {Function} next - Express next middleware function, invoked when QuellCache completes its work
+   */
   query(req, res, next) {
     // handle request without query
     if (!req.body.query) {
@@ -54,11 +42,17 @@ class QuellCache {
     // create response prototype
     const proto = this.parseAST(AST);
     
-    // handle error
-    if (proto === 'error') {
-      return next('Error: Quell currently only supports GraphQL queries');
+    // pass-through for queries and operations that QuellCache cannot handle
+    if (proto === 'unQuellable') {
+      const unQuellableResult = this.graphQLHandoff(queryString);
+      if (unQuellableResult === 'Error in graphqlHandoff') {
+        return next(unQuellableResult);
+      }
+      res.locals.queryResponse = unQuellableResult;
+      return next();
     }
     
+    // store name of query and associated object type
     const queryName = Object.keys(proto)[0];
     const queriedCollection = this.queryMap[queryName];
     
@@ -67,52 +61,53 @@ class QuellCache {
     const responseFromCache = this.buildFromCache(proto, this.queryMap, queriedCollection);
        
     
+    // query for additional information, if necessary
     let fullResponse;
-
-    if (responseFromCache.length === 0) {
+    if (responseFromCache.length === 0) { // if no cached data, handoff original query and cache results
       fullResponse = this.graphQLHandoff(queryString);
+      if (fullResponse === 'Error in graphqlHandoff') {
+        return next('Error in graphqlHandoff');
+      }
       this.cache(fullResponse, queriedCollection, queryName);
-    } else {
+    } else { 
       const queryObject = this.createQueryObj(proto);
-      
+      // if cached response is incomplete, reformulate query, handoff query, join responses, and cache joined responses
       if (Object.keys(queryObject).length > 0) {
         const newQueryString = this.createQueryStr(queryObject);
         const uncachedResponse = this.graphQLHandoff(newQueryString);
+        if (uncachedResponse === 'Error in graphqlHandoff') {
+          return next('Error in graphqlHandoff');
+        }
         fullResponse = this.joinResponses(responseFromCache, uncachedResponse);
         this.cache(fullResponse, queriedCollection, queryName);
       } else {
+        // if nothing left to query, response from cache is full response
         fullResponse = responseFromCache;
       }
     }
-
-
-    // res.locals.queryResponse = { data: { [queryName]: fullResponse }};
-    // return next();
     
-    const freshProto = this.parseAST(AST);
+    // reconstruct prototype and rebuild response from cache to ensure proper ordering of response
+    const rebuiltProto = this.parseAST(AST);
+    const rebuiltFromCache = this.buildFromCache(rebuiltProto, this.queryMap, queriedCollection);
 
-    const refetchedFromCache = this.buildFromCache(freshProto, this.queryMap, queriedCollection);
-    console.log(dummyCache.cache);
-    // return fullResponse;
-    return refetchedFromCache;
+    // attach properly formatted response to response object and pass to next middleware
+    res.locals.queryResponse = { data: { [queryName]: fullResponse }};
+    return next();
   };
 
+  /**
+   * Uses graphql-JS library to execute user-defined schema resolvers to satisfy the query.
+   * @param {String} query - original or reformulated GraphQL query string
+   */
   graphQLHandoff(query) {
-    // graphql(this.schema, query)
-    //   .then((results) => {
-    //     return results;
-    //   })
-    //   .catch((error) => {
-    //     return `Error in graphQLHandoff: ${error}`
-    //   });
-
-    return ([
-      { 'capital': 'Andorra la Vella', 'cities': [{ 'population': 1052 }, { 'population': 7211 }] },
-      { 'capital': 'Sucre', 'cities': [{ 'population': 4013 }, { 'population': 5157 }] },
-      { 'capital': 'Yerevan', 'cities': [{ 'population': 3292 }, { 'population': 22233 }] },
-      { 'capital': 'Pago Pago', 'cities': [{ 'population': 5157 }, { 'population': 20430 }] },
-      { 'capital': 'Oranjestad', 'cities': [{ 'population': 4715 }, { 'population': 0 }] }
-    ])
+    graphql(this.schema, query)
+      .then((results) => {
+        return results;
+      })
+      .catch((error) => {
+        console.log(`Error in graphQLHandoff: ${error}`);
+        return `Error in graphQLHandoff`;
+      });
   };
 
   /**
@@ -160,6 +155,7 @@ class QuellCache {
       '__Directive',
     ];
 
+    // exclude built-in types
     const customTypes = Object.keys(typesList)
       .filter((type) => !builtInTypes.includes(type) && type !== schema._queryType.name);
 
@@ -198,7 +194,7 @@ class QuellCache {
 
     // initialize prototype as empty object
     const prototype = {};
-    let isQuellable = true;
+
     /**
      * visit is a utility provided in the graphql-JS library. It performs a
      * depth-first traversal of the abstract syntax tree, invoking a callback
@@ -209,13 +205,23 @@ class QuellCache {
      */
     visit (AST, {
       enter(node) {
+        if (node.operation) {
+          if (node.operation !== 'query') {
+            return 'unQuellable';
+          }
+        }
         if (node.arguments) {
           if (node.arguments.length > 0) {
-            isQuellable = false;
+            return 'unQuellable';
+          }
+        }
+        if (node.directives) {
+          if (node.directives.length > 0) {
+            return 'unQuellable';
           }
         }
         if (node.alias) {
-          isQuellable = false;
+          return 'unQuellable';
         }
       },
       SelectionSet(node, key, parent, path, ancestors) {
@@ -273,6 +279,11 @@ class QuellCache {
     return prototype;
   };
   
+  /**
+   * Toggles to false all values in a nested field not present in cache so that they will
+   * be included in the reformulated query.
+   * @param {Object} proto - The prototype or a nested field within the prototype 
+   */
   toggleProto(proto) {
     for (const key in proto) {
       if (Object.keys(proto[key]).length > 0) this.toggleProto(proto[key]);
@@ -280,36 +291,64 @@ class QuellCache {
     }
   };
   
+  /**
+   * buildFromCache loops over a collection of references retrieved from cache, calling buildItem on each, and 
+   * returning an array of those collected items -- that part of the query that can be satisfied from cache.
+   * Simultaneously, buildFromCache and buildItem are updating the prototype to track which fields still need
+   * to be queried.
+   * @param {Object} proto - prototype of queried fields 
+   * @param {Object} map - queryMap if building the main query object, fieldsMap if building array for nested field 
+   * @param {String} queriedCollection - name of object type being queried for
+   * @param {Object} collection - optional: when passed as argument, an object retrieved from cache
+   */
   buildFromCache(proto, map, queriedCollection, collection) {
     const response = [];
     
     for (const superField in proto) {
-      if (!collection) collection = JSON.parse(dummyCache.get(superField)) || [];
+      // if collection not passed as argument, try to retrieve array of references from cache
+      if (!collection) collection = JSON.parse(this.redisCache.get(superField)) || [];
       if (collection.length === 0) this.toggleProto(proto);
       for (const item of collection) {
-        response.push(this.buildItem(proto[superField], this.fieldsMap[queriedCollection], JSON.parse(dummyCache.get(item))));
+        const itemFromCache = JSON.parse(this.redisCache.get(item));
+        const builtItem = this.buildItem(proto[superField], this.fieldsMap[queriedCollection], itemFromCache);
+        response.push(builtItem);
       }
     }
 
     return response;
   };
 
+  /**
+   * buildItem iterates through keys -- defined on pass-in prototype object, which is always a fragment of the
+   * prototype, assigning to nodeObject the data at matching keys in the passed-in item. If a key on the prototype
+   * has an object as its value, build array is recursively called.
+   * If item does not have a key corresponding to prototype, that field is toggled to false on prototype object. Data
+   * for that field will need to be queried.
+   * @param {Object} proto 
+   * @param {Object} fieldsMap 
+   * @param {Object} item 
+   */
   buildItem(proto, fieldsMap, item) {
     const nodeObject = {};
 
     for (const key in proto) {
-      if (typeof proto[key] === 'object') {
+      if (typeof proto[key] === 'object') { // if field is an object, recursively call buildFromCache
         const protoAtKey = { [key]: proto[key] };
         nodeObject[key] = this.buildFromCache(protoAtKey, fieldsMap, fieldsMap[key], item[key]);
-      } else if (proto[key]) {
+      } else if (proto[key]) { // if current key has not been toggled to false because it needs to be queried
         if (item[key] !== undefined) nodeObject[key] = item[key];
-        else proto[key] = false;
+        else proto[key] = false; // toggle proto key to false if cached item does not contain queried data
       }
     };
 
     return nodeObject;
   };
 
+  /**
+   * createQueryObj traverses the prototype, removing fields that were retrieved from cache. The resulting object
+   * will be passed to createQueryStr to construct a query requesting only the data not found in cache.
+   * @param {Object} proto - the prototype with fields that still need to be queried toggled to false 
+   */
   createQueryObj(proto) {
     const queryObj = {};
     for (const key in proto) {
@@ -319,6 +358,11 @@ class QuellCache {
     return queryObj;
   };
 
+  /**
+   * protoReducer is a helper function (recusively) called from within createQueryObj, allowing introspection of
+   * nested prototype fields.
+   * @param {Object} proto - prototype 
+   */
   protoReducer(proto) {
     const fields = [];
     for (const key in proto) {
@@ -335,6 +379,11 @@ class QuellCache {
     return fields;
   };
 
+  /** 
+   * createQueryStr converts the query object constructed in createQueryObj into a properly-formed GraphQL query,
+   * requesting just those fields not found in cache.
+   * @param {Object} queryObject - object representing queried fields not found in cache
+   */
   createQueryStr(queryObject) {
     const openCurl = ' { ';
     const closedCurl = ' } ';
@@ -348,6 +397,12 @@ class QuellCache {
     return openCurl + queryString + closedCurl;
   };
 
+  /**
+   * queryStringify is a helper function called from within createQueryStr. It iterates through an
+   * array of field names, concatenating them into a fragment of the query string being constructed 
+   * in createQueryStr.
+   * @param {Array} fieldsArray - array listing fields to be added to GraphQL query
+   */
   queryStringify(fieldsArray) {
     const openCurl = ' { ';
     const closedCurl = ' } ';
@@ -366,6 +421,14 @@ class QuellCache {
     return innerStr;
   };
 
+  /**
+   * joinResponses iterates through an array, merging each item with the same-index item in a second array.
+   * joinResponses serves two purposes:
+   *   - to merge together objects fetched out of cache with objects resolved by graphql-js library functions
+   *   - to merge together objects in joined response with object in cache to ensure that no data is lost
+   * @param {Array} cachedArray - base array
+   * @param {Array} uncachedArray - array to be merged into base array
+   */
   joinResponses(cachedArray, uncachedArray) {
     const joinedArray = [];
 
@@ -376,6 +439,13 @@ class QuellCache {
     return joinedArray;
   };
 
+  /**
+   * recursiveJoin is a helper function called from within joinResponses, allowing nested fields to be merged before
+   * returning the fully-merged item to joinResponses to be pushed onto results array. If same keys are present in
+   * both cachedItem and uncached Item, uncachedItem -- which is the more up-to-date data -- will overwrite cachedItem.
+   * @param {Object} cachedItem - base item
+   * @param {Object} uncachedItem - item to be merged into base
+   */
   recursiveJoin(cachedItem, uncachedItem) {
     const joinedObject = cachedItem || {};
     
@@ -384,7 +454,8 @@ class QuellCache {
         if (typeof uncachedItem[field][0] === 'string') {
           const temp = [];
           for (let reference of uncachedItem[field]) {
-            temp.push(JSON.parse(dummyCache.get(reference)))
+            const itemFromCache = JSON.parse(this.redisCache.get(reference));
+            temp.push(itemFromCache)
           }
           uncachedItem[field] = temp;
         }
@@ -401,17 +472,36 @@ class QuellCache {
     return joinedObject;
   };
 
+  /**
+   * generateId generates a unique ID to refer to an item in cache. Each id concatenates the object type with an
+   * id property (item.id or item._id). If no id property is present, the item is declared uncacheable.
+   * TO-DO: use fieldsMap to find a property identified as ID type and use it to identify the item.
+   * @param {String} collection - name of schema type, used to identify each cacheable object 
+   * @param {Object} item - the object, including those keys that might identify it uniquely
+   */
   generateId(collection, item) {
     const identifier = item.id || item._id || 'uncacheable';    
     return collection + '-' + identifier.toString();
   };
   
+  /**
+   * writeToCache writes a value to the cache unless the key indicates that the item is uncacheable.
+   * TO-DO: set expiration for each item written to cache
+   * @param {String} key - unique id under which the cached data will be stored 
+   * @param {Object} item - item to be cached
+   */
   writeToCache(key, item) {
     if (!key.includes('uncacheable')) {
-      dummyCache.set(key, JSON.stringify(item));
+      this.redisCache.set(key, JSON.stringify(item));
     }
   };
   
+  /**
+   * replaceitemsWithReferences takes an array of objects and returns an array of references to those objects.
+   * @param {String} queryName - name of the query or object type, to create type-governed references 
+   * @param {String} field - name of the field, used to find appropriate object type
+   * @param {Array} array - array of objects to be converted into references
+   */
   replaceItemsWithReferences(queryName, field, array) {
     const arrayOfReferences = [];
     const typeQueried = this.queryMap[queryName];
@@ -425,6 +515,15 @@ class QuellCache {
     return arrayOfReferences;
   };
 
+  /**
+   * cache iterates through joined responses, writing each item and the array of responses to cache.
+   *   - Normalization: items stored elsewhere in cache are replaced with a reference to that item.
+   *   - Prevent data loss: Each item of the response is merged with what is in cache to ensure that no data
+   *     present in the cache but not requested by the current query is lost.
+   * @param {Array} response - the response merged from cache and graphql query resolution 
+   * @param {*} collectionName - the object type name, used for identifying items in cache
+   * @param {*} queryName - the name of the query, used for identifying response arrays in cache
+   */
   cache(response, collectionName, queryName) {
     const collection = JSON.parse(JSON.stringify(response));
   
@@ -434,7 +533,8 @@ class QuellCache {
     for (const item of collection) {
       
       const cacheId = this.generateId(collectionName, item);
-      const joinedWithCache = this.recursiveJoin(item, JSON.parse(dummyCache.get(cacheId)));
+      const itemFromCache = JSON.parse(this.redisCache.get(cacheId));
+      const joinedWithCache = this.recursiveJoin(item, itemFromCache);
       const itemKeys = Object.keys(joinedWithCache);
       
       for (const key of itemKeys) {
@@ -451,81 +551,5 @@ class QuellCache {
   };
 
 };
-
-const quell = new QuellCache(mockSchema, 1000, 1000);
-// console.log('query map:  ', quell.queryMap);
-// console.log('fields map:  ', quell.fieldsMap);
-// console.log('proto:   ', quell.parseAST(parse(mockQuery)));
-
-const fakeDataComplete = {
-  'Country': ['Country-1', 'Country-2', 'Country-3', 'Country-4', 'Country-5'],
-  'City': ['City-1', 'City-2', 'City-3', 'City-4', 'City-5', 'City-6', 'City-7', 'City-8','City-9', 'City-10'],
-  'Country-1': {'id': 1, 'name': 'Andorra', 'capital': 'Andorra la Vella', 'cities': ['City-1', 'City-2']},
-  'Country-2': {'id': 2, 'name': 'Bolivia', 'capital': 'Sucre', 'cities': ['City-5', 'City-7']},
-  'Country-3': {'id': 3, 'name': 'Armenia', 'capital': 'Yerevan', 'cities': ['City-3', 'City-6']},
-  'Country-4': {'id': 4, 'name': 'American Samoa', 'capital': 'Pago Pago', 'cities': ['City-8', 'City-4']},
-  'Country-5': {'id': 5, 'name': 'Aruba', 'capital': 'Oranjestad', 'cities': ['City-9', 'City-10']},
-  'City-1': {"id": 1, "country_id": 1, "name": "El Tarter", "population": 1052},
-  'City-2': {"id": 2,"country_id": 1, "name": "La Massana", "population": 7211},
-  'City-3': {"id":3,"country_id":3,"name":"Canillo","population":3292},
-  'City-4': {"id":4,"country_id":4,"name":"Andorra la Vella","population":20430},
-  'City-5': {"id":5,"country_id":2,"name":"Jorochito","population":4013},
-  'City-6': {"id":6,"country_id":3,"name":"Tupiza","population":22233},
-  'City-7': {"id":7,"country_id":2,"name":"Puearto Pailas","population":0},
-  'City-8': {"id":8,"country_id":4,"name":"Capinota","population":5157},
-  'City-9': {"id":9,"country_id":5,"name":"Camargo","population":4715},
-  'City-10': {"id":10,"country_id":5,"name":"Villa Serrano","population":0}
-};
-
-const fakeDataPartial = {
-  'countries': ['Country-1', 'Country-2', 'Country-3', 'Country-4', 'Country-5'],
-  'cities': ['City-1', 'City-2', 'City-3', 'City-4', 'City-5', 'City-6', 'City-7', 'City-8','City-9', 'City-10'],
-  'Country-1': {'id': 1, 'name': 'Andorra', 'cities': ['City-1', 'City-2']},
-  'Country-2': {'id': 2, 'name': 'Bolivia', 'cities': ['City-5', 'City-7']},
-  'Country-3': {'id': 3, 'name': 'Armenia', 'cities': ['City-3', 'City-6']},
-  'Country-4': {'id': 4, 'name': 'American Samoa', 'cities': ['City-8', 'City-4']},
-  'Country-5': {'id': 5, 'name': 'Aruba', 'cities': ['City-9', 'City-10']},
-  'City-1': {"id": 1, "country_id": 1, "name": "El Tarter"},
-  'City-2': {"id": 2,"country_id": 1, "name": "La Massana"},
-  'City-3': {"id":3,"country_id":3,"name":"Canillo"},
-  'City-4': {"id":4,"country_id":4,"name":"Andorra la Vella"},
-  'City-5': {"id":5,"country_id":2,"name":"Jorochito"},
-  'City-6': {"id":6,"country_id":3,"name":"Tupiza"},
-  'City-7': {"id":7,"country_id":2,"name":"Puearto Pailas"},
-  'City-8': {"id":8,"country_id":4,"name":"Capinota"},
-  'City-9': {"id":9,"country_id":5,"name":"Camargo"},
-  'City-10': {"id":10,"country_id":5,"name":"Villa Serrano"}
-};
-
-const dataFromResolvers = [
-  { 'capital': 'Andorra la Vella', 'cities': [{ 'population': 1052 }, { 'population': 7211 }] },
-  { 'capital': 'Sucre', 'cities': [{ 'population': 4013 }, { 'population': 5157 }] },
-  { 'capital': 'Yerevan', 'cities': [{ 'population': 3292 }, { 'population': 22233 }] },
-  { 'capital': 'Pago Pago', 'cities': [{ 'population': 5157 }, { 'population': 20430 }] },
-  { 'capital': 'Oranjestad', 'cities': [{ 'population': 4715 }, { 'population': 0 }] }
-];
-
-for (const key in fakeDataPartial) {
-  dummyCache.set(key, JSON.stringify(fakeDataPartial[key]));
-};
-console.log(quell.query({body: { query: "{countries{id name capital cities { id name population }}}" }}));
-console.log(quell.query({body: { query: "{countries{id capital cities { id name population }}}" }}));
-
-// const cached = [
-//   { name: 'George', id: 1, human: true, friends: [ { name: 'John', human: true }, { name: 'Wesley', human: true }] },
-//   { name: 'Luke', id: 2, human: false, friends: [{ name: 'George', human: true }, { name: 'Jim', human: true }] },
-// ];
-
-// const uncached = [
-//   { hometown: 'Newport', sports: ['hockey', 'lacrosse'], friends: [ { name: 'NoOne', human: true }, { name: 'YouKnow', human: false }, { name: 'NewFriend', human: true }] },
-//   { hometown: 'Charleston', sports: ['baseball'] },
-// ]
-
-// console.log(quell.joinResponses(cached, uncached)[0].friends);
-// quell.parseAST(parse(`{
-//   empireHero: hero {
-//   name
-//   }
-//   }`));
 
 module.exports = QuellCache;
