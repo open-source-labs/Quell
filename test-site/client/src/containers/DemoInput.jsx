@@ -34,8 +34,10 @@ const DemoInput = (props) => {
 
   // All changes to final query are routed here
   const outputFunction = (newList, sub, query, id) => {
+    // console.log('output before change', output)
     const newOutput = ResultsHelper(newList, sub, query, id, output);
     setOutput(newOutput);
+    // console.log('output after change', output)
   };
 
   // Change Query Selection - fires from DropdownItem child - comes in like ('Countries')
@@ -62,7 +64,7 @@ const DemoInput = (props) => {
     outputFunction(0, 0, 0, item);
   };
 
-  // Array of queries to choose from
+  // Array of queries to choose from -- limiting the "by id" option until we build that functionality, but the demo is programmed to handle those
   // const dropdownList = ["countries", "country by id", "cities", "cities by country id"];
   const dropdownList = ["countries", "cities"];
   // Creates dropdown menu from the above array ^^

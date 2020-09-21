@@ -6,6 +6,10 @@
   sub 
     - whatever is passed in here are the sub-array (cities) fields
     - looks like: ['name', 'population', 'country_id']
+  query
+    - is passed whenever we select a new query
+  id
+    - is passed whenever we select a new id (only when querying by id)
   currentResults 
     - comes from the state
     - looks like: { QUERY: ['item1', 'item2', {'cities': ['item1', 'item2']}] }
@@ -128,38 +132,66 @@ const ResultsHelper = (newList, sub, query, id, currentResults) => {
   return currentResults
 };
 
+const output1 = { 'cities': ['id', 'country_id'] }
+// const output2 = { 'countries': ['id'] }
+
+// ResultsParser(output1)
+console.log(ResultsHelper(0, 0, 'countries', 0, output1))
+
+
+// node test.js
+
+
+
+
+
+
+
+
+
+
 //======================================//
 //========== RESULTS PARSER ============//
 //======================================//
 
-const ResultsParser = (results) => {
-  const newString = [];
-  results = JSON.stringify(results);
-  console.log(results);
-  let deleteClosingBracket = 0
-  for (let i = 0; i < results.length; i++) {
-    const char = results[i]
+// const ResultsParser = (results) => {
+//   const newString = [];
+//   results = JSON.stringify(results);
+//   console.log(results);
+//   let deleteClosingBracket = 0
+//   for (let i = 0; i < results.length; i++) {
+//     const char = results[i]
 
-    if (char === '[') newString.push('{')
-    else if (char === ']') newString.push('}')
-    else if (char === '{' && results[i-1] === ',') {
-      deleteClosingBracket+=1
-    }
-    else if (char === '}') {
-      if (deleteClosingBracket > 0) {
-        deleteClosingBracket-=1
-      } else {
-        newString.push(char)
-      }
-    }
-    else if (char === ':' && results[i-1] === '"') {}
-    else if (char === '"') {}
-    else if (char === ',') newString.push(' ')
-    else newString.push(char)
-  }
+//     if (char === '[') newString.push('{')
+//     else if (char === ']') newString.push('}')
+//     else if (char === '{' && results[i-1] === ',') {
+//       deleteClosingBracket+=1
+//     }
+//     else if (char === '}') {
+//       if (deleteClosingBracket > 0) {
+//         deleteClosingBracket-=1
+//       } else {
+//         newString.push(char)
+//       }
+//     }
+//     else if (char === ':' && results[i-1] === '"') {}
+//     else if (char === '"') {}
+//     else if (char === ',') newString.push(' ')
+//     else newString.push(char)
+//   }
 
-  return newString.join('')
-};
+//   return newString.join('')
+// };
+
+
+
+
+
+
+
+
+
+
 
 
 //======================================//
@@ -220,4 +252,4 @@ function CreateQueryStr(queryObject) {
 
 
 //===============EXPORT=================//
-export { ResultsHelper, CreateQueryStr, ResultsParser };
+// export { ResultsHelper, CreateQueryStr, ResultsParser };
