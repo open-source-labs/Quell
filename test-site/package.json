@@ -6,7 +6,7 @@
     "start": "NODE_ENV=production nodemon server/server.js",
     "build": "NODE_ENV=production webpack",
     "dev": "concurrently \"NODE_ENV=development\" \"webpack-dev-server --open --hot\" \"nodemon server/server.js\"",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "jest --verbose"
   },
   "keywords": [],
   "author": "",
@@ -36,11 +36,13 @@
     "css-loader": "^4.2.2",
     "file-loader": "^6.1.0",
     "html-webpack-plugin": "^4.4.1",
+    "jest": "^26.4.2",
     "node-sass": "^4.14.1",
     "nodemon": "^2.0.4",
     "sass": "^1.26.10",
     "sass-loader": "^10.0.1",
     "style-loader": "^1.2.1",
+    "supertest": "^4.0.2",
     "transform-runtime": "0.0.0",
     "webpack": "^4.44.1",
     "webpack-cli": "^3.3.12",

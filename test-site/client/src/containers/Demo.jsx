@@ -6,11 +6,11 @@ import QueryResults from "../components/QueryResults";
 import Metrics from "../components/Metrics";
 import ButtonClearCache from "../components/ButtonClearCache";
 import Graph from "../components/Graph";
-import Quell from "../../../../quell-client/quell";
+import Quell from "../../../../quell-client/Quellify";
 import { ResultsParser, CreateQueryStr } from "../helper-functions/HelperFunctions.js";
 
 const Demo = () => {
-  const [queryInput, setQueryInput] = useState("");
+  // const [queryInput, setQueryInput] = useState("");
   const [queryResponse, setQueryResponse] = useState({});
   const [fetchTime, setFetchTime] = useState("0.00 ms");
   const [fetchTimeIntegers, setFetchTimeIntegers] = useState([0, 0]);
@@ -41,7 +41,7 @@ const Demo = () => {
     Quell(
       "/graphql",
       // refInput.current.value,
-      parsedResult,
+      parsedResult, 
       {
         // Replace refInput.current.value with queryInput to remove default
         countries: "Country",
