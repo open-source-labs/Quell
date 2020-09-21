@@ -1,12 +1,11 @@
-import React from 'react'
+import React from 'react';
 
 const Footer = () => {
   return (
     <footer>
-      <a href="https://github.com/oslabs-beta/Quell">Github</a>
+      <img id='quell-wave' src='../images/quell_logos/QUELL-wave-V1.svg'></img>
     </footer>
-  )
-}
-
+  );
+};
 
 export default Footer;
