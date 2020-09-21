@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from "react";
+import Minus from '../images/buttons/minus-button.svg';
+import MinusHover from '../images/buttons/minus-button-hover.svg';
 
 // component to get ALL data from our created DB
 const QueryItem = (props) => {
@@ -10,20 +12,17 @@ const QueryItem = (props) => {
   }, [itemIsNotId])
 
   const tab = <span>&nbsp;&nbsp;&nbsp;&nbsp;</span>,
-    space = <span>&nbsp;</span>
+    space = <span>&nbsp;</span>;
   return (
     <>
-      <div className="queryLine">
+      <div className='queryLine'>
         {tab}
         {tab}
         {sub && <>{tab}</>}
-        {itemIsNotId && <button
-          className="minus-button"
-          onClick={() => deleteItem(item)}
-        >
+        {itemIsNotId && <button className="minus-button" onClick={() => deleteItem(item)}>
           <div className="plus-minus-icons">
-            <img src="../images/buttons/minus-button.svg" />
-            <img src="../images/buttons/minus-button-hover.svg" className="hover-button"/>
+            <img src={Minus} />
+            <img src={MinusHover} className='hover-button' />
           </div>
         </button>}
         {space}

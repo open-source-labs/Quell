@@ -1,4 +1,6 @@
 import React from 'react';
+import Linkedin from '../images/icons/QUELL-icons-linkedin.svg';
+import Github from '../images/icons/QUELL-icons-github.svg';
 
 const TeamMember = (props) => {
   const { src, bio, name, linkedin, github } = props;
@@ -10,10 +12,10 @@ const TeamMember = (props) => {
       <p>{bio}</p>
       <div className='social-icons'>
         <a href={linkedin} target='_blank'>
-          <img src='../images/icons/QUELL-icons-linkedin.svg'></img>
+          <img src={Linkedin}></img>
         </a>
         <a href={github} target='_blank'>
-          <img src='../images/icons/QUELL-icons-github.svg'></img>
+          <img src={Github}></img>
         </a>
       </div>
     </div>

@@ -1,4 +1,5 @@
 import React from 'react';
+import Logo from '../images/quell_logos/QUELL-long.svg';
 
 function smoothScroll(element) {
   document.getElementById(element).scrollIntoView({ behavior: 'smooth' });
@@ -8,9 +9,9 @@ const Header = () => {
   return (
     <header>
       <div id='logo-main-container'>
-        <img id='logo-main' src='../images/quell_logos/QUELL-long.svg'></img>
+        <img id='logo-main' src={Logo}></img>
       </div>
-  
+
       <ul className='header-links'>
         <li>
           <a href='#info'>INFO</a>
@@ -27,7 +28,6 @@ const Header = () => {
           </a>
         </li>
       </ul>
-     
     </header>
   );
 };
