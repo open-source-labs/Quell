@@ -53,6 +53,7 @@ class QuellCache {
 
     // create response prototype
     const proto = this.parseAST(AST);
+    
     // handle error
     if (proto === 'error') {
       return next('Error: Quell currently only supports GraphQL queries');
@@ -91,7 +92,7 @@ class QuellCache {
     const freshProto = this.parseAST(AST);
 
     const refetchedFromCache = this.buildFromCache(freshProto, this.queryMap, queriedCollection);
-
+    console.log(dummyCache.cache);
     // return fullResponse;
     return refetchedFromCache;
   };
@@ -189,7 +190,7 @@ class QuellCache {
    */
   parseAST(AST) {
     const queryRoot = AST.definitions[0];
-
+  
     // limit operations: Quell currently only supports GraphQL queries
     if (queryRoot.operation !== 'query') {
       return 'error';
@@ -197,7 +198,7 @@ class QuellCache {
 
     // initialize prototype as empty object
     const prototype = {};
-
+    let isQuellable = true;
     /**
      * visit is a utility provided in the graphql-JS library. It performs a
      * depth-first traversal of the abstract syntax tree, invoking a callback
@@ -207,6 +208,16 @@ class QuellCache {
      * https://graphql.org/graphql-js/language/#visit
      */
     visit (AST, {
+      enter(node) {
+        if (node.arguments) {
+          if (node.arguments.length > 0) {
+            isQuellable = false;
+          }
+        }
+        if (node.alias) {
+          isQuellable = false;
+        }
+      },
       SelectionSet(node, key, parent, path, ancestors) {
         /** Helper function to convert array of ancestor fields into a
          *  path at which to assign the `collectFields` object.
@@ -258,7 +269,7 @@ class QuellCache {
         }
       }
     });
-
+    console.log('Quellable? ', isQuellable);
     return prototype;
   };
   
@@ -498,7 +509,7 @@ for (const key in fakeDataPartial) {
   dummyCache.set(key, JSON.stringify(fakeDataPartial[key]));
 };
 console.log(quell.query({body: { query: "{countries{id name capital cities { id name population }}}" }}));
-// console.log(quell.query({body: { query: "{countries{id capital cities { id name population }}}" }}));
+console.log(quell.query({body: { query: "{countries{id capital cities { id name population }}}" }}));
 
 // const cached = [
 //   { name: 'George', id: 1, human: true, friends: [ { name: 'John', human: true }, { name: 'Wesley', human: true }] },
@@ -511,5 +522,10 @@ console.log(quell.query({body: { query: "{countries{id name capital cities { id 
 // ]
 
 // console.log(quell.joinResponses(cached, uncached)[0].friends);
+// quell.parseAST(parse(`{
+//   empireHero: hero {
+//   name
+//   }
+//   }`));
 
 module.exports = QuellCache;
