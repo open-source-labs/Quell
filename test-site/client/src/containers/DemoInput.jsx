@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
-import ClickAwayListener from '@material-ui/core/ClickAwayListener';
 import QueryDisplay from "../components/QueryDisplay.jsx";
 import DropdownItem from "../components/DropdownItem.jsx";
 import { ResultsHelper } from "../helper-functions/HelperFunctions.js";
@@ -15,9 +14,23 @@ const DemoInput = (props) => {
   const [idDropdown, setIdDropdown] = useState(false); // show an id dropdown
   const [selectedId, setSelectedId] = useState(1); // display id
   const [idDropdownMenu, toggleIdDropdownMenu] = useState(false); // toggle id dropdown menu
-  // const [output, setOutput] = useState({ Country: ["id"] }); // looks like: { QUERY: ['item1', 'item2', {'cities': ['item1', 'item2']}] }
-  // console.log("RESULT:", output);
-
+  
+  // Below makes the PLUS dropdown go away when you cick it:
+  const ref = useRef(null);
+  const handleClickOutside = (event) => {
+    if (ref.current && !ref.current.contains(event.target)) {
+      toggleDropdown(false);
+      toggleIdDropdownMenu(false);
+    }
+  };
+  useEffect(() => {
+    // triggers listener for clicks outside
+    document.addEventListener('click', handleClickOutside, true);
+    return () => {
+      document.removeEventListener('click', handleClickOutside, true);
+    };
+  }, [])
+  //
 
   // All changes to final query are routed here
   const outputFunction = (newList, sub, query, id) => {
@@ -50,7 +63,8 @@ const DemoInput = (props) => {
   };
 
   // Array of queries to choose from
-  const dropdownList = ["countries", "country by id", "cities", "cities by country id"];
+  // const dropdownList = ["countries", "country by id", "cities", "cities by country id"];
+  const dropdownList = ["countries", "cities"];
   // Creates dropdown menu from the above array ^^
   const dropdownMenu = dropdownList.map((item, i) => {
     return (
@@ -83,10 +97,10 @@ const DemoInput = (props) => {
           >
             <div className="plus-minus-icons dropdown-icon">
               <img src="../images/buttons/dropdown-button.svg" />
-              <img src="../images/buttons/dropdown-button-hover.svg" class="hover-button"/>
+              <img src="../images/buttons/dropdown-button-hover.svg" className="hover-button"/>
             </div>
             {/* Query Dropdown Menu */}
-            {queryDropdown && <div className="dropdown-menu">{dropdownMenu}</div>}
+            {queryDropdown && <div className="dropdown-menu" ref={ref}>{dropdownMenu}</div>}
           </button>
         </span>
         {tab}
@@ -101,11 +115,11 @@ const DemoInput = (props) => {
             >
               <div className="plus-minus-icons dropdown-icon">
                 <img src="../images/buttons/dropdown-button.svg" />
-                <img src="../images/buttons/dropdown-button-hover.svg" class="hover-button"/>
+                <img src="../images/buttons/dropdown-button-hover.svg" className="hover-button"/>
               </div>
               
               {/* Id Dropdown Menu */}
-              {idDropdownMenu && <div className="dropdown-menu">{idDropMenu}</div>}
+              {idDropdownMenu && <div className="dropdown-menu" ref={ref}>{idDropMenu}</div>}
             </button>
             {idDropdown && selectedId}
           </span>

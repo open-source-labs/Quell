@@ -18,7 +18,7 @@ const QueryItem = (props) => {
         >
           <div className="plus-minus-icons">
             <img src="../images/buttons/minus-button.svg" />
-            <img src="../images/buttons/minus-button-hover.svg" class="hover-button"/>
+            <img src="../images/buttons/minus-button-hover.svg" className="hover-button"/>
           </div>
         </button>
         {space}
