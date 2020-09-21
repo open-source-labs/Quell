@@ -7,9 +7,9 @@ const DropdownItem = (props) => {
   // onClick will trigger whatever func was passed into props with "item" passed in
   return (
     <>
-      <button className="dropdown-items" onClick={() => func(item)}>
+      <div className="dropdown-items" onClick={() => func(item)}>
         {item}
-      </button>
+      </div>
     </>
   );
 };
