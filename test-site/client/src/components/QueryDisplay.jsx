@@ -1,7 +1,11 @@
-import React, { useState, useEffect } from "react";
-import QueryItem from "./QueryItem.jsx";
-import DropdownItem from "./DropdownItem.jsx";
+import React, { useState, useEffect } from 'react';
+import QueryItem from './QueryItem.jsx';
+import DropdownItem from './DropdownItem.jsx';
 import AddCircleIcon from '@material-ui/icons/AddCircle';
+import Minus from '../images/buttons/minus-button.svg';
+import MinusHover from '../images/buttons/minus-button-hover.svg';
+import Plus from '../images/buttons/plus-button.svg';
+import PlusHover from '../images/buttons/plus-button-hover.svg';
 
 // component to get ALL data from our created DB
 const QueryDisplay = (props) => {
@@ -18,23 +22,23 @@ const QueryDisplay = (props) => {
   }, []);
 
   const cityItems = [
-    { country_id: "string" },
-    { id: "string" },
-    { name: "string" },
-    { population: "string" },
+    { country_id: 'string' },
+    { id: 'string' },
+    { name: 'string' },
+    { population: 'string' },
   ];
 
   const countryItems = [
-    { id: "string" },
-    { name: "string" },
-    { capital: "string" },
+    { id: 'string' },
+    { name: 'string' },
+    { capital: 'string' },
     { cities: cityItems }, // the name of the City type
   ];
 
   // returns an array equal to whichever item list corresponds with the query type
   const initialAvailableList = () => {
-    if (type === "Country") return convertIntoList(countryItems);
-    if (type === "City") return convertIntoList(cityItems);
+    if (type === 'Country') return convertIntoList(countryItems);
+    if (type === 'City') return convertIntoList(cityItems);
   };
 
   const convertIntoList = (itemList) => {
@@ -103,37 +107,38 @@ const QueryDisplay = (props) => {
     togglePlusDropdown(false);
   }
 
-  const ob = "{",
-    cb = "}",
+  const ob = '{',
+    cb = '}',
     tab = <span>&nbsp;&nbsp;&nbsp;&nbsp;</span>,
     space = <span>&nbsp;</span>;
   // Create the query list that gets rendered
   const queriedItems = queryList.map((item, i) => {
     // if querying "cities"
-    if (item === "cities") {
+    if (item === 'cities') {
       return (
         <>
-          <div className="queryLine">
+          <div className='queryLine'>
             {tab}
             {tab}
-            <button className="minus-button" onClick={() => deleteItem(item)}>
-            <div className="plus-minus-icons">
-              <img src="../images/buttons/minus-button.svg" />
-              <img src="../images/buttons/minus-button-hover.svg" class="hover-button"/>
-            </div>
+            <button className='minus-button' onClick={() => deleteItem(item)}>
+              <div className='plus-minus-icons'>
+                <img src={Minus} />
+                <img src={MinusHover} class='hover-button' />
+              </div>
             </button>
-            {space}{ob} cities{space}
+            {space}
+            {ob} cities{space}
           </div>
-          <div className="queryLine">
+          <div className='queryLine'>
             <QueryDisplay
-              initialQuery={["name"]}
-              type={"City"}
+              initialQuery={['name']}
+              type={'City'}
               outputFunction={outputFunction}
               key={type}
               sub={true}
             />
           </div>
-          <div className="queryLine">
+          <div className='queryLine'>
             {tab}
             {tab}
             {cb}
@@ -162,22 +167,22 @@ const QueryDisplay = (props) => {
   return (
     <>
       {/* List all the items we've already added */}
-      <div className="queryLinesContainer">{queriedItems}</div>
+      <div className='queryLinesContainer'>{queriedItems}</div>
 
       {/* Plus sign, which opens a dropdown */}
       {tab}
       {tab}
       {sub && <>{tab}</>}
       <button
-        className="plus-button"
+        className='plus-button'
         onClick={() => togglePlusDropdown(!plusDropdown)}
       >
-      <div className="plus-minus-icons">
-        <img src="../images/buttons/plus-button.svg" />
-        <img src="../images/buttons/plus-button-hover.svg" class="hover-button"/>
-      </div>
-      {/* Where the plus dropdown appears on click */}
-      {plusDropdown && <div className="dropdown-menu">{dropdown}</div>}
+        <div className='plus-minus-icons'>
+          <img src={Plus} />
+          <img src={PlusHover} class='hover-button' />
+        </div>
+        {/* Where the plus dropdown appears on click */}
+        {plusDropdown && <div className='dropdown-menu'>{dropdown}</div>}
       </button>
     </>
   );
