@@ -1,15 +1,15 @@
 import React, { useState, useRef } from 'react'; // Remove useRef to remove default
 import QueryInput from '../components/QueryInput';
 import DemoInput from './DemoInput';
-import ButtonRunQuery from '../components/ButtonRunQuery';
+// import ButtonRunQuery from '../components/ButtonRunQuery';
+// import ButtonClearCache from '../components/ButtonClearCache';
+import DemoButton from '../components/DemoButton';
 import QueryResults from '../components/QueryResults';
 import Metrics from '../components/Metrics';
-import ButtonClearCache from '../components/ButtonClearCache';
 import Graph from '../components/Graph';
 import Quell from '../../../../quell-client/Quellify';
 import { ResultsParser, CreateQueryStr } from '../helper-functions/HelperFunctions.js';
 import Header from '../images/headers/QUELL-headers-demo w lines.svg';
-import ButtonZeroOut from '../components/ButtonZeroOut';
 
 const Demo = () => {
   // const [queryInput, setQueryInput] = useState("");
@@ -17,7 +17,7 @@ const Demo = () => {
   const [fetchTime, setFetchTime] = useState('0.00 ms');
   const [fetchTimeIntegers, setFetchTimeIntegers] = useState([0, 0]);
   const [cacheStatus, setCacheStatus] = useState('');
-  const refInput = useRef(''); // Remove useRef to remove default
+  // const refInput = useRef(''); // Remove useRef to remove default
   const [output, setOutput] = useState({ countries: ['id'] });
   const [resetComponent, setResetComponent] = useState(false)
 
@@ -107,13 +107,16 @@ const Demo = () => {
           forwardRef={refInput} // Remove useRef to remove default
           handleChange={handleChange}
         /> */}
-        <DemoInput key={resetComponent} output={output} setOutput={setOutput} />
-        <ButtonRunQuery handleRunQueryClick={handleRunQueryClick} />
-        <QueryResults queryResponse={queryResponse} />
+        <div className="button-grid">
+          <DemoButton text={'Run Query'} func={handleRunQueryClick} classname={'button-query button-query-primary'} />
+          <DemoButton text={'Clear Session Cache'} func={handleClearCacheClick} classname={'button-query button-query-secondary'}/>
+          <DemoButton text={'Clear Server Cache'} func={handleClearCacheClick} classname={'button-query button-query-secondary'}/>
+          <DemoButton text={'Reset All'} func={handleZeroOutClick} classname={'button-query button-query-secondary'}/>
+        </div>
+        <DemoInput output={output} key={resetComponent} setOutput={setOutput} />
         <Metrics fetchTime={fetchTime} cacheStatus={cacheStatus} />
-        <ButtonClearCache handleClearCacheClick={handleClearCacheClick} />
+        <QueryResults queryResponse={queryResponse} />
         <Graph fetchTimeIntegers={fetchTimeIntegers} />
-        <ButtonZeroOut handleZeroOutClick={handleZeroOutClick}/>
       </div>
     </div>
   );

@@ -44,8 +44,9 @@ const rob = {
 
 const Team = () => {
   return (
+    <>
+    <img id='team-quell' src={Header}></img>
     <div id='team'>
-      <img id='team-quell' src={Header}></img>
       <TeamMember
         src={nick.src}
         bio={nick.bio}
@@ -75,6 +76,7 @@ const Team = () => {
         github={justin.github}
       />
     </div>
+    </>
   );
 };
 
