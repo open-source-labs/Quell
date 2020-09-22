@@ -12,8 +12,10 @@ class QuellCache {
     this.cacheExpiration = cacheExpiration;
     this.redisCache = redis.createClient(redisPort);
     this.query = this.query.bind(this);
+    this.clearCache = this.clearCache.bind(this);
   };
 
+  
   /**
    * The class's controller method. It:
    *    - reads the query string from the request object,
@@ -32,7 +34,7 @@ class QuellCache {
     if (!req.body.query) {
       return next('Error: no GraphQL query found on request body');
     };
-
+    
     // retrieve GraphQL query string from request object; 
     const queryString = req.body.query;
     // create abstract syntax tree with graphql-js parser
@@ -43,78 +45,69 @@ class QuellCache {
     
     // pass-through for queries and operations that QuellCache cannot handle
     if (proto === 'unQuellable') {
-      const unQuellableResult = this.graphQLHandoff(queryString);
-      if (unQuellableResult === 'Error in graphqlHandoff') {
-        return next(unQuellableResult);
-      }
-      res.locals.queryResponse = unQuellableResult;
-      return next();
-    }
-    
-    // store name of query and associated object type
-    const queryName = Object.keys(proto)[0];
-    const queriedCollection = this.queryMap[queryName];
-    
-    
-    // build response from cache
-    const responseFromCache = await this.buildFromCache(proto, this.queryMap, queriedCollection);
-
-    // query for additional information, if necessary
-    let fullResponse, uncachedResponse;
-    if (responseFromCache.length === 0) { // if no cached data, handoff original query and cache results
       graphql(this.schema, queryString)
-        .then(async (queryResponse) => {
-          fullResponse = queryResponse.data[queryName];
-          await this.cache(fullResponse, queriedCollection, queryName);
-          const rebuiltProto = this.parseAST(AST);
-          const rebuiltFromCache = await this.buildFromCache(rebuiltProto, this.queryMap, queriedCollection);
-          res.locals.queryResponse = { data: { [queryName]: rebuiltFromCache }};
-          return next();
+      .then((queryResult) => {
+          res.locals.queryResponse = queryResult;
+          next();
         })
         .catch((error) => {
           return next('graphql library error: ', error);
         });
-    } else { 
-      const queryObject = this.createQueryObj(proto);
-
-      // if cached response is incomplete, reformulate query, handoff query, join responses, and cache joined responses
-      if (Object.keys(queryObject).length > 0) {
-        const newQueryString = this.createQueryStr(queryObject);
-        graphql(this.schema, newQueryString)
-          .then(async (queryResponse) => {
-            uncachedResponse = queryResponse.data[queryName];
-            fullResponse = await this.joinResponses(responseFromCache, uncachedResponse);
-            await this.cache(fullResponse, queriedCollection, queryName);
+    } else {
+      
+      // store name of query and associated object type
+      const queryName = Object.keys(proto)[0];
+      const queriedCollection = this.queryMap[queryName];
+      
+      
+      // build response from cache
+      const responseFromCache = await this.buildFromCache(proto, this.queryMap, queriedCollection);
+      
+      // query for additional information, if necessary
+      let fullResponse, uncachedResponse;
+      if (responseFromCache.length === 0) { // if no cached data, handoff original query and cache results
+        graphql(this.schema, queryString)
+        .then(async (queryResponse) => {
+          fullResponse = queryResponse.data[queryName];
+          await this.cache(fullResponse, queriedCollection, queryName);
             const rebuiltProto = this.parseAST(AST);
             const rebuiltFromCache = await this.buildFromCache(rebuiltProto, this.queryMap, queriedCollection);
             res.locals.queryResponse = { data: { [queryName]: rebuiltFromCache }};
             return next();
-
           })
           .catch((error) => {
             return next('graphql library error: ', error);
           });
-      } else {
-        // if nothing left to query, response from cache is full response
-        fullResponse = responseFromCache;
-        const rebuiltProto = this.parseAST(AST);
-        const rebuiltFromCache = await this.buildFromCache(rebuiltProto, this.queryMap, queriedCollection);
-
-        // attach properly formatted response to response object and pass to next middleware
-        res.locals.queryResponse = { data: { [queryName]: fullResponse }};
-        return next();
+      } else { 
+        const queryObject = this.createQueryObj(proto);
+        
+        // if cached response is incomplete, reformulate query, handoff query, join responses, and cache joined responses
+        if (Object.keys(queryObject).length > 0) {
+          const newQueryString = this.createQueryStr(queryObject);
+          graphql(this.schema, newQueryString)
+            .then(async (queryResponse) => {
+              uncachedResponse = queryResponse.data[queryName];
+              fullResponse = await this.joinResponses(responseFromCache, uncachedResponse);
+              await this.cache(fullResponse, queriedCollection, queryName);
+              const rebuiltProto = this.parseAST(AST);
+              const rebuiltFromCache = await this.buildFromCache(rebuiltProto, this.queryMap, queriedCollection);
+              res.locals.queryResponse = { data: { [queryName]: rebuiltFromCache }};
+              return next();
+              
+            })
+            .catch((error) => {
+              return next('graphql library error: ', error);
+            });
+          } else {
+          // if nothing left to query, response from cache is full response
+          res.locals.queryResponse = { data: { [queryName]: responseFromCache }};
+          return next();
+        }
       }
     }
-    
-    // // reconstruct prototype and rebuild response from cache to ensure proper ordering of response
-    // const rebuiltProto = this.parseAST(AST);
-    // const rebuiltFromCache = await this.buildFromCache(rebuiltProto, this.queryMap, queriedCollection);
-
-    // // attach properly formatted response to response object and pass to next middleware
-    // res.locals.queryResponse = { data: { [queryName]: fullResponse }};
-    // return next();
   };
-
+  
+  
   /**
    * getFromRedis reads from Redis cache and returns a promise.
    * @param {String} key - the key for Redis lookup 
@@ -142,7 +135,7 @@ class QuellCache {
       const returnedType = queriesObj[query].type.name || queriesObj[query].type.ofType.name
       queryMap[query] = returnedType;
     }
-
+    
     return queryMap;
   };
 
@@ -172,8 +165,8 @@ class QuellCache {
 
     // exclude built-in types
     const customTypes = Object.keys(typesList)
-      .filter((type) => !builtInTypes.includes(type) && type !== schema._queryType.name);
-
+    .filter((type) => !builtInTypes.includes(type) && type !== schema._queryType.name);
+    
     for (const type of customTypes) {
       const fieldsObj = {};
       const fields = typesList[type]._fields;
@@ -190,7 +183,7 @@ class QuellCache {
 
     return fieldsMap;
   };
-
+  
   /**
    * parseAST traverses the abstract syntax tree and creates a prototype object
    * representing all the queried fields nested as they are in the query. The
@@ -201,13 +194,10 @@ class QuellCache {
    */
   parseAST(AST) {
     const queryRoot = AST.definitions[0];
-    // limit operations: Quell currently only supports GraphQL queries
-    if (queryRoot.operation !== 'query') {
-      return 'error';
-    }
-
+    
     // initialize prototype as empty object
     const prototype = {};
+    let isQuellable = true;
 
     /**
      * visit is a utility provided in the graphql-JS library. It performs a
@@ -221,21 +211,21 @@ class QuellCache {
       enter(node) {
         if (node.operation) {
           if (node.operation !== 'query') {
-            return 'unQuellable';
+            isQuellable = false;
           }
         }
         if (node.arguments) {
           if (node.arguments.length > 0) {
-            return 'unQuellable';
+            isQuellable = false;
           }
         }
         if (node.directives) {
           if (node.directives.length > 0) {
-            return 'unQuellable';
+            isQuellable = false;
           }
         }
         if (node.alias) {
-          return 'unQuellable';
+          isQuellable = false;
         }
       },
       SelectionSet(node, key, parent, path, ancestors) {
@@ -245,9 +235,9 @@ class QuellCache {
         function setProperty(path, obj, value) {
           return path.reduce((prev, curr, index) => {
             return (index + 1 === path.length) // if last item in path
-              ? prev[curr] = value // set value
+            ? prev[curr] = value // set value
               : prev[curr] = prev[curr] || {};
-            // otherwise, if index exists, keep value or set to empty object if index does not exist
+              // otherwise, if index exists, keep value or set to empty object if index does not exist
           }, obj);
         };
         
@@ -257,7 +247,7 @@ class QuellCache {
          *  queried fields.
          */
         if (parent.kind === 'Field') {
-
+          
           /** GraphQL ASTs are structured such that a field's parent field
            *  is found three three ancestors back. Hence, subtract three. 
            */
@@ -274,7 +264,7 @@ class QuellCache {
             objPath.unshift(parentNodes[length - 1].name.value);
             depth -= 3;
           }
-
+          
           /** Loop over the array of fields at current node, adding each to
            *  an object that will be assigned to the prototype object at the
            *  position determined by the above array of ancestor fields.
@@ -290,7 +280,7 @@ class QuellCache {
       }
     });
     
-    return prototype;
+    return isQuellable ? prototype : 'unQuellable';
   };
   
   /**
@@ -317,7 +307,7 @@ class QuellCache {
    */
   async buildFromCache(proto, map, queriedCollection, collection) {
     const response = [];
-
+    
     for (const superField in proto) {
       // if collection not passed as argument, try to retrieve array of references from cache
       if (!collection) {
@@ -333,10 +323,10 @@ class QuellCache {
         response.push(builtItem);
       }
     }
-
+    
     return response;
   };
-
+  
   /**
    * buildItem iterates through keys -- defined on pass-in prototype object, which is always a fragment of the
    * prototype, assigning to nodeObject the data at matching keys in the passed-in item. If a key on the prototype
@@ -359,10 +349,10 @@ class QuellCache {
         else proto[key] = false; // toggle proto key to false if cached item does not contain queried data
       }
     };
-
+    
     return nodeObject;
   };
-
+  
   /**
    * createQueryObj traverses the prototype, removing fields that were retrieved from cache. The resulting object
    * will be passed to createQueryStr to construct a query requesting only the data not found in cache.
@@ -376,7 +366,7 @@ class QuellCache {
     }
     return queryObj;
   };
-
+  
   /**
    * protoReducer is a helper function (recusively) called from within createQueryObj, allowing introspection of
    * nested prototype fields.
@@ -397,7 +387,7 @@ class QuellCache {
     }
     return fields;
   };
-
+  
   /** 
    * createQueryStr converts the query object constructed in createQueryObj into a properly-formed GraphQL query,
    * requesting just those fields not found in cache.
@@ -406,16 +396,16 @@ class QuellCache {
   createQueryStr(queryObject) {
     const openCurl = ' { ';
     const closedCurl = ' } ';
-
+    
     let queryString = '';
-
+    
     for (const key in queryObject) {
       queryString += key + openCurl + this.queryStringify(queryObject[key]) + closedCurl;
     }
-
+    
     return openCurl + queryString + closedCurl;
   };
-
+  
   /**
    * queryStringify is a helper function called from within createQueryStr. It iterates through an
    * array of field names, concatenating them into a fragment of the query string being constructed 
@@ -455,7 +445,7 @@ class QuellCache {
       const joinedItem = await this.recursiveJoin(cachedArray[i], uncachedArray[i]);
       joinedArray.push(joinedItem);
     }
-
+    
     return joinedArray;
   };
 
@@ -527,12 +517,12 @@ class QuellCache {
     const arrayOfReferences = [];
     const typeQueried = this.queryMap[queryName];
     const collectionName = this.fieldsMap[typeQueried][field];
-  
+    
     for (const item of array) {
       this.writeToCache(this.generateId(collectionName, item), item);
       arrayOfReferences.push(this.generateId(collectionName, item));
     }
-  
+    
     return arrayOfReferences;
   };
 
@@ -572,7 +562,19 @@ class QuellCache {
     // Write the array of references to cache (e.g. 'City': ['City-1', 'City-2', 'City-3'...])
     this.writeToCache(queryName, referencesToCache);
   };
-
+  
+  /**
+   * clearCache flushes the Redis cache. To clear the cache from the client, establish an endpoint that
+   * passes the request and response objects to an instance of QuellCache.clearCache.
+   * @param {Object} req 
+   * @param {Object} res 
+   * @param {Function} next 
+   */
+  clearCache(req, res, next) {
+    this.redisCache.flushall();
+    next();
+  };
+  
 };
 
 module.exports = QuellCache;

@@ -20,7 +20,7 @@ if (process.env.NODE_ENV === 'production') {
   app.use('/dist', express.static(path.resolve(__dirname, '../dist')));
   // serve index.html on the route '/'
   app.get('/', (req, res) => {
-    res
+    return res
       .status(200)
       .sendFile(path.resolve(__dirname, '../client/src/index.html'));
   });
@@ -30,7 +30,13 @@ if (process.env.NODE_ENV === 'production') {
 app.use('/g', graphqlHTTP({
   schema: schema,
   graphiql: true
-}))
+}));
+
+
+// route that triggers the flushall function to clear the Redis cache
+app.get('/clearCache', quellCache.clearCache, (req, res) => {
+  return res.status(200).send('Redis cache successfully cleared');
+})
 
 // GraphQL route
 // app.use('/graphql', quell(schema), (req, res) => {
@@ -39,7 +45,7 @@ app.use('/g', graphqlHTTP({
 app.use('/graphql', 
   quellCache.query,
   (req, res) => {
-    res
+    return res
       .status(200)
       .send(res.locals.queryResponse);
   });
