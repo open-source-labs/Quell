@@ -12,12 +12,12 @@ import { ResultsParser, CreateQueryStr } from '../helper-functions/HelperFunctio
 import Header from '../images/headers/QUELL-headers-demo w lines.svg';
 
 const Demo = () => {
-  // const [queryInput, setQueryInput] = useState("");
+  const [queryInput, setQueryInput] = useState(""); // COMMENT OUT TO REVERT!!!!
   const [queryResponse, setQueryResponse] = useState({});
   const [fetchTime, setFetchTime] = useState('0.00 ms');
   const [fetchTimeIntegers, setFetchTimeIntegers] = useState([0, 0]);
   const [cacheStatus, setCacheStatus] = useState('');
-  // const refInput = useRef(''); // Remove useRef to remove default
+  const refInput = useRef(''); // Remove useRef to remove default // COMMENT OUT TO REVERT!!!!
   const [output, setOutput] = useState({ countries: ['id'] });
   const [resetComponent, setResetComponent] = useState(false)
 
@@ -40,8 +40,8 @@ const Demo = () => {
 
     Quell(
       '/graphql',
-      // refInput.current.value,
-      parsedResult,
+      refInput.current.value, // COMMENT OUT and UNCOMMENT BELOW TO REVERT!!!!
+      // parsedResult,
       {
         // Replace refInput.current.value with queryInput to remove default
         countries: 'Country',
@@ -105,17 +105,17 @@ const Demo = () => {
         <img id='demo-header' src={Header}></img>
       </div>
       <div className='dashboard-grid'>
-        {/* <QueryInput
+        <QueryInput // COMMENT OUT and UNCOMMENT DemoInput TO REVERT!!!!
           forwardRef={refInput} // Remove useRef to remove default
           handleChange={handleChange}
-        /> */}
+        />
         <div className="button-grid">
           <DemoButton text={'Run Query'} func={handleRunQueryClick} classname={'button-query button-query-primary'} />
           <DemoButton text={'Clear Session Cache'} func={handleClearCacheClick} classname={'button-query button-query-secondary'}/>
           <DemoButton text={'Clear Server Cache'} func={handleClearCacheClick} classname={'button-query button-query-secondary'}/>
           <DemoButton text={'Reset All'} func={handleZeroOutClick} classname={'button-query button-query-secondary'}/>
         </div>
-        <DemoInput output={output} key={resetComponent} setOutput={setOutput} />
+        {/* <DemoInput output={output} key={resetComponent} setOutput={setOutput} /> */}
         <Metrics fetchTime={fetchTime} cacheStatus={cacheStatus} />
         <QueryResults queryResponse={queryResponse} />
         <Graph fetchTimeIntegers={fetchTimeIntegers} />
