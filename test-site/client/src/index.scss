@@ -519,6 +519,7 @@ textarea {
   #team-quell {
     max-width: 450px;
     margin-bottom: 50px;
+    margin-top: 100px;
   }
 
   .profile-pics {
@@ -536,6 +537,11 @@ textarea {
     justify-items: center;
     top: 0;
     max-width: 800px;
+  }
+
+  #quell-wave {
+    width: 70%;
+    float: right;
   }
 
 }
