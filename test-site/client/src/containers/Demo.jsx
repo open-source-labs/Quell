@@ -107,8 +107,8 @@ const Demo = () => {
           <DemoButton text={'Reset All'} func={handleClearCacheClick} classname={'button-query button-query-secondary'}/>
         </div>
         <DemoInput output={output} setOutput={setOutput} />
-        <QueryResults queryResponse={queryResponse} />
         <Metrics fetchTime={fetchTime} cacheStatus={cacheStatus} />
+        <QueryResults queryResponse={queryResponse} />
         <Graph fetchTimeIntegers={fetchTimeIntegers} />
       </div>
     </div>

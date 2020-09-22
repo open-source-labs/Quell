@@ -51,6 +51,10 @@ header {
 }
 
 .header-links {
+  margin: auto;
+  left: 50%;
+  right: 50%;
+  max-width: 800px;
   display: flex;
   justify-content: space-around;
   list-style-type: none;
@@ -90,6 +94,10 @@ header {
 
 
 .info-container {
+  margin: auto;
+  left: 50%;
+  right: 50%;
+  max-width: 800px;
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -123,7 +131,6 @@ margin: 50px auto;
 // ====== DEMO SECTION ======
 
 #demo {
-  
   margin-bottom: 10%;
 }
 
@@ -137,10 +144,6 @@ margin: 50px auto;
   margin: 20px auto;
 }
 
-// .query-div-title {
-//   font-size: 2em;
-// }
-
 .dashboard-grid {
   border-radius: 5px;
   // margin-top: 5vh;
@@ -151,25 +154,27 @@ margin: 50px auto;
   font-size: 25px;
   background-color: white;
   font-family: "Avenir";
-  letter-spacing: 5px;
+  letter-spacing: 3px;
   color: $quell-darkest;
+  border: 1px solid $quell-darkest;
 }
 
 .dashboard-grid > div {
-  // background-color: $off-white;
-  border: 1px solid $quell-darkest;
   border-radius: 5px;
   color: $quell-darkest;
   padding: 10px;
   font-family: "Avenir";
-  // letter-spacing: 5px;
+}
+
+.metrics-div {
+  background-color: $quell-lightest;  
+  color: $quell-darkest !important;
+  margin-top: 15px;
 }
 
 .timer-div,
 .cache-storage-div {
   font-family: "Rubik", sans-serif;
-  background: white;
-  // border: 1px solid #141415;
   border-radius: 5px;
   padding: 50px 2px;
   min-width: 15vw;
@@ -190,7 +195,6 @@ textarea {
 }
 
 .button-grid {
-  padding: 5px;
   height: 90px;
   grid-area: button-grid;
   display: grid;
@@ -205,7 +209,7 @@ textarea {
   padding: 0 !important;
   font-size: 16px;
   font-weight: bold;
-  border-radius: 3px;
+  border-radius: 5px;
   height: 90%;
 }
 .button-query:hover {
@@ -221,7 +225,6 @@ textarea {
 .button-query-secondary {
   color: $quell-medium;
   border: 3px solid $quell-medium !important;
-  // border-radius: 3px !important;
   background: #FFF;
 }
 .button-query-secondary:hover {
@@ -349,11 +352,10 @@ textarea {
 }
 
 .results-view {
-  background: #3c3c3c;
-  color: #85e6e1;
+  background: $quell-darkest;
+  color: $quell-lightest;
   font-size: 16px;
-  border: 1px solid #2c2c2eff;
-  border-radius: 2px;
+  border-radius: 5px;
   width: 100%;
   height: 30vh;
   padding: 10px;
@@ -457,46 +459,39 @@ textarea {
 
   /* Dashboard Grid */
   .dashboard-grid {
-    // display: flex;
+    margin: auto;
+    left: 50%;
+    right: 50%;
+    max-width: 700px;
     display: grid;
-    grid-template: auto/repeat(2, 1fr);
+    // grid-template: auto/repeat(2, 1fr);
     grid-gap: 10px;
-    grid-template-areas:
+    grid-template:
       "button-grid button-grid"
       "query metrics"
       "results graph";
+    grid-template-columns: 5fr 3fr;
   }
 
   /* dashboard divs */
-
-  .button-grid {
-    
-  }
 
   .query-div {
     grid-area: query;
   }
 
-  .button-query-div {
-    grid-area: button-query;
-    padding: 0 !important;
-  }
-
   .results-div {
     grid-area: results;
+    padding: 0 !important;
   }
 
   .metrics-div {
     grid-area: metrics;
-  }
-
-  .button-cache-div {
-    grid-area: button-cache;
-    padding: 0 !important;
+    margin-top: 0 !important;
   }
 
   .graph-div {
     grid-area: graph;
+    padding: 0 !important;
   }
 
   /* Metrics Grid */
