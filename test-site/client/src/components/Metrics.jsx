@@ -9,10 +9,6 @@ const Metrics = (props) => {
   return(
     <div className="metrics-div">
       <h3>Metrics:</h3>
-<<<<<<< HEAD
-      
-=======
->>>>>>> master
       <div className="metrics-grid">
         <div className="timer-div">
           <Tooltip title="Information about this component goes here.">
