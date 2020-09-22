@@ -192,7 +192,7 @@ const QueryDisplay = (props) => {
       >
         <div className='plus-minus-icons'>
           <img src={Plus} />
-          <img src={PlusHover} class='hover-button' />
+          <img src={PlusHover} className='hover-button' />
         </div>
         {/* Where the plus dropdown appears on click */}
         {plusDropdown && <div className='dropdown-menu' ref={ref}>{dropdown}</div>}
