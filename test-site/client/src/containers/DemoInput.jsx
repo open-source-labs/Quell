@@ -90,6 +90,8 @@ const DemoInput = (props) => {
     tab = <span>&nbsp;&nbsp;&nbsp;&nbsp;</span>,
     space = <span>&nbsp;</span>;
   return (
+    <>
+    <h3 className='query-title'>Query:</h3>
     <div className='query-div'>
       <div className='queryLine'>{ob}</div>
       <div className='queryLine'>
@@ -154,6 +156,7 @@ const DemoInput = (props) => {
         <div data-testid="count" >{count}</div>
         <button data-testid="countFunc" onClick={() => setCount(count+1)}></button> */}
     </div>
+    </>
   );
 };
 
