@@ -1,8 +1,7 @@
 const redis = require('redis');
 const { parse } = require('graphql/language/parser');
 const { visit } = require('graphql/language/visitor');
-const { graphql } = require('graphql');
-const { stringify } = require('querystring');
+const { graphql } = require('../../test-site/node_modules/graphql');
 
 class QuellCache {
   constructor (schema, redisPort, cacheExpiration = 1000) {
@@ -12,6 +11,7 @@ class QuellCache {
     this.redisPort = redisPort;
     this.cacheExpiration = cacheExpiration;
     this.redisCache = redis.createClient(redisPort);
+    this.query = this.query.bind(this);
   };
 
   /**
@@ -27,7 +27,7 @@ class QuellCache {
    *  @param {Object} res - Express response object, will carry query response to next middleware
    *  @param {Function} next - Express next middleware function, invoked when QuellCache completes its work
    */
-  query(req, res, next) {
+  async query(req, res, next) {
     // handle request without query
     if (!req.body.query) {
       return next('Error: no GraphQL query found on request body');
@@ -35,10 +35,9 @@ class QuellCache {
 
     // retrieve GraphQL query string from request object; 
     const queryString = req.body.query;
-    
     // create abstract syntax tree with graphql-js parser
     const AST = parse(queryString);
-
+    
     // create response prototype
     const proto = this.parseAST(AST);
     
@@ -58,50 +57,80 @@ class QuellCache {
     
     
     // build response from cache
-    const responseFromCache = this.buildFromCache(proto, this.queryMap, queriedCollection);
-       
-    
+    const responseFromCache = await this.buildFromCache(proto, this.queryMap, queriedCollection);
+
     // query for additional information, if necessary
-    let fullResponse;
+    let fullResponse, uncachedResponse;
     if (responseFromCache.length === 0) { // if no cached data, handoff original query and cache results
-      fullResponse = this.graphQLHandoff(queryString);
-      if (fullResponse === 'Error in graphqlHandoff') {
-        return next('Error in graphqlHandoff');
-      }
-      this.cache(fullResponse, queriedCollection, queryName);
+      graphql(this.schema, queryString)
+        .then(async (queryResponse) => {
+          fullResponse = queryResponse.data[queryName];
+          await this.cache(fullResponse, queriedCollection, queryName);
+          const rebuiltProto = this.parseAST(AST);
+          const rebuiltFromCache = await this.buildFromCache(rebuiltProto, this.queryMap, queriedCollection);
+          res.locals.queryResponse = { data: { [queryName]: rebuiltFromCache }};
+          return next();
+        })
+        .catch((error) => {
+          return next('graphql library error: ', error);
+        });
     } else { 
       const queryObject = this.createQueryObj(proto);
+
       // if cached response is incomplete, reformulate query, handoff query, join responses, and cache joined responses
       if (Object.keys(queryObject).length > 0) {
         const newQueryString = this.createQueryStr(queryObject);
-        const uncachedResponse = this.graphQLHandoff(newQueryString);
-        if (uncachedResponse === 'Error in graphqlHandoff') {
-          return next('Error in graphqlHandoff');
-        }
-        fullResponse = this.joinResponses(responseFromCache, uncachedResponse);
-        this.cache(fullResponse, queriedCollection, queryName);
+        graphql(this.schema, newQueryString)
+          .then(async (queryResponse) => {
+            uncachedResponse = queryResponse.data[queryName];
+            fullResponse = await this.joinResponses(responseFromCache, uncachedResponse);
+            await this.cache(fullResponse, queriedCollection, queryName);
+            const rebuiltProto = this.parseAST(AST);
+            const rebuiltFromCache = await this.buildFromCache(rebuiltProto, this.queryMap, queriedCollection);
+            res.locals.queryResponse = { data: { [queryName]: rebuiltFromCache }};
+            return next();
+
+          })
+          .catch((error) => {
+            return next('graphql library error: ', error);
+          });
       } else {
         // if nothing left to query, response from cache is full response
         fullResponse = responseFromCache;
+        const rebuiltProto = this.parseAST(AST);
+        const rebuiltFromCache = await this.buildFromCache(rebuiltProto, this.queryMap, queriedCollection);
+
+        // attach properly formatted response to response object and pass to next middleware
+        res.locals.queryResponse = { data: { [queryName]: fullResponse }};
+        return next();
       }
     }
     
-    // reconstruct prototype and rebuild response from cache to ensure proper ordering of response
-    const rebuiltProto = this.parseAST(AST);
-    const rebuiltFromCache = this.buildFromCache(rebuiltProto, this.queryMap, queriedCollection);
+    // // reconstruct prototype and rebuild response from cache to ensure proper ordering of response
+    // const rebuiltProto = this.parseAST(AST);
+    // const rebuiltFromCache = await this.buildFromCache(rebuiltProto, this.queryMap, queriedCollection);
 
-    // attach properly formatted response to response object and pass to next middleware
-    res.locals.queryResponse = { data: { [queryName]: fullResponse }};
-    return next();
+    // // attach properly formatted response to response object and pass to next middleware
+    // res.locals.queryResponse = { data: { [queryName]: fullResponse }};
+    // return next();
   };
 
+  getFromRedis(key) {
+    return new Promise((resolve, reject) => {
+      this.redisCache.get(key, (error, result) => error ? reject(error) : resolve(result));
+    });
+  };
+
+
+  
   /**
    * Uses graphql-JS library to execute user-defined schema resolvers to satisfy the query.
    * @param {String} query - original or reformulated GraphQL query string
    */
-  graphQLHandoff(query) {
+  async graphQLHandoff(query) {
     graphql(this.schema, query)
       .then((results) => {
+       
         return results;
       })
       .catch((error) => {
@@ -186,7 +215,6 @@ class QuellCache {
    */
   parseAST(AST) {
     const queryRoot = AST.definitions[0];
-  
     // limit operations: Quell currently only supports GraphQL queries
     if (queryRoot.operation !== 'query') {
       return 'error';
@@ -275,7 +303,7 @@ class QuellCache {
         }
       }
     });
-    console.log('Quellable? ', isQuellable);
+    
     return prototype;
   };
   
@@ -301,16 +329,21 @@ class QuellCache {
    * @param {String} queriedCollection - name of object type being queried for
    * @param {Object} collection - optional: when passed as argument, an object retrieved from cache
    */
-  buildFromCache(proto, map, queriedCollection, collection) {
+  async buildFromCache(proto, map, queriedCollection, collection) {
     const response = [];
-    
+
     for (const superField in proto) {
       // if collection not passed as argument, try to retrieve array of references from cache
-      if (!collection) collection = JSON.parse(this.redisCache.get(superField)) || [];
+      if (!collection) {
+        const collectionFromCache = await this.getFromRedis(superField);
+        if (!collectionFromCache) collection = [];
+        else collection = JSON.parse(collectionFromCache);
+      }
       if (collection.length === 0) this.toggleProto(proto);
       for (const item of collection) {
-        const itemFromCache = JSON.parse(this.redisCache.get(item));
-        const builtItem = this.buildItem(proto[superField], this.fieldsMap[queriedCollection], itemFromCache);
+        let itemFromCache = await this.getFromRedis(item);
+        itemFromCache = itemFromCache ? JSON.parse(itemFromCache) : {};
+        const builtItem = await this.buildItem(proto[superField], this.fieldsMap[queriedCollection], itemFromCache);
         response.push(builtItem);
       }
     }
@@ -328,13 +361,13 @@ class QuellCache {
    * @param {Object} fieldsMap 
    * @param {Object} item 
    */
-  buildItem(proto, fieldsMap, item) {
+  async buildItem(proto, fieldsMap, item) {
     const nodeObject = {};
 
     for (const key in proto) {
       if (typeof proto[key] === 'object') { // if field is an object, recursively call buildFromCache
         const protoAtKey = { [key]: proto[key] };
-        nodeObject[key] = this.buildFromCache(protoAtKey, fieldsMap, fieldsMap[key], item[key]);
+        nodeObject[key] = await this.buildFromCache(protoAtKey, fieldsMap, fieldsMap[key], item[key]);
       } else if (proto[key]) { // if current key has not been toggled to false because it needs to be queried
         if (item[key] !== undefined) nodeObject[key] = item[key];
         else proto[key] = false; // toggle proto key to false if cached item does not contain queried data
@@ -429,11 +462,12 @@ class QuellCache {
    * @param {Array} cachedArray - base array
    * @param {Array} uncachedArray - array to be merged into base array
    */
-  joinResponses(cachedArray, uncachedArray) {
+  async joinResponses(cachedArray, uncachedArray) {
     const joinedArray = [];
 
     for (let i = 0; i < uncachedArray.length; i += 1) {
-      joinedArray.push(this.recursiveJoin(cachedArray[i], uncachedArray[i]));
+      const joinedItem = await this.recursiveJoin(cachedArray[i], uncachedArray[i]);
+      joinedArray.push(joinedItem);
     }
 
     return joinedArray;
@@ -446,22 +480,23 @@ class QuellCache {
    * @param {Object} cachedItem - base item
    * @param {Object} uncachedItem - item to be merged into base
    */
-  recursiveJoin(cachedItem, uncachedItem) {
+  async recursiveJoin(cachedItem, uncachedItem) {
     const joinedObject = cachedItem || {};
-    
+
     for (const field in uncachedItem) {
       if (Array.isArray(uncachedItem[field])) {
         if (typeof uncachedItem[field][0] === 'string') {
           const temp = [];
           for (let reference of uncachedItem[field]) {
-            const itemFromCache = JSON.parse(this.redisCache.get(reference));
+            let itemFromCache = await this.getFromRedis(reference);
+            itemFromCache = itemFromCache ? JSON.parse(itemFromCache) : {};
             temp.push(itemFromCache)
           }
           uncachedItem[field] = temp;
         }
         if (cachedItem[field]) {
           
-          joinedObject[field] = this.joinResponses(cachedItem[field], uncachedItem[field]);
+          joinedObject[field] = await this.joinResponses(cachedItem[field], uncachedItem[field]);
         } else {
           joinedObject[field] = uncachedItem[field];
         }
@@ -521,10 +556,10 @@ class QuellCache {
    *   - Prevent data loss: Each item of the response is merged with what is in cache to ensure that no data
    *     present in the cache but not requested by the current query is lost.
    * @param {Array} response - the response merged from cache and graphql query resolution 
-   * @param {*} collectionName - the object type name, used for identifying items in cache
-   * @param {*} queryName - the name of the query, used for identifying response arrays in cache
+   * @param {String} collectionName - the object type name, used for identifying items in cache
+   * @param {String} queryName - the name of the query, used for identifying response arrays in cache
    */
-  cache(response, collectionName, queryName) {
+  async cache(response, collectionName, queryName) {
     const collection = JSON.parse(JSON.stringify(response));
   
     const referencesToCache = [];
@@ -533,8 +568,10 @@ class QuellCache {
     for (const item of collection) {
       
       const cacheId = this.generateId(collectionName, item);
-      const itemFromCache = JSON.parse(this.redisCache.get(cacheId));
-      const joinedWithCache = this.recursiveJoin(item, itemFromCache);
+      let itemFromCache = await this.getFromRedis(cacheId);
+      itemFromCache = itemFromCache ? JSON.parse(itemFromCache) : {};
+      
+      const joinedWithCache = await this.recursiveJoin(item, itemFromCache);
       const itemKeys = Object.keys(joinedWithCache);
       
       for (const key of itemKeys) {

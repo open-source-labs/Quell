@@ -1,6 +1,8 @@
 const mockSchema = require('./mockSchema');
 const mockQuery = require('./mockQuery');
-
+const QuellCache = require('./quell');
+const { parse } = require('graphql/language/parser');
+const { visit } = require('graphql/language/visitor');
 /**
  * CONNECTING TO REDIS SERVER:
  * I need to research this more. For now, I'm going to create a cache object to 
@@ -80,8 +82,8 @@ const dataFromResolvers = [
 for (const key in fakeDataPartial) {
   dummyCache.set(key, JSON.stringify(fakeDataPartial[key]));
 };
-console.log(quell.query({body: { query: "{countries{id name capital cities { id name population }}}" }}));
-console.log(quell.query({body: { query: "{countries{id capital cities { id name population }}}" }}));
+console.log(quell.parseAST(parse("{countries{id name capital cities { id name population }}}")));
+// console.log(quell.query({body: { query: "{countries{id capital cities { id name population }}}" }}));
 
 // const cached = [
 //   { name: 'George', id: 1, human: true, friends: [ { name: 'John', human: true }, { name: 'Wesley', human: true }] },
