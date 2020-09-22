@@ -376,6 +376,10 @@ textarea {
 // ====== TEAM SECTION ======
 
 #team-quell {
+  display: block;
+  margin: auto;
+  left: 50%;
+  right: 50%;
   width: 60%;
   padding: 2%;
   margin-bottom: 10%;
@@ -390,7 +394,7 @@ textarea {
 
 .profile-pics {
   width: 45%;
-  // max-width: 400px;
+  max-width: 400px;
   margin-bottom: 4%;
 }
 
@@ -518,6 +522,20 @@ textarea {
   }
 
   .profile-pics {
-    max-width: 250px;
+    width: 70% !important;
+    max-width: 250px !important;
+    height: 600px;
   }
+
+  #team {
+    margin: auto;
+    left: 50%;
+    right: 50%;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    justify-items: center;
+    top: 0;
+    max-width: 800px;
+  }
+
 }
