@@ -6,6 +6,10 @@ import Mike from '../images/profile_pics/QUELL-headshot w border-Mike.svg';
 import Nick from '../images/profile_pics/QUELL-headshot w border-Nick.svg';
 import Rob from '../images/profile_pics/QUELL-headshot w border-Rob.svg';
 
+/* 
+  Component to generate each teams section
+*/
+
 const justin = {
   name: 'Justin Jaeger',
   src: Justin,

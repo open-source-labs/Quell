@@ -1,8 +1,12 @@
 import React from 'react';
-import Tooltip from '@material-ui/core/Tooltip';
+
+/*
+    Metrics box in the demo
+*/
 
 const Metrics = (props) => {
   const { fetchTime, cacheStatus } = props;
+
   return(
     <>
     <h3 className='metrics-title'>Metrics:</h3>

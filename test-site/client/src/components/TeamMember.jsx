@@ -2,6 +2,10 @@ import React from 'react';
 import Linkedin from '../images/icons/QUELL-icons-linkedin.svg';
 import Github from '../images/icons/QUELL-icons-github.svg';
 
+/* 
+  Reusable component to generate each team member
+*/
+
 const TeamMember = (props) => {
   const { src, bio, name, linkedin, github } = props;
 

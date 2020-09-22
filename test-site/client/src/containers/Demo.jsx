@@ -1,52 +1,48 @@
-import React, { useState, useRef } from 'react'; // Remove useRef to remove default
-import QueryInput from '../components/QueryInput';
-import DemoInput from './DemoInput';
-// import ButtonRunQuery from '../components/ButtonRunQuery';
-// import ButtonClearCache from '../components/ButtonClearCache';
+import React, { useState } from 'react';
+import Query from './Query';
 import DemoButton from '../components/DemoButton';
 import QueryResults from '../components/QueryResults';
 import Metrics from '../components/Metrics';
 import Graph from '../components/Graph';
 import Quell from '../../../../quell-client/Quellify';
-import {
-  ResultsParser,
-  CreateQueryStr,
-} from '../helper-functions/HelperFunctions.js';
+import { CreateQueryStr } from '../helper-functions/HelperFunctions.js';
 import Header from '../images/headers/QUELL-headers-demo w lines.svg';
 
+/*
+  Container that renders the whole demo dashboard
+*/
+
 const Demo = () => {
-  // const [queryInput, setQueryInput] = useState("");
   const [queryResponse, setQueryResponse] = useState({});
   const [fetchTime, setFetchTime] = useState('0.00 ms');
   const [fetchTimeIntegers, setFetchTimeIntegers] = useState([0, 0]);
   const [cacheStatus, setCacheStatus] = useState('');
-  // const refInput = useRef(''); // Remove useRef to remove default
   const [output, setOutput] = useState({ countries: ['id'] });
   const [resetComponent, setResetComponent] = useState(false);
-
-  const handleChange = (e) => {
-    setQueryInput(e.target.value);
-  };
 
   const formatTimer = (time) => {
     return time.toFixed(2) + ' ms';
   };
 
-  const handleRunQueryClick = () => {
-    // run ResultsParser on output to get the query
-    // console.log('NON-PARSED RESULT', output)
-    const parsedResult = CreateQueryStr(output);
-    console.log('Input when you "Run Query":', parsedResult);
+  // ============================================================== //
+  // === Function that makes the fetch request to run the query === //
+  // ============================================================== //
 
+  const handleRunQueryClick = () => {
+
+    // Need to run the output state component through a parser that actually formats it like a graphQL query
+    const parsedResult = CreateQueryStr(output);
+    // console.log('Input when you "Run Query":', parsedResult); // --> uncomment if you want to check the actual input we are running
+
+    // start the timer (eventually displayed in Metrics)
     let startTime, endTime;
     startTime = performance.now();
 
+    // Make the fetch request
     Quell(
-      '/graphql',
-      // refInput.current.value,
-      parsedResult,
+      '/graphql', // our route
+      parsedResult, // our input
       {
-        // Replace refInput.current.value with queryInput to remove default
         countries: 'Country',
         country: 'Country',
         citiesByCountryId: 'City',
@@ -55,24 +51,25 @@ const Demo = () => {
       { cities: 'City' }
     )
       .then((res) => {
-        endTime = performance.now();
-        const time = endTime - startTime;
+        endTime = performance.now(); // stop the timer
+        const time = endTime - startTime; // calculate how long it took
 
-        // Query Response state
+        // Set Query Response state
         setQueryResponse(res.data);
 
-        // Timer State
+        // Set Timer State
         const rawTime = time;
         const fTime = formatTimer(rawTime);
         setFetchTime(fTime);
 
-        // Line Graph
+        // Set Line Graph
         const newTime = Number(rawTime.toFixed(3));
         setFetchTimeIntegers([...fetchTimeIntegers, newTime]);
       })
       .catch((err) => console.log(err));
   };
 
+  // Runs when we Clear Cache
   const handleClearCacheClick = () => {
     // Cache/FetchTime
     setFetchTime('0.00 ms');
@@ -85,7 +82,8 @@ const Demo = () => {
     setFetchTimeIntegers([0, 0]);
   };
 
-  const handleZeroOutClick = () => {
+  // Runs when we click Reset All
+  const handleResetAll = () => {
     // Query default
     setResetComponent(!resetComponent);
     // Reset output
@@ -144,11 +142,8 @@ const Demo = () => {
       </div>
 
       <div className='dashboard-grid'>
-        {/* <QueryInput
-          forwardRef={refInput} // Remove useRef to remove default
-          handleChange={handleChange}
-        /> */}
-        <div className='button-grid'>
+        <div className='button-grid'> 
+        {/* All of the buttons at the top of the demo */}
           <DemoButton
             text={'Run Query'}
             func={handleRunQueryClick}
@@ -166,11 +161,11 @@ const Demo = () => {
           />
           <DemoButton
             text={'Reset All'}
-            func={handleZeroOutClick}
+            func={handleResetAll}
             classname={'button-query button-query-secondary'}
           />
         </div>
-        <DemoInput output={output} key={resetComponent} setOutput={setOutput} />
+        <Query output={output} key={resetComponent} setOutput={setOutput} /> {/* The key prop makes it so that when component changes, it completely reloads -- useful when clicking "Reset All" */}
         <Metrics fetchTime={fetchTime} cacheStatus={cacheStatus} />
         <QueryResults queryResponse={queryResponse} />
         <Graph fetchTimeIntegers={fetchTimeIntegers} />

@@ -1,5 +1,6 @@
-// node HelperFunctions.js
 /* 
+  Used in Query and Demo
+  
   newList 
     - whatever is passed in here are the main array fields
     - looks like: ['name', 'id', 'capital']
@@ -128,38 +129,6 @@ const ResultsHelper = (newList, sub, query, id, currentResults) => {
   return currentResults
 };
 
-//======================================//
-//========== RESULTS PARSER ============//
-//======================================//
-
-const ResultsParser = (results) => {
-  const newString = [];
-  results = JSON.stringify(results);
-  console.log(results);
-  let deleteClosingBracket = 0
-  for (let i = 0; i < results.length; i++) {
-    const char = results[i]
-
-    if (char === '[') newString.push('{')
-    else if (char === ']') newString.push('}')
-    else if (char === '{' && results[i-1] === ',') {
-      deleteClosingBracket+=1
-    }
-    else if (char === '}') {
-      if (deleteClosingBracket > 0) {
-        deleteClosingBracket-=1
-      } else {
-        newString.push(char)
-      }
-    }
-    else if (char === ':' && results[i-1] === '"') {}
-    else if (char === '"') {}
-    else if (char === ',') newString.push(' ')
-    else newString.push(char)
-  }
-
-  return newString.join('')
-};
 
 
 //======================================//
@@ -194,30 +163,6 @@ function CreateQueryStr(queryObject) {
   return openCurl + mainStr + closedCurl;
 };
 
-//===== TESTS ======//
-//======= ERROR LOG =======//
-
-// note: In all of these, the parsed result (query) looks right, so I'm not sure if this is a back-end problem
-
-/*
-  Cannot read property 'population' of null
-*/
-// const currentResults1 = { 'countries': ['id', {'cities': ['population']}] }
-// const currentResults2 = { 'country (id:4)': ['id', 'name', {'cities': ['id', 'name']}] } 
-// const currentResults3 = { 'citiesByCountry (country_id:4)': ['id', 'name', {'cities': ['id', 'name']}] }
-// const currentResults4 = { 'cities': ['country_id', 'name'] }
-
-/*
-  Cannot read property 'population' of null
-*/
-// const currentResults = { 'country (id:1)': ['id', 'name'] }
-
-
-// console.log(CreateQueryStr(currentResults1))
-// console.log(CreateQueryStr(currentResults2))
-// console.log(CreateQueryStr(currentResults3))
-// console.log(CreateQueryStr(currentResults4))
-
-
 //===============EXPORT=================//
-export { ResultsHelper, CreateQueryStr, ResultsParser };
+
+export { ResultsHelper, CreateQueryStr };
