@@ -211,6 +211,7 @@ textarea {
   font-weight: bold;
   border-radius: 5px;
   height: 90%;
+  outline: none;
 }
 .button-query:hover {
   cursor: pointer;
@@ -240,7 +241,7 @@ textarea {
   // background-color: limegreen;
   // height: 15px;
   // width: 15px;
-  position: absolute;
+  position: relative;
   background-color: white;
   outline: none;
   border: none;
@@ -363,7 +364,8 @@ textarea {
 }
 
 .metric-value {
-  font-size: 3.5em;
+  font-size: 3.2em;
+  letter-spacing: -2px;
 }
 
 .trend {
@@ -474,13 +476,15 @@ textarea {
       "button-grid button-grid"
       "query metrics"
       "results graph";
-    grid-template-columns: 5fr 3fr;
+    grid-template-columns: 3fr 2fr;
   }
 
   /* dashboard divs */
 
   .query-div {
     grid-area: query;
+    overflow: scroll;
+    height: 400px;
   }
 
   .results-div {
@@ -491,6 +495,7 @@ textarea {
   .metrics-div {
     grid-area: metrics;
     margin-top: 0 !important;
+    padding-right: 0 !important;
   }
 
   .graph-div {
@@ -501,7 +506,7 @@ textarea {
   /* Metrics Grid */
   .metrics-grid {
     display: grid;
-    grid-template: auto/repeat(2, 1fr);
+    // grid-template: auto/repeat(2, 1fr);
     grid-gap: 10px;
     grid-template-areas: "timer-div cache-storage-div";
   }
