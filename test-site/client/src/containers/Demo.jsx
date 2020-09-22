@@ -7,11 +7,9 @@ import Metrics from '../components/Metrics';
 import ButtonClearCache from '../components/ButtonClearCache';
 import Graph from '../components/Graph';
 import Quell from '../../../../quell-client/Quellify';
-import {
-  ResultsParser,
-  CreateQueryStr,
-} from '../helper-functions/HelperFunctions.js';
+import { ResultsParser, CreateQueryStr } from '../helper-functions/HelperFunctions.js';
 import Header from '../images/headers/QUELL-headers-demo w lines.svg';
+import ButtonZeroOut from '../components/ButtonZeroOut';
 
 const Demo = () => {
   // const [queryInput, setQueryInput] = useState("");
@@ -20,10 +18,8 @@ const Demo = () => {
   const [fetchTimeIntegers, setFetchTimeIntegers] = useState([0, 0]);
   const [cacheStatus, setCacheStatus] = useState('');
   const refInput = useRef(''); // Remove useRef to remove default
-
   const [output, setOutput] = useState({ countries: ['id'] });
-  // const [queryResponseError, setQueryResponseError] = useState('');
-  // const [storageSpace, setStorageSpace] = useState('0 KB');
+  const [resetComponent, setResetComponent] = useState(false)
 
   const handleChange = (e) => {
     setQueryInput(e.target.value);
@@ -62,9 +58,6 @@ const Demo = () => {
         // Query Response state
         setQueryResponse(res.data);
 
-        // // storage state
-        // setStorageSpace(quell.calculateSessionStorage());
-
         // Timer State
         const rawTime = time;
         const fTime = formatTimer(rawTime);
@@ -78,12 +71,28 @@ const Demo = () => {
   };
 
   const handleClearCacheClick = () => {
-    sessionStorage.clear();
-    // setStorageSpace('0 KB');
+    // Cache/FetchTime
     setFetchTime('0.00 ms');
+    // Clear sessionStorage
+    sessionStorage.clear();    
+    // Time cleared
     let date = new Date();
-    setCacheStatus(date.toString());
+    setCacheStatus(date.toLocaleTimeString());
+    // Zero-out line graph
+    setFetchTimeIntegers([0, 0]);
+  };
 
+  const handleZeroOutClick = () => {
+    // Query default
+    setResetComponent(!resetComponent);
+    // Zero-out results
+    setQueryResponse({});
+    // Zero-out cache/FetchTime
+    setFetchTime('0.00 ms');
+    // Clear sessionStorage
+    sessionStorage.clear();    
+    // Time cleared
+    setCacheStatus('');
     // Zero-out line graph
     setFetchTimeIntegers([0, 0]);
   };
@@ -93,18 +102,18 @@ const Demo = () => {
       <div id='demo-header-container'>
         <img id='demo-header' src={Header}></img>
       </div>
-
       <div className='dashboard-grid'>
         {/* <QueryInput
           forwardRef={refInput} // Remove useRef to remove default
           handleChange={handleChange}
         /> */}
-        <DemoInput output={output} setOutput={setOutput} />
+        <DemoInput key={resetComponent} output={output} setOutput={setOutput} />
         <ButtonRunQuery handleRunQueryClick={handleRunQueryClick} />
         <QueryResults queryResponse={queryResponse} />
         <Metrics fetchTime={fetchTime} cacheStatus={cacheStatus} />
         <ButtonClearCache handleClearCacheClick={handleClearCacheClick} />
         <Graph fetchTimeIntegers={fetchTimeIntegers} />
+        <ButtonZeroOut handleZeroOutClick={handleZeroOutClick}/>
       </div>
     </div>
   );
