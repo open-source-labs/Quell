@@ -94,6 +94,7 @@ const DemoInput = (props) => {
       <div className='queryLine'>{ob}</div>
       <div className='queryLine'>
         {space}
+        {space}
         {/* Dropdown appears on click */}
         <span>
           <button
@@ -108,7 +109,6 @@ const DemoInput = (props) => {
             {queryDropdown && <div className="dropdown-menu" ref={ref}>{dropdownMenu}</div>}
           </button>
         </span>
-        {tab}
         {query}
 
         {/* Id Dropdown (conditional) */}

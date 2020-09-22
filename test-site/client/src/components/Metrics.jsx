@@ -10,7 +10,6 @@ const Metrics = (props) => {
     <div className="metrics-div">
       
       <h3>Metrics:</h3>
-       
       
       <div className="metrics-grid">
         <div className="timer-div">
