@@ -85,6 +85,8 @@ const Demo = () => {
   const handleZeroOutClick = () => {
     // Query default
     setResetComponent(!resetComponent);
+    // Reset output
+    setOutput({ countries: ['id'] });
     // Zero-out results
     setQueryResponse({});
     // Zero-out cache/FetchTime
