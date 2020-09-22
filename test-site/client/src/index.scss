@@ -156,7 +156,13 @@ header {
   padding: 10px;
 }
 
+.query-title, .metrics-title {
+  margin-left: 10px;
+  font-weight: 600;
+}
+
 .query-div {
+  overflow-anchor: none;
   font-size: 25px;
   background-color: white;
   font-family: 'Avenir';
@@ -175,7 +181,7 @@ header {
 .metrics-div {
   background-color: $quell-lightest;
   color: $quell-darkest !important;
-  margin-top: 15px;
+  // margin-top: 15px;
 }
 
 .timer-div,
@@ -201,6 +207,7 @@ textarea {
 }
 
 .button-grid {
+  padding-bottom: 0!important;
   height: 90px;
   grid-area: button-grid;
   display: grid;
@@ -476,11 +483,12 @@ textarea {
     max-width: 700px;
     display: grid;
     // grid-template: auto/repeat(2, 1fr);
-    grid-gap: 10px;
+    grid-gap: 5px;
     grid-template:
-      'button-grid button-grid'
-      'query metrics'
-      'results graph';
+      "button-grid button-grid"
+      "query-title metrics-title"
+      "query metrics"
+      "results graph";
     grid-template-columns: 3fr 2fr;
   }
 
@@ -499,6 +507,7 @@ textarea {
 
   .metrics-div {
     grid-area: metrics;
+    margin-top: 15px;
     margin-top: 0 !important;
     padding-right: 0 !important;
   }
@@ -506,6 +515,12 @@ textarea {
   .graph-div {
     grid-area: graph;
     padding: 0 !important;
+  }
+  
+  .query-title, .metrics-title {
+    position: relative;
+    margin: 0 !important;
+    top: 5px;
   }
 
   /* Metrics Grid */

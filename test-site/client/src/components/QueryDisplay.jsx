@@ -121,6 +121,13 @@ const QueryDisplay = (props) => {
     togglePlusDropdown(false);
   }
 
+  // only show plus dropdown if there's something in the list
+  const dropPlus = () => {
+    if (availableList.length > 0) {
+      togglePlusDropdown(!plusDropdown)
+    }
+  };
+
   const ob = '{',
     cb = '}',
     tab = <span>&nbsp;&nbsp;&nbsp;&nbsp;</span>,
@@ -188,7 +195,7 @@ const QueryDisplay = (props) => {
       {sub && <>{tab}</>}
       <button
         className='plus-button'
-        onClick={() => togglePlusDropdown(!plusDropdown)}
+        onClick={dropPlus}
       >
         <div className='plus-minus-icons'>
           <img src={Plus} />
