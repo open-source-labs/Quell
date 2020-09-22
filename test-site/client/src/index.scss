@@ -189,46 +189,45 @@ textarea {
   padding: 10px;
 }
 
-.button-cache,
-.button-query {
-  font-size: 20px;
-  font-weight: bold;
-  color: #ffffff;
-  border-radius: 3px;
-  border: 1px solid $quell-darkest;
-  width: 100%;
-  height: 50px;
-  // margin: 10px 0;
+.button-grid {
   padding: 5px;
-  outline: none;
+  height: 90px;
+  grid-area: button-grid;
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr 1fr;
+  column-gap: 10px;
+  border: none !important;
 }
 
-/* Button - Run Query */
 .button-query {
-  background: $quell-dark;
+  margin: 0px, 10px;
+  border: none !important;
+  padding: 0 !important;
+  font-size: 16px;
+  font-weight: bold;
+  border-radius: 3px;
+  height: 90%;
 }
-
 .button-query:hover {
-  background: $quell-light;
   cursor: pointer;
 }
-
-.button-query:active {
-  background: $quell-lightest;
+.button-query-primary {
+  color: #FFF;
+  background: $quell-medium;
 }
-
-/* Button - Clear Cache */
-.button-cache {
-  background: #c67906;
+.button-query-primary:hover {
+  background: $quell-dark !important;
 }
-
-.button-cache:hover {
-  background: #f09308;
-  cursor: pointer;
+.button-query-secondary {
+  color: $quell-medium;
+  border: 3px solid $quell-medium !important;
+  // border-radius: 3px !important;
+  background: #FFF;
 }
-
-.button-cache:active {
-  background: #c67906;
+.button-query-secondary:hover {
+  color: #FFF;
+  border: 3px solid $quell-dark !important;
+  background: $quell-dark !important;
 }
 
 /* Button - Query playground */
@@ -430,13 +429,11 @@ textarea {
     margin: 40px auto;
   }
 
-
-
   .quell-graph-container {
     max-width: 700px;
     
     
-    }
+  }
     
     .quell-puzzle-container {
       max-width: 700px;
@@ -465,12 +462,17 @@ textarea {
     grid-template: auto/repeat(2, 1fr);
     grid-gap: 10px;
     grid-template-areas:
+      "button-grid button-grid"
       "query metrics"
-      "button-query button-cache"
       "results graph";
   }
 
   /* dashboard divs */
+
+  .button-grid {
+    
+  }
+
   .query-div {
     grid-area: query;
   }

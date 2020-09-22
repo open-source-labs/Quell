@@ -1,10 +1,11 @@
 import React, { useState, useRef } from 'react'; // Remove useRef to remove default
 import QueryInput from '../components/QueryInput';
 import DemoInput from './DemoInput';
-import ButtonRunQuery from '../components/ButtonRunQuery';
+// import ButtonRunQuery from '../components/ButtonRunQuery';
+// import ButtonClearCache from '../components/ButtonClearCache';
+import DemoButton from '../components/DemoButton';
 import QueryResults from '../components/QueryResults';
 import Metrics from '../components/Metrics';
-import ButtonClearCache from '../components/ButtonClearCache';
 import Graph from '../components/Graph';
 import Quell from '../../../../quell-client/Quellify';
 import {
@@ -99,11 +100,15 @@ const Demo = () => {
           forwardRef={refInput} // Remove useRef to remove default
           handleChange={handleChange}
         /> */}
+        <div className="button-grid">
+          <DemoButton text={'Run Query'} func={handleRunQueryClick} classname={'button-query button-query-primary'} />
+          <DemoButton text={'Clear Session Cache'} func={handleClearCacheClick} classname={'button-query button-query-secondary'}/>
+          <DemoButton text={'Clear Server Cache'} func={handleClearCacheClick} classname={'button-query button-query-secondary'}/>
+          <DemoButton text={'Reset All'} func={handleClearCacheClick} classname={'button-query button-query-secondary'}/>
+        </div>
         <DemoInput output={output} setOutput={setOutput} />
-        <ButtonRunQuery handleRunQueryClick={handleRunQueryClick} />
         <QueryResults queryResponse={queryResponse} />
         <Metrics fetchTime={fetchTime} cacheStatus={cacheStatus} />
-        <ButtonClearCache handleClearCacheClick={handleClearCacheClick} />
         <Graph fetchTimeIntegers={fetchTimeIntegers} />
       </div>
     </div>
