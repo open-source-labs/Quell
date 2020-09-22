@@ -17,13 +17,30 @@ const DemoInput = (props) => {
   const [idDropdown, setIdDropdown] = useState(false); // show an id dropdown
   const [selectedId, setSelectedId] = useState(1); // display id
   const [idDropdownMenu, toggleIdDropdownMenu] = useState(false); // toggle id dropdown menu
-  // const [output, setOutput] = useState({ Country: ["id"] }); // looks like: { QUERY: ['item1', 'item2', {'cities': ['item1', 'item2']}] }
-  // console.log("RESULT:", output);
+  
+  // Below makes the PLUS dropdown go away when you cick it:
+  const ref = useRef(null);
+  const handleClickOutside = (event) => {
+    if (ref.current && !ref.current.contains(event.target)) {
+      toggleDropdown(false);
+      toggleIdDropdownMenu(false);
+    }
+  };
+  useEffect(() => {
+    // triggers listener for clicks outside
+    document.addEventListener('click', handleClickOutside, true);
+    return () => {
+      document.removeEventListener('click', handleClickOutside, true);
+    };
+  }, [])
+  //
 
   // All changes to final query are routed here
   const outputFunction = (newList, sub, query, id) => {
+    // console.log('output before change', output)
     const newOutput = ResultsHelper(newList, sub, query, id, output);
     setOutput(newOutput);
+    // console.log('output after change', output)
   };
 
   // Change Query Selection - fires from DropdownItem child - comes in like ('Countries')
@@ -50,13 +67,9 @@ const DemoInput = (props) => {
     outputFunction(0, 0, 0, item);
   };
 
-  // Array of queries to choose from
-  const dropdownList = [
-    'countries',
-    'country by id',
-    'cities',
-    'cities by country id',
-  ];
+  // Array of queries to choose from -- limiting the "by id" option until we build that functionality, but the demo is programmed to handle those
+  // const dropdownList = ["countries", "country by id", "cities", "cities by country id"];
+  const dropdownList = ["countries", "cities"];
   // Creates dropdown menu from the above array ^^
   const dropdownMenu = dropdownList.map((item, i) => {
     return (
@@ -89,12 +102,10 @@ const DemoInput = (props) => {
           >
             <div className='plus-minus-icons dropdown-icon'>
               <img src={DropDown} />
-              <img src={DropDownHover} class='hover-button' />
+              <img src={DropDownHover} className='hover-button' />
             </div>
             {/* Query Dropdown Menu */}
-            {queryDropdown && (
-              <div className='dropdown-menu'>{dropdownMenu}</div>
-            )}
+            {queryDropdown && <div className="dropdown-menu" ref={ref}>{dropdownMenu}</div>}
           </button>
         </span>
         {tab}
@@ -110,13 +121,11 @@ const DemoInput = (props) => {
             >
               <div className='plus-minus-icons dropdown-icon'>
                 <img src={DropDown} />
-                <img src={DropDownHover} class='hover-button' />
+                <img src={DropDownHover} className='hover-button' />
               </div>
 
               {/* Id Dropdown Menu */}
-              {idDropdownMenu && (
-                <div className='dropdown-menu'>{idDropMenu}</div>
-              )}
+              {idDropdownMenu && <div className="dropdown-menu" ref={ref}>{idDropMenu}</div>}
             </button>
             {idDropdown && selectedId}
           </span>

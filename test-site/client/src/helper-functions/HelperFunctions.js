@@ -11,6 +11,7 @@
     - looks like: { QUERY: ['item1', 'item2', {'cities': ['item1', 'item2']}] }
 */
 
+
 const ResultsHelper = (newList, sub, query, id, currentResults) => {
   
   for (let arr in currentResults) {
@@ -43,7 +44,7 @@ const ResultsHelper = (newList, sub, query, id, currentResults) => {
 
       // if new list has it but we don't, we're adding it with the default initial values
       if (alreadyHaveCities === false && newListHasCities === true) {
-        currentList.push({'cities': ['name']})
+        currentList.push({'cities': ['id']})
       }
 
       currentResults[arr] = currentList; // if no cities, this doesn't get altered
@@ -91,13 +92,19 @@ const ResultsHelper = (newList, sub, query, id, currentResults) => {
     //======================//
 
     if (query) {
+      let fields;
       if (query === 'country by id') {
-        query = 'country (id:1)'
+        query = 'country (id:1)';
+        fields = currentResults[arr];
       };
       if (query === 'cities by country id') {
-        query = 'citiesByCountry (country_id:1)'
+        query = 'citiesByCountry (country_id:1)';
+        fields = currentResults[arr];
       };
-      currentResults[query] = currentResults[arr]
+      if (query === 'countries' || query === 'cities') {
+        fields = ['id'];
+      }
+      currentResults[query] = fields
       delete currentResults[arr]
     }
 
@@ -154,10 +161,6 @@ const ResultsParser = (results) => {
   return newString.join('')
 };
 
-// console.log(ResultsParser(currentResults))
-
-
-
 
 //======================================//
 //========== CreateQueryStr ============//
@@ -199,10 +202,10 @@ function CreateQueryStr(queryObject) {
 /*
   Cannot read property 'population' of null
 */
-const currentResults1 = { 'countries': ['id', {'cities': ['population']}] }
-const currentResults2 = { 'country (id:4)': ['id', 'name', {'cities': ['id', 'name']}] } 
-const currentResults3 = { 'citiesByCountry (country_id:4)': ['id', 'name', {'cities': ['id', 'name']}] }
-const currentResults4 = { 'cities': ['country_id', 'name'] }
+// const currentResults1 = { 'countries': ['id', {'cities': ['population']}] }
+// const currentResults2 = { 'country (id:4)': ['id', 'name', {'cities': ['id', 'name']}] } 
+// const currentResults3 = { 'citiesByCountry (country_id:4)': ['id', 'name', {'cities': ['id', 'name']}] }
+// const currentResults4 = { 'cities': ['country_id', 'name'] }
 
 /*
   Cannot read property 'population' of null

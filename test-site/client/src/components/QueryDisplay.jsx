@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import QueryItem from './QueryItem.jsx';
 import DropdownItem from './DropdownItem.jsx';
 import AddCircleIcon from '@material-ui/icons/AddCircle';
@@ -16,22 +16,38 @@ const QueryDisplay = (props) => {
   const [plusDropdown, togglePlusDropdown] = useState(false);
   const [subQuery, setSubQuery] = useState(sub); // if this is true, indicates we're in a sub query
 
-  // functions to run upon update
+  // Below makes the PLUS dropdown go away when you cick it:
+    const ref = useRef(null);
+    const handleClickOutside = (event) => {
+      if (ref.current && !ref.current.contains(event.target)) {
+        togglePlusDropdown(false);
+      }
+    };
+    useEffect(() => {
+      // triggers listener for clicks outside
+      document.addEventListener('click', handleClickOutside, true);
+      return () => {
+        document.removeEventListener('click', handleClickOutside, true);
+      };
+    }, [])
+  //
+
+  // initializes the available fields list
   useEffect(() => {
     setAvailableList(initialAvailableList());
   }, []);
 
   const cityItems = [
-    { country_id: 'string' },
-    { id: 'string' },
-    { name: 'string' },
-    { population: 'string' },
+    { country_id: "string" },
+    // { id: "string" }, // commenting out because we're making it the default
+    { name: "string" },
+    { population: "string" },
   ];
 
   const countryItems = [
-    { id: 'string' },
-    { name: 'string' },
-    { capital: 'string' },
+    // { id: "string" },
+    { name: "string" },
+    { capital: "string" },
     { cities: cityItems }, // the name of the City type
   ];
 
@@ -60,7 +76,6 @@ const QueryDisplay = (props) => {
 
   //======= DELETE BUTTON ========//
   function deleteItem(item) {
-    // console.log("DELETE ITEM FIRED");
 
     // removes item from queryList
     const newList = [...queryList];
@@ -83,7 +98,6 @@ const QueryDisplay = (props) => {
 
   //======= ADD BUTTON ========//
   function addItem(item) {
-    // console.log("ADD ITEM FIRED");
 
     // adds item to queryList
     const newList = [...queryList];
@@ -123,15 +137,14 @@ const QueryDisplay = (props) => {
             <button className='minus-button' onClick={() => deleteItem(item)}>
               <div className='plus-minus-icons'>
                 <img src={Minus} />
-                <img src={MinusHover} class='hover-button' />
+                <img src={MinusHover} className='hover-button' />
               </div>
             </button>
-            {space}
-            {ob} cities{space}
+            {space}cities{space}{ob} 
           </div>
           <div className='queryLine'>
             <QueryDisplay
-              initialQuery={['name']}
+              initialQuery={['id']}
               type={'City'}
               outputFunction={outputFunction}
               key={type}
@@ -182,7 +195,7 @@ const QueryDisplay = (props) => {
           <img src={PlusHover} class='hover-button' />
         </div>
         {/* Where the plus dropdown appears on click */}
-        {plusDropdown && <div className='dropdown-menu'>{dropdown}</div>}
+        {plusDropdown && <div className='dropdown-menu' ref={ref}>{dropdown}</div>}
       </button>
     </>
   );
