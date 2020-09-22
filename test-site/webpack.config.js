@@ -15,6 +15,7 @@ module.exports = {
     contentBase: './client/src',
     proxy: {
       '/graphql': 'http://localhost:3000',
+      '/clearCache': 'http://localhost:3000',
     },
     hot: true,
   },

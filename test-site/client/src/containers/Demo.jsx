@@ -73,7 +73,7 @@ const Demo = () => {
       .catch((err) => console.log(err));
   };
 
-  const handleClearCacheClick = () => {
+  const handleClearClientCache = () => {
     // Cache/FetchTime
     setFetchTime('0.00 ms');
     // Clear sessionStorage
@@ -83,6 +83,14 @@ const Demo = () => {
     setCacheStatus(date.toLocaleTimeString());
     // Zero-out line graph
     setFetchTimeIntegers([0, 0]);
+  };
+  
+  const handleClearServerCache = () => {
+    console.log('Server cache cleared!!')
+    // Zero-out cache/FetchTime
+    setFetchTime('0.00 ms');
+    fetch('/clearCache')
+    .then(res => console.log(res))
   };
 
   const handleZeroOutClick = () => {
@@ -150,8 +158,8 @@ const Demo = () => {
         />
         <div className="button-grid">
           <DemoButton text={'Run Query'} func={handleRunQueryClick} classname={'button-query button-query-primary'} />
-          <DemoButton text={'Clear Session Cache'} func={handleClearCacheClick} classname={'button-query button-query-secondary'}/>
-          <DemoButton text={'Clear Server Cache'} func={handleClearCacheClick} classname={'button-query button-query-secondary'}/>
+          <DemoButton text={'Clear Session Cache'} func={handleClearClientCache} classname={'button-query button-query-secondary'}/>
+          <DemoButton text={'Clear Server Cache'} func={handleClearServerCache} classname={'button-query button-query-secondary'}/>
           <DemoButton text={'Reset All'} func={handleZeroOutClick} classname={'button-query button-query-secondary'}/>
         </div>
         {/* <DemoInput output={output} key={resetComponent} setOutput={setOutput} /> */}
