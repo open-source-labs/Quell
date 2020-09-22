@@ -115,28 +115,14 @@ class QuellCache {
     // return next();
   };
 
+  /**
+   * getFromRedis reads from Redis cache and returns a promise.
+   * @param {String} key - the key for Redis lookup 
+   */
   getFromRedis(key) {
     return new Promise((resolve, reject) => {
       this.redisCache.get(key, (error, result) => error ? reject(error) : resolve(result));
     });
-  };
-
-
-  
-  /**
-   * Uses graphql-JS library to execute user-defined schema resolvers to satisfy the query.
-   * @param {String} query - original or reformulated GraphQL query string
-   */
-  async graphQLHandoff(query) {
-    graphql(this.schema, query)
-      .then((results) => {
-       
-        return results;
-      })
-      .catch((error) => {
-        console.log(`Error in graphQLHandoff: ${error}`);
-        return `Error in graphQLHandoff`;
-      });
   };
 
   /**
