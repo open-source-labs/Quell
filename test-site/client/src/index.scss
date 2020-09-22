@@ -1,5 +1,5 @@
-@import url("https://fonts.googleapis.com/css2?family=Alegreya+Sans+SC:wght@300&family=Julius+Sans+One&family=Baloo+Tamma+2&family=Poiret+One&display=swap");
-@import url("https://fonts.googleapis.com/css2?family=Rubik:wght@300;400;500&display=swap");
+@import url('https://fonts.googleapis.com/css2?family=Alegreya+Sans+SC:wght@300&family=Julius+Sans+One&family=Baloo+Tamma+2&family=Poiret+One&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Rubik:wght@300;400;500&display=swap');
 
 $div-background: #7dd0e9;
 $app-background: white;
@@ -23,7 +23,7 @@ $quell-darkest: #082032;
 // }
 
 body {
-  font-family: "Avenir Next";
+  font-family: 'Avenir Next';
   font-weight: lighter;
   color: $quell-darkest;
 }
@@ -46,8 +46,6 @@ header {
   margin-bottom: 20px;
   font-weight: normal;
   letter-spacing: 7.2px;
- 
-
 }
 
 .header-links {
@@ -60,8 +58,6 @@ header {
   list-style-type: none;
   margin-bottom: 2%;
   // width: 80%;
- 
-
 }
 
 .header-links li a {
@@ -91,8 +87,6 @@ header {
   margin-bottom: 30px;
 }
 
-
-
 .info-container {
   margin: auto;
   left: 50%;
@@ -112,18 +106,14 @@ header {
 }
 
 .quell-graph-container {
-
-margin: 50px auto;
-
+  margin: 50px auto;
 }
 
 .quell-puzzle-container {
-  
   margin: 50px auto;
 }
 
 .quell-airmail-container {
-  
   margin: 0 auto;
   margin-top: 50px;
 }
@@ -144,6 +134,22 @@ margin: 50px auto;
   margin: 20px auto;
 }
 
+.demo-inst-container {
+  width: 300px;
+  margin: 0 auto;
+  // border: 1px solid red;
+}
+
+.demo-inst-container em {
+  font-weight: bolder;
+  // font-style: normal;
+}
+
+.demo-inst {
+  text-align: center;
+  // justify-content: center;
+}
+
 .dashboard-grid {
   border-radius: 5px;
   // margin-top: 5vh;
@@ -159,7 +165,7 @@ margin: 50px auto;
   overflow-anchor: none;
   font-size: 25px;
   background-color: white;
-  font-family: "Avenir";
+  font-family: 'Avenir';
   letter-spacing: 3px;
   color: $quell-darkest;
   border: 1px solid $quell-darkest;
@@ -169,18 +175,18 @@ margin: 50px auto;
   border-radius: 5px;
   color: $quell-darkest;
   padding: 10px;
-  font-family: "Avenir";
+  font-family: 'Avenir';
 }
 
 .metrics-div {
-  background-color: $quell-lightest;  
+  background-color: $quell-lightest;
   color: $quell-darkest !important;
   // margin-top: 15px;
 }
 
 .timer-div,
 .cache-storage-div {
-  font-family: "Rubik", sans-serif;
+  font-family: 'Rubik', sans-serif;
   border-radius: 5px;
   padding: 50px 2px;
   min-width: 15vw;
@@ -224,7 +230,7 @@ textarea {
   cursor: pointer;
 }
 .button-query-primary {
-  color: #FFF;
+  color: #fff;
   background: $quell-medium;
 }
 .button-query-primary:hover {
@@ -233,10 +239,10 @@ textarea {
 .button-query-secondary {
   color: $quell-medium;
   border: 3px solid $quell-medium !important;
-  background: #FFF;
+  background: #fff;
 }
 .button-query-secondary:hover {
-  color: #FFF;
+  color: #fff;
   border: 3px solid $quell-dark !important;
   background: $quell-dark !important;
 }
@@ -284,7 +290,7 @@ textarea {
 .dropdown-items {
   // display: inline-block;
   display: flex;
-  font-family: "Avenir";
+  font-family: 'Avenir';
   border: none;
   border-radius: 4px;
   padding: 3px;
@@ -320,7 +326,7 @@ textarea {
 }
 
 .minus-button {
-  font-family: "Avenir";
+  font-family: 'Avenir';
   border-radius: 50%;
   // background-color: red;
   margin-right: 5px;
@@ -343,7 +349,7 @@ textarea {
   width: 20px;
   // background: url("images/buttons/plus-button.svg") no-repeat;
 }
-.plus-minus-icons .hover-button{
+.plus-minus-icons .hover-button {
   display: none;
   position: absolute;
   top: 0;
@@ -429,9 +435,8 @@ textarea {
   // ====== TOP HEADER SECTION ======
 
   #logo-main {
-  width: 600px;
+    width: 600px;
   }
-
 
   // ====== INFO SECTION ======
 
@@ -446,19 +451,15 @@ textarea {
 
   .quell-graph-container {
     max-width: 700px;
-    
-    
   }
-    
-    .quell-puzzle-container {
-      max-width: 700px;
-      
-    }
 
-    .quell-airmail-container {
-      max-width: 700px;
-      
-    }
+  .quell-puzzle-container {
+    max-width: 700px;
+  }
+
+  .quell-airmail-container {
+    max-width: 700px;
+  }
 
   // ====== DEMO SECTION ======
 
@@ -468,6 +469,10 @@ textarea {
 
   #demo-header {
     max-width: 275px;
+  }
+
+  .demo-inst-container {
+    width: 700px;
   }
 
   /* Dashboard Grid */
@@ -523,7 +528,7 @@ textarea {
     display: grid;
     // grid-template: auto/repeat(2, 1fr);
     grid-gap: 10px;
-    grid-template-areas: "timer-div cache-storage-div";
+    grid-template-areas: 'timer-div cache-storage-div';
   }
 
   .timer-div {
@@ -563,5 +568,4 @@ textarea {
     width: 70%;
     float: right;
   }
-
 }
