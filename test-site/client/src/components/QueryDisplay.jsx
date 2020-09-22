@@ -17,19 +17,19 @@ const QueryDisplay = (props) => {
   const [subQuery, setSubQuery] = useState(sub); // if this is true, indicates we're in a sub query
 
   // Below makes the PLUS dropdown go away when you cick it:
-    const ref = useRef(null);
-    const handleClickOutside = (event) => {
-      if (ref.current && !ref.current.contains(event.target)) {
-        togglePlusDropdown(false);
-      }
+  const ref = useRef(null);
+  const handleClickOutside = (event) => {
+    if (ref.current && !ref.current.contains(event.target)) {
+      togglePlusDropdown(false);
+    }
+  };
+  useEffect(() => {
+    // triggers listener for clicks outside
+    document.addEventListener('click', handleClickOutside, true);
+    return () => {
+      document.removeEventListener('click', handleClickOutside, true);
     };
-    useEffect(() => {
-      // triggers listener for clicks outside
-      document.addEventListener('click', handleClickOutside, true);
-      return () => {
-        document.removeEventListener('click', handleClickOutside, true);
-      };
-    }, [])
+  }, [])
   //
 
   // initializes the available fields list
