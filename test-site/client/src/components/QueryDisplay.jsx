@@ -38,16 +38,16 @@ const QueryDisplay = (props) => {
   }, []);
 
   const cityItems = [
-    { country_id: 'string' },
-    { id: 'string' },
-    { name: 'string' },
-    { population: 'string' },
+    { country_id: "string" },
+    // { id: "string" }, // commenting out because we're making it the default
+    { name: "string" },
+    { population: "string" },
   ];
 
   const countryItems = [
-    { id: 'string' },
-    { name: 'string' },
-    { capital: 'string' },
+    // { id: "string" },
+    { name: "string" },
+    { capital: "string" },
     { cities: cityItems }, // the name of the City type
   ];
 
@@ -140,12 +140,11 @@ const QueryDisplay = (props) => {
                 <img src={MinusHover} className='hover-button' />
               </div>
             </button>
-            {space}
-            {ob} cities{space}
+            {space}cities{space}{ob} 
           </div>
           <div className='queryLine'>
             <QueryDisplay
-              initialQuery={['name']}
+              initialQuery={['id']}
               type={'City'}
               outputFunction={outputFunction}
               key={type}
