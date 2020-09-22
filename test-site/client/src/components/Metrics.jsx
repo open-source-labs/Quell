@@ -7,8 +7,9 @@ import Tooltip from '@material-ui/core/Tooltip';
 const Metrics = (props) => {
   const { fetchTime, cacheStatus } = props;
   return(
+    <>
+    <h3 className='metrics-title'>Metrics:</h3>
     <div className="metrics-div">
-      <h3>Metrics:</h3>
       <div className="metrics-grid">
         <div className="timer-div">
           <Tooltip title="Information about this component goes here.">
@@ -19,6 +20,7 @@ const Metrics = (props) => {
       </div>
       <div className="cache-cleared-div">Cache Cleared: {cacheStatus}</div>
     </div>
+    </>
   )
 }
 
