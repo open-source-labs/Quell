@@ -2,11 +2,14 @@ const express = require('express');
 const path = require('path');
 const schema = require('./schema/schema');
 const {graphqlHTTP} = require('express-graphql')
-const { quell } = require('./controllers/quellController');
-
+// const { quell } = require('./controllers/quellController');
+const QuellCache = require('../../quell-server/src/quell')
 const app = express();
 // const PORT = process.env.PORT || 3000;
 const PORT = 3000;
+
+const quellCache = new QuellCache(schema, 6379, 600);
+
 
 // JSON parser:
 app.use(express.json());
@@ -30,9 +33,16 @@ app.use('/g', graphqlHTTP({
 }))
 
 // GraphQL route
-app.use('/graphql', quell(schema), (req, res) => {
-  res.status(200).send(res.locals.value);
-});
+// app.use('/graphql', quell(schema), (req, res) => {
+//   res.status(200).send(res.locals.value);
+// });
+app.use('/graphql', 
+  quellCache.query,
+  (req, res) => {
+    res
+      .status(200)
+      .send(res.locals.queryResponse);
+  });
 
 // catch-all endpoint handler
 app.use((req, res) => {

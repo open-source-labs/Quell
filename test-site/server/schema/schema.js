@@ -101,5 +101,6 @@ const RootQuery = new GraphQLObjectType({
 
 // imported into server.js
 module.exports = new GraphQLSchema({
-  query: RootQuery
+  query: RootQuery,
+  types: [CountryType, CityType],
 });
