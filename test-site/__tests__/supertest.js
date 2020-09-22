@@ -8,7 +8,7 @@ describe('/graphql', () => {
       return request(app)
         .post('/graphql')
         .set('Content-Type', 'application/json')
-        .send({"query": "{ countries: {id name capital }}"})
+        .send({"query": "{countries{id name capital}}"})
         .expect(200)
     });
 
