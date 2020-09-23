@@ -506,8 +506,7 @@ class QuellCache {
 
   /**
    * generateId generates a unique ID to refer to an item in cache. Each id concatenates the object type with an
-   * id property (item.id or item._id). If no id property is present, the item is declared uncacheable.
-   * TO-DO: use fieldsMap to find a property identified as ID type and use it to identify the item.
+   * id property (user-defined key from this.idMap, item.id or item._id). If no id property is present, the item is declared uncacheable.
    * @param {String} collection - name of schema type, used to identify each cacheable object 
    * @param {Object} item - the object, including those keys that might identify it uniquely
    */
@@ -596,6 +595,12 @@ class QuellCache {
     if (referencesToCache.length > 0) this.writeToCache(queryName, referencesToCache);
   };
 
+  /**
+   * Rebuilds response from cache, using a reconstructed prototype to govern the order of fields.
+   * @param {Array} fullResponse - array of objects returned from graphql library
+   * @param {Object} AST - abstract syntax tree
+   * @param {String} queriedCollection - name of object type returned in query
+   */
   async constructResponse(fullResponse, AST, queriedCollection) {
     const rebuiltProto = this.parseAST(AST);
     const rebuiltFromCache = await this.buildFromCache(rebuiltProto, this.queryMap, queriedCollection);
