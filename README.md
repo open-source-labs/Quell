@@ -2,7 +2,7 @@
 
 #[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://github.com/oslabs-beta/Quell/blob/master/LICENSE)
 ![AppVeyor](https://img.shields.io/badge/build-passing-brightgreen.svg)
-![AppVeyor](https://img.shields.io/badge/version-1.1.2-blue.svg)
+![AppVeyor](https://img.shields.io/badge/version-1.0.0-blue.svg)
 [![contributions welcome](https://img.shields.io/badge/contributions-welcome-brightgreen.svg?style=flat)](https://github.com/oslabs-beta/Quell/issues)
 
 # Quell
