@@ -6,11 +6,7 @@ const { visit } = require('graphql/language/visitor');
 
 function parseAST(AST) {
   const queryRoot = AST.definitions[0];
-
-  if (queryRoot.operation !== 'query') {
-    console.log(`Error: Quell does not currently support ${queryRoot.operation} operations.`);
-  }
-
+  
   /**
    * visit() -- a utility provided in the graphql-JS library-- will walk 
    * through an AST using a depth first traversal, invoking a callback
@@ -22,8 +18,29 @@ function parseAST(AST) {
 
   // visit() will build the prototype, declared here and returned from the function
   const prototype = {};
+  let isQuellable = true;
 
   visit(AST, {
+    enter(node) {
+      if (node.operation) {
+        if (node.operation !== 'query') {
+          isQuellable = false;
+        }
+      }
+      if (node.arguments) {
+        if (node.arguments.length > 0) {
+          isQuellable = false;
+        }
+      }
+      if (node.directives) {
+        if (node.directives.length > 0) {
+          isQuellable = false;
+        }
+      }
+      if (node.alias) {
+        isQuellable = false;
+      }
+    },
     SelectionSet(node, key, parent, path, ancestors) {
       /**
        * Exclude SelectionSet nodes whose parents' are not of the kind 
@@ -76,7 +93,7 @@ function parseAST(AST) {
     }
   });
 
-  return prototype;
+  return isQuellable ? prototype : 'unQuellable';
 };
 
 module.exports = parseAST;

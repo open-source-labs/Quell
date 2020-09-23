@@ -29,10 +29,8 @@ const Demo = () => {
   // ============================================================== //
 
   const handleRunQueryClick = () => {
-
-    // Need to run the output state component through a parser that actually formats it like a graphQL query
+    // run ResultsParser on output to get the query
     const parsedResult = CreateQueryStr(output);
-    // console.log('Input when you "Run Query":', parsedResult); // --> uncomment if you want to check the actual input we are running
 
     // start the timer (eventually displayed in Metrics)
     let startTime, endTime;
@@ -69,8 +67,11 @@ const Demo = () => {
       .catch((err) => console.log(err));
   };
 
-  // Runs when we Clear Cache
-  const handleClearCacheClick = () => {
+  // ============================================================== //
+  // ==================== Misc event handlers ==================== //
+  // ============================================================== //
+
+  const handleClearClientCache = () => {
     // Cache/FetchTime
     setFetchTime('0.00 ms');
     // Clear sessionStorage
@@ -80,6 +81,17 @@ const Demo = () => {
     setCacheStatus(date.toLocaleTimeString());
     // Zero-out line graph
     setFetchTimeIntegers([0, 0]);
+  };
+  
+  const handleClearServerCache = () => {
+    // Zero-out cache/FetchTime
+    setFetchTime('0.00 ms');
+    // Time cleared
+    let date = new Date();
+    setCacheStatus(date.toLocaleTimeString());
+    // GET request
+    fetch('/clearCache')
+    .then(res => console.log(res))
   };
 
   // Runs when we click Reset All
@@ -94,6 +106,9 @@ const Demo = () => {
     setFetchTime('0.00 ms');
     // Clear sessionStorage
     sessionStorage.clear();
+    // Clear server cache:
+    fetch('/clearCache')
+    .then(res => console.log(res))
     // Time cleared
     setCacheStatus('');
     // Zero-out line graph
@@ -142,28 +157,11 @@ const Demo = () => {
       </div>
 
       <div className='dashboard-grid'>
-        <div className='button-grid'> 
-        {/* All of the buttons at the top of the demo */}
-          <DemoButton
-            text={'Run Query'}
-            func={handleRunQueryClick}
-            classname={'button-query button-query-primary'}
-          />
-          <DemoButton
-            text={'Clear Session Cache'}
-            func={handleClearCacheClick}
-            classname={'button-query button-query-secondary'}
-          />
-          <DemoButton
-            text={'Clear Server Cache'}
-            func={handleClearCacheClick}
-            classname={'button-query button-query-secondary'}
-          />
-          <DemoButton
-            text={'Reset All'}
-            func={handleResetAll}
-            classname={'button-query button-query-secondary'}
-          />
+        <div className="button-grid">
+          <DemoButton text={'Run Query'} func={handleRunQueryClick} classname={'button-query button-query-primary'} />
+          <DemoButton text={'Clear Session Cache'} func={handleClearClientCache} classname={'button-query button-query-secondary'}/>
+          <DemoButton text={'Clear Server Cache'} func={handleClearServerCache} classname={'button-query button-query-secondary'}/>
+          <DemoButton text={'Reset All'} func={handleResetAll} classname={'button-query button-query-secondary'}/>
         </div>
         <Query output={output} key={resetComponent} setOutput={setOutput} /> {/* The key prop makes it so that when component changes, it completely reloads -- useful when clicking "Reset All" */}
         <Metrics fetchTime={fetchTime} cacheStatus={cacheStatus} />

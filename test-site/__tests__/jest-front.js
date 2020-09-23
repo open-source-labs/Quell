@@ -68,21 +68,25 @@ describe('createQueryStr', () => {
 
 describe('joinResponses', () => {
   const protoObj = {
-    id: true, 
-    name: true, 
-    instrument: true, 
-    albums: {
-      album_id: true, 
+    artists: {
       id: true, 
       name: true, 
-      release_year: true
-    },
+      instrument: true, 
+      albums: {
+        album_id: true, 
+        id: true, 
+        name: true, 
+        release_year: true
+      },
+    }
   };
 
   const protoObjShort = {
-    id: true, 
-    name: true, 
-    instrument: true, 
+    artists: {
+      id: true, 
+      name: true, 
+      instrument: true,
+    }
   };
 
   const result = [

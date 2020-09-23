@@ -58,7 +58,6 @@ quellController.quell = (schema) => {
     
     // If query is in cache, set res.locals.value and move to next middleware
     if (redisCacheValue) {
-      console.log('REDIS CACHE HIT', redisCacheValue)
       res.locals.value = redisCacheValue;
       return next();
     }
@@ -67,10 +66,8 @@ quellController.quell = (schema) => {
       .then((response) => {
         // Save GraphQL response to Express response object
         res.locals.value = JSON.stringify(response);
-        console.log('FETCHED QUERY FROM DATABASE')
         // Write GraphQL response to Redis cache
         client.set(key, res.locals.value);
-        console.log('SUCCESSFULLY SET DB RESPONSE IN REDIS')
         return next()
       })
       .catch((error) => {
