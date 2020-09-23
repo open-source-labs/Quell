@@ -1,3 +1,11 @@
+/**
+ * @param {Array} newList - Array of query fields
+ * @param {Array} sub - Array of query fields in the sub-query (aka "cities" in "countries")
+ * @param {string} query - the query name for ex: "countries" or "cities"
+ * @param {string} id - a number when querying by id
+ * @param {Object} currentResults - the last output of the function - looks like { countries: ['id', 'name', {'cities': ['id', 'name']}] }
+*/
+
 /* 
   Used in Query and Demo
   
@@ -15,7 +23,6 @@
     - comes from the state
     - looks like: { QUERY: ['item1', 'item2', {'cities': ['item1', 'item2']}] }
 */
-
 
 const ResultsHelper = (newList, sub, query, id, currentResults) => {
   
@@ -138,6 +145,10 @@ const ResultsHelper = (newList, sub, query, id, currentResults) => {
 //======================================//
 //========== CreateQueryStr ============//
 //======================================//
+
+/**
+ * @param {Object} currentResults - looks like { countries: ['id', 'name', {'cities': ['id', 'name']}] }
+*/
 
 function CreateQueryStr(queryObject) {
   const openCurl = ' { ';
