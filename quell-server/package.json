@@ -1,13 +1,50 @@
 {
-  "name": "quell-server",
+  "name": "@quell/server",
   "version": "1.0.0",
-  "description": "GraphQL caching middleware for NodeJS/Express",
+  "description": "Quell is an open-source NPM package providing a light-weight caching layer implementation for GraphQL responses on both the client- and server-side. Use Quell to prevent redundant client-side API requests and to minimize costly server-side response latency.",
   "main": "quell.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "Quell",
-  "license": "ISC",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/oslabs-beta/Quell/tree/master/quell-server"
+  },
+  "bugs": {
+    "url": "https://github.com/oslabs-beta/Quell/issues"
+  },
+  "keywords": [
+    "graphQL",
+    "cache",
+    "caching",
+    "redis",
+    "client-side",
+    "server-side",
+    "apollo",
+    "sessionstorage",
+    "quell"
+  ],
+  "contributors": [
+    {
+      "name": "Mike Lauri",
+      "url": "https://github.com/MichaelLauri"
+    },
+    {
+      "name": "Rob Nobile",
+      "url": "https://github.com/RobNobile"
+    },
+    {
+      "name": "Justin Jaeger",
+      "url": "https://github.com/justinjaeger"
+    },
+    {
+      "name": "Nick Kruckenberg",
+      "url": "https://github.com/kruckenberg"
+    }
+  ],
+  "homepage": "https://github.com/oslabs-beta/Quell/blob/master/quell-server/README.md",
   "dependencies": {
     "graphql": "^15.3.0",
     "redis": "^3.0.2"
