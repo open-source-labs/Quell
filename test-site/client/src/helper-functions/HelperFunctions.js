@@ -7,6 +7,10 @@
   sub 
     - whatever is passed in here are the sub-array (cities) fields
     - looks like: ['name', 'population', 'country_id']
+  query
+    - argument is passed here when changing query
+  id
+    - argument is passed here when changing query (only on "query by id")
   currentResults 
     - comes from the state
     - looks like: { QUERY: ['item1', 'item2', {'cities': ['item1', 'item2']}] }

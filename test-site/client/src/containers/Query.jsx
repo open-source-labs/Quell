@@ -156,13 +156,7 @@ const Query = (props) => {
               className='dropdown-button display-id'
               onClick={() => toggleIdDropdownMenu(!idDropdownMenu)}
             >
-              <div className='plus-minus-icons dropdown-icon'>
-                <img src={DropDown} />
-                <img src={DropDownHover} className='hover-button' />
-              </div>
-
               {/* Id Dropdown Menu */}
-              {idDropdownMenu && <div className="dropdown-menu" ref={ref}>{idDropMenu}</div>}
             </button>
             {idDropdown && selectedId}
           </span>
@@ -181,7 +175,7 @@ const Query = (props) => {
         />
         {/* The above key prop makes it so that when type changes, this component completely reloads */}
         {space}
-      </div>
+   </div>
 
       {/* Close out the query */}
       <div className='queryLine'>

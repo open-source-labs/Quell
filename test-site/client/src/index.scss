@@ -18,10 +18,6 @@ $quell-darkest: #082032;
   box-sizing: border-box;
 }
 
-// .tool-tip {
-//   color: red;
-// }
-
 body {
   font-family: 'Avenir Next';
   font-weight: lighter;
@@ -36,7 +32,6 @@ body {
 }
 
 #logo-main {
-  // width: 80%;
   padding: 2%;
   margin-bottom: 2%;
 }
@@ -57,7 +52,6 @@ header {
   justify-content: space-around;
   list-style-type: none;
   margin-bottom: 2%;
-  // width: 80%;
 }
 
 .header-links li a {
@@ -137,22 +131,18 @@ header {
 .demo-inst-container {
   width: 300px;
   margin: 0 auto;
-  // border: 1px solid red;
 }
 
 .demo-inst-container em {
   font-weight: bolder;
-  // font-style: normal;
 }
 
 .demo-inst {
   text-align: center;
-  // justify-content: center;
 }
 
 .dashboard-grid {
   border-radius: 5px;
-  // margin-top: 5vh;
   padding: 10px;
 }
 
@@ -181,7 +171,6 @@ header {
 .metrics-div {
   background-color: $quell-lightest;
   color: $quell-darkest !important;
-  // margin-top: 15px;
 }
 
 .timer-div,
@@ -194,14 +183,12 @@ header {
 }
 
 textarea {
-  // background: #dcdcdc;
   color: #3c3c3c;
   font-size: 16px;
   outline: none;
   border: 1px solid #888888;
   border-radius: 2px;
   width: 100%;
-  // height: 30vh;
   height: 12vh;
   padding: 10px;
 }
@@ -247,20 +234,15 @@ textarea {
   background: $quell-dark !important;
 }
 
-/* Button - Query playground */
 .dropdown-button {
   padding-left: 10px;
   border-radius: 50%;
-  // background-color: limegreen;
-  // height: 15px;
-  // width: 15px;
   position: relative;
   background-color: white;
   outline: none;
   border: none;
 }
 .dropdown-button:hover {
-  // background: $quell-light;
   cursor: pointer;
 }
 .dropdown-items:hover {
@@ -288,7 +270,6 @@ textarea {
 }
 
 .dropdown-items {
-  // display: inline-block;
   display: flex;
   font-family: 'Avenir';
   border: none;
@@ -311,7 +292,6 @@ textarea {
 
 .plus-button {
   border-radius: 50%;
-  // background-color: limegreen;
   margin-right: 5px;
   height: 15px;
   width: 15px;
@@ -321,14 +301,12 @@ textarea {
 }
 
 .plus-button:hover {
-  // background-color: rgb(128, 203, 128);
   cursor: pointer;
 }
 
 .minus-button {
   font-family: 'Avenir';
   border-radius: 50%;
-  // background-color: red;
   margin-right: 5px;
   height: 15px;
   width: 15px;
@@ -338,7 +316,6 @@ textarea {
 }
 
 .minus-button:hover {
-  // background-color: rgb(248, 124, 124);
   cursor: pointer;
 }
 
@@ -347,7 +324,6 @@ textarea {
   position: relative;
   top: 2px;
   width: 20px;
-  // background: url("images/buttons/plus-button.svg") no-repeat;
 }
 .plus-minus-icons .hover-button {
   display: none;
@@ -358,7 +334,6 @@ textarea {
 }
 .plus-minus-icons:hover .hover-button {
   display: inline;
-  // background: url("images/buttons/plus-button-hover.svg") no-repeat;
 }
 .dropdown-icon {
   top: 5px;
@@ -482,7 +457,6 @@ textarea {
     right: 50%;
     max-width: 700px;
     display: grid;
-    // grid-template: auto/repeat(2, 1fr);
     grid-gap: 5px;
     grid-template:
       "button-grid button-grid"
@@ -526,7 +500,6 @@ textarea {
   /* Metrics Grid */
   .metrics-grid {
     display: grid;
-    // grid-template: auto/repeat(2, 1fr);
     grid-gap: 10px;
     grid-template-areas: 'timer-div cache-storage-div';
   }
