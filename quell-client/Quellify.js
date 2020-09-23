@@ -38,14 +38,10 @@ async function Quellify(endPoint, query, map, fieldsMap) {
   } else {
 
     // Copy of proto object to pass into joinResponses():
-    let joinProto;
-    for (let query in proto) {
-      joinProto = { ...proto[query] };
-    }
+    let joinProto = parseAST(AST);
 
     // Check cache for data and build array from that cached data
-    const responseFromCache = buildArray(proto, map) // returns e.g. [{name: 'Bobby'}, {id: '2'}]
-
+    const responseFromCache = buildArray(proto, map)
     // If no data in cache, the response array will be empty:
     if (responseFromCache.length === 0) {
 
@@ -91,7 +87,6 @@ async function Quellify(endPoint, query, map, fieldsMap) {
 
       // Stitch together cached response and the newly fetched data and assign to variable
       mergedResponse = joinResponses(responseFromCache, parsedData.data[queryName], joinProto);
-
     } else {
       mergedResponse = responseFromCache; // If everything needed was already in cache, only assign cached response to variable
     }
