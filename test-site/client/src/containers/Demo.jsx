@@ -89,6 +89,10 @@ const Demo = () => {
     console.log('Server cache cleared!!')
     // Zero-out cache/FetchTime
     setFetchTime('0.00 ms');
+    // Time cleared
+    let date = new Date();
+    setCacheStatus(date.toLocaleTimeString());
+    // GET request
     fetch('/clearCache')
     .then(res => console.log(res))
   };
@@ -104,6 +108,11 @@ const Demo = () => {
     setFetchTime('0.00 ms');
     // Clear sessionStorage
     sessionStorage.clear();
+    console.log('Session cache cleared!!')
+    // Clear server cache:
+    fetch('/clearCache')
+    .then(res => console.log(res))
+    console.log('Server cache cleared!!')
     // Time cleared
     setCacheStatus('');
     // Zero-out line graph
