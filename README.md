@@ -1,3 +1,10 @@
+<p align="center"><img src="./test-site/client/src/images/quell_logos/QUELL-nested-LG@0.75x.png" width='800' style="margin-top: 10px; margin-bottom: -10px;"></p>
+
+#[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://github.com/oslabs-beta/Quell/blob/master/LICENSE)
+![AppVeyor](https://img.shields.io/badge/build-passing-brightgreen.svg)
+![AppVeyor](https://img.shields.io/badge/version-1.1.2-blue.svg)
+[![contributions welcome](https://img.shields.io/badge/contributions-welcome-brightgreen.svg?style=flat)](https://github.com/oslabs-beta/Quell/issues)
+
 # Quell
 
 Quell is an open-source NPM package providing a light-weight caching layer implementation for GraphQL responses on both the client- and server-side. Use Quell to prevent redundant client-side API requests and to minimize costly server-side response latency.
