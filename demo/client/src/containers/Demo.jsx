@@ -72,26 +72,20 @@ const Demo = () => {
   // ============================================================== //
 
   const handleClearClientCache = () => {
-    // Cache/FetchTime
-    setFetchTime('0.00 ms');
     // Clear sessionStorage
     sessionStorage.clear();
     // Time cleared
     let date = new Date();
     setCacheStatus(date.toLocaleTimeString());
-    // Zero-out line graph
-    setFetchTimeIntegers([0, 0]);
   };
   
   const handleClearServerCache = () => {
-    // Zero-out cache/FetchTime
-    setFetchTime('0.00 ms');
-    // Time cleared
-    let date = new Date();
-    setCacheStatus(date.toLocaleTimeString());
-    // GET request
+    // GET request - Clear sever cache
     fetch('/clearCache')
     .then(res => console.log(res))
+     // Time cleared
+     let date = new Date();
+     setCacheStatus(date.toLocaleTimeString());
   };
 
   // Runs when we click Reset All
