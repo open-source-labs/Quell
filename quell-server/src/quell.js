@@ -8,6 +8,7 @@ class QuellCache {
     this.schema = schema;
     this.queryMap = this.getQueryMap(schema);
     this.fieldsMap = this.getFieldsMap(schema);
+    this.idMap = this.getIdMap();
     this.redisPort = redisPort;
     this.cacheExpiration = cacheExpiration;
     this.redisCache = redis.createClient(redisPort);
@@ -68,12 +69,15 @@ class QuellCache {
       if (responseFromCache.length === 0) { // if no cached data, handoff original query and cache results
         graphql(this.schema, queryString)
         .then(async (queryResponse) => {
+          // store the array of data
           fullResponse = queryResponse.data[queryName];
+          // cache response
           await this.cache(fullResponse, queriedCollection, queryName);
-            const rebuiltProto = this.parseAST(AST);
-            const rebuiltFromCache = await this.buildFromCache(rebuiltProto, this.queryMap, queriedCollection);
-            res.locals.queryResponse = { data: { [queryName]: rebuiltFromCache }};
-            return next();
+          // rebuild response from cache
+          const toReturn = await this.constructResponse(fullResponse, AST, queriedCollection);
+          // append rebuilt response (if it contains data) or fullResponse to Express's response object
+          res.locals.queryResponse = { data: { [queryName]: toReturn }};
+          return next();
           })
           .catch((error) => {
             return next('graphql library error: ', error);
@@ -87,13 +91,15 @@ class QuellCache {
           graphql(this.schema, newQueryString)
             .then(async (queryResponse) => {
               uncachedResponse = queryResponse.data[queryName];
+              // join uncached and cached responses
               fullResponse = await this.joinResponses(responseFromCache, uncachedResponse);
+              // cache joined responses
               await this.cache(fullResponse, queriedCollection, queryName);
-              const rebuiltProto = this.parseAST(AST);
-              const rebuiltFromCache = await this.buildFromCache(rebuiltProto, this.queryMap, queriedCollection);
-              res.locals.queryResponse = { data: { [queryName]: rebuiltFromCache }};
+              // rebuild response from cache
+              const toReturn = await this.constructResponse(fullResponse, AST, queriedCollection);
+              // append rebuilt response (if it contains data) or fullResponse to Express's response object
+              res.locals.queryResponse = { data: { [queryName]: toReturn }};
               return next();
-              
             })
             .catch((error) => {
               return next('graphql library error: ', error);
@@ -182,6 +188,21 @@ class QuellCache {
     }
 
     return fieldsMap;
+  };
+
+  getIdMap() {
+    const idMap = {};
+
+    for (const type in this.fieldsMap) {
+      const userDefinedIds = [];
+      const fieldsAtType = this.fieldsMap[type];
+      for (const key in fieldsAtType) {
+        if (fieldsAtType[key] === 'ID') userDefinedIds.push(key);
+      }
+      idMap[type] = userDefinedIds;
+    }
+
+    return idMap
   };
   
   /**
@@ -323,7 +344,7 @@ class QuellCache {
         response.push(builtItem);
       }
     }
-    
+
     return response;
   };
   
@@ -491,7 +512,18 @@ class QuellCache {
    * @param {Object} item - the object, including those keys that might identify it uniquely
    */
   generateId(collection, item) {
-    const identifier = item.id || item._id || 'uncacheable';    
+    let userDefinedId;
+    const idMapAtCollection = this.idMap[collection];
+    
+    if (idMapAtCollection.length > 0) {
+      for (const identifier of idMapAtCollection) {
+        if (!userDefinedId) userDefinedId = item[identifier];
+        else userDefinedId += item[identifier];
+      }
+      console.log('userDefinedId . . . ', userDefinedId);
+    }
+
+    const identifier = userDefinedId || item.id || item._id || 'uncacheable';    
     return collection + '-' + identifier.toString();
   };
   
@@ -557,10 +589,18 @@ class QuellCache {
       }
       // Write individual objects to cache (e.g. separate object for each single city)
       this.writeToCache(cacheId, joinedWithCache);
-      referencesToCache.push(cacheId);
+      // Add reference to array if item it refers to is cacheable
+      if (!cacheId.includes('uncacheable')) referencesToCache.push(cacheId);
     }
-    // Write the array of references to cache (e.g. 'City': ['City-1', 'City-2', 'City-3'...])
-    this.writeToCache(queryName, referencesToCache);
+    // Write the non-empty array of references to cache (e.g. 'City': ['City-1', 'City-2', 'City-3'...])
+    if (referencesToCache.length > 0) this.writeToCache(queryName, referencesToCache);
+  };
+
+  async constructResponse(fullResponse, AST, queriedCollection) {
+    const rebuiltProto = this.parseAST(AST);
+    const rebuiltFromCache = await this.buildFromCache(rebuiltProto, this.queryMap, queriedCollection);
+    if (rebuiltFromCache.length > 0) return rebuiltFromCache;
+    return fullResponse;
   };
   
   /**
