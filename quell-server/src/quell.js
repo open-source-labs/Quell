@@ -431,13 +431,9 @@ class QuellCache {
           uncachedItem[field] = temp;
         }
         if (cachedItem[field]) {
-          console.log('uncached item at field is array and cachedItem has same field    ');
-          console.log('cachedItem[field] . . . . ', field, cachedItem[field]);
-          console.log('uncachedItem[field . . . ', field, uncachedItem[field]);
           joinedObject[field] = await this.joinResponses(cachedItem[field], uncachedItem[field]);
         } else {
           joinedObject[field] = uncachedItem[field];
-          console.log('uncachedItem[field] . . . .', uncachedItem[field]);
         }
       } else {
         joinedObject[field] = uncachedItem[field];
@@ -505,14 +501,10 @@ class QuellCache {
     // Check for nested array (to replace objects with another array of references)
     for (const item of collection) {
       const cacheId = this.generateId(collectionName, item);
-      console.log('cacheId . . . .', cacheId)
       if (cacheId.includes('uncacheable')) return false;
       let itemFromCache = await this.getFromRedis(cacheId);
-      console.log('itemFromCache . . . ', itemFromCache)
       itemFromCache = itemFromCache ? JSON.parse(itemFromCache) : {};
-      console.log('joining . . . . ', item, itemFromCache);
       const joinedWithCache = await this.recursiveJoin(item, itemFromCache);
-      console.log('getting . . . ' , joinedWithCache);
       const itemKeys = Object.keys(joinedWithCache);
       for (const key of itemKeys) {
         if (Array.isArray(joinedWithCache[key])) {

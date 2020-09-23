@@ -6,12 +6,7 @@ const { visit } = require('graphql/language/visitor');
 
 function parseAST(AST) {
   const queryRoot = AST.definitions[0];
-
-  // ================== DELETE ==================
-  // if (queryRoot.operation !== 'query') {
-  //   console.log(`Error: Quell does not currently support ${queryRoot.operation} operations.`);
-  // }
-
+  
   /**
    * visit() -- a utility provided in the graphql-JS library-- will walk 
    * through an AST using a depth first traversal, invoking a callback
