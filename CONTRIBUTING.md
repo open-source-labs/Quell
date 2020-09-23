@@ -25,7 +25,7 @@ We use GitHub issues to track public bugs. Please ensure your description is cle
 
 2 spaces for indentation rather than tabs
 80 character line length
-Run npm run lint to conform to our lint rules
+Run npm run lint to comform to our lint rules
 
 ## License
 

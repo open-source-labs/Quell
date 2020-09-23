@@ -1,16 +1,28 @@
-// node HelperFunctions.js
+/**
+ * @param {Array} newList - Array of query fields
+ * @param {Array} sub - Array of query fields in the sub-query (aka "cities" in "countries")
+ * @param {string} query - the query name for ex: "countries" or "cities"
+ * @param {string} id - a number when querying by id
+ * @param {Object} currentResults - the last output of the function - looks like { countries: ['id', 'name', {'cities': ['id', 'name']}] }
+*/
+
 /* 
+  Used in Query and Demo
+  
   newList 
     - whatever is passed in here are the main array fields
     - looks like: ['name', 'id', 'capital']
   sub 
     - whatever is passed in here are the sub-array (cities) fields
     - looks like: ['name', 'population', 'country_id']
+  query
+    - argument is passed here when changing query
+  id
+    - argument is passed here when changing query (only on "query by id")
   currentResults 
     - comes from the state
     - looks like: { QUERY: ['item1', 'item2', {'cities': ['item1', 'item2']}] }
 */
-
 
 const ResultsHelper = (newList, sub, query, id, currentResults) => {
   
@@ -128,43 +140,15 @@ const ResultsHelper = (newList, sub, query, id, currentResults) => {
   return currentResults
 };
 
-//======================================//
-//========== RESULTS PARSER ============//
-//======================================//
-
-const ResultsParser = (results) => {
-  const newString = [];
-  results = JSON.stringify(results);
-  console.log(results);
-  let deleteClosingBracket = 0
-  for (let i = 0; i < results.length; i++) {
-    const char = results[i]
-
-    if (char === '[') newString.push('{')
-    else if (char === ']') newString.push('}')
-    else if (char === '{' && results[i-1] === ',') {
-      deleteClosingBracket+=1
-    }
-    else if (char === '}') {
-      if (deleteClosingBracket > 0) {
-        deleteClosingBracket-=1
-      } else {
-        newString.push(char)
-      }
-    }
-    else if (char === ':' && results[i-1] === '"') {}
-    else if (char === '"') {}
-    else if (char === ',') newString.push(' ')
-    else newString.push(char)
-  }
-
-  return newString.join('')
-};
 
 
 //======================================//
 //========== CreateQueryStr ============//
 //======================================//
+
+/**
+ * @param {Object} currentResults - looks like { countries: ['id', 'name', {'cities': ['id', 'name']}] }
+*/
 
 function CreateQueryStr(queryObject) {
   const openCurl = ' { ';
@@ -194,30 +178,6 @@ function CreateQueryStr(queryObject) {
   return openCurl + mainStr + closedCurl;
 };
 
-//===== TESTS ======//
-//======= ERROR LOG =======//
-
-// note: In all of these, the parsed result (query) looks right, so I'm not sure if this is a back-end problem
-
-/*
-  Cannot read property 'population' of null
-*/
-// const currentResults1 = { 'countries': ['id', {'cities': ['population']}] }
-// const currentResults2 = { 'country (id:4)': ['id', 'name', {'cities': ['id', 'name']}] } 
-// const currentResults3 = { 'citiesByCountry (country_id:4)': ['id', 'name', {'cities': ['id', 'name']}] }
-// const currentResults4 = { 'cities': ['country_id', 'name'] }
-
-/*
-  Cannot read property 'population' of null
-*/
-// const currentResults = { 'country (id:1)': ['id', 'name'] }
-
-
-// console.log(CreateQueryStr(currentResults1))
-// console.log(CreateQueryStr(currentResults2))
-// console.log(CreateQueryStr(currentResults3))
-// console.log(CreateQueryStr(currentResults4))
-
-
 //===============EXPORT=================//
-export { ResultsHelper, CreateQueryStr, ResultsParser };
+
+export { ResultsHelper, CreateQueryStr };

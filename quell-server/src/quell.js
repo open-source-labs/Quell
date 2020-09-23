@@ -104,6 +104,7 @@ class QuellCache {
       }
     }
   };
+  
   /**
    * getFromRedis reads from Redis cache and returns a promise.
    * @param {String} key - the key for Redis lookup 
@@ -113,6 +114,7 @@ class QuellCache {
       this.redisCache.get(key, (error, result) => error ? reject(error) : resolve(result));
     });
   };
+
   /**
    *  getQueryMap generates a map of queries to GraphQL object types. This mapping is used
    *  to identify and create references to cached data.
@@ -130,6 +132,7 @@ class QuellCache {
     }
     return queryMap;
   };
+
   /**
    * getFieldsMap generates of map of fields to GraphQL types. This mapping is used to identify
    * and create references to cached data. 
@@ -169,6 +172,7 @@ class QuellCache {
     }
     return fieldsMap;
   };
+
   getIdMap() {
     const idMap = {};
     for (const type in this.fieldsMap) {
@@ -181,6 +185,7 @@ class QuellCache {
     }
     return idMap
   };
+
   /**
    * parseAST traverses the abstract syntax tree and creates a prototype object
    * representing all the queried fields nested as they are in the query. The

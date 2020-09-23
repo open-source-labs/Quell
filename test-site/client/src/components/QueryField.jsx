@@ -1,12 +1,17 @@
 import React, { useState, useEffect } from "react";
+// import images
 import Minus from '../images/buttons/minus-button.svg';
 import MinusHover from '../images/buttons/minus-button-hover.svg';
 
-// component to get ALL data from our created DB
-const QueryItem = (props) => {
-  const { item, deleteItem, sub } = props;
-  const [itemIsNotId, setItemIsNotId] = useState(true)
+/* 
+  component that renders each string-type field in our query
+*/
 
+const QueryField = (props) => {
+  const { item, deleteItem, sub } = props;
+
+  // Below is so that we don't render the minus button for the id field
+  const [itemIsNotId, setItemIsNotId] = useState(true)
   useEffect(() => {
     if (item === 'id') setItemIsNotId(false)
   }, [itemIsNotId])
@@ -19,6 +24,7 @@ const QueryItem = (props) => {
         {tab}
         {tab}
         {sub && <>{tab}</>}
+        {/* Generate minus button */}
         {itemIsNotId && <button className="minus-button" onClick={() => deleteItem(item)}>
           <div className="plus-minus-icons">
             <img src={Minus} />
@@ -32,4 +38,4 @@ const QueryItem = (props) => {
   );
 };
 
-export default QueryItem;
+export default QueryField;

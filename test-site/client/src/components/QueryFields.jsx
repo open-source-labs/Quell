@@ -1,140 +1,159 @@
 import React, { useState, useEffect, useRef } from 'react';
-import QueryItem from './QueryItem.jsx';
+import QueryField from './QueryField.jsx';
 import DropdownItem from './DropdownItem.jsx';
-import AddCircleIcon from '@material-ui/icons/AddCircle';
+// imported images
 import Minus from '../images/buttons/minus-button.svg';
 import MinusHover from '../images/buttons/minus-button-hover.svg';
 import Plus from '../images/buttons/plus-button.svg';
 import PlusHover from '../images/buttons/plus-button-hover.svg';
 
-// component to get ALL data from our created DB
-const QueryDisplay = (props) => {
-  const { initialQuery: initialField, type, sub, outputFunction } = props; // passed in from QueryContainer
+/*
+  - This component renders each field in your query
+  - It is called from DemoInput in the container folder
+  - It is recursively called when you add the "cities" field in the "countries" query
+*/
+
+const QueryFields = (props) => {
+
+  const { initialQuery: initialField, type, sub, outputFunction } = props; // import props
 
   const [queryList, setQueryList] = useState(initialField);
   const [availableList, setAvailableList] = useState([]);
   const [plusDropdown, togglePlusDropdown] = useState(false);
-  const [subQuery, setSubQuery] = useState(sub); // if this is true, indicates we're in a sub query
+  const [subQuery, setSubQuery] = useState(sub); // is true when we render this recursively for the "cities" field inside "countries" query
 
-  // Below makes the PLUS dropdown go away when you cick it:
+  // ====================================================================== //
+  // ======= Functionality to close dropdowns when clicking outside ======= //
+  // ====================================================================== //
+
+  // attach "ref = {ref}" to the dropdown
   const ref = useRef(null);
+
+  // makes it so when you click outside of a dropdown it goes away
   const handleClickOutside = (event) => {
     if (ref.current && !ref.current.contains(event.target)) {
       togglePlusDropdown(false);
-    }
+    };
   };
+
+  // listens for clicks on the body of the dom
   useEffect(() => {
-    // triggers listener for clicks outside
     document.addEventListener('click', handleClickOutside, true);
     return () => {
       document.removeEventListener('click', handleClickOutside, true);
     };
   }, [])
-  //
 
-  // initializes the available fields list
+  // ========================================================== //
+  // ======= Functionality to initialize dropdowns, etc ======= //
+  // ========================================================== //
+
+  // initializes the available fields list based on the initialField prop
   useEffect(() => {
     setAvailableList(initialAvailableList());
   }, []);
 
-  const cityItems = [
+  // ====== Lists of Fields ====== //
+
+  const cityFields = [
     { country_id: "string" },
-    // { id: "string" }, // commenting out because we're making it the default
+    // { id: "string" }, // commented out because we're making it an immutable field
     { name: "string" },
     { population: "string" },
   ];
 
-  const countryItems = [
+  const countryFields = [
     // { id: "string" },
     { name: "string" },
     { capital: "string" },
-    { cities: cityItems }, // the name of the City type
+    { cities: cityFields }, // if field is array, point to the list of fields
   ];
 
-  // returns an array equal to whichever item list corresponds with the query type
+  // decides whether to populate dropdowns with Country or City fields, based on type prop
   const initialAvailableList = () => {
-    if (type === 'Country') return convertIntoList(countryItems);
-    if (type === 'City') return convertIntoList(cityItems);
+    if (type === 'Country') return convertIntoList(countryFields);
+    if (type === 'City') return convertIntoList(cityFields);
   };
 
+  // Takes the items list and returns something like: [ id, name, capital, cities ]
   const convertIntoList = (itemList) => {
-    // Takes the items list and returns something like: [ id, name, capital, cities ]
-    const output = itemList.map((obj) => {
+    const output = itemList.map((obj) => { // creates array based on keys of objects in fields array
       let key = Object.keys(obj)[0];
       return key;
     });
-
     const noDuplicates = []; // get rid of potential duplicates
     output.forEach((el) => {
       queryList.forEach((qEl) => {
         if (el !== qEl) noDuplicates.push(el);
       });
     });
-
     return noDuplicates;
   };
 
-  //======= DELETE BUTTON ========//
-  function deleteItem(item) {
+  // ==================================== //
+  // ======= Buttons Functionality ====== //
+  // ==================================== //
 
-    // removes item from queryList
+  //======= Minus button ========//
+  function deleteItem(item) {
+    // remove item from queryList
     const newList = [...queryList];
     const index = newList.indexOf(item);
     newList.splice(index, 1);
-    setQueryList(newList); // change query list
-
-    // modify output
+    setQueryList(newList);
+    // add item to availableList
+    const newAvailableList = [...availableList];
+    newAvailableList.push(item);
+    setAvailableList(newAvailableList);
+    // calls a function that prepares the query for actually being sent
     if (sub) {
       outputFunction(0, newList, 0);
     } else {
       outputFunction(newList, 0, 0);
     }
-
-    // // adds item to availableList
-    const newAvailableList = [...availableList];
-    newAvailableList.push(item);
-    setAvailableList(newAvailableList); // change available list
   }
 
-  //======= ADD BUTTON ========//
+  //======= Plus button ========//
   function addItem(item) {
-
-    // adds item to queryList
+    // add item to queryList
     const newList = [...queryList];
     newList.push(item);
     setQueryList(newList);
-
-    // modify output
-    if (sub) {
-      outputFunction(0, newList, 0);
-    } else {
-      outputFunction(newList, 0, 0);
-    }
-
-    // removes item from availableList
+    // remove item from availableList
     const newAvailablelist = [...availableList];
     const index = newAvailablelist.indexOf(item);
     newAvailablelist.splice(index, 1);
     setAvailableList(newAvailablelist);
-
-    // un-toggles the plus dropdown
+    // close the plus dropdown
     togglePlusDropdown(false);
+    // call a function that prepares the query for actually being sent
+    if (sub) {
+      outputFunction(0, newList, 0);
+    } else {
+      outputFunction(newList, 0, 0);
+    }
   }
 
-  // only show plus dropdown if there's something in the list
+  // Fires when you click plus -- only show plus dropdown if there's something in the list
   const dropPlus = () => {
     if (availableList.length > 0) {
       togglePlusDropdown(!plusDropdown)
     }
   };
 
+  // =========================== //
+  // ===== RENDER / RETURN ===== //
+  // =========================== //
+
+  // prepare some characters
   const ob = '{',
     cb = '}',
     tab = <span>&nbsp;&nbsp;&nbsp;&nbsp;</span>,
     space = <span>&nbsp;</span>;
-  // Create the query list that gets rendered
+
+  // Render the query list to the DOM
   const queriedItems = queryList.map((item, i) => {
-    // if querying "cities"
+    // if querying "cities", need to open up a new pair of brackets and recursively call QueryFields to generate cities fields
     if (item === 'cities') {
       return (
         <>
@@ -150,7 +169,7 @@ const QueryDisplay = (props) => {
             {space}cities{space}{ob} 
           </div>
           <div className='queryLine'>
-            <QueryDisplay
+            <QueryFields
               initialQuery={['id']}
               type={'City'}
               outputFunction={outputFunction}
@@ -166,9 +185,9 @@ const QueryDisplay = (props) => {
         </>
       );
     }
-    // else
+    // else (what normally happens)
     return (
-      <QueryItem
+      <QueryField
         item={item}
         key={`${type}Field${i}`}
         deleteItem={deleteItem}
@@ -177,22 +196,23 @@ const QueryDisplay = (props) => {
     );
   });
 
-  // Creates dropdown menu from the available list
+  // Render dropdown menu from the available list
   const dropdown = availableList.map((item, i) => {
     return (
       <DropdownItem func={addItem} item={item} key={`Available${type}${i}`} />
     );
   });
 
+  // note: the "sub" tags are conditionally rendered only when we're in the cities field INSIDE the countries query
   return (
     <>
-      {/* List all the items we've already added */}
+      {/* List all the chosen query fields */}
       <div className='queryLinesContainer'>{queriedItems}</div>
 
-      {/* Plus sign, which opens a dropdown */}
       {tab}
       {tab}
       {sub && <>{tab}</>}
+      {/* Render plus sign, which opens a dropdown */}
       <button
         className='plus-button'
         onClick={dropPlus}
@@ -201,11 +221,10 @@ const QueryDisplay = (props) => {
           <img src={Plus} />
           <img src={PlusHover} className='hover-button' />
         </div>
-        {/* Where the plus dropdown appears on click */}
         {plusDropdown && <div className='dropdown-menu' ref={ref}>{dropdown}</div>}
       </button>
     </>
   );
 };
 
-export default QueryDisplay;
+export default QueryFields;

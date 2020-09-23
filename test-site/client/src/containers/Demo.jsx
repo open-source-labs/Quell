@@ -1,16 +1,16 @@
 import React, { useState } from 'react';
-import QueryInput from '../components/QueryInput';
-import DemoInput from './DemoInput';
+import Query from './Query';
 import DemoButton from '../components/DemoButton';
 import QueryResults from '../components/QueryResults';
 import Metrics from '../components/Metrics';
 import Graph from '../components/Graph';
 import Quell from '../../../../quell-client/Quellify';
-import {
-  ResultsParser,
-  CreateQueryStr,
-} from '../helper-functions/HelperFunctions.js';
+import { CreateQueryStr } from '../helper-functions/HelperFunctions.js';
 import Header from '../images/headers/QUELL-headers-demo w lines.svg';
+
+/*
+  Container that renders the whole demo dashboard
+*/
 
 const Demo = () => {
   const [queryResponse, setQueryResponse] = useState({});
@@ -20,24 +20,26 @@ const Demo = () => {
   const [output, setOutput] = useState({ countries: ['id'] });
   const [resetComponent, setResetComponent] = useState(false);
 
-  const handleChange = (e) => {
-    setQueryInput(e.target.value);
-  };
-
   const formatTimer = (time) => {
     return time.toFixed(2) + ' ms';
   };
+
+  // ============================================================== //
+  // === Function that makes the fetch request to run the query === //
+  // ============================================================== //
 
   const handleRunQueryClick = () => {
     // run ResultsParser on output to get the query
     const parsedResult = CreateQueryStr(output);
 
+    // start the timer (eventually displayed in Metrics)
     let startTime, endTime;
     startTime = performance.now();
 
+    // Make the fetch request
     Quell(
-      '/graphql',
-      parsedResult,
+      '/graphql', // our route
+      parsedResult, // our input
       {
         countries: 'Country',
         country: 'Country',
@@ -47,23 +49,27 @@ const Demo = () => {
       { cities: 'City' }
     )
       .then((res) => {
-        endTime = performance.now();
-        const time = endTime - startTime;
+        endTime = performance.now(); // stop the timer
+        const time = endTime - startTime; // calculate how long it took
 
-        // Query Response state
+        // Set Query Response state
         setQueryResponse(res.data);
 
-        // Timer State
+        // Set Timer State
         const rawTime = time;
         const fTime = formatTimer(rawTime);
         setFetchTime(fTime);
 
-        // Line Graph
+        // Set Line Graph
         const newTime = Number(rawTime.toFixed(3));
         setFetchTimeIntegers([...fetchTimeIntegers, newTime]);
       })
       .catch((err) => console.log(err));
   };
+
+  // ============================================================== //
+  // ==================== Misc event handlers ==================== //
+  // ============================================================== //
 
   const handleClearClientCache = () => {
     // Cache/FetchTime
@@ -88,7 +94,8 @@ const Demo = () => {
     .then(res => console.log(res))
   };
 
-  const handleZeroOutClick = () => {
+  // Runs when we click Reset All
+  const handleResetAll = () => {
     // Query default
     setResetComponent(!resetComponent);
     // Reset output
@@ -154,9 +161,9 @@ const Demo = () => {
           <DemoButton text={'Run Query'} func={handleRunQueryClick} classname={'button-query button-query-primary'} />
           <DemoButton text={'Clear Session Cache'} func={handleClearClientCache} classname={'button-query button-query-secondary'}/>
           <DemoButton text={'Clear Server Cache'} func={handleClearServerCache} classname={'button-query button-query-secondary'}/>
-          <DemoButton text={'Reset All'} func={handleZeroOutClick} classname={'button-query button-query-secondary'}/>
+          <DemoButton text={'Reset All'} func={handleResetAll} classname={'button-query button-query-secondary'}/>
         </div>
-        <DemoInput output={output} key={resetComponent} setOutput={setOutput} />
+        <Query output={output} key={resetComponent} setOutput={setOutput} /> {/* The key prop makes it so that when component changes, it completely reloads -- useful when clicking "Reset All" */}
         <Metrics fetchTime={fetchTime} cacheStatus={cacheStatus} />
         <QueryResults queryResponse={queryResponse} />
         <Graph fetchTimeIntegers={fetchTimeIntegers} />
