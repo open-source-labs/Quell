@@ -6,7 +6,7 @@ const {
   GraphQLList, 
   GraphQLID, 
   GraphQLString, 
-  GraphQLInt } = require('graphql');
+  GraphQLInt } = require('../../../quell-server/node_modules/graphql');
 
 // =========================== //
 // ===== TYPE DEFINITIONS ==== //
