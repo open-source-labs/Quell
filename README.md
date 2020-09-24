@@ -25,20 +25,20 @@ Currently, Quell can only cache query-type requests without arguments, aliases, 
 
 Quell is divided up into two npm packages:
 
-Download Quell-Client from npm in your terminal with `npm i @quell/client`.
-Download Quell-Server from npm in your terminal with `npm i @quell/server`.
+- Download @quell/client from npm in your terminal with `npm i @quell/client`.
+- Download @quell/server from npm in your terminal with `npm i @quell/server`.
 
 ### Installing and Connecting a Redis Server
 
 If not already installed on your server, install Redis.
 - Mac-Homebrew:
-    - At the terminal, type `brew install redis`.
-    - After installation completes, type `redis-server`.
-    - Your server should now have a Redis database connection open. Note the port on which it is listening.
+    - At the terminal, type `brew install redis`
+    - After installation completes, type `redis-server`
+    - Your server should now have a Redis database connection open (note the port on which it is listening)
 - Linux or non-Homebrew:
-    - Download appropriate version of Redis from [redis.io/download](http://redis.io/download).
-    - Follow installation instructions.
-    - Once Redis is successfully installed, follow instructions to open a Redis database connection and note the port on which it is listening.
+    - Download appropriate version of Redis from [redis.io/download](http://redis.io/download)
+    - Follow installation instructions
+    - Once Redis is successfully installed, follow instructions to open a Redis database connection (note the port on which it is listening)
 
 ## Documentation
 
