@@ -6,7 +6,7 @@ before install:
 install:
 	- npm install
 before_script:
-	- echo running script…
+	- echo running script
 script:
 	- npm run test
 after_success:
