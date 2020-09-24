@@ -25,8 +25,8 @@ Currently, Quell can only cache query-type requests without arguments, aliases, 
 
 Quell is divided up into two npm packages:
 
-- Download @quell/client from npm in your terminal with `npm i @quell/client`.
-- Download @quell/server from npm in your terminal with `npm i @quell/server`.
+- Download @quell/client from npm in your terminal with `npm i @quell/client`
+- Download @quell/server from npm in your terminal with `npm i @quell/server`
 
 ### Installing and Connecting a Redis Server
 
