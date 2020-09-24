@@ -1,4 +1,4 @@
-<p align="center"><img src="./demo/client/src/images/quell_logos/QUELL-nested-LG@0.75x.png" width='800' style="margin-top: 10px; margin-bottom: -10px;"></p>
+<p align="center"><img src="./demo/client/src/images/quell_logos/QUELL-nested-LG@0.75x.png" width='500' style="margin-top: 10px; margin-bottom: -10px;"></p>
 
 #[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://github.com/oslabs-beta/Quell/blob/master/LICENSE)
 ![AppVeyor](https://img.shields.io/badge/build-passing-brightgreen.svg)
@@ -27,8 +27,8 @@ Quell does **not** currently support Mutations, Subscriptions, Arguments, Direct
 
 Quell is divided up into two npm packages:
 
-Download Quell-Client from npm in your terminal with `npm i quell-client`.
-Download Quell-Server from npm in your terminal with `npm i quell-server`.
+Download Quell-Client from npm in your terminal with `npm i @quell/client`.
+Download Quell-Server from npm in your terminal with `npm i @quell/server`.
 
 ## General Requirements
 
