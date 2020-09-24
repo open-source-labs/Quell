@@ -49,5 +49,5 @@ If not already installed on your server, install Redis.
 
 Interested in making a contribution to Quell? [Click](./CONTRIBUTING.md) for our open-source contribution guidelines.
 
-Thank you for your interest and support!
+Thank you for your interest and support!!
 Team Quell
