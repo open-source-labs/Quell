@@ -39,9 +39,9 @@ fetchMe(sampleQuery)
 ```
 
 To make that same request with Quell:
-1. Import Quell with `import Quell from '@quell/client'`.
-2. Instead of calling `fetchMe(query)`, replace with `Quell(endpoint, query, map, fieldsMap)`.
-  - The `Quell` method takes in four parameters.
+1. Import Quell with `import Quell from '@quell/client'`
+2. Instead of calling `fetchMe(query)`, replace with `Quell(endpoint, query, map, fieldsMap)`
+  - The `Quell` method takes in four parameters
     1. **_endpoint_** - your GraphQL endpoint as a string (ex. '/graphQL')
     2. **_query_** - your GraphQL query as a string (ex. see sampleQuery, above)
     3. **_map_** - an object that maps named queries to the [user-defined GraphQL types](https://graphql.org/learn/schema/#object-types-and-fields) they return
@@ -63,11 +63,9 @@ To make that same request with Quell:
 Using the example snippets above, your Quell-powered GraphQL fetch would look like this:
 ```
 Quell('/graphQL', sampleQuery, sampleMap, sampleFieldsMap)
-  .then((res) =>  res.json())
-  .then((parsedRes) => {
-    // use parsed response
-   });
+  .then( // use parsed response);
 ```
+Note: Quell will return a promise that resolves into a JS object containting your data in the same form as a typical GraphQL response `{ data: // response }`
 
 That's it! You're now caching your GraphQL queries in the browser's session storage.
 
