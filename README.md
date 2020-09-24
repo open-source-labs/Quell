@@ -2,26 +2,24 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://github.com/oslabs-beta/Quell/blob/master/LICENSE)
 ![AppVeyor](https://img.shields.io/badge/build-passing-brightgreen.svg)
-![AppVeyor](https://img.shields.io/badge/version-1.0.0-blue.svg)
+![AppVeyor](https://img.shields.io/badge/version-1.0.1-blue.svg)
 [![contributions welcome](https://img.shields.io/badge/contributions-welcome-brightgreen.svg?style=flat)](https://github.com/oslabs-beta/Quell/issues)
 
 # Quell
 
-Quell is an open-source NPM package providing a light-weight caching layer implementation for GraphQL responses on both the client- and server-side. Use Quell to prevent redundant client-side API requests and to minimize costly server-side response latency.
+Quell is a light-weight caching layer implementation for GraphQL responses on both the client- and server-side. Use Quell to prevent redundant client-side API requests and to minimize costly server-side response latency.
 
-Developed by Nick Kruckenberg, Michael Lauri, Rob Nobile, and Justin Jaeger under [OSLabs](https://opensourcelabs.io/).
+Accelerated by [OS Labs](https://github.com/oslabs-beta/) and developed by [Nick Kruckenberg](https://github.com/kruckenberg), [Mike Lauri](https://github.com/MichaelLauri), [Rob Nobile](https://github.com/RobNobile) and [Justin Jaeger](https://github.com/justinjaeger).
 
 ## Features
 
-Version 1.0 features:
+- Client-side caching utilizing sessionStorage
+- Server-side caching utilizing a configurable Redis in-memory data store
+- Automatic unique cache key generation
+- Partial and exact match query caching
+- Programmatic rebuilding of GraphQL queries to fetch only the minimum data necessary to complete the response based upon current cache contents
 
-Client-side caching utilizing sessionStorage
-Server-side caching utilizing a configurable Redis in-memory data store
-Automatic unique cache key generation
-Partial and exact match query caching
-Programmatic rebuilding of GraphQL queries to fetch only the minimum data necessary to complete the response based upon current cache contents
-
-Quell does **not** currently support Mutations, Subscriptions, Arguments, Directives, or Variables.
+Currently, Quell can only cache query-type requests without arguments, aliases, fragments, variables, or directives. Quell will still process these other requests, but will not cache the responses.
 
 ## Installation
 
@@ -30,27 +28,26 @@ Quell is divided up into two npm packages:
 Download Quell-Client from npm in your terminal with `npm i @quell/client`.
 Download Quell-Server from npm in your terminal with `npm i @quell/server`.
 
-## General Requirements
+### Installing and Connecting a Redis Server
 
-To utilize server-side caching, install Redis:
-
+If not already installed on your server, install Redis.
 - Mac-Homebrew:
+    - At the terminal, type `brew install redis`.
+    - After installation completes, type `redis-server`.
+    - Your server should now have a Redis database connection open. Note the port on which it is listening.
+- Linux or non-Homebrew:
+    - Download appropriate version of Redis from [redis.io/download](http://redis.io/download).
+    - Follow installation instructions.
+    - Once Redis is successfully installed, follow instructions to open a Redis database connection and note the port on which it is listening.
 
-  - in terminal, type `brew install redis`
-  - after installation completes, type `redis-server`
+## Documentation
 
-- Linux/Non-Homebrew:
+- [@quell/client README](./quell-client/README.md)
+-  [@quell/server README](./quell-server/README.md)
 
-  - [redis.io/download](https://redis.io/download)
-  - follow cli installation instructions
-  - be sure to locate the file path from your project directory to your redis server
+### Contribute to Quell
 
-  [Click here for Quell-Client README](./quell-client/README.md)
-  [Click here for Quell-Client README](./quell-server/README.md)
-
-  ## Contribute to Quell
-
-Interested in making a contribution to Quell? [Click here](./CONTRIBUTING.md) to check out our open-source contribution guidelines.
+Interested in making a contribution to Quell? [Click](./CONTRIBUTING.md) for our open-source contribution guidelines.
 
 Thank you for your interest and support!
 Team Quell
