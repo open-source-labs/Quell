@@ -39,7 +39,7 @@ fetchMe(sampleQuery)
 ```
 
 To make that same request with Quell:
-1. Require in Quell with `import Quell from '@quell/client'`.
+1. Import Quell with `import Quell from '@quell/client'`.
 2. Instead of calling `fetchMe(query)`, replace with `Quell(endpoint, query, map, fieldsMap)`.
   - The `Quell` method takes in four parameters.
     1. **_endpoint_** - your GraphQL endpoint as a string (ex. '/graphQL')
