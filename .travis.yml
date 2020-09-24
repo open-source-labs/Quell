@@ -1,8 +1,6 @@
 language: node_js
 node_js:
-	- node
-env:
- global: PATH=/opt/python/3.7.1/bin:$PATH
+	- "stable"
 before install:
   - cd demo
 install:
@@ -15,7 +13,3 @@ after_success:
 	- echo run success
 after_failure:
 	- echo run failure
-branches:
-	only:
-		- master
-		- production
