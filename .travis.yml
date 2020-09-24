@@ -1,6 +1,8 @@
 language: node_js
 node_js:
-	- “stable”
+	- node
+env:
+ global: PATH=/opt/python/3.7.1/bin:$PATH
 before install:
   - cd demo
 install:
