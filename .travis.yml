@@ -13,3 +13,7 @@ after_success:
 	- echo run success
 after_failure:
 	- echo run failure
+branches:
+	only:
+		- master
+		- production
