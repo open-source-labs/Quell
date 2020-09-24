@@ -1,15 +1,15 @@
 language: node_js
 node_js:
-	- "stable"
+  - "stable"
 before install:
   - cd demo
 install:
-	- npm install
+  - npm install
 before_script:
-	- echo running script
+  - echo running script
 script:
-	- npm run test
+  - npm run test
 after_success:
-	- echo run success
+  - echo run success
 after_failure:
-	- echo run failure
+  - echo run failure
