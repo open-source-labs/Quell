@@ -1,7 +1,7 @@
 const redis = require('redis');
 const { parse } = require('graphql/language/parser');
 const { visit } = require('graphql/language/visitor');
-const { graphql } = require('../../demo/node_modules/graphql');
+const { graphql } = require('graphql');
 class QuellCache {
   constructor (schema, redisPort, cacheExpiration = 1000) {
     this.schema = schema;
