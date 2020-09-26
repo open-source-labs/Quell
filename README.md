@@ -7,7 +7,7 @@
 
 # Quell
 
-Quell is a light-weight caching layer implementation for GraphQL responses on both the client- and server-side. Use Quell to prevent redundant client-side API requests and to minimize costly server-side response latency.
+Quell is an easy-to-use, lightweight JavaScript library providing a client- and server-side caching solution for GraphQL.
 
 Accelerated by [OS Labs](https://github.com/oslabs-beta/) and developed by [Nick Kruckenberg](https://github.com/kruckenberg), [Mike Lauri](https://github.com/MichaelLauri), [Rob Nobile](https://github.com/RobNobile) and [Justin Jaeger](https://github.com/justinjaeger).
 
@@ -18,8 +18,6 @@ Accelerated by [OS Labs](https://github.com/oslabs-beta/) and developed by [Nick
 - Automatic unique cache key generation
 - Partial and exact match query caching
 - Programmatic rebuilding of GraphQL queries to fetch only the minimum data necessary to complete the response based upon current cache contents
-
-Currently, Quell can only cache query-type requests without arguments, aliases, fragments, variables, or directives. Quell will still process these other requests, but will not cache the responses.
 
 ## Installation
 
@@ -40,6 +38,10 @@ If not already installed on your server, install Redis.
     - Follow installation instructions
     - Once Redis is successfully installed, follow instructions to open a Redis database connection (note the port on which it is listening)
 
+### Usage Notes
+
+- Currently, Quell can only cache query-type requests without arguments, aliases, fragments, variables, or directives. Quell will still process these other requests, but will not cache the responses.
+
 ## Documentation
 
 - [@quell/client README](./quell-client/README.md)
@@ -49,5 +51,5 @@ If not already installed on your server, install Redis.
 
 Interested in making a contribution to Quell? [Click](./CONTRIBUTING.md) for our open-source contribution guidelines.
 
-Thank you for your interest and support!!
+Thank you for your interest and support!
 Team Quell
