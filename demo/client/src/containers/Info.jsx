@@ -13,7 +13,7 @@ const Info = () => {
       </div>
       <div className='info-text'>
         <h4>
-          Quell is an open source, lightweight client and server-side caching
+          Quell is an open source, lightweight JavaScript library providing a client- and server-side caching
           solution for GraphQL.
         </h4>
         <br></br>

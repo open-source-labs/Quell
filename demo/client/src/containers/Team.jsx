@@ -14,7 +14,7 @@ const justin = {
   name: 'Justin Jaeger',
   src: Justin,
   bio:
-    'Id ad cillum enim sint sit enim deserunt dolor. Irure anim laborum consequat eu adipisicing culpa cupidatat reprehenderit aliquip officia sunt voluptate. Ipsum est nostrud incididunt irure velit. Voluptate irure ullamco excepteur cupidatat.',
+    'Constructed Redis and PostgreSQL databases, contributed development of Express server, and designed demo application interface in React',
   linkedin: 'https://www.linkedin.com/in/justin-jaeger-81a805b5/',
   github: 'https://github.com/justinjaeger',
 };
@@ -23,7 +23,7 @@ const mike = {
   name: 'Mike Lauri',
   src: Mike,
   bio:
-    'Do excepteur sint sit non id laboris velit nostrud sit do. Incididunt tempor velit ex magna est labore officia excepteur velit irure consectetur. Excepteur dolor occaecat amet laborum commodo Lorem veniam.',
+    'Architected website with React, contributed to client-side caching functionality, and implemented Travis CI for continuous integration',
   linkedin: 'https://www.linkedin.com/in/mlauri/',
   github: 'https://github.com/MichaelLauri',
 };
@@ -32,7 +32,7 @@ const nick = {
   name: 'Nick Kruckenberg',
   src: Nick,
   bio:
-    'Ullamco et aliqua ut pariatur duis nostrud. Occaecat aute minim duis mollit. Labore laborum sit quis officia nostrud deserunt qui duis aute in minim fugiat.',
+    'Built client- and server-side caching functionality, developed partial query caching algorithms, created image containers with Docker for AWS deployment',
   linkedin: 'https://www.linkedin.com/in/nicholaskruckenberg/',
   github: 'https://github.com/kruckenberg',
 };
@@ -41,7 +41,7 @@ const rob = {
   name: 'Rob Nobile',
   src: Rob,
   bio:
-    'Non esse occaecat ipsum incididunt sunt dolore magna tempor ut. Voluptate commodo duis laboris Lorem aliquip esse consequat fugiat magna ad ad voluptate irure et. Tempor cupidatat tempor ipsum consectetur eiusmod adipisicing id in ex anim pariatur. Enim minim est amet aliquip cillum do sunt elit non.',
+    'Created testing suite with Jest, architected demo application with React, built and debugged client-side caching functionality, and implemented Travis CI for continuous integration',
   linkedin: 'https://www.linkedin.com/in/robertnobile/',
   github: 'https://github.com/RobNobile',
 };
