@@ -14,7 +14,10 @@ const Header = () => {
 
       <ul className='header-links'>
         <li>
-          <a href='#info'>INFO</a>
+          <a href="https://www.npmjs.com/package/@quell/client" target='_blank'>CLIENT</a>
+        </li>
+        <li>
+          <a href="https://www.npmjs.com/package/@quell/server" target='_blank'>SERVER</a>
         </li>
         <li>
           <a href='#demo'>DEMO</a>
