@@ -70,7 +70,7 @@ app.listen(3000);
 
 That's it! You now have a normalized cache for your GraphQL endpoint.
 
-## Usage Notes and Best Practices
+### Usage Notes
 
 - @quell/server reads queries from Express' request object at `request.body.query` and attaches the query response to Express' response object at `response.locals.queryResponse`.
 - @quell/server can only cache items it can uniquely identify. It will first inspect your schema to identify fields with a [GraphQL ID type](https://graphql.org/learn/schema/#scalar-types). If it cannot find any ID-type fields, it will look for fields called `id` of `_id`. If a query lacks all three, it will execute the query without caching the response.

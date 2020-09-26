@@ -44,7 +44,7 @@
       "url": "https://github.com/kruckenberg"
     }
   ],
-  "homepage": "https://github.com/oslabs-beta/Quell/blob/master/quell-server/README.md",
+  "homepage": "http://quellql.io",
   "dependencies": {
     "graphql": "^15.3.0",
     "redis": "^3.0.2"
