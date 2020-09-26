@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
-import QueryField from './QueryField.jsx';
-import DropdownItem from './DropdownItem.jsx';
+import QueryField from './QueryField';
+import DropdownItem from './DropdownItem';
+import CitiesFields from './CitiesFields';
 // imported images
 import Minus from '../images/buttons/minus-button.svg';
 import MinusHover from '../images/buttons/minus-button-hover.svg';
@@ -13,14 +14,18 @@ import PlusHover from '../images/buttons/plus-button-hover.svg';
   - It is recursively called when you add the "cities" field in the "countries" query
 */
 
+// I don't know where in the file to set queryingCities equal to true so that it doesn't render ID after that
+// maybe just set a timer?? so that it runs after the first time we build the recursive queryFields component
+
 const QueryFields = (props) => {
 
-  const { initialQuery: initialField, type, sub, outputFunction } = props; // import props
+  const { initialField, type, sub, outputFunction } = props; // import props
 
-  const [queryList, setQueryList] = useState(initialField);
+  const [queryList, setQueryList] = useState(['id']);
   const [availableList, setAvailableList] = useState([]);
   const [plusDropdown, togglePlusDropdown] = useState(false);
   const [subQuery, setSubQuery] = useState(sub); // is true when we render this recursively for the "cities" field inside "countries" query
+  const [citiesFields, setCitiesFields] = useState(['id'])
 
   // ====================================================================== //
   // ======= Functionality to close dropdowns when clicking outside ======= //
@@ -95,7 +100,7 @@ const QueryFields = (props) => {
   // ==================================== //
 
   //======= Minus button ========//
-  function deleteItem(item) {
+  function deleteItem(item) { // THIS UNINTENTIONALLY RESETS CITIES
     // remove item from queryList
     const newList = [...queryList];
     const index = newList.indexOf(item);
@@ -134,6 +139,20 @@ const QueryFields = (props) => {
     }
   }
 
+  // Add item to cities field
+  // Delete item from cities field
+  const modifyCitiesFields = (item, addOrDelete) => {
+    const newFields = [...citiesFields]
+    if (addOrDelete === 'add') {
+      newFields.push(item);
+    };
+    if (addOrDelete === 'delete') {
+      const index = newFields.indexOf(item);
+      newFields.splice(index, 1);
+    };
+    setCitiesFields(newFields)
+  }
+
   // Fires when you click plus -- only show plus dropdown if there's something in the list
   const dropPlus = () => {
     if (availableList.length > 0) {
@@ -154,7 +173,7 @@ const QueryFields = (props) => {
   // Render the query list to the DOM
   const queriedItems = queryList.map((item, i) => {
     // if querying "cities", need to open up a new pair of brackets and recursively call QueryFields to generate cities fields
-    if (item === 'cities') {
+    if (item === 'cities' && !sub) {
       return (
         <>
           <div className='queryLine'>
@@ -166,16 +185,30 @@ const QueryFields = (props) => {
                 <img src={MinusHover} className='hover-button' />
               </div>
             </button>
-            {space}cities{space}{ob} 
+            {space}cities{space}{ob}
           </div>
           <div className='queryLine'>
-            <QueryFields
-              initialQuery={['id']}
+            <CitiesFields
+              citiesFields={citiesFields}
               type={'City'}
               outputFunction={outputFunction}
-              key={type}
+              sub={true}
+              modifyCitiesFields={modifyCitiesFields}
+            />
+            {/* {queryingCities &&
+            <QueryFields
+              type={'City'}
+              outputFunction={outputFunction}
               sub={true}
             />
+            }
+            {!queryingCities &&
+              <QueryFields
+                type={'City'}
+                outputFunction={outputFunction}
+                sub={true}
+              />
+            } */}
           </div>
           <div className='queryLine'>
             {tab}
