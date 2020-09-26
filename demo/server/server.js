@@ -14,7 +14,6 @@ const quellCache = new QuellCache(schema, 6379, 600);
 // JSON parser:
 app.use(express.json());
 
-// Webpack DevServer
 if (process.env.NODE_ENV === 'production') {
   // statically serve everything in the dist folder on the route
   app.use('/dist', express.static(path.resolve(__dirname, '../dist')));
@@ -26,7 +25,7 @@ if (process.env.NODE_ENV === 'production') {
   });
 }
 
-// just putting this here for access to the graphiql playground
+// access to the graphiql playground
 app.use('/g', graphqlHTTP({
   schema: schema,
   graphiql: true
