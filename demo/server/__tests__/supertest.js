@@ -1,5 +1,5 @@
 const request = require('supertest');
-const app = require('../server/server');
+const app = require('../server');
 
 describe('/graphql', () => {
   describe('POST', () => {
