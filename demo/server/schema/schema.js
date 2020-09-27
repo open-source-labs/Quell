@@ -1,12 +1,14 @@
 const db = require('../models/countriesModel');
 
+const graphqlNodeModule = (process.env.NODE_ENV === 'development') ? '../../../quell-server/node_modules/graphql' : 'graphql';
+
 const { 
   GraphQLSchema, 
   GraphQLObjectType, 
   GraphQLList, 
   GraphQLID, 
   GraphQLString, 
-  GraphQLInt } = require('../../../quell-server/node_modules/graphql');
+  GraphQLInt } = require(graphqlNodeModule);
 
 // =========================== //
 // ===== TYPE DEFINITIONS ==== //

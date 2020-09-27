@@ -4,10 +4,10 @@ import DemoButton from '../components/DemoButton';
 import QueryResults from '../components/QueryResults';
 import Metrics from '../components/Metrics';
 import Graph from '../components/Graph';
-import Quell from '../../../../quell-client/Quellify';
 import { CreateQueryStr } from '../helper-functions/HelperFunctions.js';
 import Header from '../images/headers/QUELL-headers-demo w lines.svg';
-
+// import Quell from '../../../../quell-client/Quellify';
+import Quell from '@quell/client';
 /*
   Container that renders the whole demo dashboard
 */
@@ -78,14 +78,14 @@ const Demo = () => {
     let date = new Date();
     setCacheStatus(date.toLocaleTimeString());
   };
-  
+
   const handleClearServerCache = () => {
     // GET request - Clear sever cache
     fetch('/clearCache')
-    .then(res => console.log(res))
-     // Time cleared
-     let date = new Date();
-     setCacheStatus(date.toLocaleTimeString());
+      .then(res => console.log(res))
+    // Time cleared
+    let date = new Date();
+    setCacheStatus(date.toLocaleTimeString());
   };
 
   // Runs when we click Reset All
@@ -102,7 +102,7 @@ const Demo = () => {
     sessionStorage.clear();
     // Clear server cache:
     fetch('/clearCache')
-    .then(res => console.log(res))
+      .then(res => console.log(res))
     // Time cleared
     setCacheStatus('');
     // Zero-out line graph
@@ -153,9 +153,9 @@ const Demo = () => {
       <div className='dashboard-grid'>
         <div className="button-grid">
           <DemoButton text={'Run Query'} func={handleRunQueryClick} classname={'button-query button-query-primary'} />
-          <DemoButton text={'Clear Session Cache'} func={handleClearClientCache} classname={'button-query button-query-secondary'}/>
-          <DemoButton text={'Clear Server Cache'} func={handleClearServerCache} classname={'button-query button-query-secondary'}/>
-          <DemoButton text={'Reset All'} func={handleResetAll} classname={'button-query button-query-secondary'}/>
+          <DemoButton text={'Clear Session Cache'} func={handleClearClientCache} classname={'button-query button-query-secondary'} />
+          <DemoButton text={'Clear Server Cache'} func={handleClearServerCache} classname={'button-query button-query-secondary'} />
+          <DemoButton text={'Reset All'} func={handleResetAll} classname={'button-query button-query-secondary'} />
         </div>
         <Query output={output} key={resetComponent} setOutput={setOutput} /> {/* The key prop makes it so that when component changes, it completely reloads -- useful when clicking "Reset All" */}
         <Metrics fetchTime={fetchTime} cacheStatus={cacheStatus} />
