@@ -5,7 +5,7 @@
   "scripts": {
     "start": "NODE_ENV=production nodemon server/server.js",
     "build": "NODE_ENV=production webpack",
-    "dev": "concurrently \"NODE_ENV=development\" \"webpack-dev-server --open --hot\" \"nodemon server/server.js\"",
+    "dev": "concurrently \"webpack-dev-server --open --hot\" \"NODE_ENV=development nodemon server/server.js\"",
     "test": "jest --verbose"
   },
   "keywords": [],
@@ -14,7 +14,10 @@
   "description": "",
   "dependencies": {
     "@babel/runtime": "^7.11.2",
+    "@quell/client": "1.0.1",
+    "@quell/server": "1.0.1",
     "concurrently": "^5.3.0",
+    "dotenv": "^8.2.0",
     "express": "^4.17.1",
     "express-graphql": "^0.11.0",
     "graphql": "^15.3.0",
