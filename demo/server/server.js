@@ -1,15 +1,19 @@
 const express = require('express');
 const path = require('path');
 const schema = require('./schema/schema');
-const graphqlNodeModule = (process.env.NODE_ENV === 'development') ? '../../quell-server/src/quell' : '@quell/server';
-const QuellCache = require(graphqlNodeModule)
+const graphqlNodeModule =
+  process.env.NODE_ENV === 'development'
+    ? '../../quell-server/src/quell'
+    : '@quell/server';
+const QuellCache = require(graphqlNodeModule);
 
 // Express instance
 const app = express();
 const PORT = 3000;
 
 // Instantiate cache GraphQL middleware
-const redisPort = (process.env.NODE_ENV === 'production') ? process.env.REDIS_URL : 6379;
+const redisPort =
+  process.env.NODE_ENV === 'production' ? process.env.REDIS_URL : 6379;
 const quellCache = new QuellCache(schema, redisPort, 600);
 
 // JSON parser:
@@ -29,16 +33,12 @@ if (process.env.NODE_ENV === 'production') {
 // Route that triggers the flushall function to clear the Redis cache
 app.get('/clearCache', quellCache.clearCache, (req, res) => {
   return res.status(200).send('Redis cache successfully cleared');
-})
+});
 
 // GraphQL route
-app.use('/graphql', 
-  quellCache.query,
-  (req, res) => {
-    return res
-      .status(200)
-      .send(res.locals.queryResponse);
-  });
+app.use('/graphql', quellCache.query, (req, res) => {
+  return res.status(200).send(res.locals.queryResponse);
+});
 
 // Catch-all endpoint handler
 app.use((req, res) => {

@@ -1,9 +1,9 @@
 import React from 'react';
 import Logo from '../images/quell_logos/QUELL-long.svg';
 
-function smoothScroll(element) {
-  document.getElementById(element).scrollIntoView({ behavior: 'smooth' });
-}
+// function smoothScroll(element) {
+//   document.getElementById(element).scrollIntoView({ behavior: 'smooth' });
+// }
 
 const Header = () => {
   return (

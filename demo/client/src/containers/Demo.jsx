@@ -6,8 +6,8 @@ import Metrics from '../components/Metrics';
 import Graph from '../components/Graph';
 import { CreateQueryStr } from '../helper-functions/HelperFunctions.js';
 import Header from '../images/headers/QUELL-headers-demo w lines.svg';
-// import Quell from '../../../../quell-client/Quellify';
-import Quell from '@quell/client';
+import Quell from '../../../../quell-client/Quellify';
+// import Quell from '@quell/client';
 /*
   Container that renders the whole demo dashboard
 */
@@ -81,8 +81,7 @@ const Demo = () => {
 
   const handleClearServerCache = () => {
     // GET request - Clear sever cache
-    fetch('/clearCache')
-      .then(res => console.log(res))
+    fetch('/clearCache').then((res) => console.log(res));
     // Time cleared
     let date = new Date();
     setCacheStatus(date.toLocaleTimeString());
@@ -101,8 +100,7 @@ const Demo = () => {
     // Clear sessionStorage
     sessionStorage.clear();
     // Clear server cache:
-    fetch('/clearCache')
-      .then(res => console.log(res))
+    fetch('/clearCache').then((res) => console.log(res));
     // Time cleared
     setCacheStatus('');
     // Zero-out line graph
@@ -110,14 +108,14 @@ const Demo = () => {
   };
 
   return (
-    <div id='demo'>
-      <div id='demo-header-container'>
-        <img id='demo-header' src={Header}></img>
+    <div id="demo">
+      <div id="demo-header-container">
+        <img id="demo-header" src={Header}></img>
       </div>
-      <div className='demo-inst-container'>
-        <p className='demo-inst'>It's time to take Quell for a spin!</p>
+      <div className="demo-inst-container">
+        <p className="demo-inst">It's time to take Quell for a spin!</p>
         <br></br>
-        <p className='demo-inst'>
+        <p className="demo-inst">
           Below is a sample GraphQL query that you can manipulate using the
           drop-down, plus, and minus buttons. Click <em>Run Query</em> to
           initiate the request/response cycle. To clear the client-side cache,
@@ -126,7 +124,7 @@ const Demo = () => {
           <em>Reset All</em> will take you back to square one.
         </p>
         <br></br>
-        <p className='demo-inst'>
+        <p className="demo-inst">
           <em>Suggestions:</em>
         </p>
         <ul>
@@ -150,14 +148,31 @@ const Demo = () => {
         </ul>
       </div>
 
-      <div className='dashboard-grid'>
+      <div className="dashboard-grid">
         <div className="button-grid">
-          <DemoButton text={'Run Query'} func={handleRunQueryClick} classname={'button-query button-query-primary'} />
-          <DemoButton text={'Clear Session Cache'} func={handleClearClientCache} classname={'button-query button-query-secondary'} />
-          <DemoButton text={'Clear Server Cache'} func={handleClearServerCache} classname={'button-query button-query-secondary'} />
-          <DemoButton text={'Reset All'} func={handleResetAll} classname={'button-query button-query-secondary'} />
+          <DemoButton
+            text={'Run Query'}
+            func={handleRunQueryClick}
+            classname={'button-query button-query-primary'}
+          />
+          <DemoButton
+            text={'Clear Session Cache'}
+            func={handleClearClientCache}
+            classname={'button-query button-query-secondary'}
+          />
+          <DemoButton
+            text={'Clear Server Cache'}
+            func={handleClearServerCache}
+            classname={'button-query button-query-secondary'}
+          />
+          <DemoButton
+            text={'Reset All'}
+            func={handleResetAll}
+            classname={'button-query button-query-secondary'}
+          />
         </div>
-        <Query output={output} key={resetComponent} setOutput={setOutput} /> {/* The key prop makes it so that when component changes, it completely reloads -- useful when clicking "Reset All" */}
+        <Query output={output} key={resetComponent} setOutput={setOutput} />{' '}
+        {/* The key prop makes it so that when component changes, it completely reloads -- useful when clicking "Reset All" */}
         <Metrics fetchTime={fetchTime} cacheStatus={cacheStatus} />
         <QueryResults queryResponse={queryResponse} />
         <Graph fetchTimeIntegers={fetchTimeIntegers} />
