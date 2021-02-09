@@ -150,7 +150,6 @@ const CitiesFields = (props) => {
     <>
       {/* List all the chosen query fields */}
       <div className="queryLinesContainer">{queriedItems}</div>
-
       {tab}
       {tab}
       {/* Render plus sign, which opens a dropdown */}

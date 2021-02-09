@@ -25,6 +25,8 @@ const QueryField = (props) => {
         {tab}
         {/* {sub && <>{tab}</>} */}
         {/* Generate minus button */}
+        {!itemIsNotId && <>{space}</>}
+        {!itemIsNotId && <>{space}</>}
         {itemIsNotId && (
           <button className="minus-button" onClick={() => deleteItem(item)}>
             <div className="plus-minus-icons">
