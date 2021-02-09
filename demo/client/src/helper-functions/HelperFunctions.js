@@ -1,5 +1,5 @@
 /**
- * @param {Array} newList - Array of query fields
+ * @param {Array} newList - Array of main query fields
  * @param {Array} sub - Array of query fields in the sub-query (aka "cities" in "countries")
  * @param {string} query - the query name for ex: "countries" or "cities"
  * @param {string} id - a number when querying by id
@@ -22,12 +22,13 @@
   currentResults 
     - comes from the state
     - looks like: { QUERY: ['item1', 'item2', {'cities': ['item1', 'item2']}] }
+    - looks like: { countries: ['id', 'name', { cities: ['id', 'name'] }] }
 */
 
 const ResultsHelper = (newList, sub, query, id, currentResults) => {
-  console.log('newList ===> ', newList);
-  console.log('sub ===> ', sub);
-  console.log('query ===> ', query);
+  // console.log('newList ===> ', newList);
+  // console.log('sub ===> ', sub);
+  // console.log('query ===> ', query);
 
   for (let type in currentResults) {
     //===========================//
@@ -36,6 +37,7 @@ const ResultsHelper = (newList, sub, query, id, currentResults) => {
 
     if (newList) {
       const currentList = [...currentResults[type]];
+      // console.log('currentList ===> ', currentList);
 
       // determine whether we already have cities
       let alreadyHaveCities = false;
@@ -89,6 +91,7 @@ const ResultsHelper = (newList, sub, query, id, currentResults) => {
     //===============================//
     //===Alters the city sub-array===//
     //===============================//
+    // type ===> countries / i ===> index / x ===> cities
 
     if (sub) {
       const currentList = currentResults[type];
@@ -140,7 +143,7 @@ const ResultsHelper = (newList, sub, query, id, currentResults) => {
 
   // RETURN STATEMENT FOR ALL
   const newResults = { ...currentResults };
-  console.log('RETURNED NewOutput ===> ', newResults);
+  // console.log('RETURNED NewOutput ===> ', newResults);
   return newResults;
 };
 
