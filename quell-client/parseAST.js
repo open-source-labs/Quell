@@ -22,6 +22,7 @@ function parseAST(AST) {
 
   visit(AST, {
     enter(node) {
+      // console.log('we are entering node ===> ', node)
       if (node.operation) {
         if (node.operation !== 'query') {
           isQuellable = false;
@@ -41,17 +42,22 @@ function parseAST(AST) {
         isQuellable = false;
       }
     },
+    // OperationDefinition(node) {
+    //   console.log('test OperationDefinition !!!!!!!!')
+    // },
+
+    // Alternatively to providing enter() and leave() functions, a visitor can instead provide functions named the same as the kinds of AST nodes, or enter/leave visitors at a named key, leading to four permutations of visitor API:
     SelectionSet(node, key, parent, path, ancestors) {
+      // console.log('test SelectionSet !!!!!!!')
       /**
-       * Exclude SelectionSet nodes whose parents' are not of the kind 
+       * Exclude SelectionSet nodes whose parents' are not of the kind
        * 'Field' to exclude nodes that do not contain information about
        *  queried fields.
        */
       if (parent.kind === 'Field') {
-
         /** GraphQL ASTs are structured such that a field's parent field
-         *  is found three three ancestors back. Hence, we subtract three. 
-        */
+         *  is found three three ancestors back. Hence, we subtract three.
+         */
         let depth = ancestors.length - 3;
         let objPath = [parent.name.value];
 
@@ -75,22 +81,21 @@ function parseAST(AST) {
           collectFields[field.name.value] = true;
         }
 
-
         /** Helper function to convert array of ancestor fields into a
          *  path at which to assign the `collectFields` object.
          */
         function setProperty(path, obj, value) {
           return path.reduce((prev, curr, index) => {
-            return (index + 1 === path.length) // if last item in path
-              ? prev[curr] = value // set value
-              : prev[curr] = prev[curr] || {};
+            return index + 1 === path.length // if last item in path
+              ? (prev[curr] = value) // set value
+              : (prev[curr] = prev[curr] || {});
             // otherwise, if index exists, keep value or set to empty object if index does not exist
           }, obj);
-        };
+        }
 
         setProperty(objPath, prototype, collectFields);
       }
-    }
+    },
   });
 
   return isQuellable ? prototype : 'unQuellable';
