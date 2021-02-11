@@ -37,6 +37,7 @@ async function Quellify(endPoint, query, map, fieldsMap) {
   } else {
     // Check cache for data and build array from that cached data
     const responseFromCache = buildArray(proto, map);
+    // console.log('proto in Quellify ===> ', proto)
     // If no data in cache, the response array will be empty:
     if (responseFromCache.length === 0) {
       const fetchOptions = {
@@ -57,9 +58,10 @@ async function Quellify(endPoint, query, map, fieldsMap) {
       return new Promise((resolve, reject) => resolve(parsedData));
     }
 
-    // If all data in cache:
+    // If found data in cache:
     let mergedResponse;
     const queryObject = createQueryObj(proto); // Create query object from only false proto fields
+    // console.log('queryObject in Quellify ===> ', queryObject)
     const queryName = Object.keys(proto)[0];
 
     // Partial data in cache:  (i.e. keys in queryObject will exist)

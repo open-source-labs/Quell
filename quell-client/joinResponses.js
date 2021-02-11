@@ -3,6 +3,9 @@
  */
 
 function joinResponses(responseArray, fetchedResponseArray, copiedProto) {
+  console.log('responseArray ===> !!!!!!! ', responseArray);
+  console.log('fetchedResponseArray ===> !!!!!!! ', fetchedResponseArray);
+  console.log('copiedProto ===> !!!!!!! ', copiedProto);
   // main output array that will contain objects with joined fields
   const joinedArray = [];
   // iterate over response containing cached fields
@@ -20,14 +23,16 @@ function joinResponses(responseArray, fetchedResponseArray, copiedProto) {
         if (typeof protoObj[field] !== 'object') {
           // add applicable field from either object to the newObj
           objStart[field]
-          ? newObj[field] = objStart[field]
-          : newObj[field] = objAdd[field]
-        // if non-scalar:
+            ? (newObj[field] = objStart[field])
+            : (newObj[field] = objAdd[field]);
+          // if non-scalar:
         } else if (typeof protoObj[field] === 'object') {
-          // if both objects contain non-scalar fields, join by passing back into joinResponses() or else, add the value from the applicable object that contains it 
+          // if both objects contain non-scalar fields, join by passing back into joinResponses() or else, add the value from the applicable object that contains it
           objStart[field] && objAdd[field]
-          ? newObj[field] = joinResponses(objStart[field], objAdd[field], { field: protoObj[field] })
-          : newObj[field] = objStart[field] || objAdd[field]
+            ? (newObj[field] = joinResponses(objStart[field], objAdd[field], {
+                field: protoObj[field],
+              }))
+            : (newObj[field] = objStart[field] || objAdd[field]);
         }
       }
 
@@ -37,6 +42,6 @@ function joinResponses(responseArray, fetchedResponseArray, copiedProto) {
   }
   // return main output array
   return joinedArray;
-};
+}
 
 module.exports = joinResponses;

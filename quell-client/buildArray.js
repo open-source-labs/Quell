@@ -24,20 +24,17 @@ function toggleProto(proto) {
  *  array of those collected items.
  */
 function buildArray(prototype, map, collection) {
-  console.log('prototype in buildArray ===> ', prototype);
-  console.log('map in buildArray ===> ', map);
-  console.log('collection in buildArray before loop ===> ', collection);
+  // console.log('prototype in buildArray ===> ', prototype);
+  // console.log('map in buildArray ===> ', map);
+  // console.log('collection in buildArray before loop ===> ', collection);
   let response = [];
 
   for (let query in prototype) {
-    console.log('query ===> !!!!', query);
+    // console.log('query ===> !!!!', query);
     // collection = 1.Object type field passed into buildArray() when called from buildItem() or 2.Obtained item from cache or 3.Empty array
     collection =
       collection || JSON.parse(sessionStorage.getItem(map[query])) || [];
-    console.log(
-      'collection in buildArray after loop ===> ',
-      JSON.parse(sessionStorage.getItem(map[query]))
-    );
+    // console.log('collection in buildArray after loop ===> ', collection);
     //  ["Country-1", "Country-2", "Country-3", "Country-4", "Country-5"] or [];
     // each of these items in the array is the item below
 
@@ -51,7 +48,7 @@ function buildArray(prototype, map, collection) {
       ); // 1st pass: builItem = prototype all true; sessionStorage = obj for each country
     }
   }
-  console.log('response ===> !!!!!!!!!!!', response);
+  // console.log('response ===> !!!!!!!!!!!', response);
   return response;
 }
 
@@ -91,16 +88,16 @@ function buildArray(prototype, map, collection) {
 // };
 
 function buildItem(prototype, item, map) {
-  console.log('prototype in buildItem ===> ', prototype);
-  console.log('item in buildItem ===> ', item);
-  console.log('map in buildItem ===> ', map);
+  // console.log('prototype in buildItem ===> ', prototype);
+  // console.log('item in buildItem ===> ', item);
+  // console.log('map in buildItem ===> ', map);
   let tempObj = {}; // gets all the in-cache data
   // Traverse fields in prototype (or nested field object type)
   for (let key in prototype) {
     // if key points to an object (an object type field, e.g. "cities" in a "country")
     if (typeof prototype[key] === 'object') {
       let prototypeAtKey = { [key]: prototype[key] };
-      console.log('prototypeAtKey !!!!!! ===> ', prototypeAtKey);
+      // console.log('prototypeAtKey !!!!!! ===> ', prototypeAtKey);
       if (item[key] !== undefined) {
         // if in cache
         tempObj[key] = buildArray(prototypeAtKey, map, item[key]);
