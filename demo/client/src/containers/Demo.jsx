@@ -32,8 +32,7 @@ const Demo = () => {
     // run ResultsParser on output to get the query
     let parsedResult = CreateQueryStr(output);
     // parsedResult = ' {country (id: 1) { id capital cities { id, name }}} ';
-    parsedResult =
-      ' {country (id: 1) { id capital city (id: 4) { id, name }}} ';
+    parsedResult = ' {country (id: 1) { id capital cities { id, name }}} ';
 
     // start the timer (eventually displayed in Metrics)
     let startTime, endTime;
