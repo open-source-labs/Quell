@@ -28,8 +28,13 @@ function buildArray(prototype, map, collection) {
   // console.log('map in buildArray ===> ', map);
   // console.log('collection in buildArray before loop ===> ', collection);
   let response = [];
-
+  console.log('I am here!!!!!!');
   for (let query in prototype) {
+    if (prototype[query].arguments) {
+      const args = prototype[query].arguments;
+      console.log('args !!!', args);
+    }
+
     // console.log('query ===> !!!!', query);
     // collection = 1.Object type field passed into buildArray() when called from buildItem() or 2.Obtained item from cache or 3.Empty array
     collection =

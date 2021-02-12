@@ -14,7 +14,7 @@ const joinResponses = require('./joinResponses');
 async function Quellify(endPoint, query, map, fieldsMap) {
   // Create AST of query
   const AST = parse(query);
-  console.log('AST ===> ', AST)
+  console.log('AST ===> ', AST);
   // Create object of "true" values from AST tree (w/ some eventually updated to "false" via buildItem())
   const proto = parseAST(AST);
 
@@ -37,7 +37,7 @@ async function Quellify(endPoint, query, map, fieldsMap) {
   } else {
     // Check cache for data and build array from that cached data
     const responseFromCache = buildArray(proto, map);
-    // console.log('proto in Quellify ===> ', proto)
+    console.log('responseFromCache ===> ', responseFromCache);
     // If no data in cache, the response array will be empty:
     if (responseFromCache.length === 0) {
       const fetchOptions = {
@@ -50,7 +50,9 @@ async function Quellify(endPoint, query, map, fieldsMap) {
 
       // Execute fetch request with original query
       const responseFromFetch = await fetch(endPoint, fetchOptions);
+      console.log('responseFromFetch !!!!!', responseFromFetch);
       const parsedData = await responseFromFetch.json();
+      console.log('parsedData !!!!!', parsedData);
       // Normalize returned data into cache
       normalizeForCache(parsedData.data, map, fieldsMap);
 

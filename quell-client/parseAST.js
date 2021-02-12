@@ -136,6 +136,7 @@ function parseAST(AST) {
   });
 
   return isQuellable ? prototype : 'unQuellable';
+  // return 'unQuellable';
 }
 
 module.exports = parseAST;
