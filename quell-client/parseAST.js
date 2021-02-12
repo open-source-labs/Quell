@@ -28,11 +28,11 @@ function parseAST(AST) {
           isQuellable = false;
         }
       }
-      if (node.arguments) {
-        if (node.arguments.length > 0) {
-          isQuellable = false;
-        }
-      }
+      // if (node.arguments) {
+      //   if (node.arguments.length > 0) {
+      //     isQuellable = false;
+      //   }
+      // }
       if (node.directives) {
         if (node.directives.length > 0) {
           isQuellable = false;
@@ -75,7 +75,7 @@ function parseAST(AST) {
          */
         while (depth >= 5) {
           let parentNodes = ancestors[depth - 1];
-          console.log('parentNodes = ancestors[depth - 1] ===> ', parentNodes);
+          console.log('parentNodes ===> ', parentNodes);
           let { length } = parentNodes;
           console.log('length', length);
           objPath.unshift(parentNodes[length - 1].name.value);
@@ -93,6 +93,14 @@ function parseAST(AST) {
          */
         const collectFields = {};
         for (let field of node.selections) {
+          console.log('parent !!!!!!!!', parent);
+          if (parent.arguments) {
+            if (parent.arguments.length > 0) {
+              const key = parent.arguments[0].name.value;
+              const value = parent.arguments[0].value.value;
+              collectFields.arguments = { [key]: value };
+            }
+          }
           collectFields[field.name.value] = true;
         }
         console.log('collectFields ===> ', { ...collectFields });
