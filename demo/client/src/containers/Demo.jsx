@@ -30,7 +30,10 @@ const Demo = () => {
 
   const handleRunQueryClick = () => {
     // run ResultsParser on output to get the query
-    const parsedResult = CreateQueryStr(output);
+    let parsedResult = CreateQueryStr(output);
+    // parsedResult = ' {country (id: 1) { id capital cities { id, name }}} ';
+    parsedResult =
+      ' {country (id: 1) { id capital city (id: 4) { id, name }}} ';
 
     // start the timer (eventually displayed in Metrics)
     let startTime, endTime;
