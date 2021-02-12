@@ -13,10 +13,10 @@ class QuellCache {
     this.redisCache = redis.createClient(redisPort);
     this.query = this.query.bind(this);
     this.clearCache = this.clearCache.bind(this);
-    console.log('this.schema ===> ', this.schema);
-    console.log('this.queryMap ===> ', this.queryMap);
-    console.log('this.fieldsMap ===> ', this.fieldsMap);
-    console.log('this.idMap ===> ', this.idMap);
+    // console.log('this.schema ===> ', this.schema);
+    // console.log('this.queryMap ===> ', this.queryMap);
+    // console.log('this.fieldsMap ===> ', this.fieldsMap);
+    // console.log('this.idMap ===> ', this.idMap);
   }
   /**
    * The class's controller method. It:
@@ -55,13 +55,16 @@ class QuellCache {
     } else {
       // store name of query and associated object type
       const queryName = Object.keys(proto)[0];
+      console.log('queryName', queryName);
       const queriedCollection = this.queryMap[queryName];
+      console.log('queriedCollection ===> ', queriedCollection);
       // build response from cache
       const responseFromCache = await this.buildFromCache(
         proto,
         this.queryMap,
         queriedCollection
       );
+      console.log('responseFromCache ===> ', responseFromCache);
       // query for additional information, if necessary
       let fullResponse, uncachedResponse;
       if (responseFromCache.length === 0) {
@@ -83,6 +86,7 @@ class QuellCache {
               AST,
               queriedCollection
             );
+            console.log('toReturn ===> ', toReturn);
             // append rebuilt response (if it contains data) or fullResponse to Express's response object
             res.locals.queryResponse = { data: { [queryName]: toReturn } };
             return next();
@@ -336,24 +340,33 @@ class QuellCache {
   }
 
   async buildFromCache(proto, map, queriedCollection, collection) {
+    console.log('proto ===> ', proto);
+    console.log('queriedCollection ===> ', queriedCollection);
+    console.log('collection ===> ', collection);
     const response = [];
     for (const superField in proto) {
+      console.log('superField ===> ', superField);
       // if collection not passed as argument, try to retrieve array of references from cache
       if (!collection) {
         const collectionFromCache = await this.getFromRedis(superField);
+        console.log('collectionFromCache ===> ', collectionFromCache);
         if (!collectionFromCache) collection = [];
         else collection = JSON.parse(collectionFromCache);
+        console.log('collection ===> ', collection);
       }
       if (collection.length === 0) this.toggleProto(proto);
       for (const item of collection) {
+        console.log('collection ===> ', collection);
         let itemFromCache = await this.getFromRedis(item);
         itemFromCache = itemFromCache ? JSON.parse(itemFromCache) : {};
+        console.log('itemFromCache ===> ', itemFromCache);
         const builtItem = await this.buildItem(
           proto[superField],
           this.fieldsMap[queriedCollection],
           itemFromCache
         );
         response.push(builtItem);
+        console.log('builtItem ===> ', JSON.parse(JSON.stringify(builtItem)));
       }
     }
     return response;
@@ -428,6 +441,7 @@ class QuellCache {
    */
   createQueryStr(queryObject) {
     const openCurl = ' { ';
+    createQueryStr;
     const closedCurl = ' } ';
     let queryString = '';
     for (const key in queryObject) {
