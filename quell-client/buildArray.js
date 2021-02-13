@@ -5,35 +5,38 @@ function toggleProto(proto) {
   }
 }
 
-// const prototype = {
-//   countries: {
-//     capital: true,
-//     id: true,
-//     name: true,
+const prototype = {
+  country: {
+    arguments: { id: '1' },
+    capital: true,
+    id: true,
+    name: true,
 
-//     cities: {
-//       country_id: true,
-//       id: true,
-//       name: true,
-//     },
-//   },
-// };
+    cities: {
+      country_id: true,
+      id: true,
+      name: true,
+    },
+  },
+};
 
 /** Helper function that loops over a collection of references,
  *  calling another helper function -- buildItem() -- on each. Returns an
  *  array of those collected items.
  */
 function buildArray(prototype, map, collection) {
-  // console.log('prototype in buildArray ===> ', prototype);
-  // console.log('map in buildArray ===> ', map);
-  // console.log('collection in buildArray before loop ===> ', collection);
+  console.log('prototype in buildArray ===> ', prototype);
+  console.log('map in buildArray ===> ', map);
+  console.log('collection in buildArray before loop ===> ', collection);
   let response = [];
   console.log('I am here!!!!!!');
   for (let query in prototype) {
+    /////////////////////////////////////////
     if (prototype[query].arguments) {
       const args = prototype[query].arguments;
       console.log('args !!!', args);
     }
+    /////////////////////////////////////////
 
     // console.log('query ===> !!!!', query);
     // collection = 1.Object type field passed into buildArray() when called from buildItem() or 2.Obtained item from cache or 3.Empty array

@@ -92,15 +92,15 @@ function parseAST(AST) {
          *  position determined by the above array of ancestor fields.
          */
         const collectFields = {};
-        for (let field of node.selections) {
-          console.log('parent !!!!!!!!', parent);
-          if (parent.arguments) {
-            if (parent.arguments.length > 0) {
-              const key = parent.arguments[0].name.value;
-              const value = parent.arguments[0].value.value;
-              collectFields.arguments = { [key]: value };
-            }
+        console.log('parent !!!!!!!!', parent);
+        if (parent.arguments) {
+          if (parent.arguments.length > 0) {
+            const key = parent.arguments[0].name.value;
+            const value = parent.arguments[0].value.value;
+            collectFields.arguments = { [key]: value };
           }
+        }
+        for (let field of node.selections) {
           collectFields[field.name.value] = true;
         }
         console.log('collectFields ===> ', { ...collectFields });
@@ -116,6 +116,7 @@ function parseAST(AST) {
           );
           console.log('collectFields/value !!!!! ===> ', value);
           return path.reduce((prev, curr, index) => {
+            
             console.log(
               'prototype accumulator/prev !!!!! ===> ',
               JSON.parse(JSON.stringify(prev))

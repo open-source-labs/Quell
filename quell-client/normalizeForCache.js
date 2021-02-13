@@ -3,15 +3,16 @@
  */
 
 function normalizeForCache(response, map, fieldsMap) {
-  // console.log('response ===> ', response);
-  // console.log('map ===> ', map);
-  // console.log('fieldsMap ===> ', fieldsMap);
+  console.log('response ===> ', response);
+  console.log('map ===> ', map);
+  console.log('fieldsMap ===> ', fieldsMap);
   // Name of query for ID generation (e.g. "countries")
   const queryName = Object.keys(response)[0];
   // Object type for ID generation ===> "City"
   const collectionName = map[queryName];
   // Array of objects on the response (cloned version)
   const collection = JSON.parse(JSON.stringify(response[queryName]));
+  console.log('response[queryName] ===> ', response[queryName]);
 
   const referencesToCache = [];
 
