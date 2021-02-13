@@ -1,7 +1,10 @@
 function toggleProto(proto) {
   for (const key in proto) {
-    if (Object.keys(proto[key]).length > 0) toggleProto(proto[key]);
-    else proto[key] = false;
+    if (Object.keys(proto[key]).length > 0) {
+      toggleProto(proto[key]);
+    } else {
+      proto[key] = false;
+    }
   }
 }
 
@@ -45,6 +48,11 @@ function buildArray(prototype, map, collection) {
     // console.log('collection in buildArray after loop ===> ', collection);
     //  ["Country-1", "Country-2", "Country-3", "Country-4", "Country-5"] or [];
     // each of these items in the array is the item below
+    console.log(
+      'JSON.parse(sessionStorage.getItem(map[query])) ===> ',
+      JSON.parse(sessionStorage.getItem(map[query]))
+    );
+    console.log('collection ===> ', collection);
 
     for (let item of collection) {
       response.push(
@@ -96,21 +104,25 @@ function buildArray(prototype, map, collection) {
 // };
 
 function buildItem(prototype, item, map) {
-  // console.log('prototype in buildItem ===> ', prototype);
-  // console.log('item in buildItem ===> ', item);
-  // console.log('map in buildItem ===> ', map);
+  console.log('prototype in buildItem ===> ', prototype);
+  console.log('item in buildItem ===> ', item);
+  console.log('map in buildItem ===> ', map);
   let tempObj = {}; // gets all the in-cache data
   // Traverse fields in prototype (or nested field object type)
   for (let key in prototype) {
+    console.log('prototype[key] !!!!!! ', prototype[key]);
     // if key points to an object (an object type field, e.g. "cities" in a "country")
-    if (typeof prototype[key] === 'object') {
+    if (typeof prototype[key] === 'object' && key !== 'arguments') {
       let prototypeAtKey = { [key]: prototype[key] };
       // console.log('prototypeAtKey !!!!!! ===> ', prototypeAtKey);
       if (item[key] !== undefined) {
+        console.log('find you in cache!!!!!!!!!');
         // if in cache
         tempObj[key] = buildArray(prototypeAtKey, map, item[key]);
+        console.log('tempObj[key] ===> ', tempObj[key]);
       } else {
         // if not in cache
+        console.log('can not find you in cache!!!!!!!');
         toggleProto(prototypeAtKey);
       }
     } else if (prototype[key]) {

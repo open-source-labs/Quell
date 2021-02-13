@@ -63,7 +63,7 @@ async function Quellify(endPoint, query, map, fieldsMap) {
     // If found data in cache:
     let mergedResponse;
     const queryObject = createQueryObj(proto); // Create query object from only false proto fields
-    // console.log('queryObject in Quellify ===> ', queryObject)
+    console.log('queryObject in Quellify ===> ', queryObject)
     const queryName = Object.keys(proto)[0];
 
     // Partial data in cache:  (i.e. keys in queryObject will exist)
