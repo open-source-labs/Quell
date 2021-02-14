@@ -55,16 +55,13 @@ class QuellCache {
     } else {
       // store name of query and associated object type
       const queryName = Object.keys(proto)[0];
-      console.log('queryName', queryName);
       const queriedCollection = this.queryMap[queryName];
-      console.log('queriedCollection ===> ', queriedCollection);
       // build response from cache
       const responseFromCache = await this.buildFromCache(
         proto,
         this.queryMap,
         queriedCollection
       );
-      console.log('responseFromCache ===> ', responseFromCache);
       // query for additional information, if necessary
       let fullResponse, uncachedResponse;
       if (responseFromCache.length === 0) {
@@ -86,7 +83,6 @@ class QuellCache {
               AST,
               queriedCollection
             );
-            console.log('toReturn ===> ', toReturn);
             // append rebuilt response (if it contains data) or fullResponse to Express's response object
             res.locals.queryResponse = { data: { [queryName]: toReturn } };
             return next();
@@ -164,7 +160,6 @@ class QuellCache {
       typeof queryTypeFields === 'function'
         ? queryTypeFields()
         : queryTypeFields;
-    console.log('queryTypeFields ===> ', schema._queryType._fields);
     for (const query in queriesObj) {
       // get name of GraphQL type returned by query
       const returnedType =
@@ -201,19 +196,14 @@ class QuellCache {
     const customTypes = Object.keys(typesList).filter(
       (type) => !builtInTypes.includes(type) && type !== schema._queryType.name
     );
-    console.log('customTypes ===> ', customTypes);
-    console.log('schema._queryType ===> ', schema._queryType);
-    console.log('schema._queryType.name ===> ', schema._queryType.name);
     for (const type of customTypes) {
       const fieldsObj = {};
       let fields = typesList[type]._fields;
 
       if (typeof fields === 'function') fields = fields();
-      console.log('fields ===> ', fields);
 
       for (const field in fields) {
         const key = fields[field].name;
-        console.log('fields[field].type ===> ', fields[field].type);
         const value = fields[field].type.ofType
           ? fields[field].type.ofType.name
           : fields[field].type.name;
@@ -340,33 +330,24 @@ class QuellCache {
   }
 
   async buildFromCache(proto, map, queriedCollection, collection) {
-    console.log('proto ===> ', proto);
-    console.log('queriedCollection ===> ', queriedCollection);
-    console.log('collection ===> ', collection);
     const response = [];
     for (const superField in proto) {
-      console.log('superField ===> ', superField);
       // if collection not passed as argument, try to retrieve array of references from cache
       if (!collection) {
         const collectionFromCache = await this.getFromRedis(superField);
-        console.log('collectionFromCache ===> ', collectionFromCache);
         if (!collectionFromCache) collection = [];
         else collection = JSON.parse(collectionFromCache);
-        console.log('collection ===> ', collection);
       }
       if (collection.length === 0) this.toggleProto(proto);
       for (const item of collection) {
-        console.log('collection ===> ', collection);
         let itemFromCache = await this.getFromRedis(item);
         itemFromCache = itemFromCache ? JSON.parse(itemFromCache) : {};
-        console.log('itemFromCache ===> ', itemFromCache);
         const builtItem = await this.buildItem(
           proto[superField],
           this.fieldsMap[queriedCollection],
           itemFromCache
         );
         response.push(builtItem);
-        console.log('builtItem ===> ', JSON.parse(JSON.stringify(builtItem)));
       }
     }
     return response;
