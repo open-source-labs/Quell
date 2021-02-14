@@ -8,21 +8,6 @@ function toggleProto(proto) {
   }
 }
 
-// const prototype = {
-//   country: {
-//     arguments: [{ id: '1' }],
-//     capital: true,
-//     id: true,
-//     name: true,
-
-//     cities: {
-//       country_id: true,
-//       id: true,
-//       name: true,
-//     },
-//   },
-// };
-
 /** Helper function that loops over a collection of references,
  *  calling another helper function -- buildItem() -- on each. Returns an
  *  array of those collected items.
@@ -31,39 +16,63 @@ function buildArray(prototype, map, collection) {
   console.log('prototype in buildArray ===> ', prototype);
   console.log('map in buildArray ===> ', map);
   console.log('collection in buildArray before loop ===> ', collection);
+
   let response = [];
   for (let query in prototype) {
-    /////////////////////////////////////////
+    // if the query has an argument
     if (prototype[query].arguments) {
-      const args = prototype[query].arguments;
-      console.log('args !!!', args);
-    }
-    /////////////////////////////////////////
+      let indentifier;
 
-    // console.log('query ===> !!!!', query);
-    // collection = 1.Object type field passed into buildArray() when called from buildItem() or 2.Obtained item from cache or 3.Empty array
-    collection =
-      collection || JSON.parse(sessionStorage.getItem(map[query])) || [];
-    // console.log('collection in buildArray after loop ===> ', collection);
-    //  ["Country-1", "Country-2", "Country-3", "Country-4", "Country-5"] or [];
-    // each of these items in the array is the item below
-    console.log(
-      'JSON.parse(sessionStorage.getItem(map[query])) ===> ',
-      JSON.parse(sessionStorage.getItem(map[query]))
-    );
-    console.log('collection ===> ', collection);
+      prototype[query].arguments.forEach((argument) => {
+        const key = Object.keys(argument)[0];
+        if (key === 'id' || key === '_id') {
+          indentifier = argument[key];
+          console.log('indentifier ===> ', indentifier);
+        }
 
-    for (let item of collection) {
-      response.push(
-        buildItem(
-          prototype[query],
-          JSON.parse(sessionStorage.getItem(item)),
-          map
-        )
-      ); // 1st pass: builItem = prototype all true; sessionStorage = obj for each country
+        delete prototype[query].arguments;
+
+        // collection = 1.Object type field passed into buildArray() when called from buildItem() or 2.Obtained item from cache or 3.Empty array
+        collection =
+          collection ||
+          JSON.parse(sessionStorage.getItem(`${map[query]}-${indentifier}`)) ||
+          [];
+        // [{ id: '2', capital: 'Sucre', cities: ['City-5', 'City-6', 'City-7', 'City-8', 'City-9', 'City-10']] || []
+        console.log(
+          'collection if the query has an argument ===> ',
+          collection
+        );
+
+        /////// super suck in here!!!!!
+
+        for (let item of collection) {
+          response.push(buildItem(prototype[query], item, map)); // 1st pass: builItem = prototype all true; sessionStorage = obj for each country
+        }
+      });
+    } else {
+      // collection = 1.Object type field passed into buildArray() when called from buildItem() or 2.Obtained item from cache or 3.Empty array
+      collection =
+        collection || JSON.parse(sessionStorage.getItem(map[query])) || [];
+      // console.log('collection if the query has no argument ===> ', collection);
+      //  ["Country-1", "Country-2", "Country-3", "Country-4", "Country-5"] or [];
+      // each of these items in the array is the item below
+      console.log(
+        'JSON.parse(sessionStorage.getItem(map[query])) ===> ',
+        JSON.parse(sessionStorage.getItem(map[query]))
+      );
+
+      for (let item of collection) {
+        response.push(
+          buildItem(
+            prototype[query],
+            JSON.parse(sessionStorage.getItem(item)),
+            map
+          )
+        ); // 1st pass: builItem = prototype all true; sessionStorage = obj for each country
+      }
     }
   }
-  // console.log('response ===> !!!!!!!!!!!', response);
+  console.log('response ===> !!!!!!!!!!!', response);
   return response;
 }
 
@@ -79,50 +88,28 @@ function buildArray(prototype, map, collection) {
  *
  */
 
-// const prototype = {
-//   country: {
-//     arguments: [{ id: '1' }],
-//     capital: true,
-//     id: true,
-//     name: true,
-
-//     cities: {
-//       country_id: true,
-//       id: true,
-//       name: true,
-//     },
-//   },
-// };
-
-// item: JSON.parse(sessionStorage.getItem(item)),
-
-// const map = {
-//   countries: 'Country',
-//   country: 'Country',
-//   citiesByCountryId: 'City',
-//   cities: 'City',
-// };
-
 function buildItem(prototype, item, map) {
-  console.log('prototype in buildItem ===> ', prototype);
+  console.log(
+    'prototype in buildItem ===> ',
+    JSON.parse(JSON.stringify(prototype))
+  );
   console.log('item in buildItem ===> ', item);
   console.log('map in buildItem ===> ', map);
   let tempObj = {}; // gets all the in-cache data
   // Traverse fields in prototype (or nested field object type)
   for (let key in prototype) {
-    console.log('prototype[key] !!!!!! ', prototype[key]);
     // if key points to an object (an object type field, e.g. "cities" in a "country")
-    if (typeof prototype[key] === 'object' && key !== 'arguments') {
+    if (typeof prototype[key] === 'object') {
       let prototypeAtKey = { [key]: prototype[key] };
-      // console.log('prototypeAtKey !!!!!! ===> ', prototypeAtKey);
+      console.log('prototypeAtKey = { [key]: prototype[key] } !!!!!! ===> ', {
+        [key]: prototype[key],
+      });
       if (item[key] !== undefined) {
-        console.log('find you in cache!!!!!!!!!');
         // if in cache
         tempObj[key] = buildArray(prototypeAtKey, map, item[key]);
         console.log('tempObj[key] ===> ', tempObj[key]);
       } else {
         // if not in cache
-        console.log('can not find you in cache!!!!!!!');
         toggleProto(prototypeAtKey);
       }
     } else if (prototype[key]) {
@@ -138,20 +125,5 @@ function buildItem(prototype, item, map) {
   }
   return tempObj;
 }
-
-// const prototype = {
-//   country: {
-//     arguments: [{ id: '1' }],
-//     capital: true,
-//     id: true,
-//     name: true,
-
-//     cities: {
-//       country_id: true,
-//       id: true,
-//       name: true,
-//     },
-//   },
-// };
 
 module.exports = buildArray;
