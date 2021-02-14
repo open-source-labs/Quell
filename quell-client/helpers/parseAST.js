@@ -28,6 +28,7 @@ function parseAST(AST) {
           isQuellable = false;
         }
       }
+      // // We commented this section out because we changed arguments to be Quellable
       // if (node.arguments) {
       //   if (node.arguments.length > 0) {
       //     isQuellable = false;
@@ -42,18 +43,19 @@ function parseAST(AST) {
         isQuellable = false;
       }
     },
-    // OperationDefinition(node) {
-    //   console.log('test OperationDefinition !!!!!!!!');
-    // },
 
     // Alternatively to providing enter() and leave() functions, a visitor can instead provide functions named the same as the kinds of AST nodes, or enter/leave visitors at a named key, leading to four permutations of visitor API:
+    // node – The current node being visiting.
+    // key – The index or key to this node from the parent node or Array.
+    // parent – the parent immediately above this node, which may be an Array.
+    // path – The key path to get to this node from the root node.
+    // ancestors – All nodes and Arrays visited before reaching parent of this node. These correspond to array indices in path. Note: ancestors includes arrays which contain the parent of visited node.
     SelectionSet(node, key, parent, path, ancestors) {
-      // console.log('test SelectionSet !!!!!!!');
-      console.log('node ===> ', node);
-      console.log('key ===> ', key);
-      console.log('parent ===> ', parent);
-      console.log('path ===> ', path);
-      console.log('ancestors ===>', ancestors);
+      // console.log('node ===> ', node);
+      // console.log('key ===> ', key);
+      // console.log('parent ===> ', parent);
+      // console.log('path ===> ', path);
+      // console.log('ancestors ===>', ancestors);
       /**
        * Exclude SelectionSet nodes whose parents' are not of the kind
        * 'Field' to exclude nodes that do not contain information about
@@ -63,28 +65,33 @@ function parseAST(AST) {
         /** GraphQL ASTs are structured such that a field's parent field
          *  is found three three ancestors back. Hence, we subtract three.
          */
-        let depth = ancestors.length - 3;
-        console.log('ancestors.length ===> ', ancestors.length);
-        console.log(' depth = ancestors.length - 3 ===> ', depth);
+        let parentFieldDepth = ancestors.length - 3;
+        // console.log('ancestors.length ===> ', ancestors.length);
+        // console.log(
+        //   ' parentFieldDepth = ancestors.length - 3 ===> ',
+        //   parentFieldDepth
+        // );
+
         let objPath = [parent.name.value];
-        console.log('objPath = [parent.name.value] ===> ', objPath);
+        // console.log('objPath = [parent.name.value] ===> ', objPath);
 
         /** Loop through ancestors to gather all ancestor nodes. This array
          * of nodes will be necessary for properly nesting each field in the
          * prototype object.
          */
-        while (depth >= 5) {
-          let parentNodes = ancestors[depth - 1];
-          console.log('parentNodes ===> ', parentNodes);
-          let { length } = parentNodes;
-          console.log('length', length);
-          objPath.unshift(parentNodes[length - 1].name.value);
-          console.log(
-            'objPath.unshift(parentNodes[length - 1].name.value) inside of while loop ===> ',
-            objPath
-          );
-          depth -= 3;
-          console.log('depth -= 3 inside of while loop ===> ', depth);
+        while (parentFieldDepth >= 5) {
+          let parentFieldNode = ancestors[parentFieldDepth - 1];
+          // console.log('parentFieldNode ===> ', parentFieldNode);
+
+          let { length } = parentFieldNode;
+          // console.log('length', length);
+          objPath.unshift(parentFieldNode[length - 1].name.value);
+          // console.log(
+          //   'objPath.unshift(parentFieldNode[length - 1].name.value) inside of while loop ===> ',
+          //   objPath
+          // );
+
+          parentFieldDepth -= 3;
         }
 
         /** Loop over the array of fields at current node, adding each to
@@ -92,37 +99,39 @@ function parseAST(AST) {
          *  position determined by the above array of ancestor fields.
          */
         const collectFields = {};
-        console.log('parent !!!!!!!!', parent);
+
+        //  Loop through all arguments, collect & save them onto property name arguments as an array
         if (parent.arguments) {
           if (parent.arguments.length > 0) {
-            const key = parent.arguments[0].name.value;
-            const value = parent.arguments[0].value.value;
-            collectFields.arguments = { [key]: value };
+            collectFields.arguments = parent.arguments.map((argument) => {
+              const key = argument.name.value;
+              const value = argument.value.value;
+              return { [key]: value };
+            });
           }
         }
+
         for (let field of node.selections) {
           collectFields[field.name.value] = true;
         }
-        console.log('collectFields ===> ', { ...collectFields });
+        // console.log(
+        //   'collectFields ===> ',
+        //   JSON.parse(JSON.stringify(collectFields))
+        // );
 
         /** Helper function to convert array of ancestor fields into a
          *  path at which to assign the `collectFields` object.
          */
         function setProperty(path, obj, value) {
-          console.log('objPath/path !!!!! ===> ', path);
-          console.log(
-            'prototype/obj !!!!! ===> ',
-            JSON.parse(JSON.stringify(obj))
-          );
-          console.log('collectFields/value !!!!! ===> ', value);
+          // console.log('objPath/path ===> ', path);
+          // console.log('prototype/obj ===> ', JSON.parse(JSON.stringify(obj)));
+          // console.log('collectFields/value ===> ', value);
           return path.reduce((prev, curr, index) => {
-            
-            console.log(
-              'prototype accumulator/prev !!!!! ===> ',
-              JSON.parse(JSON.stringify(prev))
-            );
-            console.log('current path/curr !!!!! ===> ', curr);
-            console.log('index !!!!! ===> ', index);
+            // console.log(
+            //   'prototype accumulator/prev ===> ',
+            //   JSON.parse(JSON.stringify(prev))
+            // );
+            // console.log('current path/curr ===> ', curr);
             return index + 1 === path.length // if last item in path
               ? (prev[curr] = value) // set value
               : (prev[curr] = prev[curr] || {});
@@ -131,13 +140,12 @@ function parseAST(AST) {
         }
 
         setProperty(objPath, prototype, collectFields);
-        console.log('prototype ===> ', JSON.parse(JSON.stringify(prototype)));
+        // console.log('prototype ===> ', JSON.parse(JSON.stringify(prototype)));
       }
     },
   });
 
   return isQuellable ? prototype : 'unQuellable';
-  // return 'unQuellable';
 }
 
 module.exports = parseAST;

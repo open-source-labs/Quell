@@ -10,18 +10,22 @@ function normalizeForCache(response, map, fieldsMap) {
   const queryName = Object.keys(response)[0];
   // Object type for ID generation ===> "City"
   const collectionName = map[queryName];
-  console.log('collectionName', collectionName);
+  console.log('collectionName ===>', collectionName);
   // Array of objects on the response (cloned version)
   const collection = JSON.parse(JSON.stringify(response[queryName]));
-  console.log('response[queryName] ===> ', response[queryName]);
+  console.log(
+    'collection ===> ',
+    JSON.parse(JSON.stringify(response[queryName]))
+  );
 
-  const referencesToCache = [];
-
-  // if collection is array
+  // if collection is array / etc: qury all countries
   if (Array.isArray(collection)) {
+    const referencesToCache = [];
+
     // Check for nested array (to replace objects with another array of references)
     for (const item of collection) {
       const itemKeys = Object.keys(item);
+
       for (const key of itemKeys) {
         if (Array.isArray(item[key])) {
           item[key] = replaceItemsWithReferences(key, item[key], fieldsMap);
@@ -31,10 +35,13 @@ function normalizeForCache(response, map, fieldsMap) {
       writeToCache(generateId(collectionName, item), item);
       referencesToCache.push(generateId(collectionName, item));
     }
+
+    // Write the array of references to cache (e.g. 'Country': ['Country-1', 'Country-2', 'Country-3'...])
+    writeToCache(collectionName, referencesToCache);
   } else {
-    // if collection is not an array / query with argument id
-    console.log('collection is an object');
+    // if collection is an object / etc: qury with argument ID
     const itemKeys = Object.keys(collection);
+
     for (const key of itemKeys) {
       if (Array.isArray(collection[key])) {
         collection[key] = replaceItemsWithReferences(
@@ -46,10 +53,7 @@ function normalizeForCache(response, map, fieldsMap) {
     }
     // Write individual objects to cache (e.g. separate object for each single city)
     writeToCache(generateId(collectionName, collection), collection);
-    referencesToCache.push(generateId(collectionName, collection));
   }
-  // Write the array of references to cache (e.g. 'City': ['City-1', 'City-2', 'City-3'...])
-  writeToCache(collectionName, referencesToCache);
 }
 
 // ============= HELPER FUNCTIONS ============= //
@@ -77,7 +81,6 @@ function generateId(collection, item) {
 function writeToCache(key, item) {
   if (!key.includes('uncacheable')) {
     sessionStorage.setItem(key, JSON.stringify(item));
-    // mockCache[key] = JSON.stringify(item);
   }
 }
 

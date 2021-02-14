@@ -8,20 +8,20 @@ function toggleProto(proto) {
   }
 }
 
-const prototype = {
-  country: {
-    arguments: { id: '1' },
-    capital: true,
-    id: true,
-    name: true,
+// const prototype = {
+//   country: {
+//     arguments: [{ id: '1' }],
+//     capital: true,
+//     id: true,
+//     name: true,
 
-    cities: {
-      country_id: true,
-      id: true,
-      name: true,
-    },
-  },
-};
+//     cities: {
+//       country_id: true,
+//       id: true,
+//       name: true,
+//     },
+//   },
+// };
 
 /** Helper function that loops over a collection of references,
  *  calling another helper function -- buildItem() -- on each. Returns an
@@ -32,7 +32,6 @@ function buildArray(prototype, map, collection) {
   console.log('map in buildArray ===> ', map);
   console.log('collection in buildArray before loop ===> ', collection);
   let response = [];
-  console.log('I am here!!!!!!');
   for (let query in prototype) {
     /////////////////////////////////////////
     if (prototype[query].arguments) {
@@ -81,7 +80,8 @@ function buildArray(prototype, map, collection) {
  */
 
 // const prototype = {
-//   countries: {
+//   country: {
+//     arguments: [{ id: '1' }],
 //     capital: true,
 //     id: true,
 //     name: true,
@@ -140,7 +140,8 @@ function buildItem(prototype, item, map) {
 }
 
 // const prototype = {
-//   countries: {
+//   country: {
+//     arguments: [{ id: '1' }],
 //     capital: true,
 //     id: true,
 //     name: true,
