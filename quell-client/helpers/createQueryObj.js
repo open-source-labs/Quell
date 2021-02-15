@@ -3,7 +3,6 @@
  */
 
 function createQueryObj(map) {
-  console.log('map ===> ', map);
   const output = {};
   // !! assumes there is only ONE main query, and not multiples !!
   for (let key in map) {
@@ -14,7 +13,6 @@ function createQueryObj(map) {
   }
 
   function reducer(obj) {
-    console.log('obj ===> ', obj);
     const fields = [];
 
     for (let key in obj) {

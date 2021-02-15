@@ -102,12 +102,15 @@ function parseAST(AST) {
 
         //  Loop through all arguments, collect & save them onto property name arguments as an array
         if (parent.arguments) {
+          console.log('parent arg', parent.arguments);
           if (parent.arguments.length > 0) {
-            collectFields.arguments = parent.arguments.map((argument) => {
-              const key = argument.name.value;
-              const value = argument.value.value;
-              return { [key]: value };
-            });
+            // loop through arguments
+            collectFields.arguments = {};
+            for (let i = 0; i < parent.arguments.length; i++) {
+              const key = parent.arguments[i].name.value;
+              const value = parent.arguments[i].value.value;
+              collectFields.arguments[key] = value;
+            }
           }
         }
 

@@ -21,34 +21,32 @@ function buildArray(prototype, map, collection) {
   for (let query in prototype) {
     // if the query has an argument
     if (prototype[query].arguments) {
-      let indentifier;
+      const protoArgs = prototype[query].arguments;
+      console.log('protoArgs ===> ', protoArgs);
+      let identifier;
 
-      prototype[query].arguments.forEach((argument) => {
-        const key = Object.keys(argument)[0];
-        if (key === 'id' || key === '_id') {
-          indentifier = argument[key];
-          console.log('indentifier ===> ', indentifier);
-        }
+      if (protoArgs.hasOwnProperty('id') || protoArgs.hasOwnProperty('_id')) {
+        identifier = protoArgs.id || protoArgs._id;
+        console.log('identifier ===> ', identifier);
+      }
 
-        delete prototype[query].arguments;
+      delete prototype[query].arguments;
 
-        // collection = 1.Object type field passed into buildArray() when called from buildItem() or 2.Obtained item from cache or 3.Empty array
-        collection =
-          collection ||
-          JSON.parse(sessionStorage.getItem(`${map[query]}-${indentifier}`)) ||
-          [];
-        // [{ id: '2', capital: 'Sucre', cities: ['City-5', 'City-6', 'City-7', 'City-8', 'City-9', 'City-10']] || []
-        console.log(
-          'collection if the query has an argument ===> ',
-          collection
-        );
+      // collection = 1.Object type field passed into buildArray() when called from buildItem() or 2.Obtained item from cache or 3.Empty array
 
-        /////// super suck in here!!!!!
+      const itemFromCache = JSON.parse(
+        sessionStorage.getItem(`${map[query]}-${identifier}`)
+      );
+      // [{ id: '2', capital: 'Sucre', cities: ['City-5', 'City-6', 'City-7', 'City-8', 'City-9', 'City-10']] or null
 
-        for (let item of collection) {
-          response.push(buildItem(prototype[query], item, map)); // 1st pass: builItem = prototype all true; sessionStorage = obj for each country
-        }
-      });
+      collection =
+        collection || itemFromCache ? [itemFromCache] : itemFromCache || [];
+
+      console.log('collection if the query has an argument ===> ', collection);
+
+      for (let item of collection) {
+        response.push(buildItem(prototype[query], item, map));
+      }
     } else {
       // collection = 1.Object type field passed into buildArray() when called from buildItem() or 2.Obtained item from cache or 3.Empty array
       collection =

@@ -13,10 +13,6 @@ class QuellCache {
     this.redisCache = redis.createClient(redisPort);
     this.query = this.query.bind(this);
     this.clearCache = this.clearCache.bind(this);
-    // console.log('this.schema ===> ', this.schema);
-    // console.log('this.queryMap ===> ', this.queryMap);
-    // console.log('this.fieldsMap ===> ', this.fieldsMap);
-    // console.log('this.idMap ===> ', this.idMap);
   }
   /**
    * The class's controller method. It:
@@ -199,9 +195,7 @@ class QuellCache {
     for (const type of customTypes) {
       const fieldsObj = {};
       let fields = typesList[type]._fields;
-
       if (typeof fields === 'function') fields = fields();
-
       for (const field in fields) {
         const key = fields[field].name;
         const value = fields[field].type.ofType
@@ -422,7 +416,6 @@ class QuellCache {
    */
   createQueryStr(queryObject) {
     const openCurl = ' { ';
-    createQueryStr;
     const closedCurl = ' } ';
     let queryString = '';
     for (const key in queryObject) {

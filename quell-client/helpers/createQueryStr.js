@@ -2,14 +2,27 @@
  createQueryStr converts the query object into a formal GCL query string.
  */
 
-function createQueryStr(queryObject) {
+function createQueryStr(queryObject, queryArgsObject) {
+  console.log(queryArgsObject, 'query args object in create query string');
+  let argString = '';
+  if (queryArgsObject !== null) {
+    const openBrackets = ' (';
+    const closeBrackets = ' )';
+    argString += openBrackets;
+    for (const key in queryArgsObject) {
+      argString += key + ': ' + queryArgsObject[key];
+    }
+    argString += closeBrackets;
+  }
+
   const openCurl = ' { ';
   const closedCurl = ' } ';
 
   let mainStr = '';
 
   for (let key in queryObject) {
-    mainStr += key + openCurl + stringify(queryObject[key]) + closedCurl;
+    mainStr +=
+      key + argString + openCurl + stringify(queryObject[key]) + closedCurl;
   }
 
   function stringify(fieldsArray) {
@@ -28,6 +41,6 @@ function createQueryStr(queryObject) {
     return innerStr;
   }
   return openCurl + mainStr + closedCurl;
-};
+}
 
 module.exports = createQueryStr;
