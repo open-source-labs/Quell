@@ -13,7 +13,10 @@ function toggleProto(proto) {
  *  array of those collected items.
  */
 function buildArray(prototype, map, collection) {
-  console.log('prototype in buildArray ===> ', prototype);
+  console.log(
+    'prototype in buildArray ===> ',
+    JSON.parse(JSON.stringify(prototype))
+  );
   console.log('map in buildArray ===> ', map);
   console.log('collection in buildArray before loop ===> ', collection);
 
@@ -99,10 +102,11 @@ function buildItem(prototype, item, map) {
     // if key points to an object (an object type field, e.g. "cities" in a "country")
     if (typeof prototype[key] === 'object') {
       let prototypeAtKey = { [key]: prototype[key] };
-      console.log('prototypeAtKey = { [key]: prototype[key] } !!!!!! ===> ', {
-        [key]: prototype[key],
-      });
-      if (item[key] !== undefined) {
+      console.log(
+        'prototypeAtKey = { [key]: prototype[key] } !!!!!! ===> ',
+        prototypeAtKey
+      );
+      if (item[key]) {
         // if in cache
         tempObj[key] = buildArray(prototypeAtKey, map, item[key]);
         console.log('tempObj[key] ===> ', tempObj[key]);

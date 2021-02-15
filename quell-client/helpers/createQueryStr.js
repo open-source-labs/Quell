@@ -3,44 +3,46 @@
  */
 
 function createQueryStr(queryObject, queryArgsObject) {
-  console.log(queryArgsObject, 'query args object in create query string');
+  console.log('queryArgsObject in createQueryStr ===> ', queryArgsObject);
   let argString = '';
-  if (queryArgsObject !== null) {
-    const openBrackets = ' (';
-    const closeBrackets = ' )';
-    argString += openBrackets;
+  if (queryArgsObject) {
+    const openParen = ' (';
+    const closeParen = ' )';
+    argString += openParen;
     for (const key in queryArgsObject) {
       argString += key + ': ' + queryArgsObject[key];
     }
-    argString += closeBrackets;
+    argString += closeParen;
   }
 
-  const openCurl = ' { ';
-  const closedCurl = ' } ';
+  const openCurly = ' { ';
+  const closeCurly = ' } ';
 
   let mainStr = '';
 
   for (let key in queryObject) {
     mainStr +=
-      key + argString + openCurl + stringify(queryObject[key]) + closedCurl;
+      key + argString + openCurly + stringify(queryObject[key]) + closeCurly;
   }
 
   function stringify(fieldsArray) {
     let innerStr = '';
     for (let i = 0; i < fieldsArray.length; i++) {
       if (typeof fieldsArray[i] === 'string') {
-        innerStr += fieldsArray[i] + ' ';
+        innerStr += fieldsArray[i];
       }
       if (typeof fieldsArray[i] === 'object') {
         for (let key in fieldsArray[i]) {
-          innerStr += key + openCurl + stringify(fieldsArray[i][key]);
-          innerStr += closedCurl;
+          innerStr += key + openCurly + stringify(fieldsArray[i][key]);
+          innerStr += closeCurly;
         }
       }
     }
     return innerStr;
   }
-  return openCurl + mainStr + closedCurl;
+
+  console.log('createQueryStr ===> ', openCurly + mainStr + closeCurly);
+  return openCurly + mainStr + closeCurly;
 }
 
 module.exports = createQueryStr;

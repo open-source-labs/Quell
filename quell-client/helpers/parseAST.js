@@ -102,7 +102,7 @@ function parseAST(AST) {
 
         //  Loop through all arguments, collect & save them onto property name arguments as an array
         if (parent.arguments) {
-          console.log('parent arg', parent.arguments);
+          console.log('parent.arguments ===> ', parent.arguments);
           if (parent.arguments.length > 0) {
             // loop through arguments
             collectFields.arguments = {};

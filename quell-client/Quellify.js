@@ -102,8 +102,18 @@ async function Quellify(endPoint, query, map, fieldsMap) {
         parsedResponseFromFetch,
         proto
       );
+      console.log('mergedResponse here!!!!', mergedResponse);
     } else {
       mergedResponse = responseFromCache; // If everything needed was already in cache, only assign cached response to variable
+      console.log('mergedResponse there!!!!', mergedResponse);
+    }
+
+    if (protoArgs) {
+      console.log('protoArgs is not null!');
+      mergedResponse = mergedResponse[0];
+    } else {
+      console.log('protoArgs is null!');
+      mergedResponse = mergedResponse; // If everything needed was already in cache, only assign cached response to variable
     }
 
     console.log('mergedResponse ===> ', mergedResponse);

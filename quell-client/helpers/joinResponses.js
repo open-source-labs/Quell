@@ -41,6 +41,7 @@ function joinResponses(responseArray, fetchedResponseArray, copiedProto) {
     joinedArray.push(fieldRecurse(responseItem, fetchedItem));
   }
   // return main output array
+  console.log('joinedArray ===> ', joinedArray);
   return joinedArray;
 }
 
