@@ -18,7 +18,7 @@ function parseAST(AST) {
 
   // visit() will build the prototype, declared here and returned from the function
   const prototype = {};
-  const args = {};
+  let args = null;
   let isQuellable = true;
 
   visit(AST, {
@@ -146,7 +146,7 @@ function parseAST(AST) {
             for (let i = 0; i < parent.arguments.length; i++) {
               const key = parent.arguments[i].name.value;
               const value = parent.arguments[i].value.value;
-              args[key] = value;
+              args = { [key]: value };
             }
           }
         }

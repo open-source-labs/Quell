@@ -22,6 +22,7 @@ async function Quellify(endPoint, query, map, fieldsMap) {
   // Create object of "true" values from AST tree (w/ some eventually updated to "false" via buildItem())
   const [prototype, args] = parseAST(AST);
   QuellStore.arguments = args;
+  console.log('QuellStore after parseAST ===> ', QuellStore);
 
   // pass-through for queries and operations that QuellCache cannot handle
   if (prototype === 'unQuellable') {
