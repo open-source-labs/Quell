@@ -2,7 +2,7 @@
  normalizeForCache traverses server response data and creates objects out of responses for cache. Furthermore, it identifies fields that are 'object types' then replaces those array elements with references (helper), creates separate normalized objectes out of replaced elements, and saves all to cache (helper) with unique identifiers (helper)
  */
 
-function normalizeForCache(response, map, fieldsMap) {
+function normalizeForCache(response, map, fieldsMap, QuellStore) {
   console.log('response ===> ', response);
   console.log('map ===> ', map);
   console.log('fieldsMap ===> ', fieldsMap);
@@ -18,10 +18,25 @@ function normalizeForCache(response, map, fieldsMap) {
     JSON.parse(JSON.stringify(response[queryName]))
   );
 
-  // if collection is array / etc: qury all countries
-  if (Array.isArray(collection)) {
-    const referencesToCache = [];
+  if (QuellStore.arguments) {
+    // if collection from response is an object / etc: qury with argument ID
+    const itemKeys = Object.keys(collection);
 
+    for (const key of itemKeys) {
+      if (Array.isArray(collection[key])) {
+        collection[key] = replaceItemsWithReferences(
+          key,
+          collection[key],
+          fieldsMap
+        );
+      }
+    }
+    // Write individual objects to cache (e.g. separate object for each single city)
+    writeToCache(generateId(collectionName, collection), collection);
+  } else {
+    // if collection is array / etc: query all countries
+
+    const referencesToCache = [];
     // Check for nested array (to replace objects with another array of references)
     for (const item of collection) {
       const itemKeys = Object.keys(item);
@@ -38,21 +53,6 @@ function normalizeForCache(response, map, fieldsMap) {
 
     // Write the array of references to cache (e.g. 'Country': ['Country-1', 'Country-2', 'Country-3'...])
     writeToCache(collectionName, referencesToCache);
-  } else {
-    // if collection is an object / etc: qury with argument ID
-    const itemKeys = Object.keys(collection);
-
-    for (const key of itemKeys) {
-      if (Array.isArray(collection[key])) {
-        collection[key] = replaceItemsWithReferences(
-          key,
-          collection[key],
-          fieldsMap
-        );
-      }
-    }
-    // Write individual objects to cache (e.g. separate object for each single city)
-    writeToCache(generateId(collectionName, collection), collection);
   }
 }
 

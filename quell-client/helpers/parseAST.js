@@ -5,7 +5,7 @@ const { visit } = require('graphql/language/visitor');
  */
 
 function parseAST(AST) {
-  const queryRoot = AST.definitions[0];
+  // const queryRoot = AST.definitions[0];
 
   /**
    * visit() -- a utility provided in the graphql-JS library-- will walk
@@ -18,6 +18,7 @@ function parseAST(AST) {
 
   // visit() will build the prototype, declared here and returned from the function
   const prototype = {};
+  const args = {};
   let isQuellable = true;
 
   visit(AST, {
@@ -62,6 +63,8 @@ function parseAST(AST) {
        *  queried fields.
        */
       if (parent.kind === 'Field') {
+        // Build the response prototype
+
         /** GraphQL ASTs are structured such that a field's parent field
          *  is found three three ancestors back. Hence, we subtract three.
          */
@@ -100,20 +103,6 @@ function parseAST(AST) {
          */
         const collectFields = {};
 
-        //  Loop through all arguments, collect & save them onto property name arguments as an array
-        if (parent.arguments) {
-          console.log('parent.arguments ===> ', parent.arguments);
-          if (parent.arguments.length > 0) {
-            // loop through arguments
-            collectFields.arguments = {};
-            for (let i = 0; i < parent.arguments.length; i++) {
-              const key = parent.arguments[i].name.value;
-              const value = parent.arguments[i].value.value;
-              collectFields.arguments[key] = value;
-            }
-          }
-        }
-
         for (let field of node.selections) {
           collectFields[field.name.value] = true;
         }
@@ -143,12 +132,29 @@ function parseAST(AST) {
         }
 
         setProperty(objPath, prototype, collectFields);
-        // console.log('prototype ===> ', JSON.parse(JSON.stringify(prototype)));
+        console.log('prototype ===> ', JSON.parse(JSON.stringify(prototype)));
+
+        // Build the arguments object
+
+        /** If the current node's parent has a property name arguments
+         *  and the arguments' array lengh is greater than zero
+         *  Loop over the parent's array of arguments, adding each
+         *  name value pair to the args object
+         */
+        if (parent.arguments) {
+          if (parent.arguments.length > 0) {
+            for (let i = 0; i < parent.arguments.length; i++) {
+              const key = parent.arguments[i].name.value;
+              const value = parent.arguments[i].value.value;
+              args[key] = value;
+            }
+          }
+        }
       }
     },
   });
 
-  return isQuellable ? prototype : 'unQuellable';
+  return isQuellable ? [prototype, args] : 'unQuellable';
 }
 
 module.exports = parseAST;

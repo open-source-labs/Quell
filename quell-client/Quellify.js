@@ -1,7 +1,7 @@
 const { parse } = require('graphql/language/parser');
 const parseAST = require('./helpers/parseAST');
 const normalizeForCache = require('./helpers/normalizeForCache');
-const buildArray = require('./helpers/buildArray');
+const buildFromCache = require('./helpers/buildFromCache');
 const createQueryObj = require('./helpers/createQueryObj');
 const createQueryStr = require('./helpers/createQueryStr');
 const joinResponses = require('./helpers/joinResponses');
@@ -12,14 +12,19 @@ const joinResponses = require('./helpers/joinResponses');
 
 // MAIN CONTROLLER
 async function Quellify(endPoint, query, map, fieldsMap) {
+  // Create QuellStore object to keep track of arguments, aliases, fragments, variables, or directives
+  const QuellStore = { arguments: null, aliases: null };
+
   // Create AST of query
   const AST = parse(query);
   console.log('AST ===> ', AST);
+
   // Create object of "true" values from AST tree (w/ some eventually updated to "false" via buildItem())
-  const proto = parseAST(AST);
+  const [prototype, args] = parseAST(AST);
+  QuellStore.arguments = args;
 
   // pass-through for queries and operations that QuellCache cannot handle
-  if (proto === 'unQuellable') {
+  if (prototype === 'unQuellable') {
     const fetchOptions = {
       method: 'POST',
       headers: {
@@ -35,14 +40,8 @@ async function Quellify(endPoint, query, map, fieldsMap) {
     // Return response as a promise
     return new Promise((resolve, reject) => resolve(parsedData));
   } else {
-    let protoArgs = null;
-    for (let query in proto) {
-      if (proto[query].arguments) {
-        protoArgs = proto[query].arguments;
-      }
-    }
     // Check cache for data and build array from that cached data
-    const responseFromCache = buildArray(proto, map);
+    const responseFromCache = buildFromCache(prototype, map, null, QuellStore);
     console.log('responseFromCache ===> ', responseFromCache);
     // If no data in cache, the response array will be empty:
     if (responseFromCache.length === 0) {
@@ -60,7 +59,7 @@ async function Quellify(endPoint, query, map, fieldsMap) {
       const parsedData = await responseFromFetch.json();
       console.log('parsedData !!!!!', parsedData);
       // Normalize returned data into cache
-      normalizeForCache(parsedData.data, map, fieldsMap);
+      normalizeForCache(parsedData.data, map, fieldsMap, QuellStore);
 
       // Return response as a promise
       return new Promise((resolve, reject) => resolve(parsedData));
@@ -69,16 +68,16 @@ async function Quellify(endPoint, query, map, fieldsMap) {
     // If found data in cache:
     let mergedResponse;
     console.log(
-      'proto after buildArray ===> ',
-      JSON.parse(JSON.stringify(proto))
+      'prototype after buildArray ===> ',
+      JSON.parse(JSON.stringify(prototype))
     );
-    const queryObject = createQueryObj(proto); // Create query object from only false proto fields
+    const queryObject = createQueryObj(prototype); // Create query object from only false prototype fields
     console.log('queryObject in Quellify ===> ', queryObject);
-    const queryName = Object.keys(proto)[0];
+    const queryName = Object.keys(prototype)[0];
 
     // Partial data in cache:  (i.e. keys in queryObject will exist)
     if (Object.keys(queryObject).length > 0) {
-      const newQuery = createQueryStr(queryObject, protoArgs); // Create formal GQL query string from query object
+      const newQuery = createQueryStr(queryObject, QuellStore); // Create formal GQL query string from query object
       console.log('newQuery ===> ', newQuery);
       const fetchOptions = {
         method: 'POST',
@@ -100,7 +99,7 @@ async function Quellify(endPoint, query, map, fieldsMap) {
       mergedResponse = joinResponses(
         responseFromCache,
         parsedResponseFromFetch,
-        proto
+        prototype
       );
       console.log('mergedResponse here!!!!', mergedResponse);
     } else {
@@ -108,12 +107,11 @@ async function Quellify(endPoint, query, map, fieldsMap) {
       console.log('mergedResponse there!!!!', mergedResponse);
     }
 
-    if (protoArgs) {
-      console.log('protoArgs is not null!');
+    // If everything needed was already in cache, only assign cached response to variable
+    if (QuellStore.arguments) {
       mergedResponse = mergedResponse[0];
     } else {
-      console.log('protoArgs is null!');
-      mergedResponse = mergedResponse; // If everything needed was already in cache, only assign cached response to variable
+      mergedResponse = mergedResponse;
     }
 
     console.log('mergedResponse ===> ', mergedResponse);
@@ -121,7 +119,7 @@ async function Quellify(endPoint, query, map, fieldsMap) {
     const formattedMergedResponse = { data: { [queryName]: mergedResponse } };
     console.log('formattedMergedResponse ===> ', formattedMergedResponse);
     // Cache newly stitched response
-    normalizeForCache(formattedMergedResponse.data, map, fieldsMap);
+    normalizeForCache(formattedMergedResponse.data, map, fieldsMap, QuellStore);
 
     // Return formattedMergedResponse as a promise
     return new Promise((resolve, reject) => resolve(formattedMergedResponse));

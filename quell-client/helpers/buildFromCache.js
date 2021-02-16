@@ -12,30 +12,27 @@ function toggleProto(proto) {
  *  calling another helper function -- buildItem() -- on each. Returns an
  *  array of those collected items.
  */
-function buildArray(prototype, map, collection) {
+function buildFromCache(prototype, map, collection, QuellStore) {
   console.log(
-    'prototype in buildArray ===> ',
+    'prototype in buildFromCache ===> ',
     JSON.parse(JSON.stringify(prototype))
   );
-  console.log('map in buildArray ===> ', map);
-  console.log('collection in buildArray before loop ===> ', collection);
+  console.log('map in buildFromCache ===> ', map);
+  console.log('collection in buildFromCache ===> ', collection);
+  console.log('QuellStore in buildFromCache ===> ', QuellStore);
 
   let response = [];
   for (let query in prototype) {
     // if the query has an argument
-    if (prototype[query].arguments) {
-      const protoArgs = prototype[query].arguments;
-      console.log('protoArgs ===> ', protoArgs);
+    if (QuellStore && QuellStore.arguments) {
+      const args = QuellStore.arguments;
       let identifier;
 
-      if (protoArgs.hasOwnProperty('id') || protoArgs.hasOwnProperty('_id')) {
-        identifier = protoArgs.id || protoArgs._id;
-        console.log('identifier ===> ', identifier);
+      if (args.hasOwnProperty('id') || args.hasOwnProperty('_id')) {
+        identifier = args.id || args._id;
       }
 
-      delete prototype[query].arguments;
-
-      // collection = 1.Object type field passed into buildArray() when called from buildItem() or 2.Obtained item from cache or 3.Empty array
+      // collection = 1.Object typ e field passed into buildArray() when called from buildItem() or 2.Obtained item from cache or 3.Empty array
 
       const itemFromCache = JSON.parse(
         sessionStorage.getItem(`${map[query]}-${identifier}`)
@@ -45,22 +42,18 @@ function buildArray(prototype, map, collection) {
       collection =
         collection || itemFromCache ? [itemFromCache] : itemFromCache || [];
 
-      console.log('collection if the query has an argument ===> ', collection);
-
       for (let item of collection) {
         response.push(buildItem(prototype[query], item, map));
       }
     } else {
+      // if the query has no argument
+
       // collection = 1.Object type field passed into buildArray() when called from buildItem() or 2.Obtained item from cache or 3.Empty array
       collection =
         collection || JSON.parse(sessionStorage.getItem(map[query])) || [];
       // console.log('collection if the query has no argument ===> ', collection);
       //  ["Country-1", "Country-2", "Country-3", "Country-4", "Country-5"] or [];
       // each of these items in the array is the item below
-      console.log(
-        'JSON.parse(sessionStorage.getItem(map[query])) ===> ',
-        JSON.parse(sessionStorage.getItem(map[query]))
-      );
 
       for (let item of collection) {
         response.push(
@@ -108,15 +101,15 @@ function buildItem(prototype, item, map) {
       );
       if (item[key]) {
         // if in cache
-        tempObj[key] = buildArray(prototypeAtKey, map, item[key]);
+        tempObj[key] = buildFromCache(prototypeAtKey, map, item[key]);
         console.log('tempObj[key] ===> ', tempObj[key]);
       } else {
         // if not in cache
         toggleProto(prototypeAtKey);
       }
-    } else if (prototype[key]) {
+    } else {
       // if field is scalar
-      if (item[key] !== undefined) {
+      if (item[key]) {
         // if in cache
         tempObj[key] = item[key];
       } else {
@@ -128,4 +121,4 @@ function buildItem(prototype, item, map) {
   return tempObj;
 }
 
-module.exports = buildArray;
+module.exports = buildFromCache;

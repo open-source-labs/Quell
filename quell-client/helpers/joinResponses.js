@@ -2,10 +2,10 @@
  joinResponses combines two arrays containing results from the cached response and fetched (uncached) and outputs a single array response that will ultimately be formatted and delivered to the client. the copied Proto parameter sets a reference to combine the fields in the same order as the original query.
  */
 
-function joinResponses(responseArray, fetchedResponseArray, copiedProto) {
+function joinResponses(responseArray, fetchedResponseArray, proto) {
   console.log('responseArray ===> !!!!!!! ', responseArray);
   console.log('fetchedResponseArray ===> !!!!!!! ', fetchedResponseArray);
-  console.log('copiedProto ===> !!!!!!! ', copiedProto);
+  console.log('proto ===> !!!!!!! ', proto);
   // main output array that will contain objects with joined fields
   const joinedArray = [];
   // iterate over response containing cached fields
@@ -17,7 +17,7 @@ function joinResponses(responseArray, fetchedResponseArray, copiedProto) {
     function fieldRecurse(objStart, objAdd) {
       const newObj = {};
       // traverse proto obj to reference fields
-      const protoObj = copiedProto[Object.keys(copiedProto)[0]];
+      const protoObj = proto[Object.keys(proto)[0]];
       for (let field in protoObj) {
         // if scalar:
         if (typeof protoObj[field] !== 'object') {
