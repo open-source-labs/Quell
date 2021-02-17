@@ -24,6 +24,7 @@ if (process.env.NODE_ENV === 'production') {
   app.use('/dist', express.static(path.resolve(__dirname, '../dist')));
   // serve index.html on the route '/'
   app.get('/', (req, res) => {
+    console.log('get request');
     return res
       .status(200)
       .sendFile(path.resolve(__dirname, '../client/src/index.html'));

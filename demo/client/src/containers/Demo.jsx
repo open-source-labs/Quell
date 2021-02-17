@@ -7,7 +7,7 @@ import Graph from '../components/Graph';
 import { CreateQueryStr } from '../helper-functions/HelperFunctions.js';
 import Header from '../images/headers/QUELL-headers-demo w lines.svg';
 import Quell from '../../../../quell-client/Quellify';
-// import Quell from '@quell/client';
+//import Quell from '@quell/client';
 /*
   Container that renders the whole demo dashboard
 */
