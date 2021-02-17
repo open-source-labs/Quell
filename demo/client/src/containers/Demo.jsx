@@ -6,8 +6,8 @@ import Metrics from '../components/Metrics';
 import Graph from '../components/Graph';
 import { CreateQueryStr } from '../helper-functions/HelperFunctions.js';
 import Header from '../images/headers/QUELL-headers-demo w lines.svg';
-// import Quell from '../../../../quell-client/Quellify';
-import Quell from '@quell/client';
+import Quell from '../../../../quell-client/Quellify';
+//import Quell from '@quell/client';
 /*
   Container that renders the whole demo dashboard
 */
@@ -30,8 +30,11 @@ const Demo = () => {
 
   const handleRunQueryClick = () => {
     // run ResultsParser on output to get the query
-    const parsedResult = CreateQueryStr(output);
-
+    console.log('state output', output);
+    //const parsedResult = CreateQueryStr(output);
+    console.log('query string', parsedResult);
+    let parsedResult = '{ countries { id capital cities {id name} } }';
+    parsedResult = '{ country (id: "5") { id name capital cities { id name } } }'; // { country (id: 3 ) { capital  }  } 
     // start the timer (eventually displayed in Metrics)
     let startTime, endTime;
     startTime = performance.now();

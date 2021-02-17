@@ -20,6 +20,7 @@ if (process.env.NODE_ENV === 'production') {
   app.use('/dist', express.static(path.resolve(__dirname, '../dist')));
   // serve index.html on the route '/'
   app.get('/', (req, res) => {
+    console.log('get request');
     return res
       .status(200)
       .sendFile(path.resolve(__dirname, '../client/src/index.html'));
@@ -35,6 +36,7 @@ app.get('/clearCache', quellCache.clearCache, (req, res) => {
 app.use('/graphql', 
   quellCache.query,
   (req, res) => {
+    console.log('hack solution works');
     return res
       .status(200)
       .send(res.locals.queryResponse);

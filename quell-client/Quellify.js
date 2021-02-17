@@ -15,9 +15,11 @@ const joinResponses = require('./joinResponses');
 async function Quellify(endPoint, query, map, fieldsMap) {
   // Create AST of query
   const AST = parse(query);
+  console.log('AST', AST);
   // Create object of "true" values from AST tree (w/ some eventually updated to "false" via buildItem())
-  const proto = parseAST(AST);
-
+  //const proto = parseAST(AST);
+  //console.log('proto', proto);
+  const proto = 'unQuellable';
   // pass-through for queries and operations that QuellCache cannot handle
   if (proto === 'unQuellable') {
     const fetchOptions = {
@@ -37,7 +39,9 @@ async function Quellify(endPoint, query, map, fieldsMap) {
 
   } else {
     // Check cache for data and build array from that cached data
-    const responseFromCache = buildArray(proto, map)
+    console.log('calling build array');
+    const responseFromCache = buildArray(proto, map);
+    console.log('response from cache', responseFromCache);
     // If no data in cache, the response array will be empty:
     if (responseFromCache.length === 0) {
 
