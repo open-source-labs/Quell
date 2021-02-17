@@ -154,7 +154,7 @@ function parseAST(AST) {
     },
   });
 
-  return isQuellable ? [prototype, args] : 'unQuellable';
+  return isQuellable ? [prototype, args] : ['unQuellable', null];
 }
 
 module.exports = parseAST;
