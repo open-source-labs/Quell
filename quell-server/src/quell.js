@@ -26,7 +26,7 @@ class QuellCache {
    *  @param {Object} req - Express request object, including request body with GraphQL query string
    *  @param {Object} res - Express response object, will carry query response to next middleware
    *  @param {Function} next - Express next middleware function, invoked when QuellCache completes its work
-   */
+   */x
   async query(req, res, next, isQuellable = true) {
     console.log('we are in server side');
     // handle request without query
