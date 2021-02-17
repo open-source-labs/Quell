@@ -28,16 +28,26 @@ class QuellCache {
    *  @param {Function} next - Express next middleware function, invoked when QuellCache completes its work
    */
   async query(req, res, next, isQuellable = true) {
+    console.log('we are in server side');
     // handle request without query
     if (!req.body.query) {
       return next('Error: no GraphQL query found on request body');
     };
     // retrieve GraphQL query string from request object; 
     const queryString = req.body.query;
+
     // create abstract syntax tree with graphql-js parser
     const AST = parse(queryString);
+
     // create response prototype
+    // if query has argument proto will return them as key value pair, as arguments: {id: 1}
+    // should we refactor parseAST and return two objects?? 
+    // one for proto and other for arguments
     const proto = this.parseAST(AST);
+
+    let protoArgs = null; // will be an object with query arguments; // need it to create query string for furher request and to create key identifier to save it to redis, e.g. Country-1
+
+    console.log('proto in query func', proto);
     // pass-through for queries and operations that QuellCache cannot handle
     if (proto === 'unQuellable' || !isQuellable) {
       graphql(this.schema, queryString)
@@ -51,12 +61,53 @@ class QuellCache {
     } else {
       // store name of query and associated object type
       const queryName = Object.keys(proto)[0];
+      console.log('queryName', queryName);
+
       const queriedCollection = this.queryMap[queryName];
+      console.log('queriedCollection ==>', queriedCollection);
+
+      let protoForCache = {...proto}
+
+      // buildFromCache function accepts collection argument, which is array
+      // if we have arguments in proto and we have id as argument or _id, we go through arguments and create collection from field and id
+      // it is buggy solution, needs to be improved
+      let collectionForCache = null;
+      // check if proto has arguments and cut them from obj
+      // cause we don't need argument in our response obj
+      if(protoForCache[queryName].hasOwnProperty('arguments')) {
+        console.log('proto has arguments');
+
+        const responseProto = {...protoForCache[queryName]};
+        protoArgs = {...responseProto.arguments};
+        delete responseProto.arguments;
+        protoForCache[queryName] = {...responseProto};
+
+        // create collection from proto arguments, for now proto has only one id
+        if(protoArgs.hasOwnProperty("id") || protoArgs.hasOwnProperty("_id")) {
+          const idKey = protoArgs["id"] || protoArgs["_id"];
+          const collectionElement = `${queriedCollection}-${idKey}`;
+
+          console.log('collectionElement', collectionElement);
+          collectionForCache = [collectionElement];
+        }
+        console.log('proto args', protoArgs);
+      }
+
+      console.log('proto for cache', protoForCache);
+     
       // build response from cache
-      const responseFromCache = await this.buildFromCache(proto, this.queryMap, queriedCollection);
+      const responseFromCache = await this.buildFromCache(protoForCache, this.queryMap, queriedCollection, collectionForCache);
+      console.log('resp from cache inside query', responseFromCache);
+
       // query for additional information, if necessary
       let fullResponse, uncachedResponse;
+
+      // responseFromCache always should be an array !! --> should change for obj??
+      // responseFromCache return [{}] if we don't have any cached data for item with unique identifier, e.g. country(id: 1)
+      // need to refactor this logic later cause instead of just handoff original query it runs comparison logic
+
       if (responseFromCache.length === 0) { // if no cached data, handoff original query and cache results
+        console.log('nothing in cache, run full query');
         graphql(this.schema, queryString)
         .then(async (queryResponse) => {
           // store the array of data
@@ -73,22 +124,29 @@ class QuellCache {
           .catch((error) => {
             return next('graphql library error: ', error);
           });
-      } else { 
-        const queryObject = this.createQueryObj(proto);
+      } else {
+        const queryObject = this.createQueryObj(protoForCache);
+
+        console.log('query obj from create Query obj', queryObject);
+
         // if cached response is incomplete, reformulate query, handoff query, join responses, and cache joined responses
         if (Object.keys(queryObject).length > 0) {
-          const newQueryString = this.createQueryStr(queryObject);
+          const newQueryString = this.createQueryStr(queryObject, protoArgs); // add protoArgs to build query if it has args
+          console.log('new query string to complete request', newQueryString);
           graphql(this.schema, newQueryString)
             .then(async (queryResponse) => {
+              console.log('RESPONSE ===>', queryResponse);
               uncachedResponse = queryResponse.data[queryName];
               // join uncached and cached responses
               fullResponse = await this.joinResponses(responseFromCache, uncachedResponse);
               // cache joined responses
               await this.cache(fullResponse, queriedCollection, queryName);
               const successfullyCached = await this.cache(fullResponse, queriedCollection, queryName);
+              console.log('if succesfullyCached ??', successfullyCached);
               if (!successfullyCached) return this.query(req, res, next, false);
               // rebuild response from cache
               const toReturn = await this.constructResponse(fullResponse, AST, queriedCollection);
+              console.log('rebuilt response', toReturn);
               // append rebuilt response (if it contains data) or fullResponse to Express's response object
               res.locals.queryResponse = { data: { [queryName]: toReturn }};
               return next();
@@ -110,6 +168,7 @@ class QuellCache {
    * @param {String} key - the key for Redis lookup 
    */
   getFromRedis(key) {
+    console.log('get from redis');
     return new Promise((resolve, reject) => {
       this.redisCache.get(key, (error, result) => error ? reject(error) : resolve(result));
     });
@@ -120,6 +179,7 @@ class QuellCache {
    *  to identify and create references to cached data.
    */
   getQueryMap(schema) {
+    console.log('schema from get query map', schema);
     const queryMap = {};
     // get object containing all root queries defined in the schema
     const queryTypeFields = schema._queryType._fields;
@@ -199,6 +259,8 @@ class QuellCache {
     // initialize prototype as empty object
     const prototype = {};
     let isQuellable = true;
+    console.log('we are inside parse AST');
+  
     /**
      * visit is a utility provided in the graphql-JS library. It performs a
      * depth-first traversal of the abstract syntax tree, invoking a callback
@@ -214,25 +276,26 @@ class QuellCache {
             isQuellable = false;
           }
         }
-        if (node.arguments) {
-          if (node.arguments.length > 0) {
-            isQuellable = false;
-          }
-        }
+        // if (node.arguments) {
+        //   if (node.arguments.length > 0) {
+        //     isQuellable = false;
+        //   }
+        // }
         if (node.directives) {
           if (node.directives.length > 0) {
             isQuellable = false;
           }
         }
-        if (node.alias) {
-          isQuellable = false;
-        }
+        // if (node.alias) {
+        //   isQuellable = false;
+        // }
       },
       SelectionSet(node, key, parent, path, ancestors) {
         /** Helper function to convert array of ancestor fields into a
          *  path at which to assign the `collectFields` object.
          */
         function setProperty(path, obj, value) {
+          console.log('path in setproperty', path);
           return path.reduce((prev, curr, index) => {
             return (index + 1 === path.length) // if last item in path
             ? prev[curr] = value // set value
@@ -266,14 +329,33 @@ class QuellCache {
            *  position determined by the above array of ancestor fields.
            */
           const collectFields = {};
+          console.log('parent !!!!!!!!', parent);
+          if (parent.arguments) {
+            console.log('parent arg', parent.arguments);
+            if (parent.arguments.length > 0) {
+              // loop through arguments
+              collectFields.arguments = {};
+              for(let i = 0; i < parent.arguments.length; i ++) {
+                const key = parent.arguments[i].name.value;
+                const value = parent.arguments[i].value.value;
+                collectFields.arguments[key] = value;
+              } 
+            }
+          }
           for (let field of node.selections) {
             collectFields[field.name.value] = true;
           }
+          console.log('collectFields ===> ', { ...collectFields });
           // use helper function to update prototype
           setProperty(objPath, prototype, collectFields);
+          console.log('prototype after collect fields', prototype);
         }
       }
     });
+    
+    // { country: { arguments: { id: '1' }, id: true, capital: true } } -- current proto after everything
+    // { Country-1: { id: true, capital: true } } -- should look like this ??
+
     return isQuellable ? prototype : 'unQuellable';
   };
   /**
@@ -289,8 +371,12 @@ class QuellCache {
   };
 
   async buildFromCache(proto, map, queriedCollection, collection) {
+    //proto = { "Country-1": { id: true, capital: true, name: true } }; // hardcoded
+    //collection = Object.keys(proto); // hardcoded
     const response = [];
     for (const superField in proto) {
+      console.log('superfield in proto', superField);
+      console.log('collection', collection);
       // if collection not passed as argument, try to retrieve array of references from cache
       if (!collection) {
         const collectionFromCache = await this.getFromRedis(superField);
@@ -302,9 +388,11 @@ class QuellCache {
         let itemFromCache = await this.getFromRedis(item);
         itemFromCache = itemFromCache ? JSON.parse(itemFromCache) : {};
         const builtItem = await this.buildItem(proto[superField], this.fieldsMap[queriedCollection], itemFromCache);
+        console.log('buidt item ==> ', builtItem);
         response.push(builtItem);
       }
     }
+    console.log('response from build from cache', response);
     return response;
   };
   /**
@@ -336,6 +424,7 @@ class QuellCache {
    * @param {Object} proto - the prototype with fields that still need to be queried toggled to false 
    */
   createQueryObj(proto) {
+    console.log('proto in create query obj', proto);
     const queryObj = {};
     for (const key in proto) {
       const reduced = this.protoReducer(proto[key]);
@@ -349,6 +438,7 @@ class QuellCache {
    * @param {Object} proto - prototype 
    */
   protoReducer(proto) {
+    console.log('proto in protoreducer', proto);
     const fields = [];
     for (const key in proto) {
       if (proto[key] === false) fields.push(key);
@@ -368,12 +458,23 @@ class QuellCache {
    * requesting just those fields not found in cache.
    * @param {Object} queryObject - object representing queried fields not found in cache
    */
-  createQueryStr(queryObject) {
+  createQueryStr(queryObject, queryArgsObject) {
+    console.log(queryArgsObject, 'query args object in create query string');
+    let argString = '';
+    if(queryArgsObject !== null) {
+      const openBrackets = ' (';
+      const closeBrackets = ' )';
+      argString += openBrackets;
+      for (const key in queryArgsObject) {
+        argString += key + ': ' + queryArgsObject[key];
+      }
+      argString += closeBrackets;
+    }
     const openCurl = ' { ';
     const closedCurl = ' } ';
     let queryString = '';
     for (const key in queryObject) {
-      queryString += key + openCurl + this.queryStringify(queryObject[key]) + closedCurl;
+      queryString += key + argString + openCurl + this.queryStringify(queryObject[key]) + closedCurl;
     }
     return openCurl + queryString + closedCurl;
   };
@@ -408,9 +509,19 @@ class QuellCache {
    * @param {Array} uncachedArray - array to be merged into base array
    */
   async joinResponses(cachedArray, uncachedArray) {
+    // uncachedArray can be array in case of general query e.g. counrties{ name id capital }
+    // or object in case of query with args e.g. country (id : 1) { name id capital }
+    console.log('we are in joinResponses', Array.isArray(cachedArray), Array.isArray(uncachedArray));
     const joinedArray = [];
-    for (let i = 0; i < uncachedArray.length; i += 1) {
-      const joinedItem = await this.recursiveJoin(cachedArray[i], uncachedArray[i]);
+    // if we have an array run initial logic for array
+    if (Array.isArray(uncachedArray)) {
+      for (let i = 0; i < uncachedArray.length; i += 1) {
+        const joinedItem = await this.recursiveJoin(cachedArray[i], uncachedArray[i]);
+        joinedArray.push(joinedItem);
+      }
+    // if we have an obj skip array iteration and call recursiveJoin
+    } else {
+      const joinedItem = await this.recursiveJoin(cachedArray[0], uncachedArray);
       joinedArray.push(joinedItem);
     }
     return joinedArray;
@@ -501,6 +612,8 @@ class QuellCache {
    * @param {String} queryName - the name of the query, used for identifying response arrays in cache
    */
   async cache(response, collectionName, queryName) {
+    // refactor this part cause in case of query with arg we have array of counry with one elements and we don't need it
+    console.log('we are inside cache function', response, collectionName, queryName);
     const collection = JSON.parse(JSON.stringify(response));
     const referencesToCache = [];
     // Check for nested array (to replace objects with another array of references)
@@ -532,8 +645,36 @@ class QuellCache {
    * @param {String} queriedCollection - name of object type returned in query
    */
   async constructResponse(fullResponse, AST, queriedCollection) {
+    console.log('we are inside construct response');
     const rebuiltProto = this.parseAST(AST);
-    const rebuiltFromCache = await this.buildFromCache(rebuiltProto, this.queryMap, queriedCollection);
+
+    let protoArgs = null; // will be an object with query arguments;
+
+    let protoForCache = {...rebuiltProto};
+    console.log('rebuuld from ast', rebuiltProto);
+    const queryName = Object.keys(rebuiltProto)[0];
+    // buildFromCache function accepts collection argument, which is array
+    // if we have arguments in proto and we have id as argument or _id, we go through arguments and create collection from field and id
+    let collectionForCache = null;
+    // check if proto has arguments and cut them from obj
+    // cause we don't need argument in our response obj
+    if(protoForCache[queryName].hasOwnProperty('arguments')) {
+      console.log('proto has arguments');
+      const responseProto = {...protoForCache[queryName]};
+      protoArgs = {...responseProto.arguments};
+      delete responseProto.arguments;
+      protoForCache[queryName] = {...responseProto};
+      // create collection from proto arguments, for now proto has only one id
+      if(protoArgs.hasOwnProperty("id") || protoArgs.hasOwnProperty("_id")) {
+        const idKey = protoArgs["id"] || protoArgs["_id"];
+        const collectionElement = `${queriedCollection}-${idKey}`;
+        console.log('collectionElement', collectionElement);
+        collectionForCache = [collectionElement];
+      }
+      console.log('proto args', protoArgs);
+      }
+
+    const rebuiltFromCache = await this.buildFromCache(protoForCache, this.queryMap, queriedCollection, collectionForCache);
     if (rebuiltFromCache.length > 0) return rebuiltFromCache;
     return fullResponse;
   };
