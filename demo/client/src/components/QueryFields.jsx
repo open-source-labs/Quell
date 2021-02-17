@@ -18,14 +18,15 @@ import PlusHover from '../images/buttons/plus-button-hover.svg';
 // maybe just set a timer?? so that it runs after the first time we build the recursive queryFields component
 
 const QueryFields = (props) => {
-
-  const { initialField, type, sub, outputFunction } = props; // import props
+  const { type, outputFunction } = props; // import props
 
   const [queryList, setQueryList] = useState(['id']);
   const [availableList, setAvailableList] = useState([]);
   const [plusDropdown, togglePlusDropdown] = useState(false);
-  const [subQuery, setSubQuery] = useState(sub); // is true when we render this recursively for the "cities" field inside "countries" query
-  const [citiesFields, setCitiesFields] = useState(['id'])
+  // const [subQuery, setSubQuery] = useState(sub); // is true when we render this recursively for the "cities" field inside "countries" query
+  const [citiesFields, setCitiesFields] = useState(['id']);
+  // console.log('queryList :>> ', queryList);
+  // console.log('availableList :>> ', availableList);
 
   // ====================================================================== //
   // ======= Functionality to close dropdowns when clicking outside ======= //
@@ -38,7 +39,7 @@ const QueryFields = (props) => {
   const handleClickOutside = (event) => {
     if (ref.current && !ref.current.contains(event.target)) {
       togglePlusDropdown(false);
-    };
+    }
   };
 
   // listens for clicks on the body of the dom
@@ -47,7 +48,7 @@ const QueryFields = (props) => {
     return () => {
       document.removeEventListener('click', handleClickOutside, true);
     };
-  }, [])
+  }, []);
 
   // ========================================================== //
   // ======= Functionality to initialize dropdowns, etc ======= //
@@ -61,16 +62,16 @@ const QueryFields = (props) => {
   // ====== Lists of Fields ====== //
 
   const cityFields = [
-    { country_id: "string" },
+    { country_id: 'string' },
     // { id: "string" }, // commented out because we're making it an immutable field
-    { name: "string" },
-    { population: "string" },
+    { name: 'string' },
+    { population: 'string' },
   ];
 
   const countryFields = [
     // { id: "string" },
-    { name: "string" },
-    { capital: "string" },
+    { name: 'string' },
+    { capital: 'string' },
     { cities: cityFields }, // if field is array, point to the list of fields
   ];
 
@@ -82,17 +83,9 @@ const QueryFields = (props) => {
 
   // Takes the items list and returns something like: [ id, name, capital, cities ]
   const convertIntoList = (itemList) => {
-    const output = itemList.map((obj) => { // creates array based on keys of objects in fields array
-      let key = Object.keys(obj)[0];
-      return key;
-    });
-    const noDuplicates = []; // get rid of potential duplicates
-    output.forEach((el) => {
-      queryList.forEach((qEl) => {
-        if (el !== qEl) noDuplicates.push(el);
-      });
-    });
-    return noDuplicates;
+    const output = itemList.map((obj) => Object.keys(obj)[0]);
+
+    return output;
   };
 
   // ==================================== //
@@ -100,7 +93,8 @@ const QueryFields = (props) => {
   // ==================================== //
 
   //======= Minus button ========//
-  function deleteItem(item) { // THIS UNINTENTIONALLY RESETS CITIES
+  function deleteItem(item) {
+    // THIS UNINTENTIONALLY RESETS CITIES
     // remove item from queryList
     const newList = [...queryList];
     const index = newList.indexOf(item);
@@ -111,11 +105,7 @@ const QueryFields = (props) => {
     newAvailableList.push(item);
     setAvailableList(newAvailableList);
     // calls a function that prepares the query for actually being sent
-    if (sub) {
-      outputFunction(0, newList, 0);
-    } else {
-      outputFunction(newList, 0, 0);
-    }
+    outputFunction(newList, 0, 0);
   }
 
   //======= Plus button ========//
@@ -132,31 +122,27 @@ const QueryFields = (props) => {
     // close the plus dropdown
     togglePlusDropdown(false);
     // call a function that prepares the query for actually being sent
-    if (sub) {
-      outputFunction(0, newList, 0);
-    } else {
-      outputFunction(newList, 0, 0);
-    }
+    outputFunction(newList, 0, 0);
   }
 
   // Add item to cities field
   // Delete item from cities field
   const modifyCitiesFields = (item, addOrDelete) => {
-    const newFields = [...citiesFields]
+    const newFields = [...citiesFields];
     if (addOrDelete === 'add') {
       newFields.push(item);
-    };
+    }
     if (addOrDelete === 'delete') {
       const index = newFields.indexOf(item);
       newFields.splice(index, 1);
-    };
-    setCitiesFields(newFields)
-  }
+    }
+    setCitiesFields(newFields);
+  };
 
   // Fires when you click plus -- only show plus dropdown if there's something in the list
   const dropPlus = () => {
     if (availableList.length > 0) {
-      togglePlusDropdown(!plusDropdown)
+      togglePlusDropdown(!plusDropdown);
     }
   };
 
@@ -173,26 +159,27 @@ const QueryFields = (props) => {
   // Render the query list to the DOM
   const queriedItems = queryList.map((item, i) => {
     // if querying "cities", need to open up a new pair of brackets and recursively call QueryFields to generate cities fields
-    if (item === 'cities' && !sub) {
+    if (item === 'cities') {
       return (
-        <>
-          <div className='queryLine'>
+        <div key={i}>
+          <div className="queryLine">
             {tab}
             {tab}
-            <button className='minus-button' onClick={() => deleteItem(item)}>
-              <div className='plus-minus-icons'>
+            <button className="minus-button" onClick={() => deleteItem(item)}>
+              <div className="plus-minus-icons">
                 <img src={Minus} />
-                <img src={MinusHover} className='hover-button' />
+                <img src={MinusHover} className="hover-button" />
               </div>
             </button>
-            {space}cities{space}{ob}
+            {space}cities{space}
+            {ob}
           </div>
-          <div className='queryLine'>
+          <div className="queryLine">
             <CitiesFields
               citiesFields={citiesFields}
               type={'City'}
               outputFunction={outputFunction}
-              sub={true}
+              // sub={true}
               modifyCitiesFields={modifyCitiesFields}
             />
             {/* {queryingCities &&
@@ -210,12 +197,12 @@ const QueryFields = (props) => {
               />
             } */}
           </div>
-          <div className='queryLine'>
+          <div className="queryLine">
             {tab}
             {tab}
             {cb}
           </div>
-        </>
+        </div>
       );
     }
     // else (what normally happens)
@@ -224,7 +211,7 @@ const QueryFields = (props) => {
         item={item}
         key={`${type}Field${i}`}
         deleteItem={deleteItem}
-        sub={sub}
+        // sub={sub}
       />
     );
   });
@@ -240,21 +227,22 @@ const QueryFields = (props) => {
   return (
     <>
       {/* List all the chosen query fields */}
-      <div className='queryLinesContainer'>{queriedItems}</div>
+      <div className="queryLinesContainer">{queriedItems}</div>
 
       {tab}
       {tab}
-      {sub && <>{tab}</>}
+      {/* {sub && <>{tab}</>} */}
       {/* Render plus sign, which opens a dropdown */}
-      <button
-        className='plus-button'
-        onClick={dropPlus}
-      >
-        <div className='plus-minus-icons'>
+      <button className="plus-button" onClick={dropPlus}>
+        <div className="plus-minus-icons">
           <img src={Plus} />
-          <img src={PlusHover} className='hover-button' />
+          <img src={PlusHover} className="hover-button" />
         </div>
-        {plusDropdown && <div className='dropdown-menu' ref={ref}>{dropdown}</div>}
+        {plusDropdown && (
+          <div className="dropdown-menu" ref={ref}>
+            {dropdown}
+          </div>
+        )}
       </button>
     </>
   );

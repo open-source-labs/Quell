@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect } from 'react';
 // import images
 import Minus from '../images/buttons/minus-button.svg';
 import MinusHover from '../images/buttons/minus-button-hover.svg';
@@ -8,29 +8,33 @@ import MinusHover from '../images/buttons/minus-button-hover.svg';
 */
 
 const QueryField = (props) => {
-  const { item, deleteItem, sub } = props;
+  const { item, deleteItem } = props;
 
   // Below is so that we don't render the minus button for the id field
-  const [itemIsNotId, setItemIsNotId] = useState(true)
+  const [itemIsNotId, setItemIsNotId] = useState(true);
   useEffect(() => {
-    if (item === 'id') setItemIsNotId(false)
-  }, [itemIsNotId])
+    if (item === 'id') setItemIsNotId(false);
+  }, []);
 
   const tab = <span>&nbsp;&nbsp;&nbsp;&nbsp;</span>,
     space = <span>&nbsp;</span>;
   return (
     <>
-      <div className='queryLine'>
+      <div className="queryLine">
         {tab}
         {tab}
-        {sub && <>{tab}</>}
+        {/* {sub && <>{tab}</>} */}
         {/* Generate minus button */}
-        {itemIsNotId && <button className="minus-button" onClick={() => deleteItem(item)}>
-          <div className="plus-minus-icons">
-            <img src={Minus} />
-            <img src={MinusHover} className='hover-button' />
-          </div>
-        </button>}
+        {!itemIsNotId && <>{space}</>}
+        {!itemIsNotId && <>{space}</>}
+        {itemIsNotId && (
+          <button className="minus-button" onClick={() => deleteItem(item)}>
+            <div className="plus-minus-icons">
+              <img src={Minus} />
+              <img src={MinusHover} className="hover-button" />
+            </div>
+          </button>
+        )}
         {space}
         {item}
       </div>
