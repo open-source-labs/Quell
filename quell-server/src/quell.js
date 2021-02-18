@@ -122,10 +122,11 @@ class QuellCache {
           graphql(this.schema, newQueryString)
             .then(async (queryResponse) => {
               console.log('RESPONSE ===>', queryResponse);
-              uncachedResponse = queryResponse.data[queryName];
+              uncachedResponse = queryResponse.data;
               // join uncached and cached responses
               fullResponse = await this.joinResponses(responseFromCache, uncachedResponse);
               // cache joined responses
+              console.log('WE GOT JOIN RESPONSES ==>', fullResponse);
               await this.cache(fullResponse, queriedCollection, queryName);
               const successfullyCached = await this.cache(fullResponse, queriedCollection, queryName);
               console.log('if succesfullyCached ??', successfullyCached);
@@ -531,23 +532,27 @@ class QuellCache {
    * @param {Array} cachedArray - base array
    * @param {Array} uncachedArray - array to be merged into base array
    */
-  async joinResponses(cachedArray, uncachedArray) {
+  async joinResponses(cachedData, uncachedData) {
     // uncachedArray can be array in case of general query e.g. counrties{ name id capital }
     // or object in case of query with args e.g. country (id : 1) { name id capital }
-    console.log('we are in joinResponses', Array.isArray(cachedArray), Array.isArray(uncachedArray));
-    const joinedArray = [];
+    console.log('we are in joinResponses', uncachedData, cachedData);
+
+    let joinedData;
     // if we have an array run initial logic for array
-    if (Array.isArray(uncachedArray)) {
-      for (let i = 0; i < uncachedArray.length; i += 1) {
-        const joinedItem = await this.recursiveJoin(cachedArray[i], uncachedArray[i]);
-        joinedArray.push(joinedItem);
+    if (Array.isArray(uncachedData)) {
+      joinedData = [];
+      for (let i = 0; i < uncachedData.length; i += 1) {
+        const joinedItem = await this.recursiveJoin(cachedData[i], uncachedData[i]);
+        joinedData.push(joinedItem);
       }
     // if we have an obj skip array iteration and call recursiveJoin
     } else {
-      const joinedItem = await this.recursiveJoin(cachedArray[0], uncachedArray);
-      joinedArray.push(joinedItem);
+      joinedData = {};
+      const joinedItem = await this.recursiveJoin(cachedData, uncachedData);
+      //joinedArray.push(joinedItem);
+      joinedData = {...joinedItem};
     }
-    return joinedArray;
+    return joinedData;
   };
   /**
    * recursiveJoin is a helper function called from within joinResponses, allowing nested fields to be merged before
