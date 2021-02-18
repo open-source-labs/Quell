@@ -28,7 +28,7 @@ class QuellCache {
    *  @param {Function} next - Express next middleware function, invoked when QuellCache completes its work
    */x
   async query(req, res, next, isQuellable = true) {
-    console.log('we are in server side');
+    console.log('CALL QUERY');
     // handle request without query
     if (!req.body.query) {
       return next('Error: no GraphQL query found on request body');
@@ -47,7 +47,7 @@ class QuellCache {
 
     let protoArgs = null; // will be an object with query arguments; // need it to create query string for furher request and to create key identifier to save it to redis, e.g. Country-1
 
-    console.log('proto in query func', proto);
+    console.log('PROTO OBJECT', proto);
     // pass-through for queries and operations that QuellCache cannot handle
     if (proto === 'unQuellable' || !isQuellable) {
       graphql(this.schema, queryString)
@@ -59,45 +59,31 @@ class QuellCache {
           return next('graphql library error: ', error);
         });
     } else {
-      // store name of query and associated object type
-      const queryName = Object.keys(proto)[0];
-      console.log('queryName', queryName);
-
-      const queriedCollection = this.queryMap[queryName];
-      console.log('queriedCollection ==>', queriedCollection);
-
-      let protoForCache = {...proto}
-
-      // buildFromCache function accepts collection argument, which is array
-      // if we have arguments in proto and we have id as argument or _id, we go through arguments and create collection from field and id
-      // it is buggy solution, needs to be improved
+      const queriedCollection = null;
       let collectionForCache = null;
+      let protoForCache = {...proto};
+
       // check if proto has arguments and cut them from obj
       // cause we don't need argument in our response obj
-      if(protoForCache[queryName].hasOwnProperty('arguments')) {
-        console.log('proto has arguments');
+      for(const queryName in protoForCache) {
+        if(protoForCache[queryName].hasOwnProperty('arguments')) {
+          //console.log('proto kid has arguments');
+  
+          const responseProto = {...protoForCache[queryName]};
+          protoArgs = protoArgs || {};
+          protoArgs[queryName] = {...responseProto.arguments};
+          delete responseProto.arguments;
+          protoForCache[queryName] = {...responseProto};
 
-        const responseProto = {...protoForCache[queryName]};
-        protoArgs = {...responseProto.arguments};
-        delete responseProto.arguments;
-        protoForCache[queryName] = {...responseProto};
-
-        // create collection from proto arguments, for now proto has only one id
-        if(protoArgs.hasOwnProperty("id") || protoArgs.hasOwnProperty("_id")) {
-          const idKey = protoArgs["id"] || protoArgs["_id"];
-          const collectionElement = `${queriedCollection}-${idKey}`;
-
-          console.log('collectionElement', collectionElement);
-          collectionForCache = [collectionElement];
+          console.log('proto args object --->', protoArgs);
         }
-        console.log('proto args', protoArgs);
       }
 
-      console.log('proto for cache', protoForCache);
+      console.log('proto for cache --->', protoForCache);
      
       // build response from cache
-      const responseFromCache = await this.buildFromCache(protoForCache, this.queryMap, queriedCollection, collectionForCache);
-      console.log('resp from cache inside query', responseFromCache);
+      const responseFromCache = await this.buildFromCache(protoForCache, this.queryMap, queriedCollection, collectionForCache, protoArgs);
+      console.log('resp from CACHE ----->', responseFromCache);
 
       // query for additional information, if necessary
       let fullResponse, uncachedResponse;
@@ -371,9 +357,9 @@ class QuellCache {
   };
 
   async buildFromCache(proto, map, queriedCollection, collection) {
-    //proto = { "Country-1": { id: true, capital: true, name: true } }; // hardcoded
-    //collection = Object.keys(proto); // hardcoded
-    const response = [];
+    // we don't pass collection first time
+    // if first time, response will be an o
+    const response = {};
     for (const superField in proto) {
       console.log('superfield in proto', superField);
       console.log('collection', collection);
