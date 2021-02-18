@@ -26,26 +26,30 @@ function buildFromCache(prototype, map, collection, QuellStore) {
     // if QuellStore.arguments is not null
     if (QuellStore && QuellStore.arguments) {
       for (let fieldName in QuellStore.arguments) {
-        const arg = QuellStore.arguments[fieldName];
-        console.log('arg ===> ', arg);
-        let identifier;
+        if (fieldName === query) {
+          const arg = QuellStore.arguments[fieldName];
+          console.log('fieldName ===> ', fieldName);
+          console.log('query ===> ', query);
+          console.log('arg ===> ', arg);
+          let identifier;
 
-        if (arg.hasOwnProperty('id') || arg.hasOwnProperty('_id')) {
-          identifier = arg.id || arg._id;
-        }
+          if (arg.hasOwnProperty('id') || arg.hasOwnProperty('_id')) {
+            identifier = arg.id || arg._id;
+          }
 
-        // collection = 1.Object typ e field passed into buildArray() when called from buildItem() or 2.Obtained item from cache or 3.Empty array
+          // collection = 1.Object typ e field passed into buildArray() when called from buildItem() or 2.Obtained item from cache or 3.Empty array
 
-        const itemFromCache = JSON.parse(
-          sessionStorage.getItem(`${map[query]}-${identifier}`)
-        );
-        // [{ id: '2', capital: 'Sucre', cities: ['City-5', 'City-6', 'City-7', 'City-8', 'City-9', 'City-10']] or null
+          const itemFromCache = JSON.parse(
+            sessionStorage.getItem(`${map[query]}-${identifier}`)
+          );
+          // [{ id: '2', capital: 'Sucre', cities: ['City-5', 'City-6', 'City-7', 'City-8', 'City-9', 'City-10']] or null
 
-        collection =
-          collection || itemFromCache ? [itemFromCache] : itemFromCache || [];
+          collection =
+            collection || itemFromCache ? [itemFromCache] : itemFromCache || [];
 
-        for (let item of collection) {
-          response.push(buildItem(prototype[query], item, map));
+          for (let item of collection) {
+            response.push(buildItem(prototype[query], item, map));
+          }
         }
       }
     } else {
