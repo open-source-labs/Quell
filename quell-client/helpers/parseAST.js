@@ -131,27 +131,37 @@ function parseAST(AST, QuellStore) {
         }
 
         setProperty(objPath, prototype, collectFields);
-        console.log('prototype ===> ', JSON.parse(JSON.stringify(prototype)));
+        console.log(
+          'prototype in parseAST ===> ',
+          JSON.parse(JSON.stringify(prototype))
+        );
 
         // Build the arguments object
 
         /** If the current node's parent has a property name arguments
          *  and the arguments' array lengh is greater than zero
          *  Loop over the parent's array of arguments, adding each
-         *  name value pair to the args object
+         *  name value pair to QuellStore.arguments
+         *  QuellStore.arguments stucture: {country: { id: ‘2’ }, city: {id: 3}, author: {id: 3}}
          */
         if (parent.arguments) {
+          console.log('parent ===> ', parent);
           if (parent.arguments.length > 0) {
             for (let i = 0; i < parent.arguments.length; i++) {
               const key = parent.arguments[i].name.value;
               const value = parent.arguments[i].value.value;
-              QuellStore.arguments = { [key]: value };
+              // If we have any arguments that is not an id or _id, set it to be “unQuellable” and let it pass
+              isQuellable = key === 'id' || key === '_id';
+              // if QuellStore.arguments is null, assign an empty object here. So we can add property-value pairs after this line. We can't use bracket notation on an object's value that is null.
+              if (!QuellStore.arguments) QuellStore.arguments = {};
+              QuellStore.arguments[parent.name.value] = { [key]: value };
             }
           }
         }
       }
     },
   });
+  console.log('isQuellable before return out from parseAST ===> ', isQuellable);
 
   return isQuellable ? prototype : 'unQuellable';
 }
