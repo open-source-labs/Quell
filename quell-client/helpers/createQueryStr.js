@@ -9,8 +9,10 @@ function createQueryStr(queryObject, QuellStore) {
     const openParen = ' (';
     const closeParen = ' )';
     argString += openParen;
-    for (const key in QuellStore.arguments) {
-      argString += key + ': ' + QuellStore.arguments[key];
+    for (let field in QuellStore.arguments) {
+      for (let key in QuellStore.arguments[field]) {
+        argString += key + ': ' + QuellStore.arguments[field][key];
+      }
     }
     argString += closeParen;
   }
