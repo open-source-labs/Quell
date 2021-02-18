@@ -486,12 +486,12 @@ class QuellCache {
    * @param {Object} queryObject - object representing queried fields not found in cache
    */
   createQueryStr(queryObject, queryArgsObject) {
-    //console.log(queryArgsObject, 'query args object in create query string');
+    console.log(queryArgsObject, 'query args object in create query string');
     const openCurl = ' { ';
     const closedCurl = ' } ';
     let queryString = '';
     for (const key in queryObject) {
-      if(queryArgsObject[key]) {
+      if(queryArgsObject && queryArgsObject[key]) {
         let argString = '';
        
           const openBrackets = ' (';
@@ -539,9 +539,50 @@ class QuellCache {
    * @param {Array} uncachedArray - array to be merged into base array
    */
   async joinResponses(cachedData, uncachedData) {
+    // data is always is object
+    console.log('we are in joinResponses', uncachedData, cachedData);
+
+    let joinedData = {};
+    // iterate through keys
+    for(const key in uncachedData) {
+      console.log('KEY IS', key, Array.isArray(uncachedData[key]));
+      // if we have an array run initial logic for array
+      if (Array.isArray(uncachedData[key])) {
+        console.log('key', key);
+        joinedData[key] = [];
+        for (let i = 0; i < uncachedData[key].length; i += 1) {
+          const joinedItem = await this.recursiveJoin(cachedData[key][i], uncachedData[key][i]);
+          console.log('joined item', joinedItem);
+          joinedData[key].push(joinedItem);
+        }
+      // if we have an obj skip array iteration and call recursiveJoin
+      } else {
+        console.log('key is ', key);
+        joinedData[key] = {};
+        // for(const item in uncachedData[key]) {
+          console.log('item',  uncachedData[key]);
+          
+          const joinedItem = await this.recursiveJoin(cachedData[key], uncachedData[key]);
+          console.log('joined item', joinedItem);
+          joinedData[key]= {...joinedItem};
+        // }
+      }
+    }
+    console.log('joined data', joinedData);
+    return joinedData;
+  };
+  /**
+   * joinResponses iterates through an array, merging each item with the same-index item in a second array.
+   * joinResponses serves two purposes:
+   *   - to merge together objects fetched out of cache with objects resolved by graphql-js library functions
+   *   - to merge together objects in joined response with object in cache to ensure that no data is lost
+   * @param {Array} cachedArray - base array
+   * @param {Array} uncachedArray - array to be merged into base array
+   */
+  async joinArrays(cachedData, uncachedData) {
     // uncachedArray can be array in case of general query e.g. counrties{ name id capital }
     // or object in case of query with args e.g. country (id : 1) { name id capital }
-    console.log('we are in joinResponses', uncachedData, cachedData);
+    console.log('we are in joinArrays', uncachedData, cachedData);
 
     let joinedData;
     // if we have an array run initial logic for array
@@ -583,7 +624,7 @@ class QuellCache {
           uncachedItem[field] = temp;
         }
         if (cachedItem[field]) {
-          joinedObject[field] = await this.joinResponses(cachedItem[field], uncachedItem[field]);
+          joinedObject[field] = await this.joinArrays(cachedItem[field], uncachedItem[field]);
         } else {
           joinedObject[field] = uncachedItem[field];
         }
@@ -675,20 +716,23 @@ class QuellCache {
           console.log('item from redis', itemFromCache);
           itemFromCache = itemFromCache ? JSON.parse(itemFromCache) : {};
           const joinedWithCache = await this.recursiveJoin(item, itemFromCache);
+          console.log('joined with cache', joinedWithCache);
           const itemKeys = Object.keys(joinedWithCache);
           for (const key of itemKeys) {
             if (Array.isArray(joinedWithCache[key])) {
-              joinedWithCache[key] = this.replaceItemsWithReferences(queryName, key, joinedWithCache[key]);
+              joinedWithCache[key] = this.replaceItemsWithReferences(field, key, joinedWithCache[key]);
             }
           }
           // Write individual objects to cache (e.g. separate object for each single city)
+          console.log('write individual object to cache !!!');
           this.writeToCache(cacheId, joinedWithCache);
           // Add reference to array if item it refers to is cacheable
           if (!cacheId.includes('uncacheable')) referencesToCache.push(cacheId);
         }
 
          // Write the non-empty array of references to cache (e.g. 'City': ['City-1', 'City-2', 'City-3'...])
-        if (referencesToCache.length > 0) this.writeToCache(queryName, referencesToCache);
+        console.log('references to cache', referencesToCache);
+        if (referencesToCache.length > 0) this.writeToCache(field, referencesToCache);
       } else {
         console.log('current data ', field, 'is object', currentDataPiece);
         const cacheId = this.generateId(collectionName, currentDataPiece);
@@ -702,7 +746,7 @@ class QuellCache {
           const itemKeys = Object.keys(joinedWithCache);
           for (const key of itemKeys) {
             if (Array.isArray(joinedWithCache[key])) {
-              joinedWithCache[key] = this.replaceItemsWithReferences(queryName, key, joinedWithCache[key]);
+              joinedWithCache[key] = this.replaceItemsWithReferences(field, key, joinedWithCache[key]);
             }
           }
           // Write individual objects to cache (e.g. separate object for each single city)
