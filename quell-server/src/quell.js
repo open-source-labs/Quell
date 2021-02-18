@@ -484,21 +484,24 @@ class QuellCache {
    */
   createQueryStr(queryObject, queryArgsObject) {
     console.log(queryArgsObject, 'query args object in create query string');
-    let argString = '';
-    if(queryArgsObject !== null) {
-      const openBrackets = ' (';
-      const closeBrackets = ' )';
-      argString += openBrackets;
-      for (const key in queryArgsObject) {
-        argString += key + ': ' + queryArgsObject[key];
-      }
-      argString += closeBrackets;
-    }
     const openCurl = ' { ';
     const closedCurl = ' } ';
     let queryString = '';
     for (const key in queryObject) {
-      queryString += key + argString + openCurl + this.queryStringify(queryObject[key]) + closedCurl;
+      if(queryArgsObject[key]) {
+        let argString = '';
+       
+          const openBrackets = ' (';
+          const closeBrackets = ' )';
+          argString += openBrackets;
+          for (const item in queryArgsObject[key]) {
+            argString += item + ': ' + queryArgsObject[key][item];
+          }
+          argString += closeBrackets;
+        queryString += key + argString + openCurl + this.queryStringify(queryObject[key]) + closedCurl;
+      } else {
+        queryString += key + openCurl + this.queryStringify(queryObject[key]) + closedCurl;
+      }
     }
     return openCurl + queryString + closedCurl;
   };
