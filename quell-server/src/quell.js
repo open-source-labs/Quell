@@ -103,6 +103,7 @@ class QuellCache {
           if (!successfullyCached) return this.query(req, res, next, false);
           // rebuild response from cache
           const toReturn = await this.constructResponse(fullResponse, AST, queriedCollection);
+          console.log('data to RETURN is =========>>>>', toReturn);
           // append rebuilt response (if it contains data) or fullResponse to Express's response object
           res.locals.queryResponse = { data: { [queryName]: toReturn }};
           return next();
@@ -127,15 +128,16 @@ class QuellCache {
               fullResponse = await this.joinResponses(responseFromCache, uncachedResponse);
               // cache joined responses
               console.log('WE GOT JOIN RESPONSES ==>', fullResponse);
-              await this.cache(fullResponse, queriedCollection, queryName);
-              const successfullyCached = await this.cache(fullResponse, queriedCollection, queryName);
+
+              //await this.cache(fullResponse, queriedCollection, queryName);
+              const successfullyCached = await this.cache(fullResponse);
               console.log('if succesfullyCached ??', successfullyCached);
               if (!successfullyCached) return this.query(req, res, next, false);
               // rebuild response from cache
               const toReturn = await this.constructResponse(fullResponse, AST, queriedCollection);
               console.log('rebuilt response', toReturn);
               // append rebuilt response (if it contains data) or fullResponse to Express's response object
-              res.locals.queryResponse = { data: { [queryName]: toReturn }};
+              res.locals.queryResponse = { data: { ...toReturn }};
               return next();
             })
             .catch((error) => {
@@ -143,7 +145,7 @@ class QuellCache {
             });
           } else {
           // if nothing left to query, response from cache is full response
-          res.locals.queryResponse = { data: { [queryName]: responseFromCache }};
+          res.locals.queryResponse = { data: { ...responseFromCache }};
           return next();
         }
       }
@@ -430,6 +432,7 @@ class QuellCache {
    * @param {Object} item 
    */
   async buildItem(proto, fieldsMap, item) {
+    console.log('we are inside build item', proto, fieldsMap, item);
     const nodeObject = {};
     for (const key in proto) {
       if (typeof proto[key] === 'object') { // if field is an object, recursively call buildFromCache
@@ -483,7 +486,7 @@ class QuellCache {
    * @param {Object} queryObject - object representing queried fields not found in cache
    */
   createQueryStr(queryObject, queryArgsObject) {
-    console.log(queryArgsObject, 'query args object in create query string');
+    //console.log(queryArgsObject, 'query args object in create query string');
     const openCurl = ' { ';
     const closedCurl = ' } ';
     let queryString = '';
@@ -551,9 +554,11 @@ class QuellCache {
     // if we have an obj skip array iteration and call recursiveJoin
     } else {
       joinedData = {};
-      const joinedItem = await this.recursiveJoin(cachedData, uncachedData);
-      //joinedArray.push(joinedItem);
-      joinedData = {...joinedItem};
+      for(const key in uncachedData) {
+        joinedData[key]= {};
+        const joinedItem = await this.recursiveJoin(cachedData[key], uncachedData[key]);
+        joinedData[key] = {...joinedItem};
+      }
     }
     return joinedData;
   };
@@ -642,31 +647,71 @@ class QuellCache {
    * @param {String} collectionName - the object type name, used for identifying items in cache
    * @param {String} queryName - the name of the query, used for identifying response arrays in cache
    */
-  async cache(response, collectionName, queryName) {
+  async cache(responseObject) {
     // refactor this part cause in case of query with arg we have array of counry with one elements and we don't need it
-    console.log('we are inside cache function', response, collectionName, queryName);
-    const collection = JSON.parse(JSON.stringify(response));
-    const referencesToCache = [];
-    // Check for nested array (to replace objects with another array of references)
-    for (const item of collection) {
-      const cacheId = this.generateId(collectionName, item);
-      if (cacheId.includes('uncacheable')) return false;
-      let itemFromCache = await this.getFromRedis(cacheId);
-      itemFromCache = itemFromCache ? JSON.parse(itemFromCache) : {};
-      const joinedWithCache = await this.recursiveJoin(item, itemFromCache);
-      const itemKeys = Object.keys(joinedWithCache);
-      for (const key of itemKeys) {
-        if (Array.isArray(joinedWithCache[key])) {
-          joinedWithCache[key] = this.replaceItemsWithReferences(queryName, key, joinedWithCache[key]);
+    console.log('we are inside cache function', responseObject);
+    const collection = JSON.parse(JSON.stringify(responseObject));
+    console.log('we are inside cache function', collection);
+    
+    // iterate throgh
+    for(const field in collection) {
+      console.log('iteration', field);
+      // check if current data chunck is collection
+      const currentDataPiece = collection[field];
+      console.log('curr data chunk', currentDataPiece);
+      let collectionName = this.queryMap[field];
+      console.log('collection name', collectionName);
+      collectionName = (Array.isArray(collectionName)) ? collectionName[0] : collectionName;
+
+      if(Array.isArray(currentDataPiece)) {
+
+        const referencesToCache = [];
+        console.log('current data ', field, 'is array', currentDataPiece);
+        for (const item of currentDataPiece) {
+          const cacheId = this.generateId(collectionName, item);
+          console.log('cached if from generateid', cacheId);
+          if (cacheId.includes('uncacheable')) return false;
+          let itemFromCache = await this.getFromRedis(cacheId);
+          console.log('item from redis', itemFromCache);
+          itemFromCache = itemFromCache ? JSON.parse(itemFromCache) : {};
+          const joinedWithCache = await this.recursiveJoin(item, itemFromCache);
+          const itemKeys = Object.keys(joinedWithCache);
+          for (const key of itemKeys) {
+            if (Array.isArray(joinedWithCache[key])) {
+              joinedWithCache[key] = this.replaceItemsWithReferences(queryName, key, joinedWithCache[key]);
+            }
+          }
+          // Write individual objects to cache (e.g. separate object for each single city)
+          this.writeToCache(cacheId, joinedWithCache);
+          // Add reference to array if item it refers to is cacheable
+          if (!cacheId.includes('uncacheable')) referencesToCache.push(cacheId);
         }
+
+         // Write the non-empty array of references to cache (e.g. 'City': ['City-1', 'City-2', 'City-3'...])
+        if (referencesToCache.length > 0) this.writeToCache(queryName, referencesToCache);
+      } else {
+        console.log('current data ', field, 'is object', currentDataPiece);
+        const cacheId = this.generateId(collectionName, currentDataPiece);
+          if (cacheId.includes('uncacheable')) return false;
+          console.log('cacheid', cacheId, collectionName);
+          let itemFromCache = await this.getFromRedis(cacheId);
+          console.log('item from redis', itemFromCache);
+          itemFromCache = itemFromCache ? JSON.parse(itemFromCache) : {};
+          const joinedWithCache = await this.recursiveJoin(currentDataPiece, itemFromCache);
+          console.log('joinded with cache', joinedWithCache); 
+          const itemKeys = Object.keys(joinedWithCache);
+          for (const key of itemKeys) {
+            if (Array.isArray(joinedWithCache[key])) {
+              joinedWithCache[key] = this.replaceItemsWithReferences(queryName, key, joinedWithCache[key]);
+            }
+          }
+          // Write individual objects to cache (e.g. separate object for each single city)
+          console.log('write cache -->');
+          this.writeToCache(cacheId, joinedWithCache);
+        
       }
-      // Write individual objects to cache (e.g. separate object for each single city)
-      this.writeToCache(cacheId, joinedWithCache);
-      // Add reference to array if item it refers to is cacheable
-      if (!cacheId.includes('uncacheable')) referencesToCache.push(cacheId);
     }
-    // Write the non-empty array of references to cache (e.g. 'City': ['City-1', 'City-2', 'City-3'...])
-    if (referencesToCache.length > 0) this.writeToCache(queryName, referencesToCache);
+    console.log('finish looping object in cache function, going return true');
     return true;
   };
   /**
@@ -683,30 +728,28 @@ class QuellCache {
 
     let protoForCache = {...rebuiltProto};
     console.log('rebuuld from ast', rebuiltProto);
-    const queryName = Object.keys(rebuiltProto)[0];
+    
     // buildFromCache function accepts collection argument, which is array
     // if we have arguments in proto and we have id as argument or _id, we go through arguments and create collection from field and id
     let collectionForCache = null;
     // check if proto has arguments and cut them from obj
     // cause we don't need argument in our response obj
-    if(protoForCache[queryName].hasOwnProperty('arguments')) {
-      console.log('proto has arguments');
-      const responseProto = {...protoForCache[queryName]};
-      protoArgs = {...responseProto.arguments};
-      delete responseProto.arguments;
-      protoForCache[queryName] = {...responseProto};
-      // create collection from proto arguments, for now proto has only one id
-      if(protoArgs.hasOwnProperty("id") || protoArgs.hasOwnProperty("_id")) {
-        const idKey = protoArgs["id"] || protoArgs["_id"];
-        const collectionElement = `${queriedCollection}-${idKey}`;
-        console.log('collectionElement', collectionElement);
-        collectionForCache = [collectionElement];
-      }
-      console.log('proto args', protoArgs);
-      }
+    for(const queryName in protoForCache) {
+      if(protoForCache[queryName].hasOwnProperty('arguments')) {
+        //console.log('proto kid has arguments');
 
-    const rebuiltFromCache = await this.buildFromCache(protoForCache, this.queryMap, queriedCollection, collectionForCache);
-    if (rebuiltFromCache.length > 0) return rebuiltFromCache;
+        const responseProto = {...protoForCache[queryName]};
+        protoArgs = protoArgs || {};
+        protoArgs[queryName] = {...responseProto.arguments};
+        delete responseProto.arguments;
+        protoForCache[queryName] = {...responseProto};
+
+        console.log('proto args', protoArgs);
+      }
+    }
+
+    const rebuiltFromCache = await this.buildFromCache(protoForCache, this.queryMap, queriedCollection, collectionForCache, protoArgs);
+    if (Object.keys(rebuiltFromCache).length > 0) return rebuiltFromCache;
     return fullResponse;
   };
   /**
