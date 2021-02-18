@@ -23,7 +23,7 @@ async function Quellify(endPoint, query, map, fieldsMap) {
   const [prototype, args] = parseAST(AST);
   QuellStore.arguments = args;
   console.log('QuellStore after parseAST ===> ', QuellStore);
-
+  prototype === 'unQuellable';
   // pass-through for queries and operations that QuellCache cannot handle
   if (prototype === 'unQuellable') {
     const fetchOptions = {

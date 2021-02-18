@@ -32,7 +32,7 @@ const Demo = () => {
     // run ResultsParser on output to get the query
     let parsedResult = CreateQueryStr(output);
     parsedResult = ' {country (id: 1) { id name}} ';
-    // parsedResult = ' {country (id: 2) { id cities { id, name }}} ';
+    parsedResult = ' {cities { id, name } }';
     // parsedResult = ' {country (id: 2) { id capital cities { id, name }}} ';
     // parsedResult =
     //   ' {country (id: 2) { id capital cities { id, name, population }}} ';

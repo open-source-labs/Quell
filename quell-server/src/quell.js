@@ -364,28 +364,55 @@ class QuellCache {
       if (Object.keys(proto[key]).length > 0) this.toggleProto(proto[key]);
       else proto[key] = false;
     }
+    return proto;
   };
 
-  async buildFromCache(proto, map, queriedCollection, collection) {
+  async buildFromCache(proto, map, queriedCollection, collection, protoArgs) {
     // we don't pass collection first time
     // if first time, response will be an o
     const response = {};
     for (const superField in proto) {
       console.log('superfield in proto', superField);
-      console.log('collection', collection);
+      // check if current chunck of data is collection or single item based on what we have in map
+      const mapValue = map[superField];
+      const isCollection = Array.isArray(mapValue);
+      // if we have current chunck as a collection we have to treat it as an array
+      if(isCollection) {
+        const currentCollection = [];
+      // check if collection has been passed as argument
       // if collection not passed as argument, try to retrieve array of references from cache
-      if (!collection) {
-        const collectionFromCache = await this.getFromRedis(superField);
-        if (!collectionFromCache) collection = [];
-        else collection = JSON.parse(collectionFromCache);
-      }
-      if (collection.length === 0) this.toggleProto(proto);
-      for (const item of collection) {
+        if (!collection) {
+          const collectionFromCache = await this.getFromRedis(superField);
+          if (!collectionFromCache) collection = [];
+          else collection = JSON.parse(collectionFromCache);
+        }
+        if (collection.length === 0) {
+          const toggledProto = this.toggleProto(proto[superField]);
+          proto[superField] = {...toggledProto};
+        } 
+        for (const item of collection) {
+          let itemFromCache = await this.getFromRedis(item);
+          itemFromCache = itemFromCache ? JSON.parse(itemFromCache) : {};
+          const builtItem = await this.buildItem(proto[superField], this.fieldsMap[queriedCollection], itemFromCache);
+          console.log('buidt item ==> ', builtItem);
+          currentCollection.push(builtItem);
+        }
+        response[superField] = currentCollection;
+      } else {
+        // we have an object
+        const idKey = protoArgs[superField]["id"] || protoArgs[superField]["_id"] || null;
+        const item = `${map[superField]}-${idKey}`;
         let itemFromCache = await this.getFromRedis(item);
+        console.log('item from REDDIS -->', itemFromCache);
         itemFromCache = itemFromCache ? JSON.parse(itemFromCache) : {};
-        const builtItem = await this.buildItem(proto[superField], this.fieldsMap[queriedCollection], itemFromCache);
-        console.log('buidt item ==> ', builtItem);
-        response.push(builtItem);
+        const builtItem = await this.buildItem(proto[superField], this.fieldsMap[map[superField]], itemFromCache);
+        console.log('build item ==> ', builtItem);
+        response[superField] = builtItem;
+        
+        if(Object.keys(builtItem).length === 0) {
+          const toggledProto = this.toggleProto(proto[superField]);
+          proto[superField] = {...toggledProto};
+        }
       }
     }
     console.log('response from build from cache', response);
