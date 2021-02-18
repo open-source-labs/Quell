@@ -4,7 +4,7 @@ const { visit } = require('graphql/language/visitor');
  * representing all the queried fields nested as they are in the query.
  */
 
-function parseAST(AST) {
+function parseAST(AST, QuellStore) {
   // const queryRoot = AST.definitions[0];
 
   /**
@@ -18,7 +18,6 @@ function parseAST(AST) {
 
   // visit() will build the prototype, declared here and returned from the function
   const prototype = {};
-  let args = null;
   let isQuellable = true;
 
   visit(AST, {
@@ -146,7 +145,7 @@ function parseAST(AST) {
             for (let i = 0; i < parent.arguments.length; i++) {
               const key = parent.arguments[i].name.value;
               const value = parent.arguments[i].value.value;
-              args = { [key]: value };
+              QuellStore.arguments = { [key]: value };
             }
           }
         }
@@ -154,7 +153,7 @@ function parseAST(AST) {
     },
   });
 
-  return isQuellable ? [prototype, args] : ['unQuellable', null];
+  return isQuellable ? prototype : 'unQuellable';
 }
 
 module.exports = parseAST;
