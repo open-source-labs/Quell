@@ -165,17 +165,26 @@ class QuellCache {
    *  to identify and create references to cached data.
    */
   getQueryMap(schema) {
-    console.log('schema from get query map', schema);
     const queryMap = {};
     // get object containing all root queries defined in the schema
     const queryTypeFields = schema._queryType._fields;
+    //console.log('queryTypeFields', queryTypeFields);
     // if queryTypeFields is a function, invoke it to get object with queries
     const queriesObj = (typeof queryTypeFields === 'function') ? queryTypeFields() : queryTypeFields;
     for (const query in queriesObj) {
       // get name of GraphQL type returned by query
-      const returnedType = queriesObj[query].type.name || queriesObj[query].type.ofType.name
+      // if ofType --> this is collection, else not collection
+      let returnedType;
+      if(queriesObj[query].type.ofType) {
+        returnedType = [];
+        returnedType.push(queriesObj[query].type.ofType.name);
+      } 
+      if(queriesObj[query].type.name) {
+        returnedType = queriesObj[query].type.name;
+      }
       queryMap[query] = returnedType;
     }
+    console.log('queryMap ----->>>>>>>', queryMap);
     return queryMap;
   };
 
@@ -216,6 +225,7 @@ class QuellCache {
       }
       fieldsMap[type] = fieldsObj;
     }
+    console.log('FIELDS MAP', fieldsMap);
     return fieldsMap;
   };
 
