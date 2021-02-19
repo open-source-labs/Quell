@@ -6,20 +6,22 @@ function normalizeForCache(response, map, fieldsMap, QuellStore) {
   console.log('response ===> ', response);
   console.log('map ===> ', map);
   console.log('fieldsMap ===> ', fieldsMap);
-  // Name of query for ID generation (e.g. "countries")
-  const queryName = Object.keys(response)[0];
-  // Object type for ID generation ===> "City"
-  const collectionName = map[queryName];
-  console.log('collectionName ===>', collectionName);
-  // Array of objects on the response (cloned version)
-  const collection = JSON.parse(JSON.stringify(response[queryName]));
-  console.log(
-    'collection ===> ',
-    JSON.parse(JSON.stringify(response[queryName]))
-  );
 
-  if (QuellStore.arguments) {
-    // if collection from response is an object / etc: qury with argument ID
+  if (QuellStore.arguments && !QuellStore.alias) {
+    // if collection from response is an object / etc: query with argument id
+
+    // Name of query for ID generation (e.g. "countries")
+    const queryName = Object.keys(response)[0];
+    // Object type for ID generation ===> "City"
+    const collectionName = map[queryName];
+    console.log('collectionName ===>', collectionName);
+    // Array of objects on the response (cloned version)
+    const collection = JSON.parse(JSON.stringify(response[queryName]));
+    console.log(
+      'collection ===> ',
+      JSON.parse(JSON.stringify(response[queryName]))
+    );
+
     const itemKeys = Object.keys(collection);
 
     for (const key of itemKeys) {
@@ -33,8 +35,48 @@ function normalizeForCache(response, map, fieldsMap, QuellStore) {
     }
     // Write individual objects to cache (e.g. separate object for each single city)
     writeToCache(generateId(collectionName, collection), collection);
+  } else if (QuellStore.arguments && QuellStore.alias) {
+    // if collection from response is an object && QuellStore.alias is not null
+
+    // Name of alias from response object (e.g. "country1" & "country1")
+    for (let alias of Object.keys(response)) {
+      // Name of query for ID generation (e.g. "country")
+      const queryName = Object.keys(QuellStore.alias)[0];
+      // Object type for ID generation ===> "Country"
+      const collectionName = map[queryName];
+      console.log('collectionName ===>', collectionName);
+      // Array of objects on the response (cloned version)
+      const collection = JSON.parse(JSON.stringify(response[alias]));
+      console.log('collection ===> ', collection);
+
+      const itemKeys = Object.keys(collection);
+
+      for (const key of itemKeys) {
+        if (Array.isArray(collection[key])) {
+          collection[key] = replaceItemsWithReferences(
+            key,
+            collection[key],
+            fieldsMap
+          );
+        }
+      }
+      // Write individual objects to cache (e.g. separate object for each single city)
+      writeToCache(generateId(collectionName, collection), collection);
+    }
   } else {
     // if collection is array / etc: query all countries
+
+    // Name of query for ID generation (e.g. "countries")
+    const queryName = Object.keys(response)[0];
+    // Object type for ID generation ===> "City"
+    const collectionName = map[queryName];
+    console.log('collectionName ===>', collectionName);
+    // Array of objects on the response (cloned version)
+    const collection = JSON.parse(JSON.stringify(response[queryName]));
+    console.log(
+      'collection ===> ',
+      JSON.parse(JSON.stringify(response[queryName]))
+    );
 
     const referencesToCache = [];
     // Check for nested array (to replace objects with another array of references)
