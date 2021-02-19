@@ -126,7 +126,9 @@ async function Quellify(endPoint, query, map, fieldsMap) {
 
     console.log('mergedResponse ===> ', mergedResponse);
 
-    const formattedMergedResponse = { data: { [queryName]: mergedResponse } };
+    const formattedMergedResponse = QuellStore.alias
+      ? { data: mergedResponse }
+      : { data: { [queryName]: mergedResponse } };
     console.log('formattedMergedResponse ===> ', formattedMergedResponse);
     // Cache newly stitched response
     normalizeForCache(formattedMergedResponse.data, map, fieldsMap, QuellStore);
