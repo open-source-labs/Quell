@@ -60,7 +60,7 @@ class QuellCache {
         });
     } else {
       const queriedCollection = null;
-      let collectionForCache = null;
+     
       let protoForCache = {...proto};
 
       // check if proto has arguments and cut them from obj
@@ -82,7 +82,7 @@ class QuellCache {
       console.log('proto for cache --->', protoForCache);
      
       // build response from cache
-      const responseFromCache = await this.buildFromCache(protoForCache, this.queryMap, queriedCollection, collectionForCache, protoArgs);
+      const responseFromCache = await this.buildFromCache(protoForCache, this.queryMap, queriedCollection, protoArgs);
       console.log('resp from CACHE ----->', responseFromCache);
 
       // query for additional information, if necessary
@@ -370,25 +370,30 @@ class QuellCache {
     return proto;
   };
 
-  async buildFromCache(proto, map, queriedCollection, collection, protoArgs) {
+  async buildFromCache(proto, map, queriedCollection, protoArgs) {
     // we don't pass collection first time
-    // if first time, response will be an o
+    // if first time, response will be an object
+    map = this.queryMap;
     const response = {};
     for (const superField in proto) {
-      console.log('superfield in proto', superField);
+      console.log('SUPERFIELD in proto', superField);
       // check if current chunck of data is collection or single item based on what we have in map
       const mapValue = map[superField];
       const isCollection = Array.isArray(mapValue);
+      console.log('is', superField, 'collection?', isCollection);
       // if we have current chunck as a collection we have to treat it as an array
       if(isCollection) {
+        let collection;
         const currentCollection = [];
       // check if collection has been passed as argument
       // if collection not passed as argument, try to retrieve array of references from cache
-        if (!collection) {
+        // if (!collection) {
+        //   console.log('collection is', collection);
           const collectionFromCache = await this.getFromRedis(superField);
+          console.log('collection from CACHE --->', collectionFromCache);
           if (!collectionFromCache) collection = [];
           else collection = JSON.parse(collectionFromCache);
-        }
+        // }
         if (collection.length === 0) {
           const toggledProto = this.toggleProto(proto[superField]);
           proto[superField] = {...toggledProto};
@@ -421,6 +426,31 @@ class QuellCache {
     console.log('response from build from cache', response);
     return response;
   };
+  async buildCollection(proto, map, queriedCollection, collection, protoArgs) {
+    console.log('inside buildCollection', 'PROTO--> ', proto, 'COLLECTION -->', collection);
+    map = this.queryMap;
+    const response = [];
+    for (const superField in proto) {
+      // if collection not passed as argument, try to retrieve array of references from cache
+      if (!collection) {
+        // const collectionFromCache = await this.getFromRedis(superField);
+        // if (!collectionFromCache) collection = [];
+        // else collection = JSON.parse(collectionFromCache);
+        collection = [];
+      }
+      if (collection.length === 0) {
+        const toggledProto = this.toggleProto(proto[superField]);
+        proto[superField] = {...toggledProto};
+      }
+      for (const item of collection) {
+        let itemFromCache = await this.getFromRedis(item);
+        itemFromCache = itemFromCache ? JSON.parse(itemFromCache) : {};
+        const builtItem = await this.buildItem(proto[superField], this.fieldsMap[queriedCollection], itemFromCache);
+        response.push(builtItem);
+      }
+    }
+    return response;
+  };
   /**
    * buildItem iterates through keys -- defined on pass-in prototype object, which is always a fragment of the
    * prototype, assigning to nodeObject the data at matching keys in the passed-in item. If a key on the prototype
@@ -437,7 +467,7 @@ class QuellCache {
     for (const key in proto) {
       if (typeof proto[key] === 'object') { // if field is an object, recursively call buildFromCache
         const protoAtKey = { [key]: proto[key] };
-        nodeObject[key] = await this.buildFromCache(protoAtKey, fieldsMap, fieldsMap[key], item[key]);
+        nodeObject[key] = await this.buildCollection(protoAtKey, fieldsMap, fieldsMap[key], item[key]);
       } else if (proto[key]) { // if current key has not been toggled to false because it needs to be queried
         if (item[key] !== undefined) nodeObject[key] = item[key];
         else proto[key] = false; // toggle proto key to false if cached item does not contain queried data
@@ -775,7 +805,7 @@ class QuellCache {
     
     // buildFromCache function accepts collection argument, which is array
     // if we have arguments in proto and we have id as argument or _id, we go through arguments and create collection from field and id
-    let collectionForCache = null;
+    //let collectionForCache = null;
     // check if proto has arguments and cut them from obj
     // cause we don't need argument in our response obj
     for(const queryName in protoForCache) {
@@ -792,7 +822,7 @@ class QuellCache {
       }
     }
 
-    const rebuiltFromCache = await this.buildFromCache(protoForCache, this.queryMap, queriedCollection, collectionForCache, protoArgs);
+    const rebuiltFromCache = await this.buildFromCache(protoForCache, this.queryMap, queriedCollection, protoArgs);
     if (Object.keys(rebuiltFromCache).length > 0) return rebuiltFromCache;
     return fullResponse;
   };
