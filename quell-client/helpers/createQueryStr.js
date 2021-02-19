@@ -4,14 +4,15 @@
 
 function createQueryStr(queryObject, QuellStore) {
   console.log('QuellStore in createQueryStr ===> ', QuellStore);
+  console.log('queryObject ===> ', queryObject);
   let argString = '';
   if (QuellStore.arguments) {
     const openParen = ' (';
     const closeParen = ' )';
     argString += openParen;
     for (let field in QuellStore.arguments) {
-      for (let key in QuellStore.arguments[field]) {
-        argString += key + ': ' + QuellStore.arguments[field][key];
+      for (let arg of QuellStore.arguments[field]) {
+        argString += Object.keys(arg)[0] + ': ' + arg[Object.keys(arg)[0]];
       }
     }
     argString += closeParen;
