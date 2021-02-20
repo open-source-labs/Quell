@@ -31,9 +31,10 @@ const Demo = () => {
   const handleRunQueryClick = () => {
     // run ResultsParser on output to get the query
     let parsedResult = CreateQueryStr(output);
-    // parsedResult = " {country (id: 1) { id cities { id, name }}} ";
-    // parsedResult = ' {country (id: 2) { id cities { id, name }}} ';
-    // parsedResult = " {country (id: 1) { id capital cities { id, name }}} ";
+    //parsedResult = ' {countries { id name } cities { id name }}';
+    // parsedResult =
+    //   " {countries { id name capital cities { id name country_id } } }";
+    // parsedResult = ' {country (id: 1) { id capital cities { id, name }}} ';
     // parsedResult =
     //   " {country (id: 2) { id capital cities { id, name, population }}} ";
     parsedResult =

@@ -21,16 +21,12 @@ async function Quellify(endPoint, query, map, fieldsMap) {
 
   // Create object of "true" values from AST tree (w/ some eventually updated to "false" via buildItem())
   let prototype = parseAST(AST, QuellStore);
-  // QuellStore.arguments = args;
   console.log("QuellStore after parseAST ===> ", QuellStore);
+  console.log(
+    "prototype after parseAST ===> ",
+    JSON.parse(JSON.stringify(prototype))
+  );
   prototype = "unQuellable";
-  // const prototype = parseAST(AST, QuellStore);
-  // console.log("QuellStore after parseAST ===> ", QuellStore);
-  // console.log(
-  //   "prototype after parseAST ===> ",
-  //   JSON.parse(JSON.stringify(prototype))
-  // );
-
   // pass-through for queries and operations that QuellCache cannot handle
   if (prototype === "unQuellable") {
     const fetchOptions = {

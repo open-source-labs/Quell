@@ -3,7 +3,7 @@ const path = require("path");
 const schema = require("./schema/schema");
 const graphqlNodeModule =
   process.env.NODE_ENV === "development"
-    ? "/Users/andreicabrera/Documents/GraphQL/Quell/quell-server/tempQuell.js"
+    ? "../../quell-server/src/quell"
     : "@quell/server";
 const QuellCache = require(graphqlNodeModule);
 
