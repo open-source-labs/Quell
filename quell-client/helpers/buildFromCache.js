@@ -23,31 +23,80 @@ function buildFromCache(prototype, map, collection, QuellStore) {
 
   let response = [];
   for (let query in prototype) {
-    // if the query has an argument
-    if (QuellStore && QuellStore.arguments) {
-      const args = QuellStore.arguments;
-      let identifier;
+    // if QuellStore.arguments is not null
+    if (QuellStore && QuellStore.arguments && !QuellStore.alias) {
+      for (let fieldName in QuellStore.arguments) {
+        for (let arg of QuellStore.arguments[fieldName]) {
+          console.log("arg ===> ", arg);
+          let identifier;
 
-      if (args.hasOwnProperty("id") || args.hasOwnProperty("_id")) {
-        identifier = args.id || args._id;
+          if (arg.hasOwnProperty("id") || arg.hasOwnProperty("_id")) {
+            identifier = arg.id || arg._id;
+          }
+
+          // collection = 1.Object typ e field passed into buildArray() when called from buildItem() or 2.Obtained item from cache or 3.Empty array
+
+          const itemFromCache = JSON.parse(
+            sessionStorage.getItem(`${map[query]}-${identifier}`)
+          );
+
+          console.log("itemFromCache", itemFromCache);
+          // [{ id: '2', capital: 'Sucre', cities: ['City-5', 'City-6', 'City-7', 'City-8', 'City-9', 'City-10']] or null
+
+          collection = collection || [];
+
+          if (itemFromCache) {
+            collection = [itemFromCache];
+          }
+
+          console.log("collection ===> ", collection);
+
+          for (let item of collection) {
+            response.push(buildItem(prototype[query], item, map));
+          }
+        }
       }
-
-      // collection = 1.Object typ e field passed into buildArray() when called from buildItem() or 2.Obtained item from cache or 3.Empty array
-
-      const itemFromCache = JSON.parse(
-        sessionStorage.getItem(`${map[query]}-${identifier}`)
-      );
-      // [{ id: '2', capital: 'Sucre', cities: ['City-5', 'City-6', 'City-7', 'City-8', 'City-9',
-      //'City-10']] or null
-
-      collection =
-        collection || itemFromCache ? [itemFromCache] : itemFromCache || [];
-
-      for (let item of collection) {
-        response.push(buildItem(prototype[query], item, map));
-      }
+    } else if (QuellStore && QuellStore.arguments && QuellStore.alias) {
+      /**
+       * Can fully cache aliaes by different id,
+       * and can build response from cache with previous query with exact aliases
+       * (comment out buildFromCache if alias exist now)
+       */
+      // for (let fieldName in QuellStore.arguments) {
+      //   collection = collection || [];
+      //   for (let i = 0; i < QuellStore.arguments[fieldName].length; i++) {
+      //     const arg = QuellStore.arguments[fieldName][i];
+      //     console.log('arg ===> ', arg);
+      //     let identifier;
+      //     if (arg.hasOwnProperty('id') || arg.hasOwnProperty('_id')) {
+      //       identifier = arg.id || arg._id;
+      //     }
+      //     // collection = 1.Object typ e field passed into buildArray() when called from buildItem() or 2.Obtained item from cache or 3.Empty array
+      //     const itemFromCache = JSON.parse(
+      //       sessionStorage.getItem(`${map[query]}-${identifier}`)
+      //     );
+      //     console.log('itemFromCache', itemFromCache);
+      //     // [{ id: '2', capital: 'Sucre', cities: ['City-5', 'City-6', 'City-7', 'City-8', 'City-9', 'City-10']] or null
+      //     if (itemFromCache) {
+      //       collection = [itemFromCache];
+      //     }
+      //     console.log(
+      //       'collection ===> ',
+      //       JSON.parse(JSON.stringify(collection))
+      //     );
+      //     for (let item of collection) {
+      //       response.push({
+      //         [QuellStore.alias[fieldName][i]]: buildItem(
+      //           prototype[query],
+      //           item,
+      //           map
+      //         ),
+      //       });
+      //     }
+      //   }
+      // }
     } else {
-      // if the query has no argument
+      // if the query has no arguments
 
       // collection = 1.Object type field passed into buildArray() when called from buildItem() or
       //2.Obtained item from cache or 3.Empty array
@@ -101,7 +150,7 @@ function buildItem(prototype, item, map) {
         "prototypeAtKey = { [key]: prototype[key] } !!!!!! ===> ",
         prototypeAtKey
       );
-      if (item[key]) {
+      if (item[key] !== undefined) {
         // if in cache
         tempObj[key] = buildFromCache(prototypeAtKey, map, item[key]);
         console.log("tempObj[key] ===> ", tempObj[key]);
@@ -111,7 +160,7 @@ function buildItem(prototype, item, map) {
       }
     } else {
       // if field is scalar
-      if (item[key]) {
+      if (item[key] !== undefined) {
         // if in cache
         tempObj[key] = item[key];
       } else {

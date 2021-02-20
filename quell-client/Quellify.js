@@ -13,17 +13,24 @@ const joinResponses = require("./helpers/joinResponses");
 // MAIN CONTROLLER
 async function Quellify(endPoint, query, map, fieldsMap) {
   // Create QuellStore object to keep track of arguments, aliases, fragments, variables, or directives
-  const QuellStore = { arguments: null, aliases: null };
+  const QuellStore = { arguments: null, alias: null };
 
   // Create AST of query
   const AST = parse(query);
   console.log("AST ===> ", AST);
 
   // Create object of "true" values from AST tree (w/ some eventually updated to "false" via buildItem())
-  let [prototype, args] = parseAST(AST);
-  QuellStore.arguments = args;
+  // let [prototype, args] = parseAST(AST);
+  // QuellStore.arguments = args;
+  // console.log("QuellStore after parseAST ===> ", QuellStore);
+  // prototype = "unQuellable";
+  const prototype = parseAST(AST, QuellStore);
   console.log("QuellStore after parseAST ===> ", QuellStore);
-  prototype = "unQuellable";
+  console.log(
+    "prototype after parseAST ===> ",
+    JSON.parse(JSON.stringify(prototype))
+  );
+
   // pass-through for queries and operations that QuellCache cannot handle
   if (prototype === "unQuellable") {
     const fetchOptions = {
@@ -109,15 +116,23 @@ async function Quellify(endPoint, query, map, fieldsMap) {
     }
 
     // If everything needed was already in cache, only assign cached response to variable
-    if (QuellStore.arguments) {
+    if (QuellStore.arguments && !QuellStore.alias) {
       mergedResponse = mergedResponse[0];
+    } else if (QuellStore.arguments && QuellStore.alias) {
+      newMergedReponse = {};
+      mergedResponse.forEach(
+        (e) => (newMergedReponse[Object.keys(e)[0]] = e[Object.keys(e)[0]])
+      );
+      mergedResponse = newMergedReponse;
     } else {
       mergedResponse = mergedResponse;
     }
 
     console.log("mergedResponse ===> ", mergedResponse);
 
-    const formattedMergedResponse = { data: { [queryName]: mergedResponse } };
+    const formattedMergedResponse = QuellStore.alias
+      ? { data: mergedResponse }
+      : { data: { [queryName]: mergedResponse } };
     console.log("formattedMergedResponse ===> ", formattedMergedResponse);
     // Cache newly stitched response
     normalizeForCache(formattedMergedResponse.data, map, fieldsMap, QuellStore);

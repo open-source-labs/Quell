@@ -41,10 +41,8 @@ class QuellCache {
     }
     // retrieve GraphQL query string from request object;
     const queryString = req.body.query;
-
     // create abstract syntax tree with graphql-js parser
     const AST = parse(queryString);
-
     // create response prototype
     // if query has argument proto will return them as key value pair, as arguments: {id: 1}
     // should we refactor parseAST and return two objects??
@@ -279,7 +277,6 @@ class QuellCache {
     }
     return fields;
   }
-
   /**
    * joinResponses iterates through an array, merging each item with the same-index item in a second array.
    * joinResponses serves two purposes:
