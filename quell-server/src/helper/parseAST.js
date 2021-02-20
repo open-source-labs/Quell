@@ -1,3 +1,7 @@
+const { parse } = require("graphql/language/parser");
+const { visit } = require("graphql/language/visitor");
+const { graphql } = require("graphql");
+
 /**
  * parseAST traverses the abstract syntax tree and creates a prototype object
  * representing all the queried fields nested as they are in the query. The

@@ -47,7 +47,7 @@ class QuellCache {
     // if query has argument proto will return them as key value pair, as arguments: {id: 1}
     // should we refactor parseAST and return two objects??
     // one for proto and other for arguments
-    const proto = this.parseAST(AST);
+    const proto = parseAST(AST);
 
     let protoArgs = null; // will be an object with query arguments; // need it to create query string for furher request and to create key identifier to save it to redis, e.g. Country-1
 
@@ -89,8 +89,7 @@ class QuellCache {
       const responseFromCache = await this.buildFromCache(
         protoForCache,
         this.queryMap,
-        queriedCollection,
-        collectionForCache
+        protoArgs
       );
       console.log("resp from cache inside query", responseFromCache);
 
@@ -157,19 +156,14 @@ class QuellCache {
     });
   }
 
-  async buildFromCache(proto, map, queriedCollection, protoArgs) {
+  async buildFromCache(proto, map, protoArgs) {
     // we don't pass collection first time
     // if first time, response will be an object
     map = this.queryMap;
 
     const response = {};
     for (const superField in proto) {
-      console.log(
-        "SUPERFIELD in proto",
-        superField,
-        "QUERIeD collection -->",
-        queriedCollection
-      );
+      console.log("SUPERFIELD in proto", superField);
       // check if current chunck of data is collection or single item based on what we have in map
       const mapValue = map[superField];
       const isCollection = Array.isArray(mapValue);
@@ -194,10 +188,7 @@ class QuellCache {
         for (const item of collection) {
           let itemFromCache = await this.getFromRedis(item);
           itemFromCache = itemFromCache ? JSON.parse(itemFromCache) : {};
-          const builtItem = await this.buildItem(
-            proto[superField],
-            itemFromCache
-          );
+          const builtItem = await buildItem(proto[superField], itemFromCache);
           console.log("buidt item ==> ", builtItem);
           currentCollection.push(builtItem);
         }
@@ -210,10 +201,7 @@ class QuellCache {
         let itemFromCache = await this.getFromRedis(item);
         console.log("item from REDDIS -->", itemFromCache);
         itemFromCache = itemFromCache ? JSON.parse(itemFromCache) : {};
-        const builtItem = await this.buildItem(
-          proto[superField],
-          itemFromCache
-        );
+        const builtItem = await buildItem(proto[superField], itemFromCache);
         console.log("build item ==> ", builtItem);
         response[superField] = builtItem;
 
@@ -437,10 +425,7 @@ class QuellCache {
       for (const item of collection) {
         let itemFromCache = await this.getFromRedis(item);
         itemFromCache = itemFromCache ? JSON.parse(itemFromCache) : {};
-        const builtItem = await this.buildItem(
-          proto[superField],
-          itemFromCache
-        );
+        const builtItem = await buildItem(proto[superField], itemFromCache);
         response.push(builtItem);
       }
     }
@@ -591,7 +576,7 @@ class QuellCache {
    */
   async constructResponse(fullResponse, AST, queriedCollection) {
     console.log("we are inside construct response");
-    const rebuiltProto = this.parseAST(AST);
+    const rebuiltProto = parseAST(AST);
 
     let protoArgs = null; // will be an object with query arguments;
 

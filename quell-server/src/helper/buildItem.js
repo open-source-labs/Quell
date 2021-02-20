@@ -1,4 +1,4 @@
-const buildCollection = require("../quell");
+const quel = require("../quell.buildCollection");
 /**
  * buildItem iterates through keys -- defined on pass-in prototype object, which is always a fragment of the
  * prototype, assigning to nodeObject the data at matching keys in the passed-in item. If a key on the prototype
@@ -9,7 +9,7 @@ const buildCollection = require("../quell");
  * @param {Object} fieldsMap
  * @param {Object} item
  */
-async function buildItem(proto, fieldsMap, item) {
+async function buildItem(proto, item) {
   console.log("we are inside build item", proto, item);
   const nodeObject = {};
   for (const key in proto) {

@@ -283,9 +283,9 @@ class QuellCache {
             isQuellable = false;
           }
         }
-        // if (node.alias) {
-        //   isQuellable = false;
-        // }
+        if (node.alias) {
+          isQuellable = false;
+        }
       },
       SelectionSet(node, key, parent, path, ancestors) {
         /** Helper function to convert array of ancestor fields into a
