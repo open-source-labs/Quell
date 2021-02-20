@@ -17,12 +17,12 @@ import PlusHover from '../images/buttons/plus-button-hover.svg';
 // maybe just set a timer?? so that it runs after the first time we build the recursive queryFields component
 
 const CitiesFields = (props) => {
-  const { citiesFields, type, outputFunction, modifyCitiesFields } = props; // import props
+  const { citiesFields, type, sub, outputFunction, modifyCitiesFields } = props; // import props
 
   const [queryList, setQueryList] = useState(citiesFields);
   const [availableList, setAvailableList] = useState([]);
   const [plusDropdown, togglePlusDropdown] = useState(false);
-  // const [subQuery, setSubQuery] = useState(sub); // is true when we render this recursively for the "cities" field inside "countries" query
+  const [subQuery, setSubQuery] = useState(sub); // is true when we render this recursively for the "cities" field inside "countries" query
 
   // ====================================================================== //
   // ======= Functionality to close dropdowns when clicking outside ======= //
@@ -64,8 +64,16 @@ const CitiesFields = (props) => {
 
   // Takes the items list and returns something like: [ id, name, capital, cities ]
   const convertIntoList = (itemList) => {
-    const output = itemList.map((obj) => Object.keys(obj)[0]);
-    return output;
+    const output = itemList.map((obj) => {
+      // creates array based on keys of objects in fields array
+      let key = Object.keys(obj)[0];
+      return key;
+    });
+    const noDuplicates = []; // get rid of potential duplicates
+    output.forEach((el) => {
+      if (!queryList.includes(el)) noDuplicates.push(el);
+    });
+    return noDuplicates;
   };
 
   // ==================================== //
@@ -87,7 +95,11 @@ const CitiesFields = (props) => {
     newAvailableList.push(item);
     setAvailableList(newAvailableList);
     // calls a function that prepares the query for actually being sent
-    outputFunction(0, newList, 0);
+    if (sub) {
+      outputFunction(0, newList, 0);
+    } else {
+      outputFunction(newList, 0, 0);
+    }
   }
 
   //======= Plus button ========//
@@ -106,7 +118,11 @@ const CitiesFields = (props) => {
     // close the plus dropdown
     togglePlusDropdown(false);
     // call a function that prepares the query for actually being sent
-    outputFunction(0, newList, 0);
+    if (sub) {
+      outputFunction(0, newList, 0);
+    } else {
+      outputFunction(newList, 0, 0);
+    }
   }
 
   // Fires when you click plus -- only show plus dropdown if there's something in the list
@@ -133,7 +149,7 @@ const CitiesFields = (props) => {
         item={item}
         key={`${type}Field${i}`}
         deleteItem={deleteItem}
-        // sub={sub}
+        sub={sub}
       />
     );
   });
@@ -150,8 +166,10 @@ const CitiesFields = (props) => {
     <>
       {/* List all the chosen query fields */}
       <div className="queryLinesContainer">{queriedItems}</div>
+
       {tab}
       {tab}
+      {sub && <>{tab}</>}
       {/* Render plus sign, which opens a dropdown */}
       <button className="plus-button" onClick={dropPlus}>
         <div className="plus-minus-icons">

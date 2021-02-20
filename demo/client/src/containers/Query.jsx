@@ -18,11 +18,11 @@ const Query = (props) => {
 
   const [query, setQuery] = useState('countries'); // set the kind of query you want
   const [type, setType] = useState('Country'); // is it a 'Country' or a 'City'?
-  // const [initialField, setInitialField] = useState(['id']); // initial / default field for query
+  const [initialField, setInitialField] = useState(['id']); // initial / default field for query
   const [queryDropdown, toggleDropdown] = useState(false); // toggle query dropdown
-  // const [idDropdown, setIdDropdown] = useState(false); // show id dropdown (only applies to queries by id)
-  // const [selectedId, setSelectedId] = useState(1); // display id dropwodn (only applies to queries by id)
-  // const [idDropdownMenu, toggleIdDropdownMenu] = useState(false); // toggle id dropdown menu (only applies to queries by id)
+  const [idDropdown, setIdDropdown] = useState(false); // show id dropdown (only applies to queries by id)
+  const [selectedId, setSelectedId] = useState(1); // display id dropwodn (only applies to queries by id)
+  const [idDropdownMenu, toggleIdDropdownMenu] = useState(false); // toggle id dropdown menu (only applies to queries by id)
 
   // ====================================================================== //
   // ======= Functionality to close dropdowns when clicking outside ======= //
@@ -35,7 +35,7 @@ const Query = (props) => {
   const handleClickOutside = (event) => {
     if (ref.current && !ref.current.contains(event.target)) {
       toggleDropdown(false);
-      // toggleIdDropdownMenu(false);
+      toggleIdDropdownMenu(false);
     }
   };
 
@@ -65,21 +65,15 @@ const Query = (props) => {
   // Change Query Selection - fires from DropdownItem child - comes in like ('Countries')
   const selectQuery = (selection) => {
     setQuery(selection);
-    if (
-      selection === 'countries'
-      // || selection === 'country by id'
-    ) {
+    if (selection === 'countries' || selection === 'country by id') {
       setType('Country');
     }
-    if (
-      selection === 'cities'
-      // || selection === 'cities by country id'
-    ) {
+    if (selection === 'cities' || selection === 'cities by country id') {
       setType('City');
     }
-    // if (selection === 'country by id' || selection === 'cities by country id') {
-    //   setIdDropdown(true);
-    // } else setIdDropdown(false);
+    if (selection === 'country by id' || selection === 'cities by country id') {
+      setIdDropdown(true);
+    } else setIdDropdown(false);
 
     // close dropdown
     toggleDropdown(false);
@@ -91,13 +85,13 @@ const Query = (props) => {
   // ====== //
   // ====== //
 
-  // // Fires when you change the id (only when querying by ID)
-  // const selectDropdownId = (item) => {
-  //   // item comes in as number (2), for example
-  //   setSelectedId(item);
-  //   toggleIdDropdownMenu(false);
-  //   outputFunction(0, 0, 0, item);
-  // };
+  // Fires when you change the id (only when querying by ID)
+  const selectDropdownId = (item) => {
+    // item comes in as number (2), for example
+    setSelectedId(item);
+    toggleIdDropdownMenu(false);
+    outputFunction(0, 0, 0, item);
+  };
 
   // ========================= //
   // ==== RENDER / RETURN ==== //
@@ -118,13 +112,13 @@ const Query = (props) => {
     );
   });
 
-  // // creates id dropdown (change the i <= # to customize)
-  // const idDropMenu = [];
-  // for (let i = 1; i <= 5; i++) {
-  //   idDropMenu.push(
-  //     <DropdownItem func={selectDropdownId} item={i} key={'ID' + i} />
-  //   );
-  // }
+  // creates id dropdown (change the i <= # to customize)
+  const idDropMenu = [];
+  for (let i = 1; i <= 5; i++) {
+    idDropMenu.push(
+      <DropdownItem func={selectDropdownId} item={i} key={'ID' + i} />
+    );
+  }
 
   const ob = '{',
     cb = '}',
@@ -159,18 +153,18 @@ const Query = (props) => {
           {query}
 
           {/* Id Dropdown (conditional) */}
-          {/* {idDropdown && (
-          <span>
-            {space}
-            <button
-              className='dropdown-button display-id'
-              onClick={() => toggleIdDropdownMenu(!idDropdownMenu)}
-            > */}
-          {/* Id Dropdown Menu */}
-          {/* </button>
-            {idDropdown && selectedId}
-          </span>
-        )} */}
+          {idDropdown && (
+            <span>
+              {space}
+              <button
+                className="dropdown-button display-id"
+                onClick={() => toggleIdDropdownMenu(!idDropdownMenu)}
+              >
+                {/* Id Dropdown Menu */}
+              </button>
+              {idDropdown && selectedId}
+            </span>
+          )}
           {space}
           {ob}
         </div>
@@ -178,13 +172,13 @@ const Query = (props) => {
         {/* Query fields are rendered here */}
         <div>
           <QueryFields
-            // initialQuery={initialField}
+            initialQuery={initialField}
             type={type}
             outputFunction={outputFunction}
             key={type}
           />
           {/* The above key prop makes it so that when type changes, this component completely reloads */}
-          {/* {space} */}
+          {space}
         </div>
 
         {/* Close out the query */}

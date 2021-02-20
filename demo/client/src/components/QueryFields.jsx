@@ -18,15 +18,13 @@ import PlusHover from '../images/buttons/plus-button-hover.svg';
 // maybe just set a timer?? so that it runs after the first time we build the recursive queryFields component
 
 const QueryFields = (props) => {
-  const { type, outputFunction } = props; // import props
+  const { initialField, type, sub, outputFunction } = props; // import props
 
   const [queryList, setQueryList] = useState(['id']);
   const [availableList, setAvailableList] = useState([]);
   const [plusDropdown, togglePlusDropdown] = useState(false);
-  // const [subQuery, setSubQuery] = useState(sub); // is true when we render this recursively for the "cities" field inside "countries" query
+  const [subQuery, setSubQuery] = useState(sub); // is true when we render this recursively for the "cities" field inside "countries" query
   const [citiesFields, setCitiesFields] = useState(['id']);
-  // console.log('queryList :>> ', queryList);
-  // console.log('availableList :>> ', availableList);
 
   // ====================================================================== //
   // ======= Functionality to close dropdowns when clicking outside ======= //
@@ -83,9 +81,18 @@ const QueryFields = (props) => {
 
   // Takes the items list and returns something like: [ id, name, capital, cities ]
   const convertIntoList = (itemList) => {
-    const output = itemList.map((obj) => Object.keys(obj)[0]);
-
-    return output;
+    const output = itemList.map((obj) => {
+      // creates array based on keys of objects in fields array
+      let key = Object.keys(obj)[0];
+      return key;
+    });
+    const noDuplicates = []; // get rid of potential duplicates
+    output.forEach((el) => {
+      queryList.forEach((qEl) => {
+        if (el !== qEl) noDuplicates.push(el);
+      });
+    });
+    return noDuplicates;
   };
 
   // ==================================== //
@@ -105,7 +112,11 @@ const QueryFields = (props) => {
     newAvailableList.push(item);
     setAvailableList(newAvailableList);
     // calls a function that prepares the query for actually being sent
-    outputFunction(newList, 0, 0);
+    if (sub) {
+      outputFunction(0, newList, 0);
+    } else {
+      outputFunction(newList, 0, 0);
+    }
   }
 
   //======= Plus button ========//
@@ -122,7 +133,11 @@ const QueryFields = (props) => {
     // close the plus dropdown
     togglePlusDropdown(false);
     // call a function that prepares the query for actually being sent
-    outputFunction(newList, 0, 0);
+    if (sub) {
+      outputFunction(0, newList, 0);
+    } else {
+      outputFunction(newList, 0, 0);
+    }
   }
 
   // Add item to cities field
@@ -159,9 +174,9 @@ const QueryFields = (props) => {
   // Render the query list to the DOM
   const queriedItems = queryList.map((item, i) => {
     // if querying "cities", need to open up a new pair of brackets and recursively call QueryFields to generate cities fields
-    if (item === 'cities') {
+    if (item === 'cities' && !sub) {
       return (
-        <div key={i}>
+        <>
           <div className="queryLine">
             {tab}
             {tab}
@@ -179,7 +194,7 @@ const QueryFields = (props) => {
               citiesFields={citiesFields}
               type={'City'}
               outputFunction={outputFunction}
-              // sub={true}
+              sub={true}
               modifyCitiesFields={modifyCitiesFields}
             />
             {/* {queryingCities &&
@@ -202,7 +217,7 @@ const QueryFields = (props) => {
             {tab}
             {cb}
           </div>
-        </div>
+        </>
       );
     }
     // else (what normally happens)
@@ -211,7 +226,7 @@ const QueryFields = (props) => {
         item={item}
         key={`${type}Field${i}`}
         deleteItem={deleteItem}
-        // sub={sub}
+        sub={sub}
       />
     );
   });
@@ -231,7 +246,7 @@ const QueryFields = (props) => {
 
       {tab}
       {tab}
-      {/* {sub && <>{tab}</>} */}
+      {sub && <>{tab}</>}
       {/* Render plus sign, which opens a dropdown */}
       <button className="plus-button" onClick={dropPlus}>
         <div className="plus-minus-icons">
