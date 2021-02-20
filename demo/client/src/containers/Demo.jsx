@@ -31,12 +31,12 @@ const Demo = () => {
   const handleRunQueryClick = () => {
     // run ResultsParser on output to get the query
     //let parsedResult = CreateQueryStr(output);
-    //let parsedResult = ' {country (id: 3) { id name } cities { id, name, country_id }} ';
-    //let parsedResult = ' {countries { id name } cities { id, name }}';
+    //let parsedResult = ' {countries { id name cities { id, name, country_id }}} ';
+    let parsedResult = ' {country (id: 3) { id name capital } }';
     //let parsedResult = ' {cities { id, name }} ';
     // parsedResult =
     //   ' {country (id: 2) { id capital cities { id, name, population }}} ';
-    let parsedResult = '{ country1: country (id: 3) {id name}, country2: country (id:4) {id, name} }'
+    //let parsedResult = '{ country1: country (id: 3) {id name}, country2: country (id:4) {id, name} }'
 
     // start the timer (eventually displayed in Metrics)
     let startTime, endTime;

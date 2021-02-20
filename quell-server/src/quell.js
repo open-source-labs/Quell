@@ -26,7 +26,7 @@ class QuellCache {
    *  @param {Object} req - Express request object, including request body with GraphQL query string
    *  @param {Object} res - Express response object, will carry query response to next middleware
    *  @param {Function} next - Express next middleware function, invoked when QuellCache completes its work
-   */x
+   */
   async query(req, res, next, isQuellable = true) {
     console.log('CALL QUERY');
     // handle request without query
@@ -40,14 +40,12 @@ class QuellCache {
     const AST = parse(queryString);
 
     // create response prototype
-    // if query has argument proto will return them as key value pair, as arguments: {id: 1}
-    // should we refactor parseAST and return two objects?? 
-    // one for proto and other for arguments
     const proto = this.parseAST(AST);
+    console.log('PROTO OBJECT ===>', proto);
 
-    let protoArgs = null; // will be an object with query arguments; // need it to create query string for furher request and to create key identifier to save it to redis, e.g. Country-1
+    // create object for arguments from query
+    let protoArgs = null; 
 
-    console.log('PROTO OBJECT', proto);
     // pass-through for queries and operations that QuellCache cannot handle
     if (proto === 'unQuellable' || !isQuellable) {
       graphql(this.schema, queryString)
@@ -92,26 +90,6 @@ class QuellCache {
       // responseFromCache return [{}] if we don't have any cached data for item with unique identifier, e.g. country(id: 1)
       // need to refactor this logic later cause instead of just handoff original query it runs comparison logic
 
-      if (responseFromCache.length === 0) { // if no cached data, handoff original query and cache results
-        console.log('nothing in cache, run full query');
-        graphql(this.schema, queryString)
-        .then(async (queryResponse) => {
-          // store the array of data
-          fullResponse = queryResponse.data[queryName];
-          // cache response
-          const successfullyCached = await this.cache(fullResponse, queriedCollection, queryName);
-          if (!successfullyCached) return this.query(req, res, next, false);
-          // rebuild response from cache
-          const toReturn = await this.constructResponse(fullResponse, AST, queriedCollection);
-          console.log('data to RETURN is =========>>>>', toReturn);
-          // append rebuilt response (if it contains data) or fullResponse to Express's response object
-          res.locals.queryResponse = { data: { [queryName]: toReturn }};
-          return next();
-          })
-          .catch((error) => {
-            return next('graphql library error: ', error);
-          });
-      } else {
         const queryObject = this.createQueryObj(protoForCache);
 
         console.log('query obj from create Query obj', queryObject);
@@ -147,8 +125,8 @@ class QuellCache {
           // if nothing left to query, response from cache is full response
           res.locals.queryResponse = { data: { ...responseFromCache }};
           return next();
-        }
-      }
+          //}
+          }
     }
   };
   
@@ -319,9 +297,11 @@ class QuellCache {
            */
           while (depth >= 5) {
             let parentNodes = ancestors[depth - 1];
+            console.log('parent Nodes', parentNodes);
             let { length } = parentNodes;
             objPath.unshift(parentNodes[length - 1].name.value);
             depth -= 3;
+            console.log('objectPath -->', JSON.parse(JSON.stringify(objPath)));
           }
           /** Loop over the array of fields at current node, adding each to
            *  an object that will be assigned to the prototype object at the
@@ -374,9 +354,10 @@ class QuellCache {
     // we don't pass collection first time
     // if first time, response will be an object
     map = this.queryMap;
+    //console.log('map =======>>>>>', map);
     const response = {};
     for (const superField in proto) {
-      console.log('SUPERFIELD in proto', superField);
+      console.log('SUPERFIELD in proto', superField, 'QUERIeD collection -->', queriedCollection);
       // check if current chunck of data is collection or single item based on what we have in map
       const mapValue = map[superField];
       const isCollection = Array.isArray(mapValue);
@@ -401,7 +382,7 @@ class QuellCache {
         for (const item of collection) {
           let itemFromCache = await this.getFromRedis(item);
           itemFromCache = itemFromCache ? JSON.parse(itemFromCache) : {};
-          const builtItem = await this.buildItem(proto[superField], this.fieldsMap[queriedCollection], itemFromCache);
+          const builtItem = await this.buildItem(proto[superField], itemFromCache);
           console.log('buidt item ==> ', builtItem);
           currentCollection.push(builtItem);
         }
@@ -413,7 +394,7 @@ class QuellCache {
         let itemFromCache = await this.getFromRedis(item);
         console.log('item from REDDIS -->', itemFromCache);
         itemFromCache = itemFromCache ? JSON.parse(itemFromCache) : {};
-        const builtItem = await this.buildItem(proto[superField], this.fieldsMap[map[superField]], itemFromCache);
+        const builtItem = await this.buildItem(proto[superField], itemFromCache);
         console.log('build item ==> ', builtItem);
         response[superField] = builtItem;
         
@@ -426,9 +407,10 @@ class QuellCache {
     console.log('response from build from cache', response);
     return response;
   };
-  async buildCollection(proto, map, queriedCollection, collection, protoArgs) {
+
+  async buildCollection(proto, collection) {
     console.log('inside buildCollection', 'PROTO--> ', proto, 'COLLECTION -->', collection);
-    map = this.queryMap;
+    
     const response = [];
     for (const superField in proto) {
       // if collection not passed as argument, try to retrieve array of references from cache
@@ -445,7 +427,7 @@ class QuellCache {
       for (const item of collection) {
         let itemFromCache = await this.getFromRedis(item);
         itemFromCache = itemFromCache ? JSON.parse(itemFromCache) : {};
-        const builtItem = await this.buildItem(proto[superField], this.fieldsMap[queriedCollection], itemFromCache);
+        const builtItem = await this.buildItem(proto[superField], itemFromCache);
         response.push(builtItem);
       }
     }
@@ -461,13 +443,17 @@ class QuellCache {
    * @param {Object} fieldsMap 
    * @param {Object} item 
    */
-  async buildItem(proto, fieldsMap, item) {
-    console.log('we are inside build item', proto, fieldsMap, item);
+  async buildItem(proto, item) {
+    console.log('we are inside build item', proto, item);
     const nodeObject = {};
     for (const key in proto) {
+      console.log('key -->', key);
+      console.log('type of ', key, typeof proto[key]);
       if (typeof proto[key] === 'object') { // if field is an object, recursively call buildFromCache
+        console.log('we have object for ', key);
         const protoAtKey = { [key]: proto[key] };
-        nodeObject[key] = await this.buildCollection(protoAtKey, fieldsMap, fieldsMap[key], item[key]);
+        console.log('protoAtKey', protoAtKey);
+        nodeObject[key] = await this.buildCollection(protoAtKey, item[key]);
       } else if (proto[key]) { // if current key has not been toggled to false because it needs to be queried
         if (item[key] !== undefined) nodeObject[key] = item[key];
         else proto[key] = false; // toggle proto key to false if cached item does not contain queried data
@@ -641,26 +627,40 @@ class QuellCache {
    * @param {Object} uncachedItem - item to be merged into base
    */
   async recursiveJoin(cachedItem, uncachedItem) {
+    console.log('RECURSIVE JOINNNNNNN =========> =====>', cachedItem, uncachedItem);
     const joinedObject = cachedItem || {};
+    
+    console.log('joined obj', joinedObject);
     for (const field in uncachedItem) {
+      console.log('field in uncached item', field);
       if (Array.isArray(uncachedItem[field])) {
+        console.log(field, '--- is array');
         if (typeof uncachedItem[field][0] === 'string') {
+          console.log(field[0], 'is string');
           const temp = [];
           for (let reference of uncachedItem[field]) {
             let itemFromCache = await this.getFromRedis(reference);
+            console.log('item from Cache', itemFromCache);
             itemFromCache = itemFromCache ? JSON.parse(itemFromCache) : {};
             temp.push(itemFromCache)
           }
           uncachedItem[field] = temp;
         }
-        if (cachedItem[field]) {
+        if (cachedItem && cachedItem[field]) {
+          console.log('call joinArrays with -->', cachedItem[field], uncachedItem[field]);
           joinedObject[field] = await this.joinArrays(cachedItem[field], uncachedItem[field]);
         } else {
-          joinedObject[field] = uncachedItem[field];
+          if(uncachedItem[field]) {
+            console.log('call joinArrays with -->', [], uncachedItem[field]);
+            joinedObject[field] = await this.joinArrays([], uncachedItem[field]);
+          } else {
+            joinedObject[field] = uncachedItem[field];
+          }
         }
       } else {
         joinedObject[field] = uncachedItem[field];
       }
+      // console.log('joined object', joinedObject);
     }
     return joinedObject;
   };
