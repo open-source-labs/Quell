@@ -21,7 +21,7 @@ const Query = (props) => {
   const [initialField, setInitialField] = useState(['id']); // initial / default field for query
   const [queryDropdown, toggleDropdown] = useState(false); // toggle query dropdown
   const [idDropdown, setIdDropdown] = useState(false); // show id dropdown (only applies to queries by id)
-  const [selectedId, setSelectedId] = useState(1); // display id dropwodn (only applies to queries by id)
+  const [selectedId, setSelectedId] = useState(1); // display id dropdown (only applies to queries by id)
   const [idDropdownMenu, toggleIdDropdownMenu] = useState(false); // toggle id dropdown menu (only applies to queries by id)
 
   // ====================================================================== //
@@ -73,7 +73,9 @@ const Query = (props) => {
     }
     if (selection === 'country by id' || selection === 'cities by country id') {
       setIdDropdown(true);
-    } else setIdDropdown(false);
+    } else {
+      setIdDropdown(false);
+    }
 
     // close dropdown
     toggleDropdown(false);
@@ -103,7 +105,12 @@ const Query = (props) => {
       // const dropdownList = ["countries", "country by id", "cities", "cities by country id"];
     - but we have not completed query-by-id functionality
   */
-  const dropdownList = ['countries', 'cities'];
+  const dropdownList = [
+    'countries',
+    'country by id',
+    'cities',
+    'cities by country id',
+  ];
 
   // Creates dropdown menu from the above array ^^
   const dropdownMenu = dropdownList.map((item, i) => {

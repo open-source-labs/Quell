@@ -176,7 +176,7 @@ const QueryFields = (props) => {
     // if querying "cities", need to open up a new pair of brackets and recursively call QueryFields to generate cities fields
     if (item === 'cities' && !sub) {
       return (
-        <>
+        <div key={i}>
           <div className="queryLine">
             {tab}
             {tab}
@@ -217,7 +217,7 @@ const QueryFields = (props) => {
             {tab}
             {cb}
           </div>
-        </>
+        </div>
       );
     }
     // else (what normally happens)
