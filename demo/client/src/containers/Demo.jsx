@@ -1,12 +1,12 @@
-import React, { useState } from 'react';
-import Query from './Query';
-import DemoButton from '../components/DemoButton';
-import QueryResults from '../components/QueryResults';
-import Metrics from '../components/Metrics';
-import Graph from '../components/Graph';
-import { CreateQueryStr } from '../helper-functions/HelperFunctions.js';
-import Header from '../images/headers/QUELL-headers-demo w lines.svg';
-import Quell from '../../../../quell-client/Quellify';
+import React, { useState } from "react";
+import Query from "./Query";
+import DemoButton from "../components/DemoButton";
+import QueryResults from "../components/QueryResults";
+import Metrics from "../components/Metrics";
+import Graph from "../components/Graph";
+import { CreateQueryStr } from "../helper-functions/HelperFunctions.js";
+import Header from "../images/headers/QUELL-headers-demo w lines.svg";
+import Quell from "../../../../quell-client/Quellify";
 //import Quell from '@quell/client';
 /*
   Container that renders the whole demo dashboard
@@ -14,14 +14,14 @@ import Quell from '../../../../quell-client/Quellify';
 
 const Demo = () => {
   const [queryResponse, setQueryResponse] = useState({});
-  const [fetchTime, setFetchTime] = useState('0.00 ms');
+  const [fetchTime, setFetchTime] = useState("0.00 ms");
   const [fetchTimeIntegers, setFetchTimeIntegers] = useState([0, 0]);
-  const [cacheStatus, setCacheStatus] = useState('');
-  const [output, setOutput] = useState({ countries: ['id'] });
+  const [cacheStatus, setCacheStatus] = useState("");
+  const [output, setOutput] = useState({ countries: ["id"] });
   const [resetComponent, setResetComponent] = useState(false);
 
   const formatTimer = (time) => {
-    return time.toFixed(2) + ' ms';
+    return time.toFixed(2) + " ms";
   };
 
   // ============================================================== //
@@ -30,9 +30,9 @@ const Demo = () => {
 
   const handleRunQueryClick = () => {
     // run ResultsParser on output to get the query
-    let parsedResult = CreateQueryStr(output);
+    //let parsedResult = CreateQueryStr(output);
     // parsedResult = ' {country (id: 1) { id cities { id, name }}} ';
-    // parsedResult = ' {country (id: 2) { id cities { id, name }}} ';
+    let parsedResult = " {country (id: 2) { id cities { id, name }}} ";
     // parsedResult = ' {country (id: 2) { id capital cities { id, name }}} ';
     // parsedResult =
     //   ' {country (id: 2) { id capital cities { id, name, population }}} ';
@@ -43,15 +43,15 @@ const Demo = () => {
 
     // Make the fetch request
     Quell(
-      '/graphql', // our route
+      "/graphql", // our route
       parsedResult, // our input
       {
-        countries: 'Country',
-        country: 'Country',
-        citiesByCountryId: 'City',
-        cities: 'City',
+        countries: "Country",
+        country: "Country",
+        citiesByCountryId: "City",
+        cities: "City",
       },
-      { cities: 'City' }
+      { cities: "City" }
     )
       .then((res) => {
         endTime = performance.now(); // stop the timer
@@ -86,7 +86,7 @@ const Demo = () => {
 
   const handleClearServerCache = () => {
     // GET request - Clear sever cache
-    fetch('/clearCache').then((res) => console.log(res));
+    fetch("/clearCache").then((res) => console.log(res));
     // Time cleared
     let date = new Date();
     setCacheStatus(date.toLocaleTimeString());
@@ -97,17 +97,17 @@ const Demo = () => {
     // Query default
     setResetComponent(!resetComponent);
     // Reset output
-    setOutput({ countries: ['id'] });
+    setOutput({ countries: ["id"] });
     // Zero-out results
     setQueryResponse({});
     // Zero-out cache/FetchTime
-    setFetchTime('0.00 ms');
+    setFetchTime("0.00 ms");
     // Clear sessionStorage
     sessionStorage.clear();
     // Clear server cache:
-    fetch('/clearCache').then((res) => console.log(res));
+    fetch("/clearCache").then((res) => console.log(res));
     // Time cleared
-    setCacheStatus('');
+    setCacheStatus("");
     // Zero-out line graph
     setFetchTimeIntegers([0, 0]);
   };
@@ -125,7 +125,7 @@ const Demo = () => {
           drop-down, plus, and minus buttons. Click <em>Run Query</em> to
           initiate the request/response cycle. To clear the client-side cache,
           click <em>Clear Session Cache</em> or alternatively clear the
-          server-side cache by clicking <em>Clear Server Cache</em>.{' '}
+          server-side cache by clicking <em>Clear Server Cache</em>.{" "}
           <em>Reset All</em> will take you back to square one.
         </p>
         <br></br>
@@ -156,27 +156,27 @@ const Demo = () => {
       <div className="dashboard-grid">
         <div className="button-grid">
           <DemoButton
-            text={'Run Query'}
+            text={"Run Query"}
             func={handleRunQueryClick}
-            classname={'button-query button-query-primary'}
+            classname={"button-query button-query-primary"}
           />
           <DemoButton
-            text={'Clear Session Cache'}
+            text={"Clear Session Cache"}
             func={handleClearClientCache}
-            classname={'button-query button-query-secondary'}
+            classname={"button-query button-query-secondary"}
           />
           <DemoButton
-            text={'Clear Server Cache'}
+            text={"Clear Server Cache"}
             func={handleClearServerCache}
-            classname={'button-query button-query-secondary'}
+            classname={"button-query button-query-secondary"}
           />
           <DemoButton
-            text={'Reset All'}
+            text={"Reset All"}
             func={handleResetAll}
-            classname={'button-query button-query-secondary'}
+            classname={"button-query button-query-secondary"}
           />
         </div>
-        <Query output={output} key={resetComponent} setOutput={setOutput} />{' '}
+        <Query output={output} key={resetComponent} setOutput={setOutput} />{" "}
         {/* The key prop makes it so that when component changes, it completely reloads -- useful when clicking "Reset All" */}
         <Metrics fetchTime={fetchTime} cacheStatus={cacheStatus} />
         <QueryResults queryResponse={queryResponse} />
