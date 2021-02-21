@@ -39,7 +39,6 @@ const Demo = () => {
     // start the timer (eventually displayed in Metrics)
     let startTime, endTime;
     startTime = performance.now();
-    console.log('startTime :>> ', startTime);
 
     // Make the fetch request
     Quell(

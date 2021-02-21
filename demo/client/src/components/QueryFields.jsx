@@ -18,12 +18,14 @@ import PlusHover from '../images/buttons/plus-button-hover.svg';
 // maybe just set a timer?? so that it runs after the first time we build the recursive queryFields component
 
 const QueryFields = (props) => {
-  const { type, sub, outputFunction } = props; // import props
+  const { type, outputFunction } = props; // import props
+  let sub;
+
+  console.log('sub ===> ', sub);
 
   const [queryList, setQueryList] = useState(['id']);
   const [availableList, setAvailableList] = useState([]);
   const [plusDropdown, togglePlusDropdown] = useState(false);
-  const [subQuery, setSubQuery] = useState(sub); // is true when we render this recursively for the "cities" field inside "countries" query
   const [citiesFields, setCitiesFields] = useState(['id']);
 
   // ====================================================================== //
@@ -176,7 +178,7 @@ const QueryFields = (props) => {
     // if querying "cities", need to open up a new pair of brackets and recursively call QueryFields to generate cities fields
     if (item === 'cities' && !sub) {
       return (
-        <>
+        <div key={i}>
           <div className="queryLine">
             {tab}
             {tab}
@@ -197,27 +199,27 @@ const QueryFields = (props) => {
               sub={true}
               modifyCitiesFields={modifyCitiesFields}
             />
-            {/* {queryingCities &&
-            <QueryFields
-              type={'City'}
-              outputFunction={outputFunction}
-              sub={true}
-            />
-            }
-            {!queryingCities &&
+            {/* {queryingCities && (
               <QueryFields
                 type={'City'}
                 outputFunction={outputFunction}
                 sub={true}
               />
-            } */}
+            )}
+            {!queryingCities && (
+              <QueryFields
+                type={'City'}
+                outputFunction={outputFunction}
+                sub={true}
+              />
+            )} */}
           </div>
           <div className="queryLine">
             {tab}
             {tab}
             {cb}
           </div>
-        </>
+        </div>
       );
     }
     // else (what normally happens)

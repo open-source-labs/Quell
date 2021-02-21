@@ -72,6 +72,8 @@ const Query = (props) => {
     }
     if (selection === 'country by id' || selection === 'cities by country id') {
       setIdDropdown(true);
+      // Added by Xiao. When selecting a query by id, reset selectedId to default id (1)
+      setSelectedId(1);
     } else {
       setIdDropdown(false);
     }
@@ -80,8 +82,6 @@ const Query = (props) => {
     toggleDropdown(false);
     // Update state in Demo
     outputFunction(0, 0, selection);
-    // Added by Xiao. When selecting a query, reset selectedId to default id (1)
-    setSelectedId(1);
   };
 
   // ====== //
@@ -186,8 +186,12 @@ const Query = (props) => {
 
         {/* Query fields are rendered here */}
         <div>
-          <QueryFields type={type} outputFunction={outputFunction} key={type} />
-          {/* The above key prop makes it so that when type changes, this component completely reloads */}
+          <QueryFields
+            type={type}
+            outputFunction={outputFunction}
+            key={query}
+          />
+          {/* The above key prop makes it so that when query changes, this component completely reloads */}
           {space}
         </div>
 
