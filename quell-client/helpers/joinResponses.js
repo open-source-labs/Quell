@@ -3,9 +3,9 @@
  */
 
 function joinResponses(responseArray, fetchedResponseArray, proto) {
-  console.log('responseArray ===> !!!!!!! ', responseArray);
-  console.log('fetchedResponseArray ===> !!!!!!! ', fetchedResponseArray);
-  console.log('proto ===> !!!!!!! ', proto);
+  // console.log('responseArray ===> !!!!!!! ', responseArray);
+  // console.log('fetchedResponseArray ===> !!!!!!! ', fetchedResponseArray);
+  // console.log('proto ===> !!!!!!! ', proto);
   // main output array that will contain objects with joined fields
   const joinedArray = [];
   // iterate over response containing cached fields
@@ -41,7 +41,7 @@ function joinResponses(responseArray, fetchedResponseArray, proto) {
     joinedArray.push(fieldRecurse(responseItem, fetchedItem));
   }
   // return main output array
-  console.log('joinedArray ===> ', joinedArray);
+  // console.log('joinedArray ===> ', joinedArray);
   return joinedArray;
 }
 

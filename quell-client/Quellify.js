@@ -17,15 +17,15 @@ async function Quellify(endPoint, query, map, fieldsMap) {
 
   // Create AST of query
   const AST = parse(query);
-  console.log('AST ===> ', AST);
+  // console.log('AST ===> ', AST);
 
   // Create object of "true" values from AST tree (w/ some eventually updated to "false" via buildItem())
   const prototype = parseAST(AST, QuellStore);
-  console.log('QuellStore after parseAST ===> ', QuellStore);
-  console.log(
-    'prototype after parseAST ===> ',
-    JSON.parse(JSON.stringify(prototype))
-  );
+  // console.log('QuellStore after parseAST ===> ', QuellStore);
+  // console.log(
+  //   'prototype after parseAST ===> ',
+  //   JSON.parse(JSON.stringify(prototype))
+  // );
 
   // pass-through for queries and operations that QuellCache cannot handle
   if (prototype === 'unQuellable') {
@@ -46,7 +46,7 @@ async function Quellify(endPoint, query, map, fieldsMap) {
   } else {
     // Check cache for data and build array from that cached data
     const responseFromCache = buildFromCache(prototype, map, null, QuellStore);
-    console.log('responseFromCache ===> ', responseFromCache);
+    // console.log('responseFromCache ===> ', responseFromCache);
     // If no data in cache, the response array will be empty:
     if (responseFromCache.length === 0) {
       const fetchOptions = {
@@ -59,9 +59,9 @@ async function Quellify(endPoint, query, map, fieldsMap) {
 
       // Execute fetch request with original query
       const responseFromFetch = await fetch(endPoint, fetchOptions);
-      console.log('responseFromFetch !!!!!', responseFromFetch);
+      // console.log('responseFromFetch !!!!!', responseFromFetch);
       const parsedData = await responseFromFetch.json();
-      console.log('parsedData !!!!!', parsedData);
+      // console.log('parsedData !!!!!', parsedData);
       // Normalize returned data into cache
       normalizeForCache(parsedData.data, map, fieldsMap, QuellStore);
 
@@ -71,18 +71,18 @@ async function Quellify(endPoint, query, map, fieldsMap) {
 
     // If found data in cache:
     let mergedResponse;
-    console.log(
-      'prototype after buildArray ===> ',
-      JSON.parse(JSON.stringify(prototype))
-    );
+    // console.log(
+    //   'prototype after buildArray ===> ',
+    //   JSON.parse(JSON.stringify(prototype))
+    // );
     const queryObject = createQueryObj(prototype); // Create query object from only false prototype fields
-    console.log('queryObject in Quellify ===> ', queryObject);
+    // console.log('queryObject in Quellify ===> ', queryObject);
     const queryName = Object.keys(prototype)[0];
 
     // Partial data in cache:  (i.e. keys in queryObject will exist)
     if (Object.keys(queryObject).length > 0) {
       const newQuery = createQueryStr(queryObject, QuellStore); // Create formal GQL query string from query object
-      console.log('newQuery ===> ', newQuery);
+      // console.log('newQuery ===> ', newQuery);
       const fetchOptions = {
         method: 'POST',
         headers: {
@@ -94,7 +94,7 @@ async function Quellify(endPoint, query, map, fieldsMap) {
       // Execute fetch request with new query
       const responseFromFetch = await fetch(endPoint, fetchOptions);
       const parsedData = await responseFromFetch.json();
-      console.log('parsedData ===> ', parsedData);
+      // console.log('parsedData ===> ', parsedData);
       const parsedResponseFromFetch = Array.isArray(parsedData.data[queryName])
         ? parsedData.data[queryName]
         : [parsedData.data[queryName]];
@@ -105,10 +105,10 @@ async function Quellify(endPoint, query, map, fieldsMap) {
         parsedResponseFromFetch,
         prototype
       );
-      console.log('mergedResponse here!!!!', mergedResponse);
+      // console.log('mergedResponse here!!!!', mergedResponse);
     } else {
       mergedResponse = responseFromCache; // If everything needed was already in cache, only assign cached response to variable
-      console.log('mergedResponse there!!!!', mergedResponse);
+      // console.log('mergedResponse there!!!!', mergedResponse);
     }
 
     // If everything needed was already in cache, only assign cached response to variable
@@ -124,12 +124,12 @@ async function Quellify(endPoint, query, map, fieldsMap) {
       mergedResponse = mergedResponse;
     }
 
-    console.log('mergedResponse ===> ', mergedResponse);
+    // console.log('mergedResponse ===> ', mergedResponse);
 
     const formattedMergedResponse = QuellStore.alias
       ? { data: mergedResponse }
       : { data: { [queryName]: mergedResponse } };
-    console.log('formattedMergedResponse ===> ', formattedMergedResponse);
+    // console.log('formattedMergedResponse ===> ', formattedMergedResponse);
     // Cache newly stitched response
     normalizeForCache(formattedMergedResponse.data, map, fieldsMap, QuellStore);
 

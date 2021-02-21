@@ -132,10 +132,10 @@ function parseAST(AST, QuellStore) {
         }
 
         setProperty(objPath, prototype, collectFields);
-        console.log(
-          'prototype in parseAST ===> ',
-          JSON.parse(JSON.stringify(prototype))
-        );
+        // console.log(
+        //   'prototype in parseAST ===> ',
+        //   JSON.parse(JSON.stringify(prototype))
+        // );
 
         // Build the arguments object
 
@@ -146,7 +146,7 @@ function parseAST(AST, QuellStore) {
          *  QuellStore.arguments stucture: {country: { id: ‘2’ }, city: {id: 3}, author: {id: 3}}
          */
         if (parent.arguments && !parent.alias) {
-          console.log('parent ===> ', parent);
+          // console.log('parent ===> ', parent);
           if (parent.arguments.length > 0) {
             for (let i = 0; i < parent.arguments.length; i++) {
               const key = parent.arguments[i].name.value;
@@ -170,7 +170,7 @@ function parseAST(AST, QuellStore) {
          *  QuellStore.alias stucture: {country: { id: ‘2’ }, city: {id: 3}, author: {id: 3}}
          */
         if (parent.alias) {
-          console.log('parent ===> ', parent);
+          // console.log('parent ===> ', parent);
           for (let i = 0; i < parent.arguments.length; i++) {
             const key = parent.arguments[i].name.value;
             const value = parent.arguments[i].value.value;
@@ -191,7 +191,7 @@ function parseAST(AST, QuellStore) {
       }
     },
   });
-  console.log('isQuellable before return out from parseAST ===> ', isQuellable);
+  // console.log('isQuellable before return out from parseAST ===> ', isQuellable);
 
   return isQuellable ? prototype : 'unQuellable';
 }
