@@ -18,7 +18,7 @@ import PlusHover from '../images/buttons/plus-button-hover.svg';
 // maybe just set a timer?? so that it runs after the first time we build the recursive queryFields component
 
 const QueryFields = (props) => {
-  const { initialField, type, sub, outputFunction } = props; // import props
+  const { type, sub, outputFunction } = props; // import props
 
   const [queryList, setQueryList] = useState(['id']);
   const [availableList, setAvailableList] = useState([]);
@@ -52,7 +52,7 @@ const QueryFields = (props) => {
   // ======= Functionality to initialize dropdowns, etc ======= //
   // ========================================================== //
 
-  // initializes the available fields list based on the initialField prop
+  // initializes the available fields list
   useEffect(() => {
     setAvailableList(initialAvailableList());
   }, []);
@@ -176,7 +176,7 @@ const QueryFields = (props) => {
     // if querying "cities", need to open up a new pair of brackets and recursively call QueryFields to generate cities fields
     if (item === 'cities' && !sub) {
       return (
-        <div key={i}>
+        <>
           <div className="queryLine">
             {tab}
             {tab}
@@ -217,7 +217,7 @@ const QueryFields = (props) => {
             {tab}
             {cb}
           </div>
-        </div>
+        </>
       );
     }
     // else (what normally happens)

@@ -18,7 +18,6 @@ const Query = (props) => {
 
   const [query, setQuery] = useState('countries'); // set the kind of query you want
   const [type, setType] = useState('Country'); // is it a 'Country' or a 'City'?
-  const [initialField, setInitialField] = useState(['id']); // initial / default field for query
   const [queryDropdown, toggleDropdown] = useState(false); // toggle query dropdown
   const [idDropdown, setIdDropdown] = useState(false); // show id dropdown (only applies to queries by id)
   const [selectedId, setSelectedId] = useState(1); // display id dropdown (only applies to queries by id)
@@ -28,10 +27,10 @@ const Query = (props) => {
   // ======= Functionality to close dropdowns when clicking outside ======= //
   // ====================================================================== //
 
-  // attach "ref = {ref}" to the dropdown
+  // Attach "ref = {ref}" to the dropdown
   const ref = useRef(null);
 
-  // makes it so when you click outside of a dropdown it goes away
+  // Makes it so when you click outside of a dropdown it goes away
   const handleClickOutside = (event) => {
     if (ref.current && !ref.current.contains(event.target)) {
       toggleDropdown(false);
@@ -39,7 +38,7 @@ const Query = (props) => {
     }
   };
 
-  // listens for clicks on the body of the dom
+  // Listens for clicks on the body of the dom
   useEffect(() => {
     document.addEventListener('click', handleClickOutside, true);
     return () => {
@@ -77,10 +76,12 @@ const Query = (props) => {
       setIdDropdown(false);
     }
 
-    // close dropdown
+    // Close dropdown
     toggleDropdown(false);
-    // update state in Demo
+    // Update state in Demo
     outputFunction(0, 0, selection);
+    // Added by Xiao. When selecting a query, reset selectedId to default id (1)
+    setSelectedId(1);
   };
 
   // ====== //
@@ -101,9 +102,6 @@ const Query = (props) => {
 
   /* 
     - Array of queries to choose from
-    - Used to look like this:
-      // const dropdownList = ["countries", "country by id", "cities", "cities by country id"];
-    - but we have not completed query-by-id functionality
   */
   const dropdownList = [
     'countries',
@@ -112,14 +110,14 @@ const Query = (props) => {
     'cities by country id',
   ];
 
-  // Creates dropdown menu from the above array ^^
+  // Creates dropdown menu from the above array
   const dropdownMenu = dropdownList.map((item, i) => {
     return (
       <DropdownItem func={selectQuery} item={item} key={'QueryDropdown' + i} />
     );
   });
 
-  // creates id dropdown (change the i <= # to customize)
+  // Creates id dropdown (change the i <= # to customize)
   const idDropMenu = [];
   for (let i = 1; i <= 5; i++) {
     idDropMenu.push(
@@ -163,6 +161,7 @@ const Query = (props) => {
           {idDropdown && (
             <span>
               {space}
+              {/* ID Dropdown button */}
               <button
                 className="dropdown-button display-id"
                 onClick={() => toggleIdDropdownMenu(!idDropdownMenu)}
@@ -187,12 +186,7 @@ const Query = (props) => {
 
         {/* Query fields are rendered here */}
         <div>
-          <QueryFields
-            initialQuery={initialField}
-            type={type}
-            outputFunction={outputFunction}
-            key={type}
-          />
+          <QueryFields type={type} outputFunction={outputFunction} key={type} />
           {/* The above key prop makes it so that when type changes, this component completely reloads */}
           {space}
         </div>

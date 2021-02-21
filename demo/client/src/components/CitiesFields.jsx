@@ -50,7 +50,7 @@ const CitiesFields = (props) => {
   // ======= Other functionality ======= //
   // =================================== //
 
-  // initializes the available fields list based on the initialField prop
+  // initializes the available fields list
   useEffect(() => {
     setAvailableList(convertIntoList(cityFields));
   }, []);
