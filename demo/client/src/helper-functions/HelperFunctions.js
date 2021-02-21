@@ -26,9 +26,11 @@
 */
 
 const ResultsHelper = (newList, sub, query, id, currentResults) => {
-  // console.log('newList ===> ', newList);
-  // console.log('sub ===> ', sub);
-  // console.log('query ===> ', query);
+  console.log('newList ===> ', newList);
+  console.log('sub ===> ', sub);
+  console.log('query ===> ', query);
+  console.log('id ===> ', id);
+  console.log('currentResults ===> ', currentResults);
 
   for (let type in currentResults) {
     //===========================//
@@ -110,14 +112,14 @@ const ResultsHelper = (newList, sub, query, id, currentResults) => {
 
     if (query) {
       let fields;
-      // if (query === 'country by id') {
-      //   query = 'country (id:1)';
-      //   fields = currentResults[type];
-      // }
-      // if (query === 'cities by country id') {
-      //   query = 'citiesByCountry (country_id:1)';
-      //   fields = currentResults[type];
-      // }
+      if (query === 'country by id') {
+        query = 'country (id:1)';
+        fields = currentResults[type];
+      }
+      if (query === 'cities by country id') {
+        query = 'citiesByCountry (country_id:1)';
+        fields = currentResults[type];
+      }
       if (query === 'countries' || query === 'cities') {
         fields = ['id'];
       }
@@ -129,16 +131,16 @@ const ResultsHelper = (newList, sub, query, id, currentResults) => {
     // //===Alters the id===//
     // //===================//
 
-    // if (id) {
-    //   let query = arr;
-    //   if (query.includes(':')) {
-    //     let index = query.indexOf(':');
-    //     query = query.slice(0, index + 1);
-    //   }
-    //   query += id + ')';
-    //   currentResults[query] = currentResults[arr];
-    //   delete currentResults[arr];
-    // }
+    if (id) {
+      let query = arr;
+      if (query.includes(':')) {
+        let index = query.indexOf(':');
+        query = query.slice(0, index + 1);
+      }
+      query += id + ')';
+      currentResults[query] = currentResults[arr];
+      delete currentResults[arr];
+    }
   }
 
   // RETURN STATEMENT FOR ALL
