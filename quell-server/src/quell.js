@@ -331,6 +331,20 @@ class QuellCache {
             }
           }
 
+          // add arguments to temp object if parent has arguments
+          if (parent.arguments) {
+            console.log('parent args -->', parent.arguments);
+            if (parent.arguments.length > 0) {
+              // loop through arguments
+              tempObject.arguments = {};
+              for(let i = 0; i < parent.arguments.length; i ++) {
+                const key = parent.arguments[i].name.value;
+                const value = parent.arguments[i].value.value;
+                tempObject.arguments[key] = value;
+              } 
+            }
+          }
+
           console.log('tempObject after for loop', tempObject);
           console.log('stack after for loop', stack);
 
