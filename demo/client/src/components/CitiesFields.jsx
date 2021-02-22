@@ -2,8 +2,6 @@ import React, { useState, useEffect, useRef } from 'react';
 import QueryField from './QueryField.jsx';
 import DropdownItem from './DropdownItem.jsx';
 // imported images
-import Minus from '../images/buttons/minus-button.svg';
-import MinusHover from '../images/buttons/minus-button-hover.svg';
 import Plus from '../images/buttons/plus-button.svg';
 import PlusHover from '../images/buttons/plus-button-hover.svg';
 
@@ -12,9 +10,6 @@ import PlusHover from '../images/buttons/plus-button-hover.svg';
   - It is called from DemoInput in the container folder
   - It is recursively called when you add the "cities" field in the "countries" query
 */
-
-// I don't know where in the file to set queryingCities equal to true so that it doesn't render ID after that
-// maybe just set a timer?? so that it runs after the first time we build the recursive queryFields component
 
 const CitiesFields = (props) => {
   const { citiesFields, type, sub, outputFunction, modifyCitiesFields } = props; // import props
@@ -64,16 +59,8 @@ const CitiesFields = (props) => {
 
   // Takes the items list and returns something like: [ id, name, capital, cities ]
   const convertIntoList = (itemList) => {
-    const output = itemList.map((obj) => {
-      // creates array based on keys of objects in fields array
-      let key = Object.keys(obj)[0];
-      return key;
-    });
-    const noDuplicates = []; // get rid of potential duplicates
-    output.forEach((el) => {
-      if (!queryList.includes(el)) noDuplicates.push(el);
-    });
-    return noDuplicates;
+    const output = itemList.map((obj) => Object.keys(obj)[0]);
+    return output;
   };
 
   // ==================================== //
@@ -166,7 +153,6 @@ const CitiesFields = (props) => {
     <>
       {/* List all the chosen query fields */}
       <div className="queryLinesContainer">{queriedItems}</div>
-
       {tab}
       {tab}
       {sub && <>{tab}</>}

@@ -12,10 +12,10 @@ const QueryField = (props) => {
   console.log('sub in QueryField ===> ', sub);
 
   // Below is so that we don't render the minus button for the id field
-  const [itemIsNotId, setItemIsNotId] = useState(true);
+  const [itemIsId, setItemIsId] = useState(false);
   useEffect(() => {
-    if (item === 'id') setItemIsNotId(false);
-  }, [itemIsNotId]);
+    if (item === 'id') setItemIsId(true);
+  }, [itemIsId]);
 
   const tab = <span>&nbsp;&nbsp;&nbsp;&nbsp;</span>,
     space = <span>&nbsp;</span>;
@@ -26,7 +26,14 @@ const QueryField = (props) => {
         {tab}
         {sub && <>{tab}</>}
         {/* Generate minus button */}
-        {itemIsNotId && (
+        {/* Xiao added {itemIsId && <>{space}{space}</>} so all the items are aligned vertically */}
+        {itemIsId && (
+          <>
+            {space}
+            {space}
+          </>
+        )}
+        {!itemIsId && (
           <button className="minus-button" onClick={() => deleteItem(item)}>
             <div className="plus-minus-icons">
               <img src={Minus} />
