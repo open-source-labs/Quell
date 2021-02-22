@@ -266,9 +266,6 @@ class QuellCache {
             isQuellable = false;
           }
         }
-        if (node.alias) {
-          isQuellable = false;
-        }
       },
       SelectionSet(node, key, parent, path, ancestors) {
         console.log('SELECTION SET');
@@ -324,6 +321,11 @@ class QuellCache {
       },
       Field: {
         enter(node) {
+          if (node.alias) {
+            console.log('node has aliases');
+            isQuellable = false;
+            return BREAK;
+          }
           // add value to stack
           stack.push(node.name.value);
           console.log('enter stack', stack);
