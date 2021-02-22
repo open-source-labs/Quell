@@ -8,8 +8,7 @@ import MinusHover from '../images/buttons/minus-button-hover.svg';
 */
 
 const QueryField = (props) => {
-  const { item, deleteItem, sub } = props;
-  // console.log('sub in QueryField ===> ', sub);
+  const { item, deleteItem, subQuery } = props;
 
   // Below is so that we don't render the minus button for the id field
   const [itemIsId, setItemIsId] = useState(false);
@@ -19,12 +18,14 @@ const QueryField = (props) => {
 
   const tab = <span>&nbsp;&nbsp;&nbsp;&nbsp;</span>,
     space = <span>&nbsp;</span>;
+
+  // note: the "subQuery" tags are conditionally rendered only when we're in the cities field INSIDE the countries query
   return (
     <>
       <div className="queryLine">
         {tab}
         {tab}
-        {sub && <>{tab}</>}
+        {subQuery && <>{tab}</>}
         {/* Generate minus button */}
         {/* Added {itemIsId && <>{space}{space}</>} so all the items are aligned vertically */}
         {itemIsId && (

@@ -16,8 +16,6 @@ import PlusHover from '../images/buttons/plus-button-hover.svg';
 
 const QueryFields = (props) => {
   const { type, outputFunction } = props; // import props
-  let sub = false;
-  // console.log('sub in QueryFields ', sub);
 
   const [queryList, setQueryList] = useState(['id']);
   const [availableList, setAvailableList] = useState([]);
@@ -173,7 +171,6 @@ const QueryFields = (props) => {
               citiesFields={citiesFields}
               type={'City'}
               outputFunction={outputFunction}
-              sub={true}
               modifyCitiesFields={modifyCitiesFields}
             />
           </div>
@@ -191,7 +188,7 @@ const QueryFields = (props) => {
         item={item}
         key={`${type}Field${i}`}
         deleteItem={deleteItem}
-        sub={sub}
+        subQuery={false}
       />
     );
   });

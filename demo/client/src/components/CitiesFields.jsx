@@ -12,8 +12,7 @@ import PlusHover from '../images/buttons/plus-button-hover.svg';
 */
 
 const CitiesFields = (props) => {
-  const { citiesFields, type, sub, outputFunction, modifyCitiesFields } = props; // import props
-  // console.log('sub in CitiesFields ===> ', sub);
+  const { citiesFields, type, outputFunction, modifyCitiesFields } = props; // import props
 
   const [queryList, setQueryList] = useState(citiesFields);
   const [availableList, setAvailableList] = useState([]);
@@ -82,11 +81,7 @@ const CitiesFields = (props) => {
     newAvailableList.push(item);
     setAvailableList(newAvailableList);
     // calls a function that prepares the query for actually being sent
-    if (sub) {
-      outputFunction(0, newList, 0);
-    } else {
-      outputFunction(newList, 0, 0);
-    }
+    outputFunction(0, newList, 0);
   }
 
   //======= Plus button ========//
@@ -105,11 +100,7 @@ const CitiesFields = (props) => {
     // close the plus dropdown
     togglePlusDropdown(false);
     // call a function that prepares the query for actually being sent
-    if (sub) {
-      outputFunction(0, newList, 0);
-    } else {
-      outputFunction(newList, 0, 0);
-    }
+    outputFunction(0, newList, 0);
   }
 
   // Fires when you click plus -- only show plus dropdown if there's something in the list
@@ -136,7 +127,7 @@ const CitiesFields = (props) => {
         item={item}
         key={`${type}Field${i}`}
         deleteItem={deleteItem}
-        sub={sub}
+        subQuery={true}
       />
     );
   });
@@ -148,14 +139,13 @@ const CitiesFields = (props) => {
     );
   });
 
-  // note: the "sub" tags are conditionally rendered only when we're in the cities field INSIDE the countries query
   return (
     <>
       {/* List all the chosen query fields */}
       <div className="queryLinesContainer">{queriedItems}</div>
       {tab}
       {tab}
-      {sub && <>{tab}</>}
+      {tab}
       {/* Render plus sign, which opens a dropdown */}
       {/* Added {!!availableList.length &&} so that when the availableList's length is 0, it corroses from zero to false so it doesn't render the plus sign */}
       {!!availableList.length && (
