@@ -8,7 +8,7 @@ function normalizeForCache(response, map, fieldsMap, QuellStore) {
   console.log('fieldsMap in normalizeForCache ===> ', fieldsMap);
 
   if (QuellStore.arguments && !QuellStore.alias) {
-    // if collection from response is an object / etc: query with argument id
+    // If query has arguments && QuellStore.alias is null
 
     // Name of query for ID generation (e.g. "countries")
     const queryName = Object.keys(response)[0];
@@ -22,19 +22,35 @@ function normalizeForCache(response, map, fieldsMap, QuellStore) {
       JSON.parse(JSON.stringify(response[queryName]))
     );
 
-    const itemKeys = Object.keys(collection);
+    if (Array.isArray(collection)) {
+      // if collection from response is an array / etc: query all cities with argument country_id
+      for (const item of collection) {
+        const itemKeys = Object.keys(item);
 
-    for (const key of itemKeys) {
-      if (Array.isArray(collection[key])) {
-        collection[key] = replaceItemsWithReferences(
-          key,
-          collection[key],
-          fieldsMap
-        );
+        for (const key of itemKeys) {
+          if (Array.isArray(item[key])) {
+            item[key] = replaceItemsWithReferences(key, item[key], fieldsMap);
+          }
+        }
+        // Write individual objects to cache (e.g. separate object for each single city)
+        writeToCache(generateId(collectionName, item), item);
       }
+    } else {
+      // if collection from response is an object / etc: query a country with argument id
+      const itemKeys = Object.keys(collection);
+
+      for (const key of itemKeys) {
+        if (Array.isArray(collection[key])) {
+          collection[key] = replaceItemsWithReferences(
+            key,
+            collection[key],
+            fieldsMap
+          );
+        }
+      }
+      // Write individual objects to cache (e.g. separate object for each single city)
+      writeToCache(generateId(collectionName, collection), collection);
     }
-    // Write individual objects to cache (e.g. separate object for each single city)
-    writeToCache(generateId(collectionName, collection), collection);
   } else if (QuellStore.arguments && QuellStore.alias) {
     // if collection from response is an object && QuellStore.alias is not null
 
@@ -49,19 +65,35 @@ function normalizeForCache(response, map, fieldsMap, QuellStore) {
       const collection = JSON.parse(JSON.stringify(response[alias]));
       // console.log('collection ===> ', collection);
 
-      const itemKeys = Object.keys(collection);
+      if (Array.isArray(collection)) {
+        // if collection from response is an array / etc: query all cities with argument country_id
+        for (const item of collection) {
+          const itemKeys = Object.keys(item);
 
-      for (const key of itemKeys) {
-        if (Array.isArray(collection[key])) {
-          collection[key] = replaceItemsWithReferences(
-            key,
-            collection[key],
-            fieldsMap
-          );
+          for (const key of itemKeys) {
+            if (Array.isArray(item[key])) {
+              item[key] = replaceItemsWithReferences(key, item[key], fieldsMap);
+            }
+          }
+          // Write individual objects to cache (e.g. separate object for each single city)
+          writeToCache(generateId(collectionName, item), item);
         }
+      } else {
+        // if collection from response is an object / etc: query a country with argument id
+        const itemKeys = Object.keys(collection);
+
+        for (const key of itemKeys) {
+          if (Array.isArray(collection[key])) {
+            collection[key] = replaceItemsWithReferences(
+              key,
+              collection[key],
+              fieldsMap
+            );
+          }
+        }
+        // Write individual objects to cache (e.g. separate object for each single city)
+        writeToCache(generateId(collectionName, collection), collection);
       }
-      // Write individual objects to cache (e.g. separate object for each single city)
-      writeToCache(generateId(collectionName, collection), collection);
     }
   } else {
     // if collection is query to get all / etc: query all countries
