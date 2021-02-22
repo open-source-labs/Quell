@@ -34,11 +34,12 @@ const Demo = () => {
     //parsedResult = ' {countries { id name } cities { id name }}';
     // parsedResult =
     //   " {countries { id name capital cities { id name country_id } } }";
-    // parsedResult = ' {country (id: 1) { id capital cities { id, name }}} ';
+    parsedResult =
+      " {country (id: 1) { id capital cities { id, name }}cities{id country_id}} ";
     // parsedResult =
     //   " {country (id: 2) { id capital cities { id, name, population }}} ";
-    parsedResult =
-      " {country1: country (id: 1) { id capital cities { id, name, population }} country2: country (id: 4) { id capital cities { id, name, population }}} ";
+    // parsedResult =
+    //   " {country1: country (id: 1) { id capital cities { id, name, population }} country2: country (id: 4) { id capital cities { id, name, population }}} ";
 
     // start the timer (eventually displayed in Metrics)
     let startTime, endTime;

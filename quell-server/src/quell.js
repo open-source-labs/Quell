@@ -132,6 +132,7 @@ class QuellCache {
    * @param {String} key - the key for Redis lookup
    */
   getFromRedis(key) {
+    console.log("<=======is in redis here :) ======>");
     return new Promise((resolve, reject) => {
       this.redisCache.get(key, (error, result) =>
         error ? reject(error) : resolve(result)
@@ -270,13 +271,18 @@ class QuellCache {
         if (node.alias) {
           isQuellable = false;
         }
+        //needs to look for ID
       },
       SelectionSet(node, key, parent, path, ancestors) {
+        console.log("NODEEEE=====", node);
+        console.log("KEY====+++++", key);
+        console.log("here is the first path", path);
         /** Helper function to convert array of ancestor fields into a
          *  path at which to assign the `collectFields` object.
          */
         function setProperty(path, obj, value) {
           console.log("path in setproperty", path);
+          console.log("this is the obj", JSON.parse(JSON.stringify(obj)));
           return path.reduce((prev, curr, index) => {
             return index + 1 === path.length // if last item in path
               ? (prev[curr] = value) // set value
@@ -294,12 +300,16 @@ class QuellCache {
            *  is found three three ancestors back. Hence, subtract three.
            */
           let depth = ancestors.length - 3;
+          console.log("Ancestors====>", ancestors);
+          console.log("depth===>>", depth);
           let objPath = [parent.name.value];
+          console.log("parent name value", [...objPath]);
           /** Loop through ancestors to gather all ancestor nodes. This array
            * of nodes will be necessary for properly nesting each field in the
            * prototype object.
            */
           while (depth >= 5) {
+            console.log("here is the Depth======----->", depth);
             let parentNodes = ancestors[depth - 1];
             console.log("parent Nodes", parentNodes);
             let { length } = parentNodes;
