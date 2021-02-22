@@ -249,6 +249,7 @@ class QuellCache {
      * visit is a utility provided in the graphql-JS library. It performs a
      * depth-first traversal of the abstract syntax tree, invoking a callback
      * when each SelectionSet node is entered. That function builds the prototype.
+     * Invokes a callback when entering and leaving Field node to keep track of nodes with stack
      * 
      * Find documentation at:
      * https://graphql.org/graphql-js/language/#visit
@@ -278,41 +279,6 @@ class QuellCache {
         */
 
         if (parent.kind === 'Field') {
-          console.log('we have parent field');
-          // if stack empty just put parent name as first element
-          if(stack.length === 0) {
-            console.log('stack is empty, put first element -->', parent.name.value);
-            stack.push(parent.name.value);
-          } else {
-            // if we have something is stack
-            // get object from prototype which represents current grandparent node (based on stack)
-            let currObj = JSON.parse(JSON.stringify(prototype));
-            stack.forEach(el => {
-              currObj = currObj[el];
-            });
-            console.log('curr object after -->', currObj);
-            // check if current grandparent node representation has parent.name.value as key
-            if(currObj[parent.name.value]) {
-              // if yes just push it in stack
-              stack.push(parent.name.value);
-            } else {
-              // continue to empty stack untill parent.name.value equal element in stack
-              while(stack.length > 0) {
-                console.log('inside while loop', stack);
-                if(stack[stack.length - 1] !== parent.name.value) {
-                  stack.pop();
-                } else {
-                  break;
-                }
-              }
-              // if stack became empty after while loop, put parent.name.value there
-              if(stack.length === 0) {
-                console.log('stack is empty AGAIN, put first element -->', parent.name.value);
-                stack.push(parent.name.value);
-              }
-            }
-          }
-
           console.log('stack is ==> ', stack);
 
           // keep selections in temp object;
@@ -326,14 +292,13 @@ class QuellCache {
               console.log(field.name.value, 'field doesnt have seletcion set');
               tempObject[field.name.value] = true;
             } else {
-              console.log(field.name.value, 'is setection set');
+              console.log(field.name.value, 'is selection set');
               tempObject[field.name.value] = {};
             }
           }
 
           // add arguments to temp object if parent has arguments
           if (parent.arguments) {
-            console.log('parent args -->', parent.arguments);
             if (parent.arguments.length > 0) {
               // loop through arguments
               tempObject.arguments = {};
@@ -345,9 +310,6 @@ class QuellCache {
             }
           }
 
-          console.log('tempObject after for loop', tempObject);
-          console.log('stack after for loop', stack);
-
           // loop through stack to get correct path in proto to temp object;
           const protoObj = stack.reduce((prev, curr, index) => {
             console.log(prev, curr, index);
@@ -358,12 +320,21 @@ class QuellCache {
               : (prev[curr] = prev[curr]);
             // otherwise, if index exists, keep value 
           }, prototype);
-          console.log('proto object --->', prototype);
-          console.log('stack after reduce', stack);
+        }
+      },
+      Field: {
+        enter(node) {
+          // add value to stack
+          stack.push(node.name.value);
+          console.log('enter stack', stack);
+        },
+        leave(node) {
+          // remove value from stack
+          stack.pop(node.name.value);
+          console.log('leave stack', stack);
         }
       }
     });
-    console.log('proto -->', prototype);
     return isQuellable ? prototype : 'unQuellable';
   };
   /**
