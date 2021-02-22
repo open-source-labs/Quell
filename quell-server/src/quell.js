@@ -267,6 +267,23 @@ class QuellCache {
           }
         }
       },
+      Field: {
+        enter(node) {
+          if (node.alias) {
+            console.log('node has aliases');
+            isQuellable = false;
+            return BREAK; // break will stop visitor execution
+          }
+          // add value to stack
+          stack.push(node.name.value);
+          console.log('enter stack', stack);
+        },
+        leave(node) {
+          // remove value from stack
+          stack.pop(node.name.value);
+          console.log('leave stack', stack);
+        }
+      },
       SelectionSet(node, key, parent, path, ancestors) {
         console.log('SELECTION SET');
         
@@ -278,18 +295,14 @@ class QuellCache {
         if (parent.kind === 'Field') {
           console.log('stack is ==> ', stack);
 
-          // keep selections in temp object;
-          const tempObject = {};
-          
           // loop through selections to collect fields
+          const tempObject = {};
           for (let field of node.selections) {
             
             // if field doesnt have selection set chidlren add boolean value to temp object
             if(!field.selectionSet) {
-              console.log(field.name.value, 'field doesnt have seletcion set');
               tempObject[field.name.value] = true;
             } else {
-              console.log(field.name.value, 'is selection set');
               tempObject[field.name.value] = {};
             }
           }
@@ -307,33 +320,13 @@ class QuellCache {
             }
           }
 
-          // loop through stack to get correct path in proto to temp object;
+          // loop through stack to get correct path in proto for temp object;
+          // mutates original prototype object;
           const protoObj = stack.reduce((prev, curr, index) => {
-            console.log(prev, curr, index);
-            console.log('temp object', tempObject);
-    
             return index + 1 === stack.length // if last item in path
               ? (prev[curr] = tempObject) // set value
-              : (prev[curr] = prev[curr]);
-            // otherwise, if index exists, keep value 
+              : (prev[curr] = prev[curr]); // otherwise, if index exists, keep value 
           }, prototype);
-        }
-      },
-      Field: {
-        enter(node) {
-          if (node.alias) {
-            console.log('node has aliases');
-            isQuellable = false;
-            return BREAK;
-          }
-          // add value to stack
-          stack.push(node.name.value);
-          console.log('enter stack', stack);
-        },
-        leave(node) {
-          // remove value from stack
-          stack.pop(node.name.value);
-          console.log('leave stack', stack);
         }
       }
     });
