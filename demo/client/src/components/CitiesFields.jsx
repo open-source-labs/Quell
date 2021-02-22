@@ -13,7 +13,7 @@ import PlusHover from '../images/buttons/plus-button-hover.svg';
 
 const CitiesFields = (props) => {
   const { citiesFields, type, sub, outputFunction, modifyCitiesFields } = props; // import props
-  console.log('sub in CitiesFields ===> ', sub);
+  // console.log('sub in CitiesFields ===> ', sub);
 
   const [queryList, setQueryList] = useState(citiesFields);
   const [availableList, setAvailableList] = useState([]);
@@ -157,7 +157,7 @@ const CitiesFields = (props) => {
       {tab}
       {sub && <>{tab}</>}
       {/* Render plus sign, which opens a dropdown */}
-      {/* Xiao added {!!availableList.length &&} so that when the availableList's length is 0, it corroses from zero to false so it doesn't render the plus sign */}
+      {/* Added {!!availableList.length &&} so that when the availableList's length is 0, it corroses from zero to false so it doesn't render the plus sign */}
       {!!availableList.length && (
         <button className="plus-button" onClick={dropPlus}>
           <div className="plus-minus-icons">

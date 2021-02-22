@@ -72,7 +72,7 @@ const Query = (props) => {
     }
     if (selection === 'country by id' || selection === 'cities by country id') {
       setIdDropdown(true);
-      // Added by Xiao. When selecting a query by id, reset selectedId to default id (1)
+      // When selecting a query by id, reset selectedId to default id (1)
       setSelectedId(1);
     } else {
       setIdDropdown(false);

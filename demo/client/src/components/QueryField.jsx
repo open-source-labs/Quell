@@ -9,7 +9,7 @@ import MinusHover from '../images/buttons/minus-button-hover.svg';
 
 const QueryField = (props) => {
   const { item, deleteItem, sub } = props;
-  console.log('sub in QueryField ===> ', sub);
+  // console.log('sub in QueryField ===> ', sub);
 
   // Below is so that we don't render the minus button for the id field
   const [itemIsId, setItemIsId] = useState(false);
@@ -26,7 +26,7 @@ const QueryField = (props) => {
         {tab}
         {sub && <>{tab}</>}
         {/* Generate minus button */}
-        {/* Xiao added {itemIsId && <>{space}{space}</>} so all the items are aligned vertically */}
+        {/* Added {itemIsId && <>{space}{space}</>} so all the items are aligned vertically */}
         {itemIsId && (
           <>
             {space}
