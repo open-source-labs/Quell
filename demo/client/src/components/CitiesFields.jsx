@@ -18,11 +18,11 @@ import PlusHover from '../images/buttons/plus-button-hover.svg';
 
 const CitiesFields = (props) => {
   const { citiesFields, type, sub, outputFunction, modifyCitiesFields } = props; // import props
+  console.log('sub in CitiesFields ===> ', sub);
 
   const [queryList, setQueryList] = useState(citiesFields);
   const [availableList, setAvailableList] = useState([]);
   const [plusDropdown, togglePlusDropdown] = useState(false);
-  const [subQuery, setSubQuery] = useState(sub); // is true when we render this recursively for the "cities" field inside "countries" query
 
   // ====================================================================== //
   // ======= Functionality to close dropdowns when clicking outside ======= //
@@ -50,7 +50,7 @@ const CitiesFields = (props) => {
   // ======= Other functionality ======= //
   // =================================== //
 
-  // initializes the available fields list
+  // initializes the available fields list based on the initialField prop
   useEffect(() => {
     setAvailableList(convertIntoList(cityFields));
   }, []);
@@ -171,17 +171,20 @@ const CitiesFields = (props) => {
       {tab}
       {sub && <>{tab}</>}
       {/* Render plus sign, which opens a dropdown */}
-      <button className="plus-button" onClick={dropPlus}>
-        <div className="plus-minus-icons">
-          <img src={Plus} />
-          <img src={PlusHover} className="hover-button" />
-        </div>
-        {plusDropdown && (
-          <div className="dropdown-menu" ref={ref}>
-            {dropdown}
+      {/* Xiao added {!!availableList.length &&} so that when the availableList's length is 0, it corroses from zero to false so it doesn't render the plus sign */}
+      {!!availableList.length && (
+        <button className="plus-button" onClick={dropPlus}>
+          <div className="plus-minus-icons">
+            <img src={Plus} />
+            <img src={PlusHover} className="hover-button" />
           </div>
-        )}
-      </button>
+          {plusDropdown && (
+            <div className="dropdown-menu" ref={ref}>
+              {dropdown}
+            </div>
+          )}
+        </button>
+      )}
     </>
   );
 };

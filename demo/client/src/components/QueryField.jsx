@@ -9,6 +9,7 @@ import MinusHover from '../images/buttons/minus-button-hover.svg';
 
 const QueryField = (props) => {
   const { item, deleteItem, sub } = props;
+  console.log('sub in QueryField ===> ', sub);
 
   // Below is so that we don't render the minus button for the id field
   const [itemIsNotId, setItemIsNotId] = useState(true);

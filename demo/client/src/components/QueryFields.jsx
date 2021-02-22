@@ -14,14 +14,11 @@ import PlusHover from '../images/buttons/plus-button-hover.svg';
   - It is recursively called when you add the "cities" field in the "countries" query
 */
 
-// I don't know where in the file to set queryingCities equal to true so that it doesn't render ID after that
-// maybe just set a timer?? so that it runs after the first time we build the recursive queryFields component
-
 const QueryFields = (props) => {
   const { type, outputFunction } = props; // import props
-  let sub;
+  let sub = false;
 
-  console.log('sub ===> ', sub);
+  console.log('sub in QueryFields ', sub);
 
   const [queryList, setQueryList] = useState(['id']);
   const [availableList, setAvailableList] = useState([]);
@@ -32,17 +29,17 @@ const QueryFields = (props) => {
   // ======= Functionality to close dropdowns when clicking outside ======= //
   // ====================================================================== //
 
-  // attach "ref = {ref}" to the dropdown
+  // Attach "ref = {ref}" to the dropdown
   const ref = useRef(null);
 
-  // makes it so when you click outside of a dropdown it goes away
+  // Makes it so when you click outside of a dropdown it goes away
   const handleClickOutside = (event) => {
     if (ref.current && !ref.current.contains(event.target)) {
       togglePlusDropdown(false);
     }
   };
 
-  // listens for clicks on the body of the dom
+  // Listens for clicks on the body of the dom
   useEffect(() => {
     document.addEventListener('click', handleClickOutside, true);
     return () => {
@@ -54,7 +51,7 @@ const QueryFields = (props) => {
   // ======= Functionality to initialize dropdowns, etc ======= //
   // ========================================================== //
 
-  // initializes the available fields list
+  // Initializes the available fields list
   useEffect(() => {
     setAvailableList(initialAvailableList());
   }, []);
@@ -75,7 +72,7 @@ const QueryFields = (props) => {
     { cities: cityFields }, // if field is array, point to the list of fields
   ];
 
-  // decides whether to populate dropdowns with Country or City fields, based on type prop
+  // Decides whether to populate dropdowns with Country or City fields, based on type prop
   const initialAvailableList = () => {
     if (type === 'Country') return convertIntoList(countryFields);
     if (type === 'City') return convertIntoList(cityFields);
@@ -83,18 +80,8 @@ const QueryFields = (props) => {
 
   // Takes the items list and returns something like: [ id, name, capital, cities ]
   const convertIntoList = (itemList) => {
-    const output = itemList.map((obj) => {
-      // creates array based on keys of objects in fields array
-      let key = Object.keys(obj)[0];
-      return key;
-    });
-    const noDuplicates = []; // get rid of potential duplicates
-    output.forEach((el) => {
-      queryList.forEach((qEl) => {
-        if (el !== qEl) noDuplicates.push(el);
-      });
-    });
-    return noDuplicates;
+    const output = itemList.map((obj) => Object.keys(obj)[0]);
+    return output;
   };
 
   // ==================================== //
@@ -103,43 +90,34 @@ const QueryFields = (props) => {
 
   //======= Minus button ========//
   function deleteItem(item) {
-    // THIS UNINTENTIONALLY RESETS CITIES
-    // remove item from queryList
+    // Remove item from queryList
     const newList = [...queryList];
     const index = newList.indexOf(item);
     newList.splice(index, 1);
     setQueryList(newList);
-    // add item to availableList
+    // Add item to availableList
     const newAvailableList = [...availableList];
     newAvailableList.push(item);
     setAvailableList(newAvailableList);
-    // calls a function that prepares the query for actually being sent
-    if (sub) {
-      outputFunction(0, newList, 0);
-    } else {
-      outputFunction(newList, 0, 0);
-    }
+    // Calls a function that prepares the query for actually being sent
+    outputFunction(newList, 0, 0);
   }
 
   //======= Plus button ========//
   function addItem(item) {
-    // add item to queryList
+    // Add item to queryList
     const newList = [...queryList];
     newList.push(item);
     setQueryList(newList);
-    // remove item from availableList
+    // Remove item from availableList
     const newAvailablelist = [...availableList];
     const index = newAvailablelist.indexOf(item);
     newAvailablelist.splice(index, 1);
     setAvailableList(newAvailablelist);
-    // close the plus dropdown
+    // Close the plus dropdown
     togglePlusDropdown(false);
-    // call a function that prepares the query for actually being sent
-    if (sub) {
-      outputFunction(0, newList, 0);
-    } else {
-      outputFunction(newList, 0, 0);
-    }
+    // Call a function that prepares the query for actually being sent
+    outputFunction(newList, 0, 0);
   }
 
   // Add item to cities field
@@ -167,7 +145,7 @@ const QueryFields = (props) => {
   // ===== RENDER / RETURN ===== //
   // =========================== //
 
-  // prepare some characters
+  // Prepare some characters
   const ob = '{',
     cb = '}',
     tab = <span>&nbsp;&nbsp;&nbsp;&nbsp;</span>,
@@ -175,8 +153,8 @@ const QueryFields = (props) => {
 
   // Render the query list to the DOM
   const queriedItems = queryList.map((item, i) => {
-    // if querying "cities", need to open up a new pair of brackets and recursively call QueryFields to generate cities fields
-    if (item === 'cities' && !sub) {
+    // If querying "cities", need to open up a new pair of brackets and recursively call QueryFields to generate cities fields
+    if (item === 'cities') {
       return (
         <div key={i}>
           <div className="queryLine">
@@ -199,20 +177,6 @@ const QueryFields = (props) => {
               sub={true}
               modifyCitiesFields={modifyCitiesFields}
             />
-            {/* {queryingCities && (
-              <QueryFields
-                type={'City'}
-                outputFunction={outputFunction}
-                sub={true}
-              />
-            )}
-            {!queryingCities && (
-              <QueryFields
-                type={'City'}
-                outputFunction={outputFunction}
-                sub={true}
-              />
-            )} */}
           </div>
           <div className="queryLine">
             {tab}
@@ -222,7 +186,7 @@ const QueryFields = (props) => {
         </div>
       );
     }
-    // else (what normally happens)
+    // Else (what normally happens)
     return (
       <QueryField
         item={item}
@@ -240,27 +204,27 @@ const QueryFields = (props) => {
     );
   });
 
-  // note: the "sub" tags are conditionally rendered only when we're in the cities field INSIDE the countries query
   return (
     <>
       {/* List all the chosen query fields */}
       <div className="queryLinesContainer">{queriedItems}</div>
-
       {tab}
       {tab}
-      {sub && <>{tab}</>}
       {/* Render plus sign, which opens a dropdown */}
-      <button className="plus-button" onClick={dropPlus}>
-        <div className="plus-minus-icons">
-          <img src={Plus} />
-          <img src={PlusHover} className="hover-button" />
-        </div>
-        {plusDropdown && (
-          <div className="dropdown-menu" ref={ref}>
-            {dropdown}
+      {/* Xiao added {!!availableList.length &&} so that when the availableList's length is 0, it corroses from zero to false so it doesn't render the plus sign */}
+      {!!availableList.length && (
+        <button className="plus-button" onClick={dropPlus}>
+          <div className="plus-minus-icons">
+            <img src={Plus} />
+            <img src={PlusHover} className="hover-button" />
           </div>
-        )}
-      </button>
+          {plusDropdown && (
+            <div className="dropdown-menu" ref={ref}>
+              {dropdown}
+            </div>
+          )}
+        </button>
+      )}
     </>
   );
 };

@@ -192,7 +192,6 @@ const Query = (props) => {
             key={query}
           />
           {/* The above key prop makes it so that when query changes, this component completely reloads */}
-          {space}
         </div>
 
         {/* Close out the query */}
