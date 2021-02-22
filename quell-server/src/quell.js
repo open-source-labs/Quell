@@ -1,6 +1,6 @@
 const redis = require('redis');
 const { parse } = require('graphql/language/parser');
-const { visit } = require('graphql/language/visitor');
+const { visit, BREAK } = require('graphql/language/visitor');
 const { graphql } = require('graphql');
 class QuellCache {
   constructor(schema, redisPort, cacheExpiration = 1000) {
@@ -236,16 +236,20 @@ class QuellCache {
    *  (3) a model guiding the construction of a new, partial GraphQL query
    */
   parseAST(AST) {
-    const queryRoot = AST.definitions[0];
+    console.log('we are inside parse AST');
+    
     // initialize prototype as empty object
     const prototype = {};
     let isQuellable = true;
-    console.log('we are inside parse AST');
+    
+    // initialize stack to keep track of depth first parsing
+    const stack = [];
   
     /**
      * visit is a utility provided in the graphql-JS library. It performs a
      * depth-first traversal of the abstract syntax tree, invoking a callback
      * when each SelectionSet node is entered. That function builds the prototype.
+     * Invokes a callback when entering and leaving Field node to keep track of nodes with stack
      * 
      * Find documentation at:
      * https://graphql.org/graphql-js/language/#visit
@@ -257,88 +261,75 @@ class QuellCache {
             isQuellable = false;
           }
         }
-        // if (node.arguments) {
-        //   if (node.arguments.length > 0) {
-        //     isQuellable = false;
-        //   }
-        // }
         if (node.directives) {
           if (node.directives.length > 0) {
             isQuellable = false;
           }
         }
-        if (node.alias) {
-          isQuellable = false;
+      },
+      Field: {
+        enter(node) {
+          if (node.alias) {
+            console.log('node has aliases');
+            isQuellable = false;
+            return BREAK; // break will stop visitor execution
+          }
+          // add value to stack
+          stack.push(node.name.value);
+          console.log('enter stack', stack);
+        },
+        leave(node) {
+          // remove value from stack
+          stack.pop(node.name.value);
+          console.log('leave stack', stack);
         }
       },
       SelectionSet(node, key, parent, path, ancestors) {
-        /** Helper function to convert array of ancestor fields into a
-         *  path at which to assign the `collectFields` object.
-         */
-        function setProperty(path, obj, value) {
-          console.log('path in setproperty', path);
-          return path.reduce((prev, curr, index) => {
-            return (index + 1 === path.length) // if last item in path
-            ? prev[curr] = value // set value
-              : prev[curr] = prev[curr] || {};
-              // otherwise, if index exists, keep value or set to empty object if index does not exist
-          }, obj);
-        };
-        /**
-         * Exclude SelectionSet nodes whose parents' are not of the kind 
+        console.log('SELECTION SET');
+        
+        /* Exclude SelectionSet nodes whose parents' are not of the kind 
          * 'Field' to exclude nodes that do not contain information about
          *  queried fields.
-         */
+        */
+
         if (parent.kind === 'Field') {
-          /** GraphQL ASTs are structured such that a field's parent field
-           *  is found three three ancestors back. Hence, subtract three. 
-           */
-          let depth = ancestors.length - 3;
-          let objPath = [parent.name.value];
-          /** Loop through ancestors to gather all ancestor nodes. This array
-           * of nodes will be necessary for properly nesting each field in the
-           * prototype object.
-           */
-          while (depth >= 5) {
-            let parentNodes = ancestors[depth - 1];
-            console.log('parent Nodes', parentNodes);
-            let { length } = parentNodes;
-            objPath.unshift(parentNodes[length - 1].name.value);
-            depth -= 3;
-            console.log('objectPath -->', JSON.parse(JSON.stringify(objPath)));
+          console.log('stack is ==> ', stack);
+
+          // loop through selections to collect fields
+          const tempObject = {};
+          for (let field of node.selections) {
+            
+            // if field doesnt have selection set chidlren add boolean value to temp object
+            if(!field.selectionSet) {
+              tempObject[field.name.value] = true;
+            } else {
+              tempObject[field.name.value] = {};
+            }
           }
-          /** Loop over the array of fields at current node, adding each to
-           *  an object that will be assigned to the prototype object at the
-           *  position determined by the above array of ancestor fields.
-           */
-          const collectFields = {};
-          console.log('parent !!!!!!!!', parent);
+
+          // add arguments to temp object if parent has arguments
           if (parent.arguments) {
-            console.log('parent arg', parent.arguments);
             if (parent.arguments.length > 0) {
               // loop through arguments
-              collectFields.arguments = {};
+              tempObject.arguments = {};
               for(let i = 0; i < parent.arguments.length; i ++) {
                 const key = parent.arguments[i].name.value;
                 const value = parent.arguments[i].value.value;
-                collectFields.arguments[key] = value;
+                tempObject.arguments[key] = value;
               } 
             }
           }
-          for (let field of node.selections) {
-            collectFields[field.name.value] = true;
-          }
-          console.log('collectFields ===> ', { ...collectFields });
-          // use helper function to update prototype
-          setProperty(objPath, prototype, collectFields);
-          console.log('prototype after collect fields', prototype);
+
+          // loop through stack to get correct path in proto for temp object;
+          // mutates original prototype object;
+          const protoObj = stack.reduce((prev, curr, index) => {
+            return index + 1 === stack.length // if last item in path
+              ? (prev[curr] = tempObject) // set value
+              : (prev[curr] = prev[curr]); // otherwise, if index exists, keep value 
+          }, prototype);
         }
       }
     });
-    
-    // { country: { arguments: { id: '1' }, id: true, capital: true } } -- current proto after everything
-    // { Country-1: { id: true, capital: true } } -- should look like this ??
-
     return isQuellable ? prototype : 'unQuellable';
   };
   /**
