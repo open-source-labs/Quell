@@ -3,9 +3,9 @@
  */
 
 function normalizeForCache(response, map, fieldsMap, QuellStore) {
-  // console.log('response ===> ', response);
-  // console.log('map ===> ', map);
-  // console.log('fieldsMap ===> ', fieldsMap);
+  console.log('response in normalizeForCache ===> ', response);
+  console.log('map in normalizeForCache ===> ', map);
+  console.log('fieldsMap in normalizeForCache ===> ', fieldsMap);
 
   if (QuellStore.arguments && !QuellStore.alias) {
     // if collection from response is an object / etc: query with argument id
@@ -14,13 +14,13 @@ function normalizeForCache(response, map, fieldsMap, QuellStore) {
     const queryName = Object.keys(response)[0];
     // Object type for ID generation ===> "City"
     const collectionName = map[queryName];
-    // console.log('collectionName ===>', collectionName);
+    console.log('collectionName ===>', collectionName);
     // Array of objects on the response (cloned version)
     const collection = JSON.parse(JSON.stringify(response[queryName]));
-    // console.log(
-    //   'collection ===> ',
-    //   JSON.parse(JSON.stringify(response[queryName]))
-    // );
+    console.log(
+      'collection ===> ',
+      JSON.parse(JSON.stringify(response[queryName]))
+    );
 
     const itemKeys = Object.keys(collection);
 
@@ -64,7 +64,7 @@ function normalizeForCache(response, map, fieldsMap, QuellStore) {
       writeToCache(generateId(collectionName, collection), collection);
     }
   } else {
-    // if collection is array / etc: query all countries
+    // if collection is query to get all / etc: query all countries
 
     // Name of query for ID generation (e.g. "countries")
     const queryName = Object.keys(response)[0];
@@ -73,10 +73,10 @@ function normalizeForCache(response, map, fieldsMap, QuellStore) {
     // console.log('collectionName ===>', collectionName);
     // Array of objects on the response (cloned version)
     const collection = JSON.parse(JSON.stringify(response[queryName]));
-    // console.log(
-    //   'collection ===> ',
-    //   JSON.parse(JSON.stringify(response[queryName]))
-    // );
+    console.log(
+      'collection ===> ',
+      JSON.parse(JSON.stringify(response[queryName]))
+    );
 
     const referencesToCache = [];
     // Check for nested array (to replace objects with another array of references)
