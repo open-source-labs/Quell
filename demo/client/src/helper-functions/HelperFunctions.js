@@ -1,5 +1,5 @@
 /**
- * @param {Array} newList - Array of main query fields
+ * @param {Array} newList - Array of query fields
  * @param {Array} sub - Array of query fields in the sub-query (aka "cities" in "countries")
  * @param {string} query - the query name for ex: "countries" or "cities"
  * @param {string} id - a number when querying by id
@@ -22,22 +22,22 @@
   currentResults 
     - comes from the state
     - looks like: { QUERY: ['item1', 'item2', {'cities': ['item1', 'item2']}] }
-    - looks like: { countries: ['id', 'name', { cities: ['id', 'name'] }] }
 */
 
 const ResultsHelper = (newList, sub, query, id, currentResults) => {
   // console.log('newList ===> ', newList);
   // console.log('sub ===> ', sub);
   // console.log('query ===> ', query);
+  // console.log('id ===> ', id);
+  // console.log('currentResults ===> ', currentResults);
 
-  for (let type in currentResults) {
+  for (let arr in currentResults) {
     //===========================//
     //===Alters the main array===//
     //===========================//
 
     if (newList) {
-      const currentList = [...currentResults[type]];
-      // console.log('currentList ===> ', currentList);
+      const currentList = currentResults[arr];
 
       // determine whether we already have cities
       let alreadyHaveCities = false;
@@ -63,11 +63,11 @@ const ResultsHelper = (newList, sub, query, id, currentResults) => {
         currentList.push({ cities: ['id'] });
       }
 
-      currentResults[type] = currentList;
+      currentResults[arr] = currentList; // if no cities, this doesn't get altered
 
       // if we are NOT DEALING WITH CITIES AT ALL
       if (alreadyHaveCities === false && newListHasCities === false) {
-        currentResults[type] = newList;
+        currentResults[arr] = newList;
       }
 
       // if we need to simply preserve cities as it is
@@ -84,21 +84,20 @@ const ResultsHelper = (newList, sub, query, id, currentResults) => {
           }
           return el;
         });
-        currentResults[type] = finalList;
+        currentResults[arr] = finalList;
       }
     }
 
     //===============================//
     //===Alters the city sub-array===//
     //===============================//
-    // type ===> countries / i ===> index / x ===> cities
 
     if (sub) {
-      const currentList = currentResults[type];
+      const currentList = currentResults[arr];
       currentList.forEach((el, i) => {
         if (typeof el === 'object') {
           for (let x in el) {
-            currentResults[type][i][x] = sub;
+            currentResults[arr][i][x] = sub;
           }
         }
       });
@@ -110,41 +109,39 @@ const ResultsHelper = (newList, sub, query, id, currentResults) => {
 
     if (query) {
       let fields;
-      // if (query === 'country by id') {
-      //   query = 'country (id:1)';
-      //   fields = currentResults[type];
-      // }
-      // if (query === 'cities by country id') {
-      //   query = 'citiesByCountry (country_id:1)';
-      //   fields = currentResults[type];
-      // }
+      if (query === 'country by id') {
+        query = 'country (id:1)';
+        fields = currentResults[arr];
+      }
+      if (query === 'cities by country id') {
+        query = 'citiesByCountry (country_id:1)';
+        fields = currentResults[arr];
+      }
       if (query === 'countries' || query === 'cities') {
         fields = ['id'];
       }
       currentResults[query] = fields;
-      delete currentResults[type];
+      delete currentResults[arr];
     }
 
-    // //===================//
-    // //===Alters the id===//
-    // //===================//
+    //===================//
+    //===Alters the id===//
+    //===================//
 
-    // if (id) {
-    //   let query = arr;
-    //   if (query.includes(':')) {
-    //     let index = query.indexOf(':');
-    //     query = query.slice(0, index + 1);
-    //   }
-    //   query += id + ')';
-    //   currentResults[query] = currentResults[arr];
-    //   delete currentResults[arr];
-    // }
+    if (id) {
+      let query = arr;
+      if (query.includes(':')) {
+        let index = query.indexOf(':');
+        query = query.slice(0, index + 1);
+      }
+      query += id + ')';
+      currentResults[query] = currentResults[arr];
+      delete currentResults[arr];
+    }
   }
 
   // RETURN STATEMENT FOR ALL
-  const newResults = { ...currentResults };
-  // console.log('RETURNED NewOutput ===> ', newResults);
-  return newResults;
+  return currentResults;
 };
 
 //======================================//

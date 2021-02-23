@@ -8,7 +8,7 @@ import Trend from 'react-trend';
 const Graph = (props) => {
   const { fetchTimeIntegers } = props;
 
-  return(
+  return (
     <div className="graph-div">
       <h3>Speed Graph:</h3>
       <Trend
@@ -20,7 +20,7 @@ const Graph = (props) => {
         strokeLinecap={'round'}
       />
     </div>
-  )
-}
+  );
+};
 
 export default Graph;

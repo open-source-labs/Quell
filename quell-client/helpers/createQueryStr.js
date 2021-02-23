@@ -3,8 +3,8 @@
  */
 
 function createQueryStr(queryObject, QuellStore) {
-  console.log('QuellStore in createQueryStr ===> ', QuellStore);
-  console.log('queryObject ===> ', queryObject);
+  // console.log('QuellStore in createQueryStr ===> ', QuellStore);
+  // console.log('queryObject ===> ', queryObject);
   let argString = '';
   if (QuellStore.arguments) {
     const openParen = ' (';
@@ -44,7 +44,7 @@ function createQueryStr(queryObject, QuellStore) {
     return innerStr;
   }
 
-  console.log('createQueryStr ===> ', openCurly + mainStr + closeCurly);
+  // console.log('createQueryStr ===> ', openCurly + mainStr + closeCurly);
   return openCurly + mainStr + closeCurly;
 }
 

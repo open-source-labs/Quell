@@ -27,7 +27,7 @@ function buildFromCache(prototype, map, collection, QuellStore) {
     if (QuellStore && QuellStore.arguments && !QuellStore.alias) {
       for (let fieldName in QuellStore.arguments) {
         for (let arg of QuellStore.arguments[fieldName]) {
-          console.log('arg ===> ', arg);
+          // console.log('arg ===> ', arg);
           let identifier;
 
           if (arg.hasOwnProperty('id') || arg.hasOwnProperty('_id')) {
@@ -101,7 +101,7 @@ function buildFromCache(prototype, map, collection, QuellStore) {
       // collection = 1.Object type field passed into buildArray() when called from buildItem() or 2.Obtained item from cache or 3.Empty array
       collection =
         collection || JSON.parse(sessionStorage.getItem(map[query])) || [];
-      // console.log('collection if the query has no argument ===> ', collection);
+      console.log('collection if the query has no argument ===> ', collection);
       //  ["Country-1", "Country-2", "Country-3", "Country-4", "Country-5"] or [];
       // each of these items in the array is the item below
 

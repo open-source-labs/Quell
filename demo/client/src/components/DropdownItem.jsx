@@ -1,4 +1,4 @@
-import React from "react";
+import React from 'react';
 
 /*
   A reusable component for all dropdowns in the query

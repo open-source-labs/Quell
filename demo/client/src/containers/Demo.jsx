@@ -29,13 +29,10 @@ const Demo = () => {
   // ============================================================== //
 
   const handleRunQueryClick = () => {
-    // run ResultsParser on output to get the query
+    // Run ResultsParser on output to get the query
     let parsedResult = CreateQueryStr(output);
-    //parsedResult = ' {countries { id name } cities { id name }}';
-    parsedResult = ' {countries { id name capital cities { id name country_id } } }';
-    // parsedResult = ' {country (id: 1) { id capital cities { id, name }}} ';
-    // parsedResult =
-    //   ' {country (id: 2) { id capital cities { id, name, population }}} ';
+
+    // // Uncomment the code below to test alias
     // parsedResult =
     //   ' {country1: country (id: 1) { id capital cities { id, name, population }} country2: country (id: 4) { id capital cities { id, name, population }}} ';
 
@@ -50,20 +47,19 @@ const Demo = () => {
       {
         countries: 'Country',
         country: 'Country',
-        citiesByCountryId: 'City',
+        citiesByCountry: 'City',
         cities: 'City',
       },
       { cities: 'City' }
     )
       .then((res) => {
         endTime = performance.now(); // stop the timer
-        const time = endTime - startTime; // calculate how long it took
+        const rawTime = endTime - startTime; // calculate how long it took
 
         // Set Query Response state
         setQueryResponse(res.data);
 
         // Set Timer State
-        const rawTime = time;
         const fTime = formatTimer(rawTime);
         setFetchTime(fTime);
 
@@ -178,8 +174,8 @@ const Demo = () => {
             classname={'button-query button-query-secondary'}
           />
         </div>
-        <Query output={output} key={resetComponent} setOutput={setOutput} />{' '}
         {/* The key prop makes it so that when component changes, it completely reloads -- useful when clicking "Reset All" */}
+        <Query output={output} key={resetComponent} setOutput={setOutput} />
         <Metrics fetchTime={fetchTime} cacheStatus={cacheStatus} />
         <QueryResults queryResponse={queryResponse} />
         <Graph fetchTimeIntegers={fetchTimeIntegers} />

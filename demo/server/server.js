@@ -3,7 +3,7 @@ const path = require('path');
 const schema = require('./schema/schema');
 const graphqlNodeModule =
   process.env.NODE_ENV === 'development'
-    ? '../../quell-server/src/quell'
+    ? '../../quell-server/src/quellBeforeIteration'
     : '@quell/server';
 const QuellCache = require(graphqlNodeModule);
 
