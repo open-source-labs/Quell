@@ -360,6 +360,20 @@ class QuellCache {
       console.log("is", superField, "collection?", isCollection);
       // if we have current chunck as a collection we have to treat it as an array
       if (isCollection) {
+        if (protoArgs.hasOwnProperty(superField)) {
+          console.log("protosuperField", protoArgs[superField]);
+          console.log("superField has arg===", superField);
+          console.log(
+            "here are the keys==============>>>",
+            Object.keys(protoArgs[superField])
+          );
+          const haveKeys = [];
+          let test = protoArgs.hasOwnProperty(superField);
+          for (test in Object.keys(protoArgs[superField])) {
+            haveKeys.push(test);
+          }
+          console.log("here is the []", haveKeys);
+        }
         let collection;
         const currentCollection = [];
         // check if collection has been passed as argument

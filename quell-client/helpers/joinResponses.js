@@ -28,9 +28,10 @@ function joinResponses(responseArray, fetchedResponseArray, proto) {
           // if non-scalar:
         } else if (typeof protoObj[field] === 'object') {
           // if both objects contain non-scalar fields, join by passing back into joinResponses() or else, add the value from the applicable object that contains it
+          console.log('field ===> ', field);
           objStart[field] && objAdd[field]
             ? (newObj[field] = joinResponses(objStart[field], objAdd[field], {
-                field: protoObj[field],
+                [field]: protoObj[field],
               }))
             : (newObj[field] = objStart[field] || objAdd[field]);
         }

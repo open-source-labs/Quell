@@ -2,8 +2,6 @@ import React, { useState, useEffect, useRef } from 'react';
 import QueryField from './QueryField.jsx';
 import DropdownItem from './DropdownItem.jsx';
 // imported images
-import Minus from '../images/buttons/minus-button.svg';
-import MinusHover from '../images/buttons/minus-button-hover.svg';
 import Plus from '../images/buttons/plus-button.svg';
 import PlusHover from '../images/buttons/plus-button-hover.svg';
 
@@ -13,16 +11,12 @@ import PlusHover from '../images/buttons/plus-button-hover.svg';
   - It is recursively called when you add the "cities" field in the "countries" query
 */
 
-// I don't know where in the file to set queryingCities equal to true so that it doesn't render ID after that
-// maybe just set a timer?? so that it runs after the first time we build the recursive queryFields component
-
 const CitiesFields = (props) => {
   const { citiesFields, type, outputFunction, modifyCitiesFields } = props; // import props
 
   const [queryList, setQueryList] = useState(citiesFields);
   const [availableList, setAvailableList] = useState([]);
   const [plusDropdown, togglePlusDropdown] = useState(false);
-  // const [subQuery, setSubQuery] = useState(sub); // is true when we render this recursively for the "cities" field inside "countries" query
 
   // ====================================================================== //
   // ======= Functionality to close dropdowns when clicking outside ======= //
@@ -133,7 +127,7 @@ const CitiesFields = (props) => {
         item={item}
         key={`${type}Field${i}`}
         deleteItem={deleteItem}
-        // sub={sub}
+        subQuery={true}
       />
     );
   });
@@ -145,25 +139,28 @@ const CitiesFields = (props) => {
     );
   });
 
-  // note: the "sub" tags are conditionally rendered only when we're in the cities field INSIDE the countries query
   return (
     <>
       {/* List all the chosen query fields */}
       <div className="queryLinesContainer">{queriedItems}</div>
       {tab}
       {tab}
+      {tab}
       {/* Render plus sign, which opens a dropdown */}
-      <button className="plus-button" onClick={dropPlus}>
-        <div className="plus-minus-icons">
-          <img src={Plus} />
-          <img src={PlusHover} className="hover-button" />
-        </div>
-        {plusDropdown && (
-          <div className="dropdown-menu" ref={ref}>
-            {dropdown}
+      {/* Added {!!availableList.length &&} so that when the availableList's length is 0, it corroses from zero to false so it doesn't render the plus sign */}
+      {!!availableList.length && (
+        <button className="plus-button" onClick={dropPlus}>
+          <div className="plus-minus-icons">
+            <img src={Plus} />
+            <img src={PlusHover} className="hover-button" />
           </div>
-        )}
-      </button>
+          {plusDropdown && (
+            <div className="dropdown-menu" ref={ref}>
+              {dropdown}
+            </div>
+          )}
+        </button>
+      )}
     </>
   );
 };
