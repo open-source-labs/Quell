@@ -33,8 +33,7 @@ const Demo = () => {
     let parsedResult = CreateQueryStr(output);
 
     // // Uncomment the code below to test alias
-    // parsedResult =
-    //   " {country (id: 2) { id capital cities { id, name, population }}";
+    parsedResult = `{country (id: 2) { id capital cities { id, name, population }} citiesByCountry(country_id:1){name}}`;
     // '{ country (id: 2) { id name } cities { id name }}'
     // parsedResult =
     //   " {country1: country (id: 1) { id capital cities { id, name, population }} country2: country (id: 4) { id capital cities { id, name, population }}} ";

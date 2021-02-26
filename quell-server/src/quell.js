@@ -107,7 +107,10 @@ class QuellCache {
             // cache joined responses
             console.log("WE GOT JOIN RESPONSES ==>", fullResponse);
 
-            const successfullyCached = await this.cache(fullResponse);
+            const successfullyCached = await this.cache(
+              fullResponse,
+              protoArgs
+            );
             console.log("if succesfullyCached ??", successfullyCached);
             if (!successfullyCached) return this.query(req, res, next, false);
             // rebuild response from cache
@@ -353,37 +356,36 @@ class QuellCache {
     //console.log('map =======>>>>>', map);
     const response = {};
     for (const superField in proto) {
-      console.log("SUPERFIELD in proto", superField);
+      let identifierForRedis = superField;
+      //  console.log("SUPERFIELD in proto", superField);
       // check if current chunck of data is collection or single item based on what we have in map
       const mapValue = map[superField];
       const isCollection = Array.isArray(mapValue);
-      console.log("is", superField, "collection?", isCollection);
+      // console.log("is", superField, "collection?", isCollection);
       // if we have current chunck as a collection we have to treat it as an array
       if (isCollection) {
-        if (protoArgs.hasOwnProperty(superField)) {
-          console.log("protosuperField", protoArgs[superField]);
-          console.log("superField has arg===", superField);
-          console.log(
-            "here are the keys==============>>>",
-            Object.keys(protoArgs[superField])
-          );
-          const haveKeys = [];
-          let test = protoArgs.hasOwnProperty(superField);
-          for (test in Object.keys(protoArgs[superField])) {
-            haveKeys.push(test);
+        if (protoArgs != null && protoArgs.hasOwnProperty(superField)) {
+          // console.log("protosuperField", protoArgs[superField]);
+          // console.log("superField has arg===", protoArgs);
+          for (const key in protoArgs[superField]) {
+            if (key.includes("id")) {
+              identifierForRedis =
+                identifierForRedis + "-" + protoArgs[superField][key];
+              console.log("identifierForRedis here", identifierForRedis);
+            }
           }
-          console.log("here is the []", haveKeys);
         }
+
         let collection;
         const currentCollection = [];
         // check if collection has been passed as argument
         // if collection not passed as argument, try to retrieve array of references from cache
         // if (!collection) {
         //   console.log('collection is', collection);
-        const collectionFromCache = await this.getFromRedis(superField);
+        const collectionFromCache = await this.getFromRedis(identifierForRedis);
         console.log(
           "collection from CACHE ---> for key ",
-          superField,
+          identifierForRedis,
           "is",
           collectionFromCache
         );
@@ -787,7 +789,7 @@ class QuellCache {
    * @param {String} collectionName - the object type name, used for identifying items in cache
    * @param {String} queryName - the name of the query, used for identifying response arrays in cache
    */
-  async cache(responseObject) {
+  async cache(responseObject, protoArgs) {
     // refactor this part cause in case of query with arg we have array of counry with one elements and we don't need it
     console.log("we are inside cache function", responseObject);
     const collection = JSON.parse(JSON.stringify(responseObject));
@@ -836,8 +838,20 @@ class QuellCache {
 
         // Write the non-empty array of references to cache (e.g. 'City': ['City-1', 'City-2', 'City-3'...])
         console.log("references to cache", referencesToCache);
-        if (referencesToCache.length > 0)
-          this.writeToCache(field, referencesToCache);
+        if (referencesToCache.length > 0) {
+          let identifierInRedis = field;
+          if (protoArgs != null && protoArgs.hasOwnProperty(field)) {
+            for (const key in protoArgs[field]) {
+              if (key.includes("id")) {
+                identifierInRedis =
+                  identifierInRedis + "-" + protoArgs[field][key];
+                console.log("identifierInRedis here", identifierInRedis);
+                //this.writeToCache(identifierInRedis, referencesToCache);
+              }
+            }
+          }
+          this.writeToCache(identifierInRedis, referencesToCache);
+        }
       } else {
         console.log("current data ", field, "is object", currentDataPiece);
         const cacheId = this.generateId(collectionName, currentDataPiece);
