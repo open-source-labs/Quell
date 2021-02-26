@@ -14,12 +14,12 @@ function toggleProto(proto) {
  */
 function buildFromCache(prototype, map, collection, QuellStore) {
   console.log(
-    'prototype in buildFromCache ===> ',
+    "prototype in buildFromCache ===> ",
     JSON.parse(JSON.stringify(prototype))
   );
-  console.log('map in buildFromCache ===> ', map);
-  console.log('collection in buildFromCache ===> ', collection);
-  console.log('QuellStore in buildFromCache ===> ', QuellStore);
+  console.log("map in buildFromCache ===> ", map);
+  console.log("collection in buildFromCache ===> ", collection);
+  console.log("QuellStore in buildFromCache ===> ", QuellStore);
 
   let response = [];
   for (let query in prototype) {
@@ -30,7 +30,7 @@ function buildFromCache(prototype, map, collection, QuellStore) {
           // console.log('arg ===> ', arg);
           let identifier;
 
-          if (arg.hasOwnProperty('id') || arg.hasOwnProperty('_id')) {
+          if (arg.hasOwnProperty("id") || arg.hasOwnProperty("_id")) {
             identifier = arg.id || arg._id;
           }
 
@@ -40,7 +40,7 @@ function buildFromCache(prototype, map, collection, QuellStore) {
             sessionStorage.getItem(`${map[query]}-${identifier}`)
           );
 
-          console.log('itemFromCache', itemFromCache);
+          console.log("itemFromCache", itemFromCache);
           // [{ id: '2', capital: 'Sucre', cities: ['City-5', 'City-6', 'City-7', 'City-8', 'City-9', 'City-10']] or null
 
           collection = collection || [];
@@ -49,7 +49,7 @@ function buildFromCache(prototype, map, collection, QuellStore) {
             collection = [itemFromCache];
           }
 
-          console.log('collection ===> ', collection);
+          console.log("collection ===> ", collection);
 
           for (let item of collection) {
             response.push(buildItem(prototype[query], item, map));
@@ -98,10 +98,11 @@ function buildFromCache(prototype, map, collection, QuellStore) {
     } else {
       // if the query has no arguments
 
-      // collection = 1.Object type field passed into buildArray() when called from buildItem() or 2.Obtained item from cache or 3.Empty array
+      // collection = 1.Object type field passed into buildArray() when called from buildItem() or
+      //2.Obtained item from cache or 3.Empty array
       collection =
         collection || JSON.parse(sessionStorage.getItem(map[query])) || [];
-      console.log('collection if the query has no argument ===> ', collection);
+      console.log("collection if the query has no argument ===> ", collection);
       //  ["Country-1", "Country-2", "Country-3", "Country-4", "Country-5"] or [];
       // each of these items in the array is the item below
 
@@ -116,7 +117,7 @@ function buildFromCache(prototype, map, collection, QuellStore) {
       }
     }
   }
-  console.log('response ===> !!!!!!!!!!!', response);
+  console.log("response ===> !!!!!!!!!!!", response);
   return response;
 }
 
@@ -134,25 +135,25 @@ function buildFromCache(prototype, map, collection, QuellStore) {
 
 function buildItem(prototype, item, map) {
   console.log(
-    'prototype in buildItem ===> ',
+    "prototype in buildItem ===> ",
     JSON.parse(JSON.stringify(prototype))
   );
-  console.log('item in buildItem ===> ', item);
-  console.log('map in buildItem ===> ', map);
+  console.log("item in buildItem ===> ", item);
+  console.log("map in buildItem ===> ", map);
   let tempObj = {}; // gets all the in-cache data
   // Traverse fields in prototype (or nested field object type)
   for (let key in prototype) {
     // if key points to an object (an object type field, e.g. "cities" in a "country")
-    if (typeof prototype[key] === 'object') {
+    if (typeof prototype[key] === "object") {
       let prototypeAtKey = { [key]: prototype[key] };
       console.log(
-        'prototypeAtKey = { [key]: prototype[key] } !!!!!! ===> ',
+        "prototypeAtKey = { [key]: prototype[key] } !!!!!! ===> ",
         prototypeAtKey
       );
       if (item[key] !== undefined) {
         // if in cache
         tempObj[key] = buildFromCache(prototypeAtKey, map, item[key]);
-        console.log('tempObj[key] ===> ', tempObj[key]);
+        console.log("tempObj[key] ===> ", tempObj[key]);
       } else {
         // if not in cache
         toggleProto(prototypeAtKey);
