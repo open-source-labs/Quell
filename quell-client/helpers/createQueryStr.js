@@ -3,29 +3,19 @@
  */
 
 function createQueryStr(queryObject, QuellStore) {
-  // console.log('QuellStore in createQueryStr ===> ', QuellStore);
-  // console.log('queryObject ===> ', queryObject);
-  let argString = '';
-  if (QuellStore.arguments) {
-    const openParen = ' (';
-    const closeParen = ' )';
-    argString += openParen;
-    for (let field in QuellStore.arguments) {
-      for (let arg of QuellStore.arguments[field]) {
-        argString += Object.keys(arg)[0] + ': ' + arg[Object.keys(arg)[0]];
-      }
-    }
-    argString += closeParen;
-  }
-
-  const openCurly = ' { ';
-  const closeCurly = ' } ';
+  console.log('QuellStore in createQueryStr ===> ', QuellStore);
+  console.log('queryObject ===> ', queryObject);
+  const openCurly = '{';
+  const closeCurly = '}';
+  const openParen = '(';
+  const closeParen = ')';
 
   let mainStr = '';
 
   for (let key in queryObject) {
-    mainStr +=
-      key + argString + openCurly + stringify(queryObject[key]) + closeCurly;
+    mainStr += `${key} ${getArgs(key) || ''} ${openCurly} ${stringify(
+      queryObject[key]
+    )}  ${closeCurly}`;
   }
 
   function stringify(fieldsArray) {
@@ -36,15 +26,31 @@ function createQueryStr(queryObject, QuellStore) {
       }
       if (typeof fieldsArray[i] === 'object') {
         for (let key in fieldsArray[i]) {
-          innerStr += key + openCurly + stringify(fieldsArray[i][key]);
-          innerStr += closeCurly;
+          innerStr += `${key} ${getArgs(key) || ''} ${openCurly} ${stringify(
+            fieldsArray[i][key]
+          )} ${closeCurly}`;
         }
       }
     }
     return innerStr;
   }
 
-  // console.log('createQueryStr ===> ', openCurly + mainStr + closeCurly);
+  function getArgs(key) {
+    let argString = '';
+
+    if (QuellStore.arguments[key]) {
+      QuellStore.arguments[key].forEach((arg) => {
+        argString
+          ? (argString += `, ${Object.keys(arg)[0]} : ${
+              Object.values(arg)[0]
+            } `)
+          : (argString += `${Object.keys(arg)[0]} : ${Object.values(arg)[0]} `);
+      });
+    }
+
+    return argString ? `${openParen} ${argString} ${closeParen}` : null;
+  }
+
   return openCurly + mainStr + closeCurly;
 }
 
