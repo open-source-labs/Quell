@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<coverage generated="1614424359011" clover="3.2.0">
-  <project timestamp="1614424359011" name="All files">
+<coverage generated="1614427562659" clover="3.2.0">
+  <project timestamp="1614427562659" name="All files">
     <metrics statements="100" coveredstatements="81" conditionals="70" coveredconditionals="52" methods="13" coveredmethods="13" elements="183" coveredelements="146" complexity="0" loc="100" ncloc="100" packages="1" files="4" classes="4"/>
     <file name="createQueryObj.js" path="/Users/xiaoyuomeara/Desktop/Codesmith PTRI/-Project Phase/P4-Production Project/Quell/quell-client/helpers/createQueryObj.js">
       <metrics statements="17" coveredstatements="17" conditionals="8" coveredconditionals="8" methods="2" coveredmethods="2"/>

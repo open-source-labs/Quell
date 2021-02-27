@@ -63,7 +63,7 @@ describe('joinResponses', () => {
     },
   ];
 
-  it('inputs two arrays (scalar <<< scalar) and outputs combined array', () => {
+  test('inputs two arrays (scalar <<< scalar) and outputs combined array', () => {
     const scalar1 = [
       { id: '1', name: 'John Coltrane' },
       { id: '2', name: 'Miles Davis' },
@@ -83,7 +83,7 @@ describe('joinResponses', () => {
     ]);
   });
 
-  it('inputs two arrays (non-scalar <<< scalar) and outputs combined array', () => {
+  test('inputs two arrays (non-scalar <<< scalar) and outputs combined array', () => {
     const nonScalar2 = [
       {
         albums: [
@@ -132,7 +132,7 @@ describe('joinResponses', () => {
     expect(joinResponses(nonScalar2, scalar2, protoObj)).toEqual(result);
   });
 
-  it('inputs two arrays (scalar <<< non-scalar) and outputs combined array', () => {
+  test('inputs two arrays (scalar <<< non-scalar) and outputs combined array', () => {
     const scalar3 = [
       { id: '1', name: 'John Coltrane' },
       { id: '2', name: 'Miles Davis' },
@@ -181,7 +181,7 @@ describe('joinResponses', () => {
     expect(joinResponses(scalar3, nonScalar3, protoObj)).toEqual(result);
   });
 
-  it('inputs two arrays (non-scalar <<< non-scalar) and outputs combined array', () => {
+  test('inputs two arrays (non-scalar <<< non-scalar) and outputs combined array', () => {
     const nonScalar4 = [
       {
         id: '1',
