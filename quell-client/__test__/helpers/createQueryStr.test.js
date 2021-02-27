@@ -29,7 +29,7 @@ const QuellStore3 = {
   alias: null,
 };
 
-describe('createQueryStr', () => {
+describe('createQueryStr.js', () => {
   test('should convert a query object into a formal GCL query string', () => {
     expect(createQueryStr(queryObject1, QuellStore1)).toEqual(
       `{countries  { name capital   }}`
