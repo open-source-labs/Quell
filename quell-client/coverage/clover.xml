@@ -1,51 +1,69 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<coverage generated="1614398537634" clover="3.2.0">
-  <project timestamp="1614398537634" name="All files">
-    <metrics statements="85" coveredstatements="66" conditionals="58" coveredconditionals="39" methods="11" coveredmethods="11" elements="154" coveredelements="116" complexity="0" loc="85" ncloc="85" packages="1" files="3" classes="3"/>
+<coverage generated="1614424359011" clover="3.2.0">
+  <project timestamp="1614424359011" name="All files">
+    <metrics statements="100" coveredstatements="81" conditionals="70" coveredconditionals="52" methods="13" coveredmethods="13" elements="183" coveredelements="146" complexity="0" loc="100" ncloc="100" packages="1" files="4" classes="4"/>
     <file name="createQueryObj.js" path="/Users/xiaoyuomeara/Desktop/Codesmith PTRI/-Project Phase/P4-Production Project/Quell/quell-client/helpers/createQueryObj.js">
-      <metrics statements="17" coveredstatements="17" conditionals="8" coveredconditionals="6" methods="2" coveredmethods="2"/>
-      <line num="7" count="2" type="stmt"/>
-      <line num="9" count="2" type="stmt"/>
-      <line num="10" count="2" type="stmt"/>
-      <line num="11" count="2" type="cond" truecount="1" falsecount="1"/>
-      <line num="12" count="2" type="stmt"/>
-      <line num="17" count="3" type="stmt"/>
-      <line num="19" count="3" type="stmt"/>
-      <line num="21" count="11" type="cond" truecount="2" falsecount="0"/>
-      <line num="23" count="11" type="cond" truecount="2" falsecount="0"/>
-      <line num="24" count="1" type="stmt"/>
-      <line num="25" count="1" type="stmt"/>
-      <line num="26" count="1" type="cond" truecount="1" falsecount="1"/>
-      <line num="27" count="1" type="stmt"/>
-      <line num="28" count="1" type="stmt"/>
-      <line num="33" count="3" type="stmt"/>
-      <line num="37" count="2" type="stmt"/>
+      <metrics statements="17" coveredstatements="17" conditionals="8" coveredconditionals="8" methods="2" coveredmethods="2"/>
+      <line num="7" count="5" type="stmt"/>
+      <line num="9" count="5" type="stmt"/>
+      <line num="10" count="5" type="stmt"/>
+      <line num="11" count="5" type="cond" truecount="2" falsecount="0"/>
+      <line num="12" count="4" type="stmt"/>
+      <line num="17" count="9" type="stmt"/>
+      <line num="19" count="9" type="stmt"/>
+      <line num="21" count="35" type="cond" truecount="2" falsecount="0"/>
+      <line num="23" count="35" type="cond" truecount="2" falsecount="0"/>
+      <line num="24" count="4" type="stmt"/>
+      <line num="25" count="4" type="stmt"/>
+      <line num="26" count="4" type="cond" truecount="2" falsecount="0"/>
+      <line num="27" count="2" type="stmt"/>
+      <line num="28" count="2" type="stmt"/>
+      <line num="33" count="9" type="stmt"/>
+      <line num="37" count="5" type="stmt"/>
       <line num="40" count="1" type="stmt"/>
     </file>
     <file name="createQueryStr.js" path="/Users/xiaoyuomeara/Desktop/Codesmith PTRI/-Project Phase/P4-Production Project/Quell/quell-client/helpers/createQueryStr.js">
       <metrics statements="22" coveredstatements="22" conditionals="16" coveredconditionals="16" methods="4" coveredmethods="4"/>
-      <line num="8" count="4" type="stmt"/>
-      <line num="9" count="4" type="stmt"/>
-      <line num="10" count="4" type="stmt"/>
-      <line num="11" count="4" type="stmt"/>
-      <line num="13" count="4" type="stmt"/>
-      <line num="15" count="4" type="stmt"/>
-      <line num="16" count="4" type="cond" truecount="2" falsecount="0"/>
-      <line num="22" count="7" type="stmt"/>
-      <line num="23" count="7" type="stmt"/>
-      <line num="24" count="23" type="cond" truecount="2" falsecount="0"/>
-      <line num="25" count="20" type="stmt"/>
-      <line num="27" count="23" type="cond" truecount="2" falsecount="0"/>
-      <line num="28" count="3" type="stmt"/>
-      <line num="29" count="3" type="cond" truecount="2" falsecount="0"/>
-      <line num="35" count="7" type="stmt"/>
-      <line num="39" count="7" type="stmt"/>
-      <line num="41" count="7" type="cond" truecount="4" falsecount="0"/>
+      <line num="8" count="5" type="stmt"/>
+      <line num="9" count="5" type="stmt"/>
+      <line num="10" count="5" type="stmt"/>
+      <line num="11" count="5" type="stmt"/>
+      <line num="13" count="5" type="stmt"/>
+      <line num="15" count="5" type="stmt"/>
+      <line num="16" count="5" type="cond" truecount="2" falsecount="0"/>
+      <line num="22" count="9" type="stmt"/>
+      <line num="23" count="9" type="stmt"/>
+      <line num="24" count="32" type="cond" truecount="2" falsecount="0"/>
+      <line num="25" count="28" type="stmt"/>
+      <line num="27" count="32" type="cond" truecount="2" falsecount="0"/>
+      <line num="28" count="4" type="stmt"/>
+      <line num="29" count="4" type="cond" truecount="2" falsecount="0"/>
+      <line num="35" count="9" type="stmt"/>
+      <line num="39" count="9" type="stmt"/>
+      <line num="41" count="9" type="cond" truecount="4" falsecount="0"/>
       <line num="42" count="2" type="stmt"/>
       <line num="43" count="3" type="cond" truecount="2" falsecount="0"/>
-      <line num="51" count="7" type="cond" truecount="2" falsecount="0"/>
-      <line num="54" count="4" type="stmt"/>
+      <line num="51" count="9" type="cond" truecount="2" falsecount="0"/>
+      <line num="54" count="5" type="stmt"/>
       <line num="57" count="1" type="stmt"/>
+    </file>
+    <file name="joinResponses.js" path="/Users/xiaoyuomeara/Desktop/Codesmith PTRI/-Project Phase/P4-Production Project/Quell/quell-client/helpers/joinResponses.js">
+      <metrics statements="15" coveredstatements="15" conditionals="12" coveredconditionals="11" methods="2" coveredmethods="2"/>
+      <line num="10" count="7" type="stmt"/>
+      <line num="12" count="7" type="stmt"/>
+      <line num="14" count="18" type="stmt"/>
+      <line num="15" count="18" type="stmt"/>
+      <line num="18" count="18" type="stmt"/>
+      <line num="20" count="18" type="stmt"/>
+      <line num="21" count="18" type="stmt"/>
+      <line num="23" count="69" type="cond" truecount="2" falsecount="0"/>
+      <line num="25" count="60" type="cond" truecount="2" falsecount="0"/>
+      <line num="29" count="9" type="cond" truecount="1" falsecount="1"/>
+      <line num="32" count="9" type="cond" truecount="4" falsecount="0"/>
+      <line num="40" count="18" type="stmt"/>
+      <line num="42" count="18" type="stmt"/>
+      <line num="46" count="7" type="stmt"/>
+      <line num="49" count="1" type="stmt"/>
     </file>
     <file name="parseAST.js" path="/Users/xiaoyuomeara/Desktop/Codesmith PTRI/-Project Phase/P4-Production Project/Quell/quell-client/helpers/parseAST.js">
       <metrics statements="46" coveredstatements="27" conditionals="34" coveredconditionals="17" methods="5" coveredmethods="5"/>
