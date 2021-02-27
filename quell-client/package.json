@@ -4,7 +4,7 @@
   "description": "Quell is an open-source NPM package providing a light-weight caching layer implementation for GraphQL responses on both the client- and server-side. Use Quell to prevent redundant client-side API requests and to minimize costly server-side response latency.",
   "main": "Quellify.js",
   "scripts": {
-    "test": "jest"
+    "test": "jest --watchAll --coverage"
   },
   "author": "Quell",
   "license": "MIT",
