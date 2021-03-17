@@ -183,6 +183,103 @@ describe('/graphql', () => {
         ]
       }
     }
+
+    const countryIdWithCitiesAndCities = {
+        "country": {
+          "id": "1",
+          "name": "Andorra"
+        },
+        "cities": [
+          {
+            "id": "1",
+            "name": "El Tarter"
+          },
+          {
+            "id": "2",
+            "name": "La Massana"
+          },
+          {
+            "id": "3",
+            "name": "Canillo"
+          },
+          {
+            "id": "4",
+            "name": "Andorra la Vella"
+          },
+          {
+            "id": "5",
+            "name": "Jorochito"
+          },
+          {
+            "id": "6",
+            "name": "Tupiza"
+          },
+          {
+            "id": "7",
+            "name": "Puearto Pailas"
+          },
+          {
+            "id": "8",
+            "name": "Capinota"
+          },
+          {
+            "id": "9",
+            "name": "Camargo"
+          },
+          {
+            "id": "10",
+            "name": "Villa Serrano"
+          },
+          {
+            "id": "11",
+            "name": "Voskevaz"
+          },
+          {
+            "id": "12",
+            "name": "Gavarr"
+          },
+          {
+            "id": "13",
+            "name": "Nizami"
+          },
+          {
+            "id": "14",
+            "name": "Metsavan"
+          },
+          {
+            "id": "15",
+            "name": "Hnaberd"
+          },
+          {
+            "id": "16",
+            "name": "Tāfuna"
+          },
+          {
+            "id": "17",
+            "name": "Aūa"
+          },
+          {
+            "id": "18",
+            "name": "Malaeimi"
+          },
+          {
+            "id": "19",
+            "name": "Taulaga"
+          },
+          {
+            "id": "20",
+            "name": "Fagatogo"
+          },
+          {
+            "id": "21",
+            "name": "Oranjestad"
+          },
+          {
+            "id": "51",
+            "name": "Paradera"
+          }
+        ]
+    }
     
     it('responds with 200 status on valid request', () => {
       return request(server)
@@ -241,7 +338,15 @@ describe('/graphql', () => {
     });
 
     it('gets country by id 1 / ID NAME CAPITAL CITIES AND list of cities', () => {
-
+      return request(server)
+        .post('/graphql')
+        .set("Accept", "application/json")
+        .send({ "query": "{country (id: 1) {id name cities {id name population}} cities { id name }}" })
+        .expect(200)
+        .then((response) => {
+          // if (err) return done(err);
+          expect(response.body.data).toEqual(countryIdWithCitiesAndCities)
+        });
     });
 
     it('gets list of countries with next fields: ID NAME CITIES {}', () => {
