@@ -2,10 +2,27 @@ const request = require('supertest');
 
 const server = 'http://localhost:3000';
 
-// clean redis before all
-
 describe('/graphql', () => {
-  describe('POST', () => {
+
+  describe ('POST', () => {
+    it('responds with 200 status on valid request', () => {
+      return request(server)
+        .post('/graphql')
+        .set('Content-Type', 'application/json')
+        .send({ "query": "{countries{id}}" })
+        .expect(200)
+    });
+
+    it('responds with 400 status on invalid request', () => {
+      return request(server)
+        .post('/graphql')
+        .set('Content-Type', 'application/json')
+        .send("Invalid query")
+        .expect(400)
+    });
+  });
+
+  describe('POST || correct data in response body', () => {
 
     const countries = {
       "countries": [
@@ -187,7 +204,29 @@ describe('/graphql', () => {
     const countryIdWithCitiesAndCities = {
         "country": {
           "id": "1",
-          "name": "Andorra"
+          "name": "Andorra",
+          "cities": [
+            {
+              "id": "1",
+              "name": "El Tarter",
+              "population": 1052
+            },
+            {
+              "id": "2",
+              "name": "La Massana",
+              "population": 7211
+            },
+            {
+              "id": "3",
+              "name": "Canillo",
+              "population": 3292
+            },
+            {
+              "id": "4",
+              "name": "Andorra la Vella",
+              "population": 20430
+            }
+          ]
         },
         "cities": [
           {
@@ -280,16 +319,17 @@ describe('/graphql', () => {
           }
         ]
     }
-    
-    it('responds with 200 status on valid request', () => {
-      return request(server)
-        .post('/graphql')
-        .set('Content-Type', 'application/json')
-        .send({ "query": "{countries{id name capital}}" })
-        .expect(200)
-    });
 
-    it('gets list of countries when cache is empty', async () => {
+    it('clears cache', async () => {
+      return request(server)
+        .get('/clearCache')
+        .expect(200)
+        .then((response) => {
+          expect(response.text).toEqual("Redis cache successfully cleared")
+        })
+    })
+
+    it('returns correct data when cache is empty || {countries{id name}}', async () => {
       return request(server)
         .post('/graphql')
         .set("Accept", "application/json")
@@ -301,7 +341,7 @@ describe('/graphql', () => {
         });
     });
 
-    it('gets list of countries AND list of cities when countries are in cache and cities are not', () => {
+    it('combines data for multiple queries from cache and database || {countries{id name} cities {id name}}', async () => {
       return request(server)
         .post('/graphql')
         .set("Accept", "application/json")
@@ -313,7 +353,7 @@ describe('/graphql', () => {
         });
     });
 
-    it('gets country by id 1 / ID NAME CAPITAL when id and name are in cache and capital is not', () => {
+    it('combines data for one query from cache and database || {country (id: 1) {id name capital}}', async() => {
       return request(server)
         .post('/graphql')
         .set("Accept", "application/json")
@@ -325,7 +365,7 @@ describe('/graphql', () => {
         });
     });
 
-    it('gets country by id 1 / ID NAME CITIES { id name population} when everything but population are in cache', () => {
+    it('combines data for one nested query from cache and database || {country (id: 1) {id name cities {id name population}}}', async() => {
       return request(server)
         .post('/graphql')
         .set("Accept", "application/json")
@@ -337,7 +377,7 @@ describe('/graphql', () => {
         });
     });
 
-    it('gets country by id 1 / ID NAME CAPITAL CITIES AND list of cities', () => {
+    it('returns data for multiple queries, one of them nested, with different datatype || {country (id: 1) {id name cities {id name population}} cities { id name }}', async() => {
       return request(server)
         .post('/graphql')
         .set("Accept", "application/json")
@@ -348,19 +388,6 @@ describe('/graphql', () => {
           expect(response.body.data).toEqual(countryIdWithCitiesAndCities)
         });
     });
-
-    it('gets list of countries with next fields: ID NAME CITIES {}', () => {
-
-    });
-
-    it('responds with 400 status on invalid request', () => {
-      return request(server)
-        .post('/graphql')
-        .set('Content-Type', 'application/json')
-        .send("Invalid query")
-        .expect(400)
-    });
-
   });
   
 });
