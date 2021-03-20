@@ -7,7 +7,7 @@
     "build": "NODE_ENV=production webpack",
     "dev": "concurrently \"webpack-dev-server --open --hot\" \"NODE_ENV=development nodemon -w ../quell-server/src/quell.js server/server.js\"",
     "client": "webpack-dev-server --open --hot",
-    "test": "jest --verbose"
+    "test": "jest --verbose --detectOpenHandles"
   },
   "keywords": [],
   "author": "",
