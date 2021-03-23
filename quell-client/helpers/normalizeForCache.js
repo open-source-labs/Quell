@@ -6,6 +6,7 @@ function normalizeForCache(response, map, fieldsMap, QuellStore) {
   console.log('response in normalizeForCache ===> ', response);
   console.log('map in normalizeForCache ===> ', map);
   console.log('fieldsMap in normalizeForCache ===> ', fieldsMap);
+  console.log('QuellStore in normalizeForCache ===> ', QuellStore);
 
   if (QuellStore.arguments && !QuellStore.alias) {
     // If query has arguments && QuellStore.alias is null
@@ -24,6 +25,7 @@ function normalizeForCache(response, map, fieldsMap, QuellStore) {
 
     if (Array.isArray(collection)) {
       // if collection from response is an array / etc: query all cities with argument country_id
+      const referencesToCache = [];
       for (const item of collection) {
         const itemKeys = Object.keys(item);
 
@@ -34,7 +36,12 @@ function normalizeForCache(response, map, fieldsMap, QuellStore) {
         }
         // Write individual objects to cache (e.g. separate object for each single city)
         writeToCache(generateId(collectionName, item), item);
+        referencesToCache.push(generateId(collectionName, item));
       }
+      // Write the array of references to cache (e.g. 'City': ['City-1', 'City-2', 'City-3'...])
+      writeToCache(['Country-1'], {
+        [Object.keys(fieldsMap)[0]]: referencesToCache,
+      });
     } else {
       // if collection from response is an object / etc: query a country with argument id
       const itemKeys = Object.keys(collection);
