@@ -39,9 +39,7 @@ function normalizeForCache(response, map, fieldsMap, QuellStore) {
         referencesToCache.push(generateId(collectionName, item));
       }
       // Write the array of references to cache (e.g. 'City': ['City-1', 'City-2', 'City-3'...])
-      writeToCache(['Country-1'], {
-        [Object.keys(fieldsMap)[0]]: referencesToCache,
-      });
+      writeToCache(queryName, referencesToCache);
     } else {
       // if collection from response is an object / etc: query a country with argument id
       const itemKeys = Object.keys(collection);
