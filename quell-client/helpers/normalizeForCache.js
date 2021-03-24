@@ -25,6 +25,15 @@ function normalizeForCache(response, map, fieldsMap, QuellStore) {
 
     if (Array.isArray(collection)) {
       // if collection from response is an array / etc: query all cities with argument country_id
+      let userDefinedIdArg;
+      for (let fieldName in QuellStore.arguments) {
+        for (let arg of QuellStore.arguments[fieldName]) {
+          if (Object.keys(arg)[0].includes('id')) {
+            userDefinedIdArg = arg;
+          }
+        }
+      }
+      console.log('userDefinedIdArg ===> ', userDefinedIdArg);
       const referencesToCache = [];
       for (const item of collection) {
         const itemKeys = Object.keys(item);
@@ -38,8 +47,8 @@ function normalizeForCache(response, map, fieldsMap, QuellStore) {
         writeToCache(generateId(collectionName, item), item);
         referencesToCache.push(generateId(collectionName, item));
       }
-      // Write the array of references to cache (e.g. 'City': ['City-1', 'City-2', 'City-3'...])
-      writeToCache(queryName, referencesToCache);
+      // Write the array of references to cache (e.g. 'citiesByCountry-1': ['City-1', 'City-2', 'City-3'...])
+      writeToCache(generateId(queryName, userDefinedIdArg), referencesToCache);
     } else {
       // if collection from response is an object / etc: query a country with argument id
       const itemKeys = Object.keys(collection);
@@ -152,7 +161,14 @@ function replaceItemsWithReferences(field, array, fieldsMap) {
 
 // Creates unique ID (key) for cached item
 function generateId(collection, item) {
-  const identifier = item.id || item._id || 'uncacheable';
+  let userDefinedId;
+  for (let key in item) {
+    if (key.includes('id') && key !== 'id' && key !== '_id') {
+      userDefinedId = item[key];
+    }
+  }
+
+  const identifier = item.id || item._id || userDefinedId || 'uncacheable';
   return collection + '-' + identifier.toString();
 }
 
