@@ -177,10 +177,12 @@ function writeToCache(key, item) {
   if (!key.includes('uncacheable')) {
     // Storage the data entry
     sessionStorage.setItem(key, JSON.stringify(item));
+
     // Start the timeout to remove this data entry for cache expiration
+    let seconds = 10;
     setTimeout(() => {
       sessionStorage.removeItem(key);
-    }, 10000);
+    }, seconds * 1000);
   }
 }
 
