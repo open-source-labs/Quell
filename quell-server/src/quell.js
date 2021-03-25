@@ -39,18 +39,15 @@ class QuellCache {
     const AST = parse(queryString);
 
     // create response prototype, referenses for aliases and arguments
-    const {proto, protoAliases, protoArguments} = this.parseAST(AST);
+    const {proto, protoArgs} = this.parseAST(AST);
     console.log("PROTO OBJECT ===>", proto);
-    console.log("ALIAS OBJECT ===>", protoAliases);
-    console.log("ARGUMENTS OBJECT ===>", protoArguments);
-
-    // create object for arguments from query
-    let protoArgs = null;
+    console.log("ARGUMENTS OBJECT ===>", protoArgs);
 
     // pass-through for queries and operations that QuellCache cannot handle
     if (proto === "unQuellable" || !isQuellable) {
       graphql(this.schema, queryString)
         .then((queryResult) => {
+          console.log('query result -->', queryResult);
           res.locals.queryResponse = queryResult;
           next();
         })
@@ -59,24 +56,6 @@ class QuellCache {
         });
     } else {
       let protoForCache = { ...proto };
-
-      // check if proto has arguments and cut them from obj
-      // cause we don't need argument in our response obj
-      for (const queryName in protoForCache) {
-        if (protoForCache[queryName].hasOwnProperty("arguments")) {
-          ////console.log('proto kid has arguments');
-
-          const responseProto = { ...protoForCache[queryName] };
-          protoArgs = protoArgs || {};
-          protoArgs[queryName] = { ...responseProto.arguments };
-          delete responseProto.arguments;
-          protoForCache[queryName] = { ...responseProto };
-
-          console.log("proto args object --->", protoArgs);
-        }
-      }
-
-      //console.log("proto for cache --->", protoForCache);
 
       // build response from cache
       const responseFromCache = await this.buildFromCache(
@@ -252,8 +231,9 @@ class QuellCache {
     let isQuellable = true;
 
     // initialiaze arguments and aliases as null
-    const protoArguments = null; //{ country: { id: '2' } }
-    const protoAliases = null;
+    let protoArgs = null; //{ country: { id: '2' } }
+   
+    const info = {};
 
     // initialize stack to keep track of depth first parsing
     const stack = [];
@@ -272,60 +252,58 @@ class QuellCache {
         if (node.operation) {
           if (node.operation !== "query") {
             isQuellable = false;
+            return BREAK;
           }
         }
         if (node.directives) {
           if (node.directives.length > 0) {
             isQuellable = false;
+            return BREAK;
           }
         }
       },
       Field: {
         enter(node) {
           if (node.alias) {
-            //console.log("node has aliases");
             isQuellable = false;
-            return BREAK; // break will stop visitor execution
+            return BREAK; 
+          }
+          if(node.arguments && node.arguments.length > 0) {
+            
+            protoArgs = protoArgs || {};
+            protoArgs[node.name.value] = {};
+            
+            // collect arguments if arguments contain id, otherwise make query unquellable
+            // hint: can check for graphQl type ID instead of string 'id'
+            for (let i = 0; i < node.arguments.length; i++) {
+              const key = node.arguments[i].name.value;
+              const value = node.arguments[i].value.value;
+            
+              if(!key.includes('id')) {
+                isQuellable = false;
+                return BREAK;
+              }
+              protoArgs[node.name.value][key] = value;
+            }
           }
           // add value to stack
           stack.push(node.name.value);
-          //console.log("enter stack", stack);
         },
         leave(node) {
           // remove value from stack
           stack.pop();
-          //console.log("leave stack", stack);
         },
-        //needs to look for ID
       },
       SelectionSet(node, key, parent, path, ancestors) {
-        //console.log("SELECTION SET");
-
         /* Exclude SelectionSet nodes whose parents' are not of the kind
          * 'Field' to exclude nodes that do not contain information about
          *  queried fields.
          */
-
         if (parent.kind === "Field") {
-          //console.log("stack is ==> ", stack);
-
           // loop through selections to collect fields
           const tempObject = {};
           for (let field of node.selections) {
             tempObject[field.name.value] = true;
-          }
-
-          // add arguments to temp object if parent has arguments
-          if (parent.arguments) {
-            if (parent.arguments.length > 0) {
-              // loop through arguments
-              tempObject.arguments = {};
-              for (let i = 0; i < parent.arguments.length; i++) {
-                const key = parent.arguments[i].name.value;
-                const value = parent.arguments[i].value.value;
-                tempObject.arguments[key] = value;
-              }
-            }
           }
 
           // loop through stack to get correct path in proto for temp object;
@@ -339,7 +317,8 @@ class QuellCache {
       },
     });
     const proto = isQuellable ? prototype : "unQuellable";
-    return {proto, protoAliases, protoArguments};
+    //const proto = "unQuellable";
+    return {proto, protoArgs};
   }
   /**
    * Toggles to false all values in a nested field not present in cache so that they will
@@ -895,37 +874,14 @@ class QuellCache {
    * @param {String} queriedCollection - name of object type returned in query
    */
   async constructResponse(fullResponse, AST) {
-    const rebuiltProto = this.parseAST(AST);
-
-    let protoArgs = null; // will be an object with query arguments;
-
-    let protoForCache = { ...rebuiltProto };
-    //console.log("rebuuld from ast", rebuiltProto);
-
-    // buildFromCache function accepts collection argument, which is array
-    // if we have arguments in proto and we have id as argument or _id, we go through arguments and create collection from field and id
-    //let collectionForCache = null;
-    // check if proto has arguments and cut them from obj
-    // cause we don't need argument in our response obj
-    for (const queryName in protoForCache) {
-      if (protoForCache[queryName].hasOwnProperty("arguments")) {
-        ////console.log('proto kid has arguments');
-
-        const responseProto = { ...protoForCache[queryName] };
-        protoArgs = protoArgs || {};
-        protoArgs[queryName] = { ...responseProto.arguments };
-        delete responseProto.arguments;
-        protoForCache[queryName] = { ...responseProto };
-
-        //console.log("proto args", protoArgs);
-      }
-    }
+    const {proto, protoArgs} = this.parseAST(AST);
 
     const rebuiltFromCache = await this.buildFromCache(
-      protoForCache,
+      proto,
       this.queryMap,
       protoArgs
     );
+    console.log('Rebuild from Cache --->', rebuiltFromCache);
     if (Object.keys(rebuiltFromCache).length > 0) return rebuiltFromCache;
     return fullResponse;
   }
