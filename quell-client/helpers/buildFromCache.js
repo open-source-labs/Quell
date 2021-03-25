@@ -77,8 +77,10 @@ function buildFromCache(prototype, map, collection, QuellStore) {
 
             collection = collection || [];
 
-            if (itemFromCache && !Array.isArray(itemFromCache)) {
-              collection = [itemFromCache];
+            if (itemFromCache) {
+              collection = Array.isArray(itemFromCache)
+                ? itemFromCache
+                : [itemFromCache];
             }
 
             console.log('collection ===> ', collection);
