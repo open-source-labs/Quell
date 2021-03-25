@@ -175,7 +175,12 @@ function generateId(collection, item) {
 // Saves item/s to cache and omits any 'uncacheable' items
 function writeToCache(key, item) {
   if (!key.includes('uncacheable')) {
+    // Storage the data entry
     sessionStorage.setItem(key, JSON.stringify(item));
+    // Start the timeout to remove this data entry for cache expiration
+    setTimeout(() => {
+      sessionStorage.removeItem(key);
+    }, 10000);
   }
 }
 
