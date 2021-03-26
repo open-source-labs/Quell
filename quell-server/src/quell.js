@@ -6,6 +6,7 @@ class QuellCache {
   constructor(schema, redisPort, cacheExpiration = 1000) {
     this.schema = schema;
     this.queryMap = this.getQueryMap(schema);
+    this.mutationMap = this.getMutationMap(schema);
     this.fieldsMap = this.getFieldsMap(schema);
     this.idMap = this.getIdMap();
     this.redisPort = redisPort;
@@ -14,6 +15,7 @@ class QuellCache {
     this.query = this.query.bind(this);
     this.clearCache = this.clearCache.bind(this);
   }
+
   /**
    * The class's controller method. It:
    *    - reads the query string from the request object,
@@ -35,8 +37,11 @@ class QuellCache {
     }
     // retrieve GraphQL query string from request object;
     const queryString = req.body.query;
+
+    console.log('query string --->', queryString);
     // create abstract syntax tree with graphql-js parser
     const AST = parse(queryString);
+    console.log('AST --->', AST);
 
     // create response prototype, referenses for aliases and arguments
     const {proto, protoArgs} = this.parseAST(AST);
@@ -55,6 +60,15 @@ class QuellCache {
           return next("graphql library error: ", error);
         });
     } else {
+    /*
+     * we can have two types of operation to take care of
+     * MUTATION OR QUERY
+    */
+    
+    // if MUTATION
+    // do updates
+    // check if we have same key in redis, update redis
+
       let protoForCache = { ...proto };
 
       // build response from cache
@@ -128,6 +142,36 @@ class QuellCache {
   }
 
   /**
+   *  getMutationMap generates a map of mutation to GraphQL object types. This mapping is used
+   *  to identify references to cached data when mutation occurs.
+   */
+  getMutationMap(schema) {
+    const mutationMap = {};
+    // get object containing all root mutations defined in the schema
+    const mutationTypeFields = schema._mutationType._fields;
+    // if queryTypeFields is a function, invoke it to get object with queries
+    const mutationsObj =
+      typeof mutationTypeFields === "function"
+        ? mutationTypeFields()
+        : mutationTypeFields;
+    for (const mutation in mutationsObj) {
+      // get name of GraphQL type returned by query
+      // if ofType --> this is collection, else not collection
+      let returnedType;
+      if (mutationsObj[mutation].type.ofType) {
+        returnedType = [];
+        returnedType.push(mutationsObj[mutation].type.ofType.name);
+      }
+      if (mutationsObj[mutation].type.name) {
+        returnedType = mutationsObj[mutation].type.name;
+      }
+      mutationMap[mutation] = returnedType;
+    }
+    console.log("mutationMap ----->>>>>>>", mutationMap);
+    return mutationMap;
+  }
+
+  /**
    *  getQueryMap generates a map of queries to GraphQL object types. This mapping is used
    *  to identify and create references to cached data.
    */
@@ -135,7 +179,7 @@ class QuellCache {
     const queryMap = {};
     // get object containing all root queries defined in the schema
     const queryTypeFields = schema._queryType._fields;
-    ////console.log('queryTypeFields', queryTypeFields);
+    
     // if queryTypeFields is a function, invoke it to get object with queries
     const queriesObj =
       typeof queryTypeFields === "function"
@@ -154,7 +198,6 @@ class QuellCache {
       }
       queryMap[query] = returnedType;
     }
-    //console.log("queryMap ----->>>>>>>", queryMap);
     return queryMap;
   }
 
@@ -198,7 +241,6 @@ class QuellCache {
       }
       fieldsMap[type] = fieldsObj;
     }
-    //console.log("FIELDS MAP", fieldsMap);
     return fieldsMap;
   }
 
@@ -224,17 +266,15 @@ class QuellCache {
    *  (3) a model guiding the construction of a new, partial GraphQL query
    */
   parseAST(AST) {
-    //console.log("we are inside parse AST");
-
     // initialize prototype as empty object
     const prototype = {};
     let isQuellable = true;
 
-    // initialiaze arguments and aliases as null
+    let operationType;
+
+    // initialiaze arguments as null
     let protoArgs = null; //{ country: { id: '2' } }
    
-    const info = {};
-
     // initialize stack to keep track of depth first parsing
     const stack = [];
 
@@ -249,18 +289,22 @@ class QuellCache {
      */
     visit(AST, {
       enter(node) {
-        if (node.operation) {
-          if (node.operation !== "query") {
-            isQuellable = false;
-            return BREAK;
-          }
-        }
         if (node.directives) {
           if (node.directives.length > 0) {
             isQuellable = false;
             return BREAK;
           }
         }
+      },
+      OperationDefinition(node) {
+        if (node.operation === "subscription") {
+          isQuellable = false;
+          return BREAK;
+        }
+        if(node.operation === 'mutation') {
+          console.log('we got mutation', node);
+        }
+
       },
       Field: {
         enter(node) {
