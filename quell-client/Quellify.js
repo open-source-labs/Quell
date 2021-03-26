@@ -112,7 +112,9 @@ async function Quellify(endPoint, query, map, fieldsMap) {
 
     // If everything needed was already in cache, only assign cached response to variable
     if (QuellStore.arguments && !QuellStore.alias) {
-      mergedResponse = mergedResponse[0];
+      if (mergedResponse.length === 1) {
+        mergedResponse = mergedResponse[0];
+      }
     } else if (QuellStore.arguments && QuellStore.alias) {
       newMergedReponse = {};
       mergedResponse.forEach(
