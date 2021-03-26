@@ -12,7 +12,11 @@ const {
   GraphQLID,
   GraphQLString,
   GraphQLInt,
+  GraphQLNonNull
 } = require(graphqlNodeModule);
+
+let _id = 0;
+const books = [];
 
 // =========================== //
 // ===== TYPE DEFINITIONS ==== //
@@ -21,6 +25,16 @@ const {
 /*
   Generally corresponds with table we're pulling from
 */
+
+// definition for mutation purposes, doesn't exist in database
+const BookType = new GraphQLObjectType({
+  name: 'Book',
+  fields: () => ({
+    id: {type: GraphQLID},
+    name: {type: GraphQLString},
+    author: {type: GraphQLString},
+  }),
+});
 
 const CountryType = new GraphQLObjectType({
   name: 'Country',
@@ -31,6 +45,7 @@ const CountryType = new GraphQLObjectType({
     cities: {
       type: new GraphQLList(CityType),
       async resolve(parent, args) {
+        
         const citiesList = await db.query(
           `
           SELECT * FROM cities WHERE country_id = $1`,
@@ -52,6 +67,8 @@ const CityType = new GraphQLObjectType({
     population: { type: GraphQLInt },
   }),
 });
+
+
 
 // ADD LANGUAGES TYPE HERE
 
@@ -111,11 +128,78 @@ const RootQuery = new GraphQLObjectType({
         return citiesList.rows;
       },
     },
+    // GET ALL BOOKS
+    books: {
+      type: new GraphQLList(BookType),
+      resolve(args) {
+        return books;
+      }
+    },
+    // GET BOOK BY ID
+    book: {
+      type: BookType,
+      args: { id: { type: GraphQLID } },
+      resolve(parent, args) {
+        console.log('books -->', books);
+
+        return books.find(book => Number(args.id) === book.id);
+      }
+    }
   },
+});
+
+// ================== //
+// ===== MUTATIONS ==== //
+// ================== //
+
+const RootMutation = new GraphQLObjectType({
+  name: 'RootMutationType',
+  fields: {
+    // add book
+    addBook: {
+      type: BookType,
+      args: {
+        name: {type: new GraphQLNonNull(GraphQLString)},
+        author: {type: GraphQLString}
+      },
+      resolve(parent, args) {
+        console.log('ARGS --->', args);
+        let newBook = {
+          id: _id++,
+          ...args
+        }
+        books.push(newBook);
+        console.log('BOOKS --->', books);
+        return newBook;
+      }
+    },
+    // change book
+    changeBook: {
+      type: BookType,
+      args: {
+        id: { type: GraphQLID },
+        author: { type: GraphQLString}
+      },
+      resolve(args) {
+        let updatedBook = {
+          id: args.id,
+          author: args.author
+        }
+        books.forEach(book => {
+          if(book.id === Number(updatedBook.id)) {
+            book.author = updatedBook.author;
+            updatedBook.name = book.name;
+          }
+        });
+        return updatedBook;
+      }
+    }
+  }
 });
 
 // imported into server.js
 module.exports = new GraphQLSchema({
   query: RootQuery,
+  mutation: RootMutation,
   types: [CountryType, CityType],
 });
