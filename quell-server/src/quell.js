@@ -44,12 +44,13 @@ class QuellCache {
     console.log('AST --->', AST);
 
     // create response prototype, referenses for aliases and arguments
-    const {proto, protoArgs} = this.parseAST(AST);
+    const {proto, protoArgs, operationType} = this.parseAST(AST);
     console.log("PROTO OBJECT ===>", proto);
     console.log("ARGUMENTS OBJECT ===>", protoArgs);
+    console.log("OPERATION TYPE ===>", operationType);
 
     // pass-through for queries and operations that QuellCache cannot handle
-    if (proto === "unQuellable" || !isQuellable) {
+    if (operationType === "unQuellable" || !isQuellable) {
       graphql(this.schema, queryString)
         .then((queryResult) => {
           console.log('query result -->', queryResult);
@@ -59,16 +60,37 @@ class QuellCache {
         .catch((error) => {
           return next("graphql library error: ", error);
         });
-    } else {
+
     /*
      * we can have two types of operation to take care of
      * MUTATION OR QUERY
     */
-    
-    // if MUTATION
-    // do updates
-    // check if we have same key in redis, update redis
-
+    } else if (operationType === "mutation"){
+      // if MUTATION
+      // configure possible redis key
+      const redisKey = this.createRedisKey(this.mutationMap, proto, protoArgs);
+      // check if we have same key in redis;  
+      const needUpdates = redisKey ? await this.checkFromRedis(redisKey) : false;
+      
+      console.log('REDIS KEY --->', redisKey);
+      console.log('NEEDS UPDATES --->', needUpdates);
+      
+      graphql(this.schema, queryString)
+        .then((mutationResult) => {
+          console.log('mutation result -->', mutationResult);
+          // if redis needs to be updated, write to cache and send result back in sync
+          if(redisKey && needUpdates) {
+            this.writeToCache(redisKey, protoArgs);
+          }
+          res.locals.queryResponse = mutationResult;
+          next();
+         
+        })
+        .catch((error) => {
+          return next("graphql library error: ", error);
+      });
+    } else {
+      // if QUERY
       let protoForCache = { ...proto };
 
       // build response from cache
@@ -126,6 +148,43 @@ class QuellCache {
         return next();
       }
     }
+  }
+
+  /**
+   * createRedisKey creates key based on field name and argument id and returns string or null if key creation is not possible
+   * @param {Object} mutationMap - 
+   * @param {Object} proto - 
+   * @param {Object} protoArgs - 
+   * returns null or referenceToCache if possible, e.g. 'Book-1' or 'Book-2', where 'Book' is name from mutationMap and '1' is id from protoArgs
+   */
+  createRedisKey(mutationMap, proto, protoArgs) {
+   console.log('CREATE REDIS KEY', mutationMap, proto, protoArgs);
+   let referenceToCache = null;
+   for(const mutationName in proto) {
+    const mutationArgs = protoArgs[mutationName];
+    for (const key in mutationArgs) {
+      let identifier = null;
+      if(key.includes('id')) {
+        identifier = mutationArgs[key];
+        referenceToCache = mutationMap[mutationName] + '-' + identifier;
+        return referenceToCache;
+      }
+    }
+   }
+   return referenceToCache;
+  }
+
+  /**
+   * checkFromRedis reads from Redis cache and returns a promise.
+   * @param {String} key - the key for Redis lookup
+   */
+  checkFromRedis(key) {
+    console.log('check from redis, key --->', key);
+    return new Promise((resolve, reject) => {
+      this.redisCache.exists(key, (error, result) =>
+        error ? reject(error) : resolve(result)
+      );
+    });
   }
 
   /**
@@ -267,8 +326,8 @@ class QuellCache {
    */
   parseAST(AST) {
     // initialize prototype as empty object
-    const prototype = {};
-    let isQuellable = true;
+    const proto = {};
+    //let isQuellable = true;
 
     let operationType;
 
@@ -297,8 +356,9 @@ class QuellCache {
         }
       },
       OperationDefinition(node) {
+        operationType = node.operation;
         if (node.operation === "subscription") {
-          isQuellable = false;
+          operationType = 'unQuellable';
           return BREAK;
         }
         if(node.operation === 'mutation') {
@@ -309,7 +369,7 @@ class QuellCache {
       Field: {
         enter(node) {
           if (node.alias) {
-            isQuellable = false;
+            operationType = 'unQuellable';
             return BREAK; 
           }
           if(node.arguments && node.arguments.length > 0) {
@@ -322,10 +382,13 @@ class QuellCache {
             for (let i = 0; i < node.arguments.length; i++) {
               const key = node.arguments[i].name.value;
               const value = node.arguments[i].value.value;
-            
-              if(!key.includes('id')) {
-                isQuellable = false;
-                return BREAK;
+              
+              // for queries cache can handle only id as argument
+              if(operationType === 'query') {
+                if(!key.includes('id')) {
+                  operationType = 'unQuellable';
+                  return BREAK;
+                }
               }
               protoArgs[node.name.value][key] = value;
             }
@@ -356,13 +419,13 @@ class QuellCache {
             return index + 1 === stack.length // if last item in path
               ? (prev[curr] = tempObject) // set value
               : (prev[curr] = prev[curr]); // otherwise, if index exists, keep value
-          }, prototype);
+          }, proto);
         }
       },
     });
-    const proto = isQuellable ? prototype : "unQuellable";
+    //const proto = isQuellable ? prototype : "unQuellable";
     //const proto = "unQuellable";
-    return {proto, protoArgs};
+    return {proto, protoArgs, operationType};
   }
   /**
    * Toggles to false all values in a nested field not present in cache so that they will
