@@ -14,6 +14,7 @@ class QuellCache {
     this.redisCache = redis.createClient(redisPort);
     this.query = this.query.bind(this);
     this.clearCache = this.clearCache.bind(this);
+
   }
 
   /**
@@ -67,10 +68,21 @@ class QuellCache {
     */
     } else if (operationType === "mutation"){
       // if MUTATION
+      // parse queryMap to find any possible edges with current type to update redis
+      const edges = await this.getEdgesForMutation(this.queryMap, this.mutationMap, proto);
+      console.log('EDGES --->', edges); //EDGES ---> { addBook: [ 'books' ] }
+      
+      // if something in edges we have to update edges
+
+      // if we don't have an id in args we need id from database to create correct identifier 
+      // Book-1
+      // create unique alias for id and cut it before send response
+      // __id
+
       // configure possible redis key
-      const redisKey = this.createRedisKey(this.mutationMap, proto, protoArgs);
+      let {redisKey, isExist} = this.createRedisKey(this.mutationMap, proto, protoArgs);
       // check if we have same key in redis;  
-      const needUpdates = redisKey ? await this.checkFromRedis(redisKey) : false;
+      const needUpdates = isExist ? await this.checkFromRedis(redisKey) : false;
       
       console.log('REDIS KEY --->', redisKey);
       console.log('NEEDS UPDATES --->', needUpdates);
@@ -78,8 +90,33 @@ class QuellCache {
       graphql(this.schema, queryString)
         .then((mutationResult) => {
           console.log('mutation result -->', mutationResult);
+          if(!isExist) {
+            console.log('need redis key');
+            // take id from mutation result
+            redisKey = redisKey + '-' + mutationResult.data['addBook'].id;
+            console.log('redis key -->', redisKey);
+          }
+          console.log('redis key ---> ', redisKey);
+          // if we have some edges we have to update them as well
+          if(Object.keys(edges).length > 0) {
+            // check edges for each key
+            for(let key in edges) {
+              console.log('KEY ===> ', key);
+              edges[key].forEach(async(edge) => {
+                console.log('EDGE --->', edge);
+                // get current result from redis
+                const resultFromRedis = Array.from(JSON.parse(await this.getFromRedis(edge)));
+                console.log('RESULT FROM REDIS', resultFromRedis, typeof resultFromRedis);
+                resultFromRedis.push(redisKey);
+                this.writeToCache(edge, resultFromRedis);
+                // update it 
+                // send back
+              })
+            }
+          }
+
           // if redis needs to be updated, write to cache and send result back in sync
-          if(redisKey && needUpdates) {
+          if(isExist && needUpdates) {
             this.writeToCache(redisKey, protoArgs);
           }
           res.locals.queryResponse = mutationResult;
@@ -151,6 +188,33 @@ class QuellCache {
   }
 
   /**
+   * getEdgesForMutation goes through queryMap to find any possible edges for mutation
+   * @param {Object} queryMap - 
+   * @param {Object} proto - 
+   * @param {Object} protoArgs - 
+   * 
+   */
+
+  async getEdgesForMutation (queryMap, mutationMap, proto) {
+    const edges = {};
+    for(const key in proto) {
+      const field = mutationMap[key];
+      for (const queryKey in queryMap) {
+        if(Array.isArray(queryMap[queryKey]) && queryMap[queryKey][0] === field) {
+          // check if queryKey exist in redis
+          const edge = await this.checkFromRedis(queryKey);
+          if(edge) {
+            edges[key] = edges[key] || [];
+            edges[key].push(queryKey);
+          }
+        }
+      }
+    }
+    
+    return edges;
+  }
+
+  /**
    * createRedisKey creates key based on field name and argument id and returns string or null if key creation is not possible
    * @param {Object} mutationMap - 
    * @param {Object} proto - 
@@ -159,19 +223,21 @@ class QuellCache {
    */
   createRedisKey(mutationMap, proto, protoArgs) {
    console.log('CREATE REDIS KEY', mutationMap, proto, protoArgs);
-   let referenceToCache = null;
+   let isExist = false;
+   let redisKey;
    for(const mutationName in proto) {
     const mutationArgs = protoArgs[mutationName];
+    redisKey = mutationMap[mutationName];
     for (const key in mutationArgs) {
       let identifier = null;
       if(key.includes('id')) {
         identifier = mutationArgs[key];
-        referenceToCache = mutationMap[mutationName] + '-' + identifier;
-        return referenceToCache;
+        redisKey = mutationMap[mutationName] + '-' + identifier;
+        isExist = true;
       }
     }
    }
-   return referenceToCache;
+   return {redisKey, isExist};
   }
 
   /**
@@ -179,7 +245,6 @@ class QuellCache {
    * @param {String} key - the key for Redis lookup
    */
   checkFromRedis(key) {
-    console.log('check from redis, key --->', key);
     return new Promise((resolve, reject) => {
       this.redisCache.exists(key, (error, result) =>
         error ? reject(error) : resolve(result)
@@ -257,6 +322,7 @@ class QuellCache {
       }
       queryMap[query] = returnedType;
     }
+    console.log('QUERY MAP --->', queryMap);
     return queryMap;
   }
 
@@ -881,17 +947,11 @@ class QuellCache {
    * @param {String} queryName - the name of the query, used for identifying response arrays in cache
    */
   async cache(responseObject, protoArgs) {
-    // refactor this part cause in case of query with arg we have array of counry with one elements and we don't need it
-    //console.log("we are inside cache function", responseObject);
     const collection = JSON.parse(JSON.stringify(responseObject));
-    //console.log("we are inside cache function", collection);
-
-    // iterate throgh
+    
     for (const field in collection) {
-      //console.log("iteration", field);
       // check if current data chunck is collection
       const currentDataPiece = collection[field];
-      //console.log("curr data chunk", currentDataPiece);
       let collectionName = this.queryMap[field];
       //console.log("collection name", collectionName);
       collectionName = Array.isArray(collectionName)
