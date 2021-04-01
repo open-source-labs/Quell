@@ -2,6 +2,7 @@ const redis = require("redis");
 const { parse } = require("graphql/language/parser");
 const { visit, BREAK } = require("graphql/language/visitor");
 const { graphql } = require("graphql");
+
 class QuellCache {
   constructor(schema, redisPort, cacheExpiration = 1000) {
     this.schema = schema;
@@ -14,7 +15,6 @@ class QuellCache {
     this.redisCache = redis.createClient(redisPort);
     this.query = this.query.bind(this);
     this.clearCache = this.clearCache.bind(this);
-
   }
 
   /**
@@ -66,57 +66,75 @@ class QuellCache {
      * we can have two types of operation to take care of
      * MUTATION OR QUERY
     */
+    // if MUTATION
     } else if (operationType === "mutation"){
-      // if MUTATION
-      // parse queryMap to find any possible edges with current type to update redis
+      // find any possible edges/connections between other fields and field from current mutation to update redis
       const edges = await this.getEdgesForMutation(this.queryMap, this.mutationMap, proto);
       console.log('EDGES --->', edges); //EDGES ---> { addBook: [ 'books' ] }
+      // edges = {books: ['Book-1', 'Book-2'], cities: []}
       
-      // if something in edges we have to update edges
+      /*
+        // if we have edges: 
+        // -- update references in edges
+        // -- create key (fieldName + id) for Redis
+        // -- check if we have an id in arguments or in response body 
+        // -- if we don't have an id, reformulate mutation and return id
+        // -- cut id before response
+        // -- create Redis key
+        // -- check if we have this key in Redis
+        // -- if yes update it 
+      */
 
-      // if we don't have an id in args we need id from database to create correct identifier 
-      // Book-1
-      // create unique alias for id and cut it before send response
-      // __id
+      /* 
+        // if we don't have edges:
+        // -- we still can have reference in Redis
+        // -- if we have reference in Redis we have to have an id in arguments
+        // -- check if we have an id in arguments
+        // -- if we have an id, create identifier
+        // -- check if this identifier exist in redis as key
+        // -- if yes, update redis after succes updates in database
+        // -- to update Redis we need data from arguments
+        // -- pull existing data from Redis, combine with data from arguments, put back to Redis
+      */
 
-      // configure possible redis key
-      let {redisKey, isExist} = this.createRedisKey(this.mutationMap, proto, protoArgs);
-      // check if we have same key in redis;  
-      const needUpdates = isExist ? await this.checkFromRedis(redisKey) : false;
+      const redisReferences = {};
+      let {redisKey, isExist} = await this.createRedisKey(this.mutationMap, proto, protoArgs);
+      if(Object.keys(edges).length > 0) {
+        // check if protoArgs has an id
+        
+        if(!isExist) {
+          // recreate mutation string to add alias __id__
+
+        }
+        // for(let key in edges) {
+        //   console.log('KEY ===> ', key);
+        //   edges[key].forEach(async(edge) => { // change for promise all later
+        //     console.log('EDGE --->', edge);
+        //     // get current result from redis
+        //     const resultFromRedis = Array.from(JSON.parse(await this.getFromRedis(edge)));
+        //     redisReferences[edge] = redisFromRedis;
+        //     console.log('RESULT FROM REDIS', resultFromRedis, typeof resultFromRedis);
+        //     //resultFromRedis.push(redisKey);
+        //     //this.writeToCache(edge, resultFromRedis);
+        //     // update it 
+        //     // send back
+        //   })
+        // }
+      } 
       
       console.log('REDIS KEY --->', redisKey);
       console.log('NEEDS UPDATES --->', needUpdates);
+     
       
       graphql(this.schema, queryString)
         .then((mutationResult) => {
           console.log('mutation result -->', mutationResult);
-          if(!isExist) {
-            console.log('need redis key');
-            // take id from mutation result
-            redisKey = redisKey + '-' + mutationResult.data['addBook'].id;
-            console.log('redis key -->', redisKey);
-          }
-          console.log('redis key ---> ', redisKey);
           // if we have some edges we have to update them as well
-          if(Object.keys(edges).length > 0) {
-            // check edges for each key
-            for(let key in edges) {
-              console.log('KEY ===> ', key);
-              edges[key].forEach(async(edge) => {
-                console.log('EDGE --->', edge);
-                // get current result from redis
-                const resultFromRedis = Array.from(JSON.parse(await this.getFromRedis(edge)));
-                console.log('RESULT FROM REDIS', resultFromRedis, typeof resultFromRedis);
-                resultFromRedis.push(redisKey);
-                this.writeToCache(edge, resultFromRedis);
-                // update it 
-                // send back
-              })
-            }
-          }
+          
 
           // if redis needs to be updated, write to cache and send result back in sync
-          if(isExist && needUpdates) {
+          if(isExist) {
+            // reconstruct result from redis and db
             this.writeToCache(redisKey, protoArgs);
           }
           res.locals.queryResponse = mutationResult;
@@ -202,15 +220,13 @@ class QuellCache {
       for (const queryKey in queryMap) {
         if(Array.isArray(queryMap[queryKey]) && queryMap[queryKey][0] === field) {
           // check if queryKey exist in redis
-          const edge = await this.checkFromRedis(queryKey);
+          const edge = await this.getFromRedis(queryKey)
           if(edge) {
-            edges[key] = edges[key] || [];
-            edges[key].push(queryKey);
+            edges[queryKey] = edge;
           }
         }
       }
     }
-    
     return edges;
   }
 
@@ -219,9 +235,11 @@ class QuellCache {
    * @param {Object} mutationMap - 
    * @param {Object} proto - 
    * @param {Object} protoArgs - 
-   * returns null or referenceToCache if possible, e.g. 'Book-1' or 'Book-2', where 'Book' is name from mutationMap and '1' is id from protoArgs
+   * returns redisKey if possible, e.g. 'Book-1' or 'Book-2', where 'Book' is name from mutationMap and '1' is id from protoArgs 
+   * and isExist if we have this key in redis
+   * 
    */
-  createRedisKey(mutationMap, proto, protoArgs) {
+  async createRedisKey(mutationMap, proto, protoArgs) {
    console.log('CREATE REDIS KEY', mutationMap, proto, protoArgs);
    let isExist = false;
    let redisKey;
@@ -233,7 +251,7 @@ class QuellCache {
       if(key.includes('id')) {
         identifier = mutationArgs[key];
         redisKey = mutationMap[mutationName] + '-' + identifier;
-        isExist = true;
+        isExist = await this.checkFromRedis(redisKey);
       }
     }
    }
