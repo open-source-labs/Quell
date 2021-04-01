@@ -50,7 +50,7 @@ class QuellCache {
     console.log('ARGUMENTS OBJECT ===>', protoArgs);
 
     // pass-through for queries and operations that QuellCache cannot handle
-    if (proto === 'unQuellable' || !isQuellable) {
+    if (operationType === 'unQuellable' || !isQuellable) {
       graphql(this.schema, queryString)
         .then((queryResult) => {
           console.log('query result -->', queryResult);
@@ -60,18 +60,37 @@ class QuellCache {
         .catch((error) => {
           return next('graphql library error: ', error);
         });
-    } else {
       /*
        * we can have two types of operation to take care of
        * MUTATION OR QUERY
        */
-
+    } else if (operationType === 'mutation') {
       // if MUTATION
+      let isUpdate = false;
+      // check if we have same key in redis, reassign isUpdate;
+      const redisKey = this.createRedisKey(this.mutationMap, proto, protoArgs);
       // do updates
+      graphql(this.schema, queryString)
+        .then((mutationResult) => {
+          console.log('mutation result -->', mutationResult);
+          // if redis doesn't need to be updated, send result back
+          if (!isUpdate) {
+            xgtwysghyyyyyyy;
+            res.locals.queryResponse = mutationResult;
+            next();
+          } else {
+            // find same key in redis, make updates, send result back
+            res.locals.queryResponse = mutationResult;
+            next();
+          }
+        })
+        .catch((error) => {
+          return next('graphql library error: ', error);
+        });
       // check if we have same key in redis, update redis
-
+    } else {
+      // if QUERY
       let protoForCache = { ...proto };
-
       // build response from cache
       const responseFromCache = await this.buildFromCache(
         protoForCache,
@@ -79,14 +98,11 @@ class QuellCache {
         protoArgs
       );
       //console.log("RESPONSE FROM CACHE ----->", responseFromCache);
-
       // query for additional information, if necessary
       let fullResponse, uncachedResponse;
-
       // crate query object to check if we have to get something from database
       const queryObject = this.createQueryObj(protoForCache);
       //console.log("UPDATED QUERY OBJECT ===>", queryObject);
-
       // if cached response is incomplete, reformulate query, handoff query, join responses, and cache joined responses
       if (Object.keys(queryObject).length > 0) {
         // create new query sting
@@ -103,7 +119,6 @@ class QuellCache {
             );
             // cache joined responses
             //console.log("WE GOT JOIN RESPONSES ==>", fullResponse);
-
             const successfullyCached = await this.cache(
               fullResponse,
               protoArgs
@@ -129,6 +144,16 @@ class QuellCache {
     }
   }
 
+  /**
+   * createRedisKey creates key based on field name and argument id and returns string or null
+   * if key creation is not possible
+   * @param {Object} mutationMap -
+   * @param {Object} proto -
+   * @param {Object} protoArgs -
+   */
+  createRedisKey(mutationMap, proto, protoArgs) {
+    console.log('CREATE REDIS KEY', mutationMap, proto, protoArgs);
+  }
   /**
    * getFromRedis reads from Redis cache and returns a promise.
    * @param {String} key - the key for Redis lookup
