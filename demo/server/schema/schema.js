@@ -180,7 +180,7 @@ const RootMutation = new GraphQLObjectType({
         id: { type: GraphQLID },
         author: { type: GraphQLString}
       },
-      resolve(args) {
+      resolve(parent, args) {
         let updatedBook = {
           id: args.id,
           author: args.author
