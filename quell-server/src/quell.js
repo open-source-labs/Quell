@@ -109,17 +109,20 @@ class QuellCache {
       graphql(this.schema, mutationString)
         .then((mutationResult) => {
           console.log('mutation result -->', mutationResult);
-          if(!isExist) {
-            // cut __id from mutationResult
-            const redisIdentifier = this.getIdentifier(mutationResult); 
-            // use id to create redis key
-            console.log('identifier --->', redisIdentifier);
-            console.log('mutation --->', mutationResult);
-          }
           
           // if we have some edges we have to update them as well
           if(Object.keys(edgesFromRedis).length > 0) {
+            if(!isExist) {
+              // cut __id from mutationResult
+              const redisIdentifier = this.getIdentifier(mutationResult); 
+              // use id to create redis key
+              redisKey += '-' + redisIdentifier;
+            }
             // go through, push new redis key to each, update redis
+            for(const edge in edgesFromRedis) {
+              edgesFromRedis[edge].push(redisKey);
+              this.writeToCache(edge, edgesFromRedis[edge]);
+            }
           }
 
           // if redis needs to be updated, write to cache and send result back in sync
@@ -212,7 +215,7 @@ class QuellCache {
           // check if queryKey exist in redis
           const edge = await this.getFromRedis(queryKey)
           if(edge) {
-            edges[queryKey] = edge;
+            edges[queryKey] = JSON.parse(edge);
           }
         }
       }
