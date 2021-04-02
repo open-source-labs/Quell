@@ -97,8 +97,9 @@ class QuellCache {
         // -- pull existing data from Redis, combine with data from arguments, put back to Redis
       */
 
-      // get redis key if possible
-      let {redisKey, isExist} = await this.createRedisKey(this.mutationMap, proto, protoArgs);
+      // get redis key if possible and potential combined value for future update
+      let {redisKey, isExist, redisValue} = await this.createRedisKey(this.mutationMap, proto, protoArgs);
+      console.log('combined value -->', redisValue);
       let mutationString = queryString;
       if(Object.keys(edgesFromRedis).length > 0) {    
         if(!isExist) {
@@ -128,7 +129,7 @@ class QuellCache {
           // if redis needs to be updated, write to cache and send result back in sync
           if(isExist) {
             // reconstruct result from redis and db
-            this.writeToCache(redisKey, protoArgs);
+            this.writeToCache(redisKey, redisValue);
           }
           res.locals.queryResponse = mutationResult;
           next();
@@ -256,6 +257,7 @@ class QuellCache {
    console.log('CREATE REDIS KEY', mutationMap, proto, protoArgs);
    let isExist = false;
    let redisKey;
+   let redisValue = null;
    for(const mutationName in proto) {
     const mutationArgs = protoArgs[mutationName];
     redisKey = mutationMap[mutationName];
@@ -265,10 +267,52 @@ class QuellCache {
         identifier = mutationArgs[key];
         redisKey = mutationMap[mutationName] + '-' + identifier;
         isExist = await this.checkFromRedis(redisKey);
+        if(isExist) {
+          redisValue = await this.getFromRedis(redisKey);
+          console.log('redis value -->', redisValue);
+          redisValue = JSON.parse(redisValue);
+          // combine redis value and protoArgs
+          let argumentsValue;
+          for(let mutationName in protoArgs) { // change later, now we assume that we have only one mutation
+            argumentsValue = protoArgs[mutationName];
+          }
+          redisValue = this.mergeObjects(argumentsValue, redisValue);
+        }
       }
     }
    }
-   return {redisKey, isExist};
+   return {redisKey, isExist, redisValue};
+  }
+
+  /**
+   * mergeObjects combines two objects together with priority to objectPrimary
+   * @param {Object} objectPrimary - object
+   * @param {Object} objectSecondary - object
+   */
+  mergeObjects(objectPrimary, objectSecondary) {
+    const value = {};
+    // start from secondary object, so primary will overwrite same properties later
+    for(const prop in objectSecondary) {
+      if (objectSecondary.hasOwnProperty(prop)) {
+        if (Object.prototype.toString.call(objectSecondary[prop]) === '[object Object]') {
+          // if the property is a nested object
+          value[prop] = merge(objectSecondary[prop], value[prop]);
+        } else {
+          value[prop] = objectSecondary[prop];
+        }
+      }
+    }
+    for(const prop in objectPrimary) {
+      if (objectPrimary.hasOwnProperty(prop)) {
+        if (Object.prototype.toString.call(objectPrimary[prop]) === '[object Object]') {
+          // if the property is a nested object
+          value[prop] = merge(objectPrimary[prop], value[prop]);
+        } else {
+          value[prop] = objectPrimary[prop];
+        }
+      }
+    }
+    return value;
   }
 
   /**
