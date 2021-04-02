@@ -69,8 +69,8 @@ class QuellCache {
     // if MUTATION
     } else if (operationType === "mutation"){
       // find any possible edges/connections between other fields and field from current mutation to update redis
-      const edges = await this.getEdgesForMutation(this.queryMap, this.mutationMap, proto);
-      console.log('EDGES --->', edges); //EDGES ---> { addBook: [ 'books' ] }
+      const edgesFromRedis = await this.getEdgesForMutation(this.queryMap, this.mutationMap, proto);
+      console.log('EDGES --->', edgesFromRedis); //EDGES ---> { addBook: [ 'books' ] }
       // edges = {books: ['Book-1', 'Book-2'], cities: []}
       
       /*
@@ -97,40 +97,29 @@ class QuellCache {
         // -- pull existing data from Redis, combine with data from arguments, put back to Redis
       */
 
-      const redisReferences = {};
+      
       let {redisKey, isExist} = await this.createRedisKey(this.mutationMap, proto, protoArgs);
-      if(Object.keys(edges).length > 0) {
+      let mutationString = queryString;
+      if(Object.keys(edgesFromRedis).length > 0) {
         // check if protoArgs has an id
         
         if(!isExist) {
+          console.log('initial mutation string -->', mutationString);
           // recreate mutation string to add alias __id__
-
+          mutationString = this.createMutationStr(proto, protoArgs);
+          console.log('recreated mutation string -->', mutationString);
         }
-        // for(let key in edges) {
-        //   console.log('KEY ===> ', key);
-        //   edges[key].forEach(async(edge) => { // change for promise all later
-        //     console.log('EDGE --->', edge);
-        //     // get current result from redis
-        //     const resultFromRedis = Array.from(JSON.parse(await this.getFromRedis(edge)));
-        //     redisReferences[edge] = redisFromRedis;
-        //     console.log('RESULT FROM REDIS', resultFromRedis, typeof resultFromRedis);
-        //     //resultFromRedis.push(redisKey);
-        //     //this.writeToCache(edge, resultFromRedis);
-        //     // update it 
-        //     // send back
-        //   })
-        // }
       } 
       
       console.log('REDIS KEY --->', redisKey);
-      console.log('NEEDS UPDATES --->', needUpdates);
-     
-      
-      graphql(this.schema, queryString)
+
+      graphql(this.schema, mutationString)
         .then((mutationResult) => {
           console.log('mutation result -->', mutationResult);
           // if we have some edges we have to update them as well
-          
+          if(Object.keys(edgesFromRedis).length > 0) {
+            // go through, push new redis key to each, update redis
+          }
 
           // if redis needs to be updated, write to cache and send result back in sync
           if(isExist) {
@@ -705,6 +694,48 @@ class QuellCache {
       }
     }
     return fields;
+  }
+
+  /**
+   * createMutationStr creates new mutation string by adding alias __id__ to existing fields for cache purposes
+   * @param {Object} proto - protoObject
+   * @param {Object} protoArgs - protoArgsObject
+   */
+  createMutationStr(proto, protoArgs) {
+    const openCurl = " { ";
+    const closedCurl = " } ";
+    let mutationString = "mutation{";
+
+    for (const key in proto) {
+      console.log('KEY -->', key);
+      console.log('query stringify -->', proto[key]);
+      if (protoArgs && protoArgs[key]) {
+        let argString = "";
+        let fieldsString = "";
+
+        const openBrackets = " ( "; 
+        const closeBrackets = " )";
+        argString += openBrackets;
+
+        for (const item in protoArgs[key]) {
+          argString += item + ": " + '"' + protoArgs[key][item]+ '"';
+        }
+
+        for(const field in proto[key]) {
+          fieldsString += " " + field + " ";
+        }
+
+        argString += closeBrackets;
+        mutationString +=
+          key +
+          argString +
+          openCurl + fieldsString +
+           '__id:id' + // change for correct identifier later
+          closedCurl;
+      }
+    }
+
+    return mutationString + closedCurl;
   }
   /**
    * createQueryStr converts the query object constructed in createQueryObj into a properly-formed GraphQL query,
