@@ -1,6 +1,6 @@
 {
   "name": "@quell/server",
-  "version": "1.0.1",
+  "version": "1.5.1",
   "description": "Quell is an open-source NPM package providing a light-weight caching layer implementation for GraphQL responses on both the client- and server-side. Use Quell to prevent redundant client-side API requests and to minimize costly server-side response latency.",
   "main": "src/quell.js",
   "scripts": {
