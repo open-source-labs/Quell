@@ -9,7 +9,7 @@
 
 Quell is an easy-to-use, lightweight JavaScript library providing a client- and server-side caching solution for GraphQL.
 
-Accelerated by [OS Labs](https://github.com/oslabs-beta/) and developed by [Nick Kruckenberg](https://github.com/kruckenberg), [Mike Lauri](https://github.com/MichaelLauri), [Rob Nobile](https://github.com/RobNobile) and [Justin Jaeger](https://github.com/justinjaeger).
+Accelerated by [OS Labs](https://github.com/oslabs-beta/) and developed by [Nick Kruckenberg](https://github.com/kruckenberg), [Mike Lauri](https://github.com/MichaelLauri), [Rob Nobile](https://github.com/RobNobile), [Justin Jaeger](https://github.com/justinjaeger), [Andrei Cabrera](https://github.com/Andreicabrerao), [Dasha Kondratenko](https://github.com/dasha-k), [Derek Sirola](https://github.com/dsirola1) and [Xiao Yu Omeara](https://github.com/xyomeara).
 
 ## Features
 
