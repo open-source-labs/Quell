@@ -97,25 +97,26 @@ class QuellCache {
         // -- pull existing data from Redis, combine with data from arguments, put back to Redis
       */
 
-      
+      // get redis key if possible
       let {redisKey, isExist} = await this.createRedisKey(this.mutationMap, proto, protoArgs);
       let mutationString = queryString;
-      if(Object.keys(edgesFromRedis).length > 0) {
-        // check if protoArgs has an id
-        
+      if(Object.keys(edgesFromRedis).length > 0) {    
         if(!isExist) {
-          console.log('initial mutation string -->', mutationString);
-          // recreate mutation string to add alias __id__
+          // recreate mutation string to add alias __id
           mutationString = this.createMutationStr(proto, protoArgs);
-          console.log('recreated mutation string -->', mutationString);
         }
       } 
-      
-      console.log('REDIS KEY --->', redisKey);
-
       graphql(this.schema, mutationString)
         .then((mutationResult) => {
           console.log('mutation result -->', mutationResult);
+          if(!isExist) {
+            // cut __id from mutationResult
+            const redisIdentifier = this.getIdentifier(mutationResult); 
+            // use id to create redis key
+            console.log('identifier --->', redisIdentifier);
+            console.log('mutation --->', mutationResult);
+          }
+          
           // if we have some edges we have to update them as well
           if(Object.keys(edgesFromRedis).length > 0) {
             // go through, push new redis key to each, update redis
@@ -217,6 +218,26 @@ class QuellCache {
       }
     }
     return edges;
+  }
+
+  /**
+   * getIdentifier goes through mutationResult object, finds __id alias, delete it form mutation Result and return back
+   * mutate originalt mutaionResul object
+   * @param {Object} mutationResult - 
+   */
+  getIdentifier(mutationResult, keyToFind = '__id') {
+    for(const key in mutationResult) {
+      if(key === keyToFind) {
+        const valueToTReturn = mutationResult[key];
+        delete mutationResult[key];
+        return valueToTReturn
+      } else {
+        if(Object.prototype.toString.call(mutationResult[key]) === "[object Object]") {
+          return this.getIdentifier(mutationResult[key]);
+        }
+      }
+    }
+    return;
   }
 
   /**
