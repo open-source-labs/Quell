@@ -1,6 +1,6 @@
 {
   "name": "demo",
-  "version": "1.0.0",
+  "version": "1.5.1",
   "main": "index.js",
   "scripts": {
     "start": "NODE_ENV=production nodemon server/server.js",
@@ -10,7 +10,40 @@
     "test": "jest --verbose --detectOpenHandles"
   },
   "keywords": [],
-  "author": "",
+  "contributors": [
+    {
+      "name": "Mike Lauri",
+      "url": "https://github.com/MichaelLauri"
+    },
+    {
+      "name": "Rob Nobile",
+      "url": "https://github.com/RobNobile"
+    },
+    {
+      "name": "Justin Jaeger",
+      "url": "https://github.com/justinjaeger"
+    },
+    {
+      "name": "Nick Kruckenberg",
+      "url": "https://github.com/kruckenberg"
+    },
+    {
+      "name": "Andrei Cabrera",
+      "url": "https://github.com/Andreicabrerao"
+    },
+    {
+      "name": "Dasha Kondratenko",
+      "url": "https://github.com/dasha-k"
+    },
+    {
+      "name": "Derek Sirola",
+      "url": "https://github.com/dsirola1"
+    },
+    {
+      "name": "Xiao Yu Omeara",
+      "url": "https://github.com/xyomeara"
+    }
+  ],
   "license": "ISC",
   "description": "",
   "dependencies": {

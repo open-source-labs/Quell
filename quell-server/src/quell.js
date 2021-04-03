@@ -1,7 +1,15 @@
+<<<<<<< HEAD
 const redis = require('redis');
 const { parse } = require('graphql/language/parser');
 const { visit, BREAK } = require('graphql/language/visitor');
 const { graphql } = require('graphql');
+=======
+const redis = require("redis");
+const { parse } = require("graphql/language/parser");
+const { visit, BREAK } = require("graphql/language/visitor");
+const { graphql } = require("graphql");
+
+>>>>>>> 114b7818c53bdd98d75d4956800312f942722e16
 class QuellCache {
   constructor(schema, redisPort, cacheExpiration = 1000) {
     this.schema = schema;
@@ -44,12 +52,22 @@ class QuellCache {
     console.log('AST --->', AST);
 
     // create response prototype, referenses for aliases and arguments
+<<<<<<< HEAD
     const { proto, protoArgs } = this.parseAST(AST);
     console.log('PROTO OBJECT ===>', proto);
     console.log('ARGUMENTS OBJECT ===>', protoArgs);
 
     // pass-through for queries and operations that QuellCache cannot handle
     if (proto === 'unQuellable' || !isQuellable) {
+=======
+    const {proto, protoArgs, operationType} = this.parseAST(AST);
+    console.log("PROTO OBJECT ===>", proto);
+    console.log("ARGUMENTS OBJECT ===>", protoArgs);
+    console.log("OPERATION TYPE ===>", operationType);
+
+    // pass-through for queries and operations that QuellCache cannot handle
+    if (operationType === "unQuellable" || !isQuellable) {
+>>>>>>> 114b7818c53bdd98d75d4956800312f942722e16
       graphql(this.schema, queryString)
         .then((queryResult) => {
           console.log('query result -->', queryResult);
@@ -59,6 +77,7 @@ class QuellCache {
         .catch((error) => {
           return next('graphql library error: ', error);
         });
+<<<<<<< HEAD
     } else {
       /*
        * we can have two types of operation to take care of
@@ -68,7 +87,87 @@ class QuellCache {
       // if MUTATION
       // do updates
       // check if we have same key in redis, update redis
+=======
 
+    /*
+     * we can have two types of operation to take care of
+     * MUTATION OR QUERY
+    */
+    // if MUTATION
+    } else if (operationType === "mutation"){
+      // find any possible edges/connections between other fields and field from current mutation to update redis
+      const edgesFromRedis = await this.getEdgesForMutation(this.queryMap, this.mutationMap, proto);
+      console.log('EDGES --->', edgesFromRedis); //EDGES ---> { addBook: [ 'books' ] }
+      // edges = {books: ['Book-1', 'Book-2'], cities: []}
+      
+      /*
+        // if we have edges: 
+        // -- update references in edges
+        // -- create key (fieldName + id) for Redis
+        // -- check if we have an id in arguments or in response body 
+        // -- if we don't have an id, reformulate mutation and return id
+        // -- cut id before response
+        // -- create Redis key
+        // -- check if we have this key in Redis
+        // -- if yes update it 
+      */
+
+      /* 
+        // if we don't have edges:
+        // -- we still can have reference in Redis
+        // -- if we have reference in Redis we have to have an id in arguments
+        // -- check if we have an id in arguments
+        // -- if we have an id, create identifier
+        // -- check if this identifier exist in redis as key
+        // -- if yes, update redis after succes updates in database
+        // -- to update Redis we need data from arguments
+        // -- pull existing data from Redis, combine with data from arguments, put back to Redis
+      */
+>>>>>>> 114b7818c53bdd98d75d4956800312f942722e16
+
+      // get redis key if possible and potential combined value for future update
+      let {redisKey, isExist, redisValue} = await this.createRedisKey(this.mutationMap, proto, protoArgs);
+      console.log('combined value -->', redisValue);
+      let mutationString = queryString;
+      if(Object.keys(edgesFromRedis).length > 0) {    
+        if(!isExist) {
+          // recreate mutation string to add alias __id
+          mutationString = this.createMutationStr(proto, protoArgs);
+        }
+      } 
+      graphql(this.schema, mutationString)
+        .then((mutationResult) => {
+          console.log('mutation result -->', mutationResult);
+          
+          // if we have some edges we have to update them as well
+          if(Object.keys(edgesFromRedis).length > 0) {
+            if(!isExist) {
+              // cut __id from mutationResult
+              const redisIdentifier = this.getIdentifier(mutationResult); 
+              // use id to create redis key
+              redisKey += '-' + redisIdentifier;
+            }
+            // go through, push new redis key to each, update redis
+            for(const edge in edgesFromRedis) {
+              edgesFromRedis[edge].push(redisKey);
+              this.writeToCache(edge, edgesFromRedis[edge]);
+            }
+          }
+
+          // if redis needs to be updated, write to cache and send result back in sync
+          if(isExist) {
+            // reconstruct result from redis and db
+            this.writeToCache(redisKey, redisValue);
+          }
+          res.locals.queryResponse = mutationResult;
+          next();
+         
+        })
+        .catch((error) => {
+          return next("graphql library error: ", error);
+      });
+    } else {
+      // if QUERY
       let protoForCache = { ...proto };
 
       // build response from cache
@@ -126,6 +225,134 @@ class QuellCache {
         return next();
       }
     }
+  }
+
+  /**
+   * getEdgesForMutation goes through queryMap to find any possible edges for mutation
+   * @param {Object} queryMap - 
+   * @param {Object} proto - 
+   * @param {Object} protoArgs - 
+   * 
+   */
+
+  async getEdgesForMutation (queryMap, mutationMap, proto) {
+    const edges = {};
+    for(const key in proto) {
+      const field = mutationMap[key];
+      for (const queryKey in queryMap) {
+        if(Array.isArray(queryMap[queryKey]) && queryMap[queryKey][0] === field) {
+          // check if queryKey exist in redis
+          const edge = await this.getFromRedis(queryKey)
+          if(edge) {
+            edges[queryKey] = JSON.parse(edge);
+          }
+        }
+      }
+    }
+    return edges;
+  }
+
+  /**
+   * getIdentifier goes through mutationResult object, finds __id alias, delete it form mutation Result and return back
+   * mutate originalt mutaionResul object
+   * @param {Object} mutationResult - 
+   */
+  getIdentifier(mutationResult, keyToFind = '__id') {
+    for(const key in mutationResult) {
+      if(key === keyToFind) {
+        const valueToTReturn = mutationResult[key];
+        delete mutationResult[key];
+        return valueToTReturn
+      } else {
+        if(Object.prototype.toString.call(mutationResult[key]) === "[object Object]") {
+          return this.getIdentifier(mutationResult[key]);
+        }
+      }
+    }
+    return;
+  }
+
+  /**
+   * createRedisKey creates key based on field name and argument id and returns string or null if key creation is not possible
+   * @param {Object} mutationMap - 
+   * @param {Object} proto - 
+   * @param {Object} protoArgs - 
+   * returns redisKey if possible, e.g. 'Book-1' or 'Book-2', where 'Book' is name from mutationMap and '1' is id from protoArgs 
+   * and isExist if we have this key in redis
+   * 
+   */
+  async createRedisKey(mutationMap, proto, protoArgs) {
+   console.log('CREATE REDIS KEY', mutationMap, proto, protoArgs);
+   let isExist = false;
+   let redisKey;
+   let redisValue = null;
+   for(const mutationName in proto) {
+    const mutationArgs = protoArgs[mutationName];
+    redisKey = mutationMap[mutationName];
+    for (const key in mutationArgs) {
+      let identifier = null;
+      if(key.includes('id')) {
+        identifier = mutationArgs[key];
+        redisKey = mutationMap[mutationName] + '-' + identifier;
+        isExist = await this.checkFromRedis(redisKey);
+        if(isExist) {
+          redisValue = await this.getFromRedis(redisKey);
+          console.log('redis value -->', redisValue);
+          redisValue = JSON.parse(redisValue);
+          // combine redis value and protoArgs
+          let argumentsValue;
+          for(let mutationName in protoArgs) { // change later, now we assume that we have only one mutation
+            argumentsValue = protoArgs[mutationName];
+          }
+          redisValue = this.mergeObjects(argumentsValue, redisValue);
+        }
+      }
+    }
+   }
+   return {redisKey, isExist, redisValue};
+  }
+
+  /**
+   * mergeObjects combines two objects together with priority to objectPrimary
+   * @param {Object} objectPrimary - object
+   * @param {Object} objectSecondary - object
+   */
+  mergeObjects(objectPrimary, objectSecondary) {
+    const value = {};
+    // start from secondary object, so primary will overwrite same properties later
+    for(const prop in objectSecondary) {
+      if (objectSecondary.hasOwnProperty(prop)) {
+        if (Object.prototype.toString.call(objectSecondary[prop]) === '[object Object]') {
+          // if the property is a nested object
+          value[prop] = merge(objectSecondary[prop], value[prop]);
+        } else {
+          value[prop] = objectSecondary[prop];
+        }
+      }
+    }
+    for(const prop in objectPrimary) {
+      if (objectPrimary.hasOwnProperty(prop)) {
+        if (Object.prototype.toString.call(objectPrimary[prop]) === '[object Object]') {
+          // if the property is a nested object
+          value[prop] = merge(objectPrimary[prop], value[prop]);
+        } else {
+          value[prop] = objectPrimary[prop];
+        }
+      }
+    }
+    return value;
+  }
+
+  /**
+   * checkFromRedis reads from Redis cache and returns a promise.
+   * @param {String} key - the key for Redis lookup
+   */
+  checkFromRedis(key) {
+    return new Promise((resolve, reject) => {
+      this.redisCache.exists(key, (error, result) =>
+        error ? reject(error) : resolve(result)
+      );
+    });
   }
 
   /**
@@ -198,6 +425,7 @@ class QuellCache {
       }
       queryMap[query] = returnedType;
     }
+    console.log('QUERY MAP --->', queryMap);
     return queryMap;
   }
 
@@ -267,8 +495,8 @@ class QuellCache {
    */
   parseAST(AST) {
     // initialize prototype as empty object
-    const prototype = {};
-    let isQuellable = true;
+    const proto = {};
+    //let isQuellable = true;
 
     let operationType;
 
@@ -297,8 +525,14 @@ class QuellCache {
         }
       },
       OperationDefinition(node) {
+<<<<<<< HEAD
         if (node.operation === 'subscription') {
           isQuellable = false;
+=======
+        operationType = node.operation;
+        if (node.operation === "subscription") {
+          operationType = 'unQuellable';
+>>>>>>> 114b7818c53bdd98d75d4956800312f942722e16
           return BREAK;
         }
         if (node.operation === 'mutation') {
@@ -308,8 +542,13 @@ class QuellCache {
       Field: {
         enter(node) {
           if (node.alias) {
+<<<<<<< HEAD
             isQuellable = false;
             return BREAK;
+=======
+            operationType = 'unQuellable';
+            return BREAK; 
+>>>>>>> 114b7818c53bdd98d75d4956800312f942722e16
           }
           if (node.arguments && node.arguments.length > 0) {
             protoArgs = protoArgs || {};
@@ -320,10 +559,20 @@ class QuellCache {
             for (let i = 0; i < node.arguments.length; i++) {
               const key = node.arguments[i].name.value;
               const value = node.arguments[i].value.value;
+<<<<<<< HEAD
 
               if (!key.includes('id')) {
                 isQuellable = false;
                 return BREAK;
+=======
+              
+              // for queries cache can handle only id as argument
+              if(operationType === 'query') {
+                if(!key.includes('id')) {
+                  operationType = 'unQuellable';
+                  return BREAK;
+                }
+>>>>>>> 114b7818c53bdd98d75d4956800312f942722e16
               }
               protoArgs[node.name.value][key] = value;
             }
@@ -354,13 +603,19 @@ class QuellCache {
             return index + 1 === stack.length // if last item in path
               ? (prev[curr] = tempObject) // set value
               : (prev[curr] = prev[curr]); // otherwise, if index exists, keep value
-          }, prototype);
+          }, proto);
         }
       },
     });
+<<<<<<< HEAD
     const proto = isQuellable ? prototype : 'unQuellable';
     //const proto = "unQuellable";
     return { proto, protoArgs };
+=======
+    //const proto = isQuellable ? prototype : "unQuellable";
+    //const proto = "unQuellable";
+    return {proto, protoArgs, operationType};
+>>>>>>> 114b7818c53bdd98d75d4956800312f942722e16
   }
   /**
    * Toggles to false all values in a nested field not present in cache so that they will
@@ -556,6 +811,48 @@ class QuellCache {
       }
     }
     return fields;
+  }
+
+  /**
+   * createMutationStr creates new mutation string by adding alias __id__ to existing fields for cache purposes
+   * @param {Object} proto - protoObject
+   * @param {Object} protoArgs - protoArgsObject
+   */
+  createMutationStr(proto, protoArgs) {
+    const openCurl = " { ";
+    const closedCurl = " } ";
+    let mutationString = "mutation{";
+
+    for (const key in proto) {
+      console.log('KEY -->', key);
+      console.log('query stringify -->', proto[key]);
+      if (protoArgs && protoArgs[key]) {
+        let argString = "";
+        let fieldsString = "";
+
+        const openBrackets = " ( "; 
+        const closeBrackets = " )";
+        argString += openBrackets;
+
+        for (const item in protoArgs[key]) {
+          argString += item + ": " + '"' + protoArgs[key][item]+ '"';
+        }
+
+        for(const field in proto[key]) {
+          fieldsString += " " + field + " ";
+        }
+
+        argString += closeBrackets;
+        mutationString +=
+          key +
+          argString +
+          openCurl + fieldsString +
+           '__id:id' + // change for correct identifier later
+          closedCurl;
+      }
+    }
+
+    return mutationString + closedCurl;
   }
   /**
    * createQueryStr converts the query object constructed in createQueryObj into a properly-formed GraphQL query,
@@ -816,17 +1113,11 @@ class QuellCache {
    * @param {String} queryName - the name of the query, used for identifying response arrays in cache
    */
   async cache(responseObject, protoArgs) {
-    // refactor this part cause in case of query with arg we have array of counry with one elements and we don't need it
-    //console.log("we are inside cache function", responseObject);
     const collection = JSON.parse(JSON.stringify(responseObject));
-    //console.log("we are inside cache function", collection);
-
-    // iterate throgh
+    
     for (const field in collection) {
-      //console.log("iteration", field);
       // check if current data chunck is collection
       const currentDataPiece = collection[field];
-      //console.log("curr data chunk", currentDataPiece);
       let collectionName = this.queryMap[field];
       //console.log("collection name", collectionName);
       collectionName = Array.isArray(collectionName)

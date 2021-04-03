@@ -4,7 +4,7 @@
 
 @quell/client is an easy-to-implement JavaScript library providing a client-side caching solution for GraphQL.  Quell's schema-governed, type-level normalization algorithm caches GraphQL query responses as flattened key-value representations of the graph's nodes, making it possible to partially satisfy queries from the browser's sessionStorage, reformulate the query, and fetch from other APIs or databases only the data not already cached.  
 
-@quell/client is an open-source NPM package accelerated by [OS Labs](https://github.com/oslabs-beta/) and developed by [Nick Kruckenberg](https://github.com/kruckenberg), [Mike Lauri](https://github.com/MichaelLauri), [Rob Nobile](https://github.com/RobNobile) and [Justin Jaeger](https://github.com/justinjaeger).
+@quell/client is an open-source NPM package accelerated by [OS Labs](https://github.com/oslabs-beta/) and developed by [Nick Kruckenberg](https://github.com/kruckenberg), [Mike Lauri](https://github.com/MichaelLauri), [Rob Nobile](https://github.com/RobNobile), [Justin Jaeger](https://github.com/justinjaeger), [Andrei Cabrera](https://github.com/Andreicabrerao), [Dasha Kondratenko](https://github.com/dasha-k), [Derek Sirola](https://github.com/dsirola1) and [Xiao Yu Omeara](https://github.com/xyomeara).
 
 ## Installation
 
@@ -76,6 +76,6 @@ That's it! You're now caching your GraphQL queries in the browser's sessionStora
 
 ### Usage Notes
 
-- Currently, Quell can only cache query-type requests without arguments, aliases, fragments, variables, or directives. Quell will still process these other requests, but will not cache the responses.
+- Currently, Quell can only cache query-type requests without aliases, fragments, variables, or directives. Quell will still process these other requests, but will not cache the responses.
 
 #### For information on @quell/server, please visit the corresponding [README file](https://github.com/oslabs-beta/Quell/tree/master/quell-server).
