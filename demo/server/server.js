@@ -42,9 +42,6 @@ app.use('/graphql', quellCache.query, (req, res) => {
   return res.status(200).send(res.locals.queryResponse);
 });
 
-// GraphiQL, a visual editor for queries
-app.use('/graphiql', graphiqlExpress({ endpointURL: '/graphql' }));
-
 // Catch-all endpoint handler
 app.use((req, res) => {
   return res.status(400).send('Page not found.');
