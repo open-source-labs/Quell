@@ -70,8 +70,7 @@ class QuellCache {
     } else if (operationType === "mutation"){
       // find any possible edges/connections between other fields and field from current mutation to update redis
       const edgesFromRedis = await this.getEdgesForMutation(this.queryMap, this.mutationMap, proto);
-      console.log('EDGES --->', edgesFromRedis); //EDGES ---> { addBook: [ 'books' ] }
-      // edges = {books: ['Book-1', 'Book-2'], cities: []}
+      console.log('EDGES --->', edgesFromRedis);  // edges = {books: ['Book-1', 'Book-2'], cities: []}
       
       /*
         // if we have edges: 
@@ -276,12 +275,35 @@ class QuellCache {
           for(let mutationName in protoArgs) { // change later, now we assume that we have only one mutation
             argumentsValue = protoArgs[mutationName];
           }
-          redisValue = this.mergeObjects(argumentsValue, redisValue);
+          redisValue = this.updateObject(redisValue, argumentsValue);
         }
       }
     }
    }
    return {redisKey, isExist, redisValue};
+  }
+
+  /**
+   * updateObject updates existing fields in primary object taking incoming value from incoming object, returns new value
+   * @param {Object} objectPrimary - object
+   * @param {Object} objectIncoming - object
+   */
+  updateObject(objectPrimary, objectIncoming) {
+    const value = {};
+    
+    for(const prop in objectPrimary) {
+      if (objectIncoming.hasOwnProperty(prop)) {
+        if (Object.prototype.toString.call(objectPrimary[prop]) === '[object Object]') {
+          // if the property is a nested object
+          value[prop] = merge(objectPrimary[prop], objectIncomin[prop]);
+        } else {
+          value[prop] = objectIncoming[prop] || objectPrimary[prop];
+        }
+      } else {
+        value[prop] = objectPrimary[prop];
+      }
+    }
+    return value;
   }
 
   /**
