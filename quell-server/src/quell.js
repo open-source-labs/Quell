@@ -931,45 +931,45 @@ class QuellCache {
    * @param {Array} cachedArray - base array
    * @param {Array} uncachedArray - array to be merged into base array
    */
-  async joinResponses(cachedData, uncachedData) {
-    // data is always is object
-    //console.log("we are in joinResponses", uncachedData, cachedData);
+  // async joinResponses(cachedData, uncachedData) {
+  //   // data is always is object
+  //   //console.log("we are in joinResponses", uncachedData, cachedData);
 
-    let joinedData = {};
-    // iterate through keys
-    for (const key in uncachedData) {
-      //console.log("KEY IS", key, Array.isArray(uncachedData[key]));
-      // if we have an array run initial logic for array
-      if (Array.isArray(uncachedData[key])) {
-        //console.log("key", key);
-        joinedData[key] = [];
-        for (let i = 0; i < uncachedData[key].length; i += 1) {
-          const joinedItem = await this.recursiveJoin(
-            cachedData[key][i],
-            uncachedData[key][i]
-          );
-          //console.log("joined item", joinedItem);
-          joinedData[key].push(joinedItem);
-        }
-        // if we have an obj skip array iteration and call recursiveJoin
-      } else {
-        //console.log("key is ", key);
-        joinedData[key] = {};
-        // for(const item in uncachedData[key]) {
-        //console.log("item", uncachedData[key]);
+  //   let joinedData = {};
+  //   // iterate through keys
+  //   for (const key in uncachedData) {
+  //     //console.log("KEY IS", key, Array.isArray(uncachedData[key]));
+  //     // if we have an array run initial logic for array
+  //     if (Array.isArray(uncachedData[key])) {
+  //       //console.log("key", key);
+  //       joinedData[key] = [];
+  //       for (let i = 0; i < uncachedData[key].length; i += 1) {
+  //         const joinedItem = await this.recursiveJoin(
+  //           cachedData[key][i],
+  //           uncachedData[key][i]
+  //         );
+  //         //console.log("joined item", joinedItem);
+  //         joinedData[key].push(joinedItem);
+  //       }
+  //       // if we have an obj skip array iteration and call recursiveJoin
+  //     } else {
+  //       //console.log("key is ", key);
+  //       joinedData[key] = {};
+  //       // for(const item in uncachedData[key]) {
+  //       //console.log("item", uncachedData[key]);
 
-        const joinedItem = await this.recursiveJoin(
-          cachedData[key],
-          uncachedData[key]
-        );
-        //console.log("joined item", joinedItem);
-        joinedData[key] = { ...joinedItem };
-        // }
-      }
-    }
-    //console.log("joined data", joinedData);
-    return joinedData;
-  }
+  //       const joinedItem = await this.recursiveJoin(
+  //         cachedData[key],
+  //         uncachedData[key]
+  //       );
+  //       //console.log("joined item", joinedItem);
+  //       joinedData[key] = { ...joinedItem };
+  //       // }
+  //     }
+  //   }
+  //   //console.log("joined data", joinedData);
+  //   return joinedData;
+  // }
   /**
    * joinResponses iterates through an array, merging each item with the same-index item in a second array.
    * joinResponses serves two purposes:
