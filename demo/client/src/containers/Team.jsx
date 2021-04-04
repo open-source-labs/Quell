@@ -62,7 +62,7 @@ const dasha = {
   name: 'Dasha Kondratenko',
   src: Dasha,
   bio:
-    "Dasha is a full-stack software engineer experienced in JavaScript. She is passionate about code readability, open-source projects and believes in technologies' abilities to be a force for good. Outside of programming, she is dedicated to her two dogs.",
+    "Dasha is a full-stack software engineer experienced in JavaScript. She is passionate about code readability, open-source projects and believes in technology's ability to be a force for good. Outside of programming, she is dedicated to her two dogs.",
   linkedin: 'https://www.linkedin.com/in/dasha-k/',
   github: 'https://github.com/dasha-k',
 };
