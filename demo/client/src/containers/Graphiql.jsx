@@ -3,7 +3,7 @@ import GraphiQL from 'graphiql';
 import 'graphiql/graphiql.min.css';
 
 const Graphiql = () => (
-  <div class="graphiql">
+  <div className="graphiql">
     <GraphiQL
       fetcher={async (graphQLParams) => {
         const data = await fetch('graphql', {

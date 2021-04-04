@@ -146,7 +146,8 @@ header {
   padding: 10px;
 }
 
-.query-title, .metrics-title {
+.query-title,
+.metrics-title {
   margin-left: 10px;
   font-weight: 600;
 }
@@ -194,7 +195,7 @@ textarea {
 }
 
 .button-grid {
-  padding-bottom: 0!important;
+  padding-bottom: 0 !important;
   height: 90px;
   grid-area: button-grid;
   display: grid;
@@ -467,10 +468,10 @@ textarea {
     display: grid;
     grid-gap: 5px;
     grid-template:
-      "button-grid button-grid"
-      "query-title metrics-title"
-      "query metrics"
-      "results graph";
+      'button-grid button-grid'
+      'query-title metrics-title'
+      'query metrics'
+      'results graph';
     grid-template-columns: 3fr 2fr;
   }
 
@@ -480,6 +481,7 @@ textarea {
     grid-area: query;
     overflow: scroll;
     height: 400px;
+    width: 405px;
   }
 
   .results-div {
@@ -498,8 +500,9 @@ textarea {
     grid-area: graph;
     padding: 0 !important;
   }
-  
-  .query-title, .metrics-title {
+
+  .query-title,
+  .metrics-title {
     position: relative;
     margin: 0 !important;
     top: 5px;
@@ -549,5 +552,4 @@ textarea {
     width: 70%;
     float: right;
   }
-
 }
