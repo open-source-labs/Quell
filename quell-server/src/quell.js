@@ -50,6 +50,8 @@ class QuellCache {
     console.log("ARGUMENTS OBJECT ===>", protoArgs);
     console.log("OPERATION TYPE ===>", operationType);
 
+    const protoDeepCopy = {...proto};
+
     // pass-through for queries and operations that QuellCache cannot handle
     if (operationType === "unQuellable" || !isQuellable) {
       graphql(this.schema, queryString)
@@ -70,8 +72,7 @@ class QuellCache {
     } else if (operationType === "mutation"){
       // find any possible edges/connections between other fields and field from current mutation to update redis
       const edgesFromRedis = await this.getEdgesForMutation(this.queryMap, this.mutationMap, proto);
-      console.log('EDGES --->', edgesFromRedis); //EDGES ---> { addBook: [ 'books' ] }
-      // edges = {books: ['Book-1', 'Book-2'], cities: []}
+      console.log('EDGES --->', edgesFromRedis);  // edges = {books: ['Book-1', 'Book-2'], cities: []}
       
       /*
         // if we have edges: 
@@ -164,13 +165,15 @@ class QuellCache {
         //console.log("UPDATED QUERY STRING ===>", newQueryString);
         graphql(this.schema, newQueryString)
           .then(async (queryResponse) => {
-            //console.log("RESPONSE ===>", queryResponse);
+            console.log("RESPONSE ===>", queryResponse);
             uncachedResponse = queryResponse.data;
             // join uncached and cached responses
-            fullResponse = await this.joinResponses(
-              responseFromCache,
-              uncachedResponse
-            );
+            // fullResponse = await this.joinResponses(
+            //   responseFromCache,
+            //   uncachedResponse
+            // );
+            fullResponse = this.mergeObjects(protoDeepCopy, uncachedResponse, responseFromCache);
+            console.log('FULL RESPONSE ==>', fullResponse);
             // cache joined responses
             //console.log("WE GOT JOIN RESPONSES ==>", fullResponse);
 
@@ -179,12 +182,13 @@ class QuellCache {
               protoArgs
             );
             //console.log("if succesfullyCached ??", successfullyCached);
-            if (!successfullyCached) return this.query(req, res, next, false);
+            //if (!successfullyCached) return this.query(req, res, next, false);
             // rebuild response from cache
-            const toReturn = await this.constructResponse(fullResponse, AST);
+            //const toReturn = await this.constructResponse(fullResponse, AST);
+
             // append rebuilt response (if it contains data) or fullResponse to Express's response object
-            console.log('final response, cache and sb -->', toReturn);
-            res.locals.queryResponse = { data: { ...toReturn } };
+            //console.log('final response, cache and sb -->', toReturn);
+            res.locals.queryResponse = { data: { ...fullResponse } };
             return next();
           })
           .catch((error) => {
@@ -276,7 +280,7 @@ class QuellCache {
           for(let mutationName in protoArgs) { // change later, now we assume that we have only one mutation
             argumentsValue = protoArgs[mutationName];
           }
-          redisValue = this.mergeObjects(argumentsValue, redisValue);
+          redisValue = this.updateObject(redisValue, argumentsValue);
         }
       }
     }
@@ -285,34 +289,88 @@ class QuellCache {
   }
 
   /**
-   * mergeObjects combines two objects together with priority to objectPrimary
+   * updateObject updates existing fields in primary object taking incoming value from incoming object, returns new value
    * @param {Object} objectPrimary - object
-   * @param {Object} objectSecondary - object
+   * @param {Object} objectIncoming - object
    */
-  mergeObjects(objectPrimary, objectSecondary) {
+  updateObject(objectPrimary, objectIncoming) {
     const value = {};
-    // start from secondary object, so primary will overwrite same properties later
-    for(const prop in objectSecondary) {
-      if (objectSecondary.hasOwnProperty(prop)) {
-        if (Object.prototype.toString.call(objectSecondary[prop]) === '[object Object]') {
-          // if the property is a nested object
-          value[prop] = merge(objectSecondary[prop], value[prop]);
-        } else {
-          value[prop] = objectSecondary[prop];
-        }
-      }
-    }
+    
     for(const prop in objectPrimary) {
-      if (objectPrimary.hasOwnProperty(prop)) {
+      if (objectIncoming.hasOwnProperty(prop)) {
         if (Object.prototype.toString.call(objectPrimary[prop]) === '[object Object]') {
           // if the property is a nested object
-          value[prop] = merge(objectPrimary[prop], value[prop]);
+          value[prop] = merge(objectPrimary[prop], objectIncomin[prop]);
         } else {
-          value[prop] = objectPrimary[prop];
+          value[prop] = objectIncoming[prop] || objectPrimary[prop];
         }
+      } else {
+        value[prop] = objectPrimary[prop];
       }
     }
     return value;
+  }
+
+  /**
+   * mergeObjects combines objects together, next object overwrites previous
+   * @param {ArrayLike} objects - rest arugments for object
+   */
+  mergeObjects(proto, ...objects) {
+    console.log('inside mergeObjects --> ', ...objects);
+    const isObject = (obj) => Object.prototype.toString.call(obj) === '[object Object]';
+
+    const protoDeepCopy = {...proto};
+    console.log('proto deep copy -->', protoDeepCopy);
+    // return func that loop through arguments with reduce 
+    return objects.reduce((prev, obj) => {
+      //console.log('inside reducer, prev -->', prev, 'obj -->', obj);
+      Object.keys(prev).forEach(key => {
+        //console.log('inside foreach');
+        const prevVal = prev[key];
+        const objVal = obj[key];
+        
+        if(Array.isArray(objVal)) {
+          //console.log('array');
+          const prevArray = Array.isArray(prevVal) ? prevVal : [];
+          prev[key] = this.mergeArrays(proto[key], prevArray, objVal);
+        } else if(isObject(objVal)) {
+          //console.log('object');
+          const prevObject = isObject(prevVal) ? prevVal : {};
+          prev[key] = this.mergeObjects(proto[key], prevObject, objVal);
+          //console.log('prev[key] -->', prev[key]);
+        } else {
+          //console.log('value');
+          prev[key] = objVal || prev[key];
+        }
+      });
+      return prev;
+    }, protoDeepCopy);
+  }
+  
+  /**
+   * mergeObjects combines objects together, next object overwrites previous
+   * @param {ArrayLike} objects - rest arugments for object
+   */
+  mergeArrays(proto, ...arrays) {
+    // loop through arrays
+    // if type is object, call mergeObject
+    // else merge values
+    const isObject = (obj) => Object.prototype.toString.call(obj) === '[object Object]';
+
+    return arrays.reduce((prev, arr) => {
+      //console.log('inside arrays reduce', prev, arr);
+      arr.forEach((el, index) => {
+        const prevVal = prev[index];
+        const arrVal = arr[index];
+
+        if(isObject(prevVal) && isObject(arrVal)) {
+          prev[index] = this.mergeObjects(proto, prevVal, arrVal);
+        } else {
+          prev[index] = arrVal;
+        }
+      });
+      return prev;
+    }, []);
   }
 
   /**
