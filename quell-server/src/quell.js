@@ -525,14 +525,9 @@ class QuellCache {
         }
       },
       OperationDefinition(node) {
-<<<<<<< HEAD
-        if (node.operation === 'subscription') {
-          isQuellable = false;
-=======
         operationType = node.operation;
         if (node.operation === "subscription") {
           operationType = 'unQuellable';
->>>>>>> 114b7818c53bdd98d75d4956800312f942722e16
           return BREAK;
         }
         if (node.operation === 'mutation') {
@@ -542,13 +537,8 @@ class QuellCache {
       Field: {
         enter(node) {
           if (node.alias) {
-<<<<<<< HEAD
-            isQuellable = false;
-            return BREAK;
-=======
             operationType = 'unQuellable';
             return BREAK; 
->>>>>>> 114b7818c53bdd98d75d4956800312f942722e16
           }
           if (node.arguments && node.arguments.length > 0) {
             protoArgs = protoArgs || {};
@@ -559,12 +549,6 @@ class QuellCache {
             for (let i = 0; i < node.arguments.length; i++) {
               const key = node.arguments[i].name.value;
               const value = node.arguments[i].value.value;
-<<<<<<< HEAD
-
-              if (!key.includes('id')) {
-                isQuellable = false;
-                return BREAK;
-=======
               
               // for queries cache can handle only id as argument
               if(operationType === 'query') {
@@ -572,7 +556,6 @@ class QuellCache {
                   operationType = 'unQuellable';
                   return BREAK;
                 }
->>>>>>> 114b7818c53bdd98d75d4956800312f942722e16
               }
               protoArgs[node.name.value][key] = value;
             }
@@ -607,15 +590,9 @@ class QuellCache {
         }
       },
     });
-<<<<<<< HEAD
-    const proto = isQuellable ? prototype : 'unQuellable';
-    //const proto = "unQuellable";
-    return { proto, protoArgs };
-=======
     //const proto = isQuellable ? prototype : "unQuellable";
     //const proto = "unQuellable";
     return {proto, protoArgs, operationType};
->>>>>>> 114b7818c53bdd98d75d4956800312f942722e16
   }
   /**
    * Toggles to false all values in a nested field not present in cache so that they will
