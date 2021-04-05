@@ -48,8 +48,8 @@
   "description": "",
   "dependencies": {
     "@babel/runtime": "^7.11.2",
-    "@quell/client": "1.5.1",
-    "@quell/server": "1.5.1",
+    "@quell/client": "1.0.1",
+    "@quell/server": "1.0.1",
     "concurrently": "^5.3.0",
     "dotenv": "^8.2.0",
     "express": "^4.17.1",

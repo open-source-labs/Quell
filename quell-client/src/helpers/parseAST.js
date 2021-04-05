@@ -39,10 +39,9 @@ function parseAST(AST, QuellStore) {
           isQuellable = false;
         }
       }
-      // // We commented this section out because we changed alias to be Quellable
-      // if (node.alias) {
-      //   isQuellable = false;
-      // }
+      if (node.alias) {
+        isQuellable = false;
+      }
     },
 
     // Alternatively to providing enter() and leave() functions, a visitor can instead provide functions named the same as the kinds of AST nodes, or enter/leave visitors at a named key, leading to four permutations of visitor API:
@@ -170,25 +169,27 @@ function parseAST(AST, QuellStore) {
          *  name value pair to QuellStore.alias
          *  QuellStore.alias stucture: {country: { id: ‘2’ }, city: {id: 3}, author: {id: 3}}
          */
-        if (parent.alias) {
-          // console.log('parent ===> ', parent);
-          for (let i = 0; i < parent.arguments.length; i++) {
-            const key = parent.arguments[i].name.value;
-            const value = parent.arguments[i].value.value;
-            // If isQuellable is already false prior to this loop or if we have any arguments that is not an id or _id, set it to be false and let the query pass without cache in client side
-            isQuellable = isQuellable && key.includes('id');
-            // if QuellStore.arguments is null, assign an empty object here. So we can add property-value pairs after this line. We can't use bracket notation on an object's value that is null.
-            if (!QuellStore.alias) {
-              QuellStore.alias = { [parent.name.value]: [] };
-            }
-            QuellStore.alias[parent.name.value].push(parent.alias.value);
 
-            if (!QuellStore.arguments) {
-              QuellStore.arguments = { [parent.name.value]: [] };
-            }
-            QuellStore.arguments[parent.name.value].push({ [key]: value });
-          }
-        }
+        // // comment out aliases cache functionality
+        // if (parent.alias) {
+        //   // console.log('parent ===> ', parent);
+        //   for (let i = 0; i < parent.arguments.length; i++) {
+        //     const key = parent.arguments[i].name.value;
+        //     const value = parent.arguments[i].value.value;
+        //     // If isQuellable is already false prior to this loop or if we have any arguments that is not an id or _id, set it to be false and let the query pass without cache in client side
+        //     isQuellable = isQuellable && key.includes('id');
+        //     // if QuellStore.arguments is null, assign an empty object here. So we can add property-value pairs after this line. We can't use bracket notation on an object's value that is null.
+        //     if (!QuellStore.alias) {
+        //       QuellStore.alias = { [parent.name.value]: [] };
+        //     }
+        //     QuellStore.alias[parent.name.value].push(parent.alias.value);
+
+        //     if (!QuellStore.arguments) {
+        //       QuellStore.arguments = { [parent.name.value]: [] };
+        //     }
+        //     QuellStore.arguments[parent.name.value].push({ [key]: value });
+        //   }
+        // }
       }
     },
   });
