@@ -1,4 +1,4 @@
-const joinResponses = require('../../helpers/joinResponses');
+const joinResponses = require('../../src/helpers/joinResponses');
 
 describe('joinResponses', () => {
   const protoObj = {
