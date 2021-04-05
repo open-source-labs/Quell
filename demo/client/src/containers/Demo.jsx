@@ -31,9 +31,7 @@ const Demo = () => {
   const handleRunQueryClick = () => {
     // Run ResultsParser on output to get the query
     let parsedResult = CreateQueryStr(output);
-    //parsedResult='mutation{addBook(name: "Patterns") {id name}}'
-    //parsedResult='{books {id name author}}'
-    //parsedResult = 'mutation {changeBook (id: 0, author: "Other smart person"){id name}}'
+
     // // Uncomment the code below to test alias
     //parsedResult = `{country (id: 2) { id capital cities { id, name, population }} citiesByCountry(country_id:1){name}}`;
     // '{ country (id: 2) { id name } cities { id name }}'
