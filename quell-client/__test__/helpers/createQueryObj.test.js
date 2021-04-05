@@ -1,4 +1,4 @@
-const createQueryObj = require('../../helpers/createQueryObj');
+const createQueryObj = require('../../src/helpers/createQueryObj');
 
 describe('createQueryObj.js', () => {
   test('inputs prototype w/ all true should output empty object', () => {
