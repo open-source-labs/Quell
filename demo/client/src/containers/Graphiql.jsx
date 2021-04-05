@@ -3,11 +3,10 @@ import GraphiQL from 'graphiql';
 import 'graphiql/graphiql.min.css';
 
 const Graphiql = () => (
-  <GraphiQL
-    fetcher={async (graphQLParams) => {
-      const data = await fetch(
-        'graphql',
-        {
+  <div className="graphiql">
+    <GraphiQL
+      fetcher={async (graphQLParams) => {
+        const data = await fetch('graphql', {
           method: 'POST',
           headers: {
             Accept: 'application/json',
@@ -15,11 +14,11 @@ const Graphiql = () => (
           },
           body: JSON.stringify(graphQLParams),
           credentials: 'same-origin',
-        }
-      );
-      return data.json().catch(() => data.text());
-    }}
-  />
+        });
+        return data.json().catch(() => data.text());
+      }}
+    />
+  </div>
 );
 
 export default Graphiql;

@@ -1,4 +1,4 @@
-const createQueryStr = require('../../helpers/createQueryStr');
+const createQueryStr = require('../../src/helpers/createQueryStr');
 
 describe('createQueryStr.js', () => {
   test('inputs query object w/ only scalar types and outputs GCL query string', () => {

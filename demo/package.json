@@ -1,6 +1,6 @@
 {
   "name": "demo",
-  "version": "1.5.1",
+  "version": "1.1.0",
   "main": "index.js",
   "scripts": {
     "start": "NODE_ENV=production nodemon server/server.js",
