@@ -1,4 +1,4 @@
-const parseAST = require('../../helpers/parseAST');
+const parseAST = require('../../src/helpers/parseAST');
 const { parse } = require('graphql/language/parser');
 
 describe('parseAST.js', () => {

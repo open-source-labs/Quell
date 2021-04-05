@@ -8,6 +8,7 @@ import Justin from '../images/profile_pics/QUELL-headshot w border-Justin.svg';
 import Andrei from '../images/profile_pics/QUELL-headshot w border-Andrei.png';
 import Dasha from '../images/profile_pics/QUELL-headshot w border-Dasha.png';
 import Derek from '../images/profile_pics/QUELL-headshot w border-Derek.png';
+import Xiao from '../images/profile_pics/QUELL-headshot w border-Xiao.png';
 
 /* 
   Component to generate each teams section
@@ -62,7 +63,7 @@ const dasha = {
   name: 'Dasha Kondratenko',
   src: Dasha,
   bio:
-    "Dasha is a full-stack software engineer experienced in JavaScript. She is passionate about code readability, open-source projects and believes in technologies' abilities to be a force for good. Outside of programming, she is dedicated to her two dogs.",
+    "Dasha is a full-stack software engineer experienced in JavaScript. She is passionate about code readability, open-source projects and believes in technology's ability to be a force for good. Outside of programming, she is dedicated to her two dogs.",
   linkedin: 'https://www.linkedin.com/in/dasha-k/',
   github: 'https://github.com/dasha-k',
 };
@@ -78,9 +79,9 @@ const derek = {
 
 const xiao = {
   name: 'Xiao Yu Omeara',
-  src: '',
+  src: Xiao,
   bio:
-    'Xiao is a full-stack software engineer with a passion for maximizing performance and resiliency. Xiao also cares deeply about maintainable code, automated testing, and community-driven open-source projects.',
+    'Xiao is a full-stack software engineer with a passion for maximizing performance and resiliency. Xiao also cares deeply about maintainable code, automated testing, and community-driven open-source projects. Outside of coding, Xiao is a Pilates and indoor rowing enthusiast.',
   linkedin: 'https://www.linkedin.com/in/xyomeara/',
   github: 'https://github.com/xyomeara',
 };

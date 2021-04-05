@@ -1,6 +1,6 @@
 {
   "name": "demo",
-  "version": "1.5.1",
+  "version": "1.1.0",
   "main": "index.js",
   "scripts": {
     "start": "NODE_ENV=production nodemon server/server.js",
@@ -53,7 +53,10 @@
     "concurrently": "^5.3.0",
     "dotenv": "^8.2.0",
     "express": "^4.17.1",
+<<<<<<< HEAD
     "express-graphql": "^0.11.0",
+=======
+>>>>>>> c4ca21c743f9ce561d11baf8bd942085cea1bcdc
     "graphiql": "^1.4.0",
     "graphql": "^15.5.0",
     "pg": "^8.3.3",
