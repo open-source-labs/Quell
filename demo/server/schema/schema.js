@@ -51,7 +51,7 @@ const BookType = new GraphQLObjectType({
     id: {type: GraphQLID},
     name: {type: GraphQLString},
     author: {type: GraphQLString},
-    shelf_id: {type: GraphQLString}
+    shelf_id: {type: GraphQLString},
   }),
 });
 
@@ -66,8 +66,7 @@ const CountryType = new GraphQLObjectType({
       async resolve(parent, args) {
         
         const citiesList = await db.query(
-          `
-          SELECT * FROM cities WHERE country_id = $1`,
+          `SELECT * FROM cities WHERE country_id = $1`,
           [Number(parent.id)]
         );
 
@@ -166,7 +165,7 @@ const RootQuery = new GraphQLObjectType({
         const books = await dbBooks.query(
           `SELECT * FROM books`
         );
-        return books;
+        return books.rows;
       }
     },
     // GET BOOK BY ID
@@ -178,7 +177,7 @@ const RootQuery = new GraphQLObjectType({
           `SELECT * FROM books WHERE id = $1`,
           [Number(args.id)]
         );
-        return book;
+        return book.rows[0];
       }
     },
     // GET ALL BOOKSHELVES
@@ -219,13 +218,15 @@ const RootMutation = new GraphQLObjectType({
       type: BookType,
       args: {
         name: {type: new GraphQLNonNull(GraphQLString)},
-        author: {type: GraphQLString}
+        author: {type: GraphQLString},
+        shelf_id: {type: new GraphQLNonNull(GraphQLString)},
       },
       async resolve(parent, args) {
         const author = args.author || '';
+
         const newBook = await dbBooks.query(
-          `INSERT INTO books (name, author) VALUES ($1, $2) RETURNING *`,
-          [args.name, author]
+          `INSERT INTO books (name, author, shelf_id) VALUES ($1, $2, $3) RETURNING *`,
+          [args.name, author, Number(args.shelf_id)]
         );
         return newBook.rows[0];
       }
@@ -235,9 +236,10 @@ const RootMutation = new GraphQLObjectType({
       type: BookType,
       args: {
         id: { type: GraphQLID },
-        author: { type: GraphQLString}
+        author: { type: GraphQLString},
       },
       async resolve(parent, args) {
+
         const updatedBook = await dbBooks.query(
           `UPDATE books SET author = $2 WHERE id = $1 RETURNING *`,
           [args.id, args.author]
