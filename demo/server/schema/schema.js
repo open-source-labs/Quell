@@ -1,4 +1,5 @@
 const db = require('../models/countriesModel');
+const dbBooks = require('../models/booksModel');
 
 const graphqlNodeModule =
   process.env.NODE_ENV === 'development'
@@ -15,9 +16,6 @@ const {
   GraphQLNonNull
 } = require(graphqlNodeModule);
 
-let _id = 0;
-const books = [];
-
 // =========================== //
 // ===== TYPE DEFINITIONS ==== //
 // =========================== //
@@ -26,13 +24,34 @@ const books = [];
   Generally corresponds with table we're pulling from
 */
 
-// definition for mutation purposes, doesn't exist in database
+const BookShelfType = new GraphQLObjectType({
+  name: 'BookShelfType',
+  fields: () => ({
+    id: { type: GraphQLID },
+    name: {type: GraphQLString},
+    books: {
+      type: new GraphQLList(BookType),
+      async resolve(parent, args) {
+        
+        const booksList = await dbBooks.query(
+          `
+          SELECT * FROM books WHERE shelf_id = $1`,
+          [Number(parent.id)]
+        );
+
+        return booksList.rows;
+      },
+    }
+  }),
+});
+
 const BookType = new GraphQLObjectType({
   name: 'Book',
   fields: () => ({
     id: {type: GraphQLID},
     name: {type: GraphQLString},
     author: {type: GraphQLString},
+    shelf_id: {type: GraphQLString}
   }),
 });
 
@@ -67,8 +86,6 @@ const CityType = new GraphQLObjectType({
     population: { type: GraphQLInt },
   }),
 });
-
-
 
 // ADD LANGUAGES TYPE HERE
 
@@ -118,6 +135,20 @@ const RootQuery = new GraphQLObjectType({
         return citiesList.rows;
       },
     },
+    // GET CITY BY ID
+    city: {
+      type: CityType,
+      args: { id: { type: GraphQLID } },
+      async resolve(parent, args) {
+        const city = await db.query(
+          `
+          SELECT * FROM cities WHERE id = $1`,
+          [Number(args.id)]
+        );
+
+        return city.rows[0];
+      },
+    },
     // GET ALL CITIES
     cities: {
       type: new GraphQLList(CityType),
@@ -131,7 +162,10 @@ const RootQuery = new GraphQLObjectType({
     // GET ALL BOOKS
     books: {
       type: new GraphQLList(BookType),
-      resolve(args) {
+      async resolve(parent, args) {
+        const books = await dbBooks.query(
+          `SELECT * FROM books`
+        );
         return books;
       }
     },
@@ -139,13 +173,38 @@ const RootQuery = new GraphQLObjectType({
     book: {
       type: BookType,
       args: { id: { type: GraphQLID } },
-      resolve(parent, args) {
-        console.log('books -->', books);
-
-        return books.find(book => Number(args.id) === book.id);
+      async resolve(parent, args) {
+        const book = await dbBooks.query(
+          `SELECT * FROM books WHERE id = $1`,
+          [Number(args.id)]
+        );
+        return book;
       }
+    },
+    // GET ALL BOOKSHELVES
+    bookShelves: {
+      type: new GraphQLList(BookShelfType),
+      async resolve(parent, args) {
+        const shelvesList = await dbBooks.query(`
+          SELECT * FROM bookShelves`);
+
+        return shelvesList.rows;
+      },
+    },
+    // GET SHELF BY ID
+    bookShelf: {
+      type: BookShelfType,
+      args: {id: { type: GraphQLID }},
+      async resolve(parent, args) {
+        const bookShelf = await dbBooks.query(
+          `SELECT * FROM bookShelves WHERE id = $1`,
+          [Number(args.id)]
+        );
+
+        return bookShelf.rows[0];
+      },
     }
-  },
+  }
 });
 
 // ================== //
@@ -162,15 +221,13 @@ const RootMutation = new GraphQLObjectType({
         name: {type: new GraphQLNonNull(GraphQLString)},
         author: {type: GraphQLString}
       },
-      resolve(parent, args) {
-        console.log('ARGS --->', args);
-        let newBook = {
-          id: _id++,
-          ...args
-        }
-        books.push(newBook);
-        console.log('BOOKS --->', books);
-        return newBook;
+      async resolve(parent, args) {
+        const author = args.author || '';
+        const newBook = await dbBooks.query(
+          `INSERT INTO books (name, author) VALUES ($1, $2) RETURNING *`,
+          [args.name, author]
+        );
+        return newBook.rows[0];
       }
     },
     // change book
@@ -180,20 +237,29 @@ const RootMutation = new GraphQLObjectType({
         id: { type: GraphQLID },
         author: { type: GraphQLString}
       },
-      resolve(parent, args) {
-        let updatedBook = {
-          id: args.id,
-          author: args.author
-        }
-        books.forEach(book => {
-          if(book.id === Number(updatedBook.id)) {
-            book.author = updatedBook.author;
-            updatedBook.name = book.name;
-          }
-        });
-        return updatedBook;
+      async resolve(parent, args) {
+        const updatedBook = await dbBooks.query(
+          `UPDATE books SET author = $2 WHERE id = $1 RETURNING *`,
+          [args.id, args.author]
+        );
+        return updatedBook.rows[0];
+      }
+    },
+    // ADD SHELF
+    addBookShelf: {
+      type: BookShelfType,
+      args: {
+        name: {type: new GraphQLNonNull(GraphQLString)},
+      },
+      async resolve(parent, args) {
+        const newBookShelf = await dbBooks.query(
+          `INSERT INTO bookShelves (name) VALUES ($1) RETURNING *`,
+        [args.name]
+        );
+        return newBookShelf.rows[0];
       }
     }
+    // UPDATE SHELF
   }
 });
 
@@ -201,5 +267,5 @@ const RootMutation = new GraphQLObjectType({
 module.exports = new GraphQLSchema({
   query: RootQuery,
   mutation: RootMutation,
-  types: [CountryType, CityType],
+  types: [CountryType, CityType, BookType, BookShelfType],
 });
