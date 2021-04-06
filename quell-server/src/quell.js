@@ -267,7 +267,7 @@ class QuellCache {
     redisKey = mutationMap[mutationName];
     for (const key in mutationArgs) {
       let identifier = null;
-      if(key.includes('id')) {
+      if(key === 'id' || key === "_id") {
         identifier = mutationArgs[key];
         redisKey = mutationMap[mutationName] + '-' + identifier;
         isExist = await this.checkFromRedis(redisKey);
