@@ -40,7 +40,7 @@ If not already installed on your server, install Redis.
 
 ### Usage Notes
 
-- Currently, Quell can only cache query-type requests without arguments, aliases, fragments, variables, or directives. Quell will still process these other requests, but will not cache the responses.
+- Currently, Quell can only cache query-type requests without aliases, fragments, variables, or directives. Quell will still process these other requests, but will not cache the responses.
 
 ## Documentation
 
