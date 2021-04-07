@@ -25,7 +25,7 @@ const {
 */
 
 const BookShelfType = new GraphQLObjectType({
-  name: 'BookShelfType',
+  name: 'BookShelf',
   fields: () => ({
     id: { type: GraphQLID },
     name: {type: GraphQLString},
