@@ -11,35 +11,41 @@
 ### Installing and Connecting a Redis Server
 
 If not already installed on your server, install Redis.
+
 - Mac-Homebrew:
-    - At the terminal, type `brew install redis`
-    - After installation completes, type `redis-server`
-    - Your server should now have a Redis database connection open (note the port on which it is listening)
+  - At the terminal, type `brew install redis`
+  - After installation completes, type `redis-server`
+  - Your server should now have a Redis database connection open (note the port on which it is listening)
 - Linux or non-Homebrew:
-    - Download appropriate version of Redis from [redis.io/download](http://redis.io/download)
-    - Follow installation instructions
-    - Once Redis is successfully installed, follow instructions to open a Redis database connection (note the port on which it is listening)
+  - Download appropriate version of Redis from [redis.io/download](http://redis.io/download)
+  - Follow installation instructions
+  - Once Redis is successfully installed, follow instructions to open a Redis database connection (note the port on which it is listening)
 
 ### Install @quell/server
 
-Install the NPM package from your terminal: `npm i @quell/server`. 
+Install the NPM package from your terminal: `npm i @quell/server`.
 `@quell/server` will be added as a dependency to your package.json file.
 
 ## Implementation
 
 1. Import quell-server into your Node.js/Express file:
-  - Common JS: `const { QuellCache } = require('@quell/server');`
-  - ES6+: `import { QuellCache } from '@quell/server';`
+
+- Common JS: `const { QuellCache } = require('@quell/server');`
+- ES6+: `import { QuellCache } from '@quell/server';`
+
 2. Instantiate QuellCache once for each GraphQL endpoint, passing to it the following arguments:
-  - schema - the GraphQL schema you've defined using the graphql-JS library
-  - redisPort - the port on which your Redis server is listening
-  - cacheExpiration - number of seconds you want data to persist in the Redis cache
+
+- schema - the GraphQL schema you've defined using the graphql-JS library
+- redisPort - the port on which your Redis server is listening
+- cacheExpiration - number of seconds you want data to persist in the Redis cache, its set for 10 minutes.
+
 3. Add quell-server's controller function `quellCache.query` to the Express route that receives GraphQL queries:
 
 So, for example, to instantiate the middleware to satisfy GraphQL queries using the schema you've stored or imported as `myGraphQLSchema` and cache responses to the Redis database listening on `6379` for `3600` seconds, you would add to your server file:
 `const quellCache = new QuellCache(myGraphQLSchema, 6379, 3600);`
 
 And your server file might look like this:
+
 ```
 const express = require('express');
 const myGraphQLSchema = require('./schema/schema');
@@ -48,14 +54,14 @@ const { QuellCache } = require('@quell/server')
 // create a new Express server
 const app = express();
 
-// instantiate quell-server 
+// instantiate quell-server
 const quellCache = new QuellCache(myGraphQLSchema, 6379, 3600);
 
 // apply Express's JSON parser
 app.use(express.json());
 
 // GraphQL route
-app.use('/graphql', 
+app.use('/graphql',
     quellCache.query,
     (req, res) => {
     return res

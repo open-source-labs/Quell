@@ -1,6 +1,5 @@
 const express = require('express');
 const { GraphQLObjectType } = require('graphql');
-const { graphqlHTTP } = require('express-graphql');
 const path = require('path');
 const schema = require('./schema/schema');
 const graphqlNodeModule =
