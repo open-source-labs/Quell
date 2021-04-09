@@ -37,7 +37,7 @@ Install the NPM package from your terminal: `npm i @quell/server`.
 
 - schema - the GraphQL schema you've defined using the graphql-JS library
 - redisPort - the port on which your Redis server is listening
-- cacheExpiration - number of seconds you want data to persist in the Redis cache, it's set to 10 minutes.
+- cacheExpiration - number of seconds you want data to persist in the Redis cache, it is set to 10 minutes.
 
 3. Add quell-server's controller function `quellCache.query` to the Express route that receives GraphQL queries:
 

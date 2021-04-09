@@ -1032,7 +1032,7 @@ class QuellCache {
   }
   /**
    * writeToCache writes a value to the cache unless the key indicates that the item is uncacheable.
-   * WriteToCache will set an expiration time for each key written to cache base on cacheExpiration
+   * Will set an expiration time for each key written to cache base on cacheExpiration
    * @param {String} key - unique id under which the cached data will be stored
    * @param {Object} item - item to be cached
    */
