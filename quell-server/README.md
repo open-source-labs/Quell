@@ -37,7 +37,7 @@ Install the NPM package from your terminal: `npm i @quell/server`.
 
 - schema - the GraphQL schema you've defined using the graphql-JS library
 - redisPort - the port on which your Redis server is listening
-- cacheExpiration - number of seconds you want data to persist in the Redis cache, its set for 10 minutes.
+- cacheExpiration - number of seconds you want data to persist in the Redis cache, it's set to 10 minutes.
 
 3. Add quell-server's controller function `quellCache.query` to the Express route that receives GraphQL queries:
 
@@ -81,5 +81,6 @@ That's it! You now have a normalized cache for your GraphQL endpoint.
 - @quell/server reads queries from Express' request object at `request.body.query` and attaches the query response to Express' response object at `response.locals.queryResponse`.
 - @quell/server can only cache items it can uniquely identify. It will first inspect your schema to identify fields with a [GraphQL ID type](https://graphql.org/learn/schema/#scalar-types). If it cannot find any ID-type fields, it will look for fields called `id` of `_id`. If a query lacks all three, it will execute the query without caching the response.
 - Currently, Quell can only cache query-type requests without aliases, fragments, variables, or directives. Quell will still process these other requests, but will not cache the responses.
+- Currently, Quell can only handle mutations that changes single entity and can not handle remove or add operations.
 
 #### For information on @quell/client, please visit the corresponding [README file](https://github.com/oslabs-beta/Quell/tree/master/quell-client).
