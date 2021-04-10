@@ -128,26 +128,6 @@ class QuellCache {
   }
 
   /**
-   * getIdentifier goes through mutationResult object, finds __id alias, delete it form mutation Result and return back
-   * mutate originalt mutaionResul object
-   * @param {Object} mutationResult - 
-   */
-  getIdentifier(mutationResult, keyToFind = '__id') {
-    for(const key in mutationResult) {
-      if(key === keyToFind) {
-        const valueToTReturn = mutationResult[key];
-        delete mutationResult[key];
-        return valueToTReturn
-      } else {
-        if(Object.prototype.toString.call(mutationResult[key]) === "[object Object]") {
-          return this.getIdentifier(mutationResult[key]);
-        }
-      }
-    }
-    return;
-  }
-
-  /**
    * createRedisKey creates key based on field name and argument id and returns string or null if key creation is not possible
    * @param {Object} mutationMap - 
    * @param {Object} proto - 
@@ -209,9 +189,11 @@ class QuellCache {
   }
 
   /**
-   * mergeObjects combines objects together, next object overwrites previous
-   * Rebuilds response from cache, using a reconstructed prototype to govern the order of fields.
-   * @param {ArrayLike} objects - rest arugments for object
+   * mergeObjects recursively combines objects together, next object overwrites previous
+   * Used to rebuild response from cache and database
+   * Uses a prototype to govern the order of fields
+   * @param {Array} - rest parameters for all objects passed to function
+   * @param {proto} - protoObject 
    */
   mergeObjects(proto, ...objects) {
     const isObject = (obj) => Object.prototype.toString.call(obj) === '[object Object]';
@@ -239,8 +221,10 @@ class QuellCache {
   }
   
   /**
-   * mergeObjects combines objects together, next object overwrites previous
-   * @param {ArrayLike} objects - rest arugments for object
+   * mergeArrays combines arrays together, next array overwrites previous
+   * Used as helper function for mergeObject to handle arrays 
+   * @param {Array} arrays - rest parameters for all arrays passed to function
+   * @param {proto} - protoObject, needed only to pass it to mergeObjects
    */
   mergeArrays(proto, ...arrays) {
     const isObject = (obj) => Object.prototype.toString.call(obj) === '[object Object]';
@@ -506,7 +490,7 @@ class QuellCache {
     });
     return {proto, protoArgs, operationType};
   }
-  
+
   /**
    * Toggles to false all values in a nested field not present in cache so that they will
    * be included in the reformulated query.
