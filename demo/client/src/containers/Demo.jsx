@@ -31,9 +31,9 @@ const Demo = () => {
   const handleRunQueryClick = () => {
     // Run ResultsParser on output to get the query
     let parsedResult = CreateQueryStr(output);
-
+    //parsedResult = '{countries{id name} cities {id name}}';
     // // Uncomment the code below to test alias
-    //parsedResult = `{country (id: 2) { id capital cities { id, name, population }} citiesByCountry(country_id:1){name}}`;
+    //parsedResult = `{countries{id name} cities {id name}}`;
     // '{ country (id: 2) { id name } cities { id name }}'
     // parsedResult =
     //   " {country1: country (id: 1) { id capital cities { id, name, population }} country2: country (id: 4) { id capital cities { id, name, population }}} ";
