@@ -11,41 +11,35 @@
 ### Installing and Connecting a Redis Server
 
 If not already installed on your server, install Redis.
-
 - Mac-Homebrew:
-  - At the terminal, type `brew install redis`
-  - After installation completes, type `redis-server`
-  - Your server should now have a Redis database connection open (note the port on which it is listening)
+    - At the terminal, type `brew install redis`
+    - After installation completes, type `redis-server`
+    - Your server should now have a Redis database connection open (note the port on which it is listening)
 - Linux or non-Homebrew:
-  - Download appropriate version of Redis from [redis.io/download](http://redis.io/download)
-  - Follow installation instructions
-  - Once Redis is successfully installed, follow instructions to open a Redis database connection (note the port on which it is listening)
+    - Download appropriate version of Redis from [redis.io/download](http://redis.io/download)
+    - Follow installation instructions
+    - Once Redis is successfully installed, follow instructions to open a Redis database connection (note the port on which it is listening)
 
 ### Install @quell/server
 
-Install the NPM package from your terminal: `npm i @quell/server`.
+Install the NPM package from your terminal: `npm i @quell/server`. 
 `@quell/server` will be added as a dependency to your package.json file.
 
 ## Implementation
 
 1. Import quell-server into your Node.js/Express file:
-
-- Common JS: `const { QuellCache } = require('@quell/server');`
-- ES6+: `import { QuellCache } from '@quell/server';`
-
+  - Common JS: `const { QuellCache } = require('@quell/server');`
+  - ES6+: `import { QuellCache } from '@quell/server';`
 2. Instantiate QuellCache once for each GraphQL endpoint, passing to it the following arguments:
-
-- schema - the GraphQL schema you've defined using the graphql-JS library
-- redisPort - the port on which your Redis server is listening
-- cacheExpiration - number of seconds you want data to persist in the Redis cache, it is set to 10 minutes.
-
+  - schema - the GraphQL schema you've defined using the graphql-JS library
+  - redisPort - the port on which your Redis server is listening
+  - cacheExpiration - number of seconds you want data to persist in the Redis cache
 3. Add quell-server's controller function `quellCache.query` to the Express route that receives GraphQL queries:
 
 So, for example, to instantiate the middleware to satisfy GraphQL queries using the schema you've stored or imported as `myGraphQLSchema` and cache responses to the Redis database listening on `6379` for `3600` seconds, you would add to your server file:
 `const quellCache = new QuellCache(myGraphQLSchema, 6379, 3600);`
 
 And your server file might look like this:
-
 ```
 const express = require('express');
 const myGraphQLSchema = require('./schema/schema');
@@ -54,14 +48,14 @@ const { QuellCache } = require('@quell/server')
 // create a new Express server
 const app = express();
 
-// instantiate quell-server
+// instantiate quell-server 
 const quellCache = new QuellCache(myGraphQLSchema, 6379, 3600);
 
 // apply Express's JSON parser
 app.use(express.json());
 
 // GraphQL route
-app.use('/graphql',
+app.use('/graphql', 
     quellCache.query,
     (req, res) => {
     return res
@@ -81,6 +75,5 @@ That's it! You now have a normalized cache for your GraphQL endpoint.
 - @quell/server reads queries from Express' request object at `request.body.query` and attaches the query response to Express' response object at `response.locals.queryResponse`.
 - @quell/server can only cache items it can uniquely identify. It will first inspect your schema to identify fields with a [GraphQL ID type](https://graphql.org/learn/schema/#scalar-types). If it cannot find any ID-type fields, it will look for fields called `id` of `_id`. If a query lacks all three, it will execute the query without caching the response.
 - Currently, Quell can only cache query-type requests without aliases, fragments, variables, or directives. Quell will still process these other requests, but will not cache the responses.
-- Currently, Quell can only handle mutations that changes single entity and can not handle remove or add operations.
 
 #### For information on @quell/client, please visit the corresponding [README file](https://github.com/oslabs-beta/Quell/tree/master/quell-client).
