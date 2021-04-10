@@ -162,11 +162,11 @@ function writeToCache(key, item) {
     // Store the data entry
     sessionStorage.setItem(key, JSON.stringify(item));
 
-    // // Start the time out to remove this data entry for cache expiration
-    // let seconds = 10;
-    // setTimeout(() => {
-    //   sessionStorage.removeItem(key);
-    // }, seconds * 1000);
+    // Start the time out to remove this data entry for cache expiration after 10 minutes
+    let seconds = 600;
+    setTimeout(() => {
+      sessionStorage.removeItem(key);
+    }, seconds * 1000);
   }
 }
 
