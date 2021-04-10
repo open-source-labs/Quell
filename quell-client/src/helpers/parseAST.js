@@ -22,7 +22,6 @@ function parseAST(AST, QuellStore) {
 
   visit(AST, {
     enter(node) {
-      // console.log('we are entering node ===> ', node);
       if (node.operation) {
         if (node.operation !== 'query') {
           isQuellable = false;
@@ -51,11 +50,6 @@ function parseAST(AST, QuellStore) {
     // path – The key path to get to this node from the root node.
     // ancestors – All nodes and Arrays visited before reaching parent of this node. These correspond to array indices in path. Note: ancestors includes arrays which contain the parent of visited node.
     SelectionSet(node, key, parent, path, ancestors) {
-      // console.log('node ===> ', node);
-      // console.log('key ===> ', key);
-      // console.log('parent ===> ', parent);
-      // console.log('path ===> ', path);
-      // console.log('ancestors ===>', ancestors);
       /**
        * Exclude SelectionSet nodes whose parents' are not of the kind
        * 'Field' to exclude nodes that do not contain information about
@@ -68,14 +62,8 @@ function parseAST(AST, QuellStore) {
          *  is found three three ancestors back. Hence, we subtract three.
          */
         let parentFieldDepth = ancestors.length - 3;
-        // console.log('ancestors.length ===> ', ancestors.length);
-        // console.log(
-        //   ' parentFieldDepth = ancestors.length - 3 ===> ',
-        //   parentFieldDepth
-        // );
 
         let objPath = [parent.name.value];
-        // console.log('objPath = [parent.name.value] ===> ', objPath);
 
         /** Loop through ancestors to gather all ancestor nodes. This array
          * of nodes will be necessary for properly nesting each field in the
@@ -83,15 +71,9 @@ function parseAST(AST, QuellStore) {
          */
         while (parentFieldDepth >= 5) {
           let parentFieldNode = ancestors[parentFieldDepth - 1];
-          // console.log('parentFieldNode ===> ', parentFieldNode);
 
           let { length } = parentFieldNode;
-          // console.log('length', length);
           objPath.unshift(parentFieldNode[length - 1].name.value);
-          // console.log(
-          //   'objPath.unshift(parentFieldNode[length - 1].name.value) inside of while loop ===> ',
-          //   objPath
-          // );
 
           parentFieldDepth -= 3;
         }
@@ -105,24 +87,12 @@ function parseAST(AST, QuellStore) {
         for (let field of node.selections) {
           collectFields[field.name.value] = true;
         }
-        // console.log(
-        //   'collectFields ===> ',
-        //   JSON.parse(JSON.stringify(collectFields))
-        // );
 
         /** Helper function to convert array of ancestor fields into a
          *  path at which to assign the `collectFields` object.
          */
         function setProperty(path, obj, value) {
-          // console.log('objPath/path ===> ', path);
-          // console.log('prototype/obj ===> ', JSON.parse(JSON.stringify(obj)));
-          // console.log('collectFields/value ===> ', value);
           return path.reduce((prev, curr, index) => {
-            // console.log(
-            //   'prototype accumulator/prev ===> ',
-            //   JSON.parse(JSON.stringify(prev))
-            // );
-            // console.log('current path/curr ===> ', curr);
             return index + 1 === path.length // if last item in path
               ? (prev[curr] = value) // set value
               : (prev[curr] = prev[curr] || {});
@@ -131,11 +101,6 @@ function parseAST(AST, QuellStore) {
         }
 
         setProperty(objPath, prototype, collectFields);
-        // console.log(
-        //   'prototype in parseAST ===> ',
-        //   JSON.parse(JSON.stringify(prototype))
-        // );
-
         // Build the arguments object
 
         /** If the current node's parent has a property name arguments and the arguments' array
@@ -145,14 +110,12 @@ function parseAST(AST, QuellStore) {
          *  QuellStore.arguments stucture: {country: { id: ‘2’ }, city: {id: 3}, author: {id: 3}}
          */
         if (parent.arguments && !parent.alias) {
-          // console.log('parent ===> ', parent);
           if (parent.arguments.length > 0) {
             for (let i = 0; i < parent.arguments.length; i++) {
               const key = parent.arguments[i].name.value;
               const value = parent.arguments[i].value.value;
               // If isQuellable is already false prior to this loop or if we have any arguments that is not an id or _id, set it to be false and let the query pass without cache in client side
               isQuellable = isQuellable && key.includes('id');
-              // console.log('isQuellable ===> ', isQuellable);
               // if QuellStore.arguments is null, assign an empty object here. So we can add property-value pairs after this line. We can't use bracket notation on an object's value that is null.
               if (!QuellStore.arguments) {
                 QuellStore.arguments = { [parent.name.value]: [] };
@@ -172,7 +135,6 @@ function parseAST(AST, QuellStore) {
 
         // // comment out aliases cache functionality
         // if (parent.alias) {
-        //   // console.log('parent ===> ', parent);
         //   for (let i = 0; i < parent.arguments.length; i++) {
         //     const key = parent.arguments[i].name.value;
         //     const value = parent.arguments[i].value.value;
@@ -193,7 +155,6 @@ function parseAST(AST, QuellStore) {
       }
     },
   });
-  // console.log('isQuellable before return out from parseAST ===> ', isQuellable);
 
   return isQuellable ? prototype : 'unQuellable';
 }

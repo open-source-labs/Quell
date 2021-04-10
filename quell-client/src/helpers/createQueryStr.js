@@ -3,8 +3,6 @@
  */
 
 function createQueryStr(queryObject, QuellStore) {
-  // console.log('queryObject ===> ', queryObject);
-  // console.log('QuellStore in createQueryStr ===> ', QuellStore);
   const openCurly = '{';
   const closeCurly = '}';
   const openParen = '(';

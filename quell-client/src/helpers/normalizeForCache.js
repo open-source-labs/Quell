@@ -3,10 +3,6 @@
  */
 
 function normalizeForCache(response, map, fieldsMap, QuellStore) {
-  console.log('response in normalizeForCache ===> ', response);
-  console.log('map in normalizeForCache ===> ', map);
-  console.log('fieldsMap in normalizeForCache ===> ', fieldsMap);
-  console.log('QuellStore in normalizeForCache ===> ', QuellStore);
 
   if (QuellStore.arguments && !QuellStore.alias) {
     // If query has arguments && QuellStore.alias is null
@@ -15,13 +11,8 @@ function normalizeForCache(response, map, fieldsMap, QuellStore) {
     const queryName = Object.keys(response)[0];
     // Object type for ID generation ===> "City"
     const collectionName = map[queryName];
-    console.log('collectionName ===>', collectionName);
     // Array of objects on the response (cloned version)
     const collection = JSON.parse(JSON.stringify(response[queryName]));
-    console.log(
-      'collection ===> ',
-      JSON.parse(JSON.stringify(response[queryName]))
-    );
 
     if (Array.isArray(collection)) {
       // if collection from response is an array / etc: query all cities with argument country_id
@@ -33,7 +24,6 @@ function normalizeForCache(response, map, fieldsMap, QuellStore) {
           }
         }
       }
-      console.log('userDefinedIdArg ===> ', userDefinedIdArg);
       const referencesToCache = [];
       for (const item of collection) {
         const itemKeys = Object.keys(item);
@@ -78,10 +68,8 @@ function normalizeForCache(response, map, fieldsMap, QuellStore) {
     //   const queryName = Object.keys(QuellStore.alias)[0];
     //   // Object type for ID generation ===> "Country"
     //   const collectionName = map[queryName];
-    //   // console.log('collectionName ===>', collectionName);
     //   // Array of objects on the response (cloned version)
     //   const collection = JSON.parse(JSON.stringify(response[alias]));
-    //   // console.log('collection ===> ', collection);
     //   if (Array.isArray(collection)) {
     //     // if collection from response is an array / etc: query all cities with argument country_id
     //     for (const item of collection) {
@@ -117,13 +105,8 @@ function normalizeForCache(response, map, fieldsMap, QuellStore) {
     const queryName = Object.keys(response)[0];
     // Object type for ID generation ===> "City"
     const collectionName = map[queryName];
-    // console.log('collectionName ===>', collectionName);
     // Array of objects on the response (cloned version)
     const collection = JSON.parse(JSON.stringify(response[queryName]));
-    console.log(
-      'collection ===> ',
-      JSON.parse(JSON.stringify(response[queryName]))
-    );
 
     const referencesToCache = [];
     // Check for nested array (to replace objects with another array of references)
@@ -179,11 +162,11 @@ function writeToCache(key, item) {
     // Store the data entry
     sessionStorage.setItem(key, JSON.stringify(item));
 
-    // // Start the time out to remove this data entry for cache expiration
-    // let seconds = 10;
-    // setTimeout(() => {
-    //   sessionStorage.removeItem(key);
-    // }, seconds * 1000);
+    // Start the time out to remove this data entry for cache expiration after saved in session storage for 10 minutes (600 seconds)
+    let seconds = 600;
+    setTimeout(() => {
+      sessionStorage.removeItem(key);
+    }, seconds * 1000);
   }
 }
 
