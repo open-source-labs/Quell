@@ -13,14 +13,6 @@ function toggleProto(proto) {
  *  array of those collected items.
  */
 function buildFromCache(prototype, map, collection, QuellStore) {
-  console.log(
-    'prototype in buildFromCache ===> ',
-    JSON.parse(JSON.stringify(prototype))
-  );
-  console.log('map in buildFromCache ===> ', map);
-  console.log('collection in buildFromCache ===> ', collection);
-  console.log('QuellStore in buildFromCache ===> ', QuellStore);
-
   let response = [];
   for (let query in prototype) {
     // if QuellStore.arguments is not null
@@ -31,15 +23,12 @@ function buildFromCache(prototype, map, collection, QuellStore) {
           for (let key in arg) {
             if (key.includes('id') && key !== 'id' && key !== '_id') {
               userDefinedId = arg[key];
-              console.log('userDefinedId ===> ', userDefinedId);
             }
           }
 
-          console.log('arg ===> ', arg);
           let identifier;
           if (arg.hasOwnProperty('id') || arg.hasOwnProperty('_id')) {
             identifier = arg.id || arg._id;
-            console.log('identifier ===> ', identifier);
           }
 
           if (identifier) {
@@ -49,7 +38,6 @@ function buildFromCache(prototype, map, collection, QuellStore) {
               sessionStorage.getItem(`${map[query]}-${identifier}`)
             );
 
-            console.log('itemFromCache', itemFromCache);
             // [{ id: '2', capital: 'Sucre', cities: ['City-5', 'City-6', 'City-7', 'City-8', 'City-9', 'City-10']] or null
 
             collection = collection || [];
@@ -58,8 +46,6 @@ function buildFromCache(prototype, map, collection, QuellStore) {
               collection = [itemFromCache];
             }
 
-            console.log('collection ===> ', collection);
-
             for (let item of collection) {
               response.push(buildItem(prototype[query], item, map));
             }
@@ -67,12 +53,10 @@ function buildFromCache(prototype, map, collection, QuellStore) {
 
           if (userDefinedId) {
             // collection = 1.Object typ e field passed into buildArray() when called from buildItem() or 2.Obtained item from cache or 3.Empty array
-            console.log('query ===> ', query);
             const itemFromCache = JSON.parse(
               sessionStorage.getItem(`${query}-${userDefinedId}`)
             );
 
-            console.log('itemFromCache ===>', itemFromCache);
             // [{ id: '2', capital: 'Sucre', cities: ['City-5', 'City-6', 'City-7', 'City-8', 'City-9', 'City-10']] or null
 
             collection = collection || [];
@@ -82,8 +66,6 @@ function buildFromCache(prototype, map, collection, QuellStore) {
                 ? itemFromCache
                 : [itemFromCache];
             }
-
-            console.log('collection ===> ', collection);
 
             for (let item of collection) {
               response.push(
@@ -107,7 +89,6 @@ function buildFromCache(prototype, map, collection, QuellStore) {
       //   collection = collection || [];
       //   for (let i = 0; i < QuellStore.arguments[fieldName].length; i++) {
       //     const arg = QuellStore.arguments[fieldName][i];
-      //     console.log('arg ===> ', arg);
       //     let identifier;
       //     if (arg.hasOwnProperty('id') || arg.hasOwnProperty('_id')) {
       //       identifier = arg.id || arg._id;
@@ -116,15 +97,10 @@ function buildFromCache(prototype, map, collection, QuellStore) {
       //     const itemFromCache = JSON.parse(
       //       sessionStorage.getItem(`${map[query]}-${identifier}`)
       //     );
-      //     console.log('itemFromCache', itemFromCache);
       //     // [{ id: '2', capital: 'Sucre', cities: ['City-5', 'City-6', 'City-7', 'City-8', 'City-9', 'City-10']] or null
       //     if (itemFromCache) {
       //       collection = [itemFromCache];
       //     }
-      //     console.log(
-      //       'collection ===> ',
-      //       JSON.parse(JSON.stringify(collection))
-      //     );
       //     for (let item of collection) {
       //       response.push({
       //         [QuellStore.alias[fieldName][i]]: buildItem(
@@ -143,7 +119,6 @@ function buildFromCache(prototype, map, collection, QuellStore) {
       //2.Obtained item from cache or 3.Empty array
       collection =
         collection || JSON.parse(sessionStorage.getItem(map[query])) || [];
-      console.log('collection if the query has no argument ===> ', collection);
       //  ["Country-1", "Country-2", "Country-3", "Country-4", "Country-5"] or [];
       // each of these items in the array is the item below
 
@@ -158,7 +133,6 @@ function buildFromCache(prototype, map, collection, QuellStore) {
       }
     }
   }
-  console.log('response ===> !!!!!!!!!!!', response);
   return response;
 }
 
@@ -175,26 +149,17 @@ function buildFromCache(prototype, map, collection, QuellStore) {
  */
 
 function buildItem(prototype, item, map) {
-  console.log(
-    'prototype in buildItem ===> ',
-    JSON.parse(JSON.stringify(prototype))
-  );
-  console.log('item in buildItem ===> ', item);
-  console.log('map in buildItem ===> ', map);
+
   let tempObj = {}; // gets all the in-cache data
   // Traverse fields in prototype (or nested field object type)
   for (let key in prototype) {
     // if key points to an object (an object type field, e.g. "cities" in a "country")
     if (typeof prototype[key] === 'object') {
       let prototypeAtKey = { [key]: prototype[key] };
-      console.log(
-        'prototypeAtKey = { [key]: prototype[key] } !!!!!! ===> ',
-        prototypeAtKey
-      );
+
       if (item[key] !== undefined) {
         // if in cache
         tempObj[key] = buildFromCache(prototypeAtKey, map, item[key]);
-        console.log('tempObj[key] ===> ', tempObj[key]);
       } else {
         // if not in cache
         toggleProto(prototypeAtKey);

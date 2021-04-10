@@ -637,7 +637,6 @@ class QuellCache {
    * @param {Object} proto - the prototype with fields that still need to be queried toggled to false
    */
   createQueryObj(proto) {
-    //console.log("proto in create query obj", proto);
     const queryObj = {};
     for (const key in proto) {
       const reduced = this.protoReducer(proto[key]);
@@ -673,7 +672,6 @@ class QuellCache {
    * @param {Object} queryObject - object representing queried fields not found in cache
    */
   createQueryStr(queryObject, queryArgsObject) {
-    //console.log(queryArgsObject, "query args object in create query string");
     const openCurl = " { ";
     const closedCurl = " } ";
     let queryString = "";

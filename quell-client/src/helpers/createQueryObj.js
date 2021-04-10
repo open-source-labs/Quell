@@ -3,7 +3,6 @@
  */
 
 function createQueryObj(map) {
-  // console.log('map in createQueryObj ===> ', map);
   const output = {};
   // !! assumes there is only ONE main query, and not multiples !!
   for (let key in map) {
@@ -33,7 +32,6 @@ function createQueryObj(map) {
     return fields;
   }
 
-  // console.log('output in createQueryObj ===> ', output);
   return output;
 }
 

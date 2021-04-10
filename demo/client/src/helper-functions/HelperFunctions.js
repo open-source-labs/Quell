@@ -25,11 +25,6 @@
 */
 
 const ResultsHelper = (newList, sub, query, id, currentResults) => {
-  // console.log('newList ===> ', newList);
-  // console.log('sub ===> ', sub);
-  // console.log('query ===> ', query);
-  // console.log('id ===> ', id);
-  // console.log('currentResults ===> ', currentResults);
 
   for (let arr in currentResults) {
     //===========================//
