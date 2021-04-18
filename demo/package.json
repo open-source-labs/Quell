@@ -12,22 +12,6 @@
   "keywords": [],
   "contributors": [
     {
-      "name": "Mike Lauri",
-      "url": "https://github.com/MichaelLauri"
-    },
-    {
-      "name": "Rob Nobile",
-      "url": "https://github.com/RobNobile"
-    },
-    {
-      "name": "Justin Jaeger",
-      "url": "https://github.com/justinjaeger"
-    },
-    {
-      "name": "Nick Kruckenberg",
-      "url": "https://github.com/kruckenberg"
-    },
-    {
       "name": "Andrei Cabrera",
       "url": "https://github.com/Andreicabrerao"
     },
@@ -42,6 +26,22 @@
     {
       "name": "Xiao Yu Omeara",
       "url": "https://github.com/xyomeara"
+    },
+    {
+      "name": "Mike Lauri",
+      "url": "https://github.com/MichaelLauri"
+    },
+    {
+      "name": "Rob Nobile",
+      "url": "https://github.com/RobNobile"
+    },
+    {
+      "name": "Justin Jaeger",
+      "url": "https://github.com/justinjaeger"
+    },
+    {
+      "name": "Nick Kruckenberg",
+      "url": "https://github.com/kruckenberg"
     }
   ],
   "license": "ISC",
