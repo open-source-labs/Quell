@@ -9,7 +9,7 @@
 
 Quell is an easy-to-use, lightweight JavaScript library providing a client- and server-side caching solution for GraphQL.
 
-Accelerated by [OS Labs](https://github.com/oslabs-beta/) and developed by [Nick Kruckenberg](https://github.com/kruckenberg), [Mike Lauri](https://github.com/MichaelLauri), [Rob Nobile](https://github.com/RobNobile) and [Justin Jaeger](https://github.com/justinjaeger).
+Accelerated by [OS Labs](https://github.com/oslabs-beta/) and developed by [Andrei Cabrera](https://github.com/Andreicabrerao), [Dasha Kondratenko](https://github.com/dasha-k), [Derek Sirola](https://github.com/dsirola1), [Xiao Yu Omeara](https://github.com/xyomeara), [Nick Kruckenberg](https://github.com/kruckenberg), [Mike Lauri](https://github.com/MichaelLauri), [Rob Nobile](https://github.com/RobNobile) and [Justin Jaeger](https://github.com/justinjaeger).
 
 ## Features
 
@@ -29,23 +29,24 @@ Quell is divided up into two npm packages:
 ### Installing and Connecting a Redis Server
 
 If not already installed on your server, install Redis.
+
 - Mac-Homebrew:
-    - At the terminal, type `brew install redis`
-    - After installation completes, type `redis-server`
-    - Your server should now have a Redis database connection open (note the port on which it is listening)
+  - At the terminal, type `brew install redis`
+  - After installation completes, type `redis-server`
+  - Your server should now have a Redis database connection open (note the port on which it is listening)
 - Linux or non-Homebrew:
-    - Download appropriate version of Redis from [redis.io/download](http://redis.io/download)
-    - Follow installation instructions
-    - Once Redis is successfully installed, follow instructions to open a Redis database connection (note the port on which it is listening)
+  - Download appropriate version of Redis from [redis.io/download](http://redis.io/download)
+  - Follow installation instructions
+  - Once Redis is successfully installed, follow instructions to open a Redis database connection (note the port on which it is listening)
 
 ### Usage Notes
 
-- Currently, Quell can only cache query-type requests without arguments, aliases, fragments, variables, or directives. Quell will still process these other requests, but will not cache the responses.
+- Currently, Quell can only cache query-type requests without aliases, fragments, variables, or directives. Quell will still process these other requests, but will not cache the responses.
 
 ## Documentation
 
 - [@quell/client README](./quell-client/README.md)
--  [@quell/server README](./quell-server/README.md)
+- [@quell/server README](./quell-server/README.md)
 
 ### Contribute to Quell
 

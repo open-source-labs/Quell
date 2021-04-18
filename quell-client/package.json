@@ -1,10 +1,10 @@
 {
   "name": "@quell/client",
-  "version": "1.0.1",
+  "version": "1.1.1",
   "description": "Quell is an open-source NPM package providing a light-weight caching layer implementation for GraphQL responses on both the client- and server-side. Use Quell to prevent redundant client-side API requests and to minimize costly server-side response latency.",
-  "main": "Quellify.js",
+  "main": "src/Quellify.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "jest"
   },
   "author": "Quell",
   "license": "MIT",
@@ -28,6 +28,22 @@
   ],
   "contributors": [
     {
+      "name": "Andrei Cabrera",
+      "url": "https://github.com/Andreicabrerao"
+    },
+    {
+      "name": "Dasha Kondratenko",
+      "url": "https://github.com/dasha-k"
+    },
+    {
+      "name": "Derek Sirola",
+      "url": "https://github.com/dsirola1"
+    },
+    {
+      "name": "Xiao Yu Omeara",
+      "url": "https://github.com/xyomeara"
+    },
+    {
       "name": "Mike Lauri",
       "url": "https://github.com/MichaelLauri"
     },
@@ -47,5 +63,9 @@
   "homepage": "http://quellql.io",
   "dependencies": {
     "graphql": "^15.3.0"
+  },
+  "devDependencies": {
+    "@types/jest": "^26.0.20",
+    "jest": "^26.6.3"
   }
 }

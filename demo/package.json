@@ -1,29 +1,63 @@
 {
   "name": "demo",
-  "version": "1.0.0",
+  "version": "1.1.1",
   "main": "index.js",
   "scripts": {
     "start": "NODE_ENV=production nodemon server/server.js",
     "build": "NODE_ENV=production webpack",
-    "dev": "concurrently \"webpack-dev-server --open --hot\" \"NODE_ENV=development nodemon server/server.js\"",
-    "test": "jest --verbose"
+    "dev": "concurrently \"webpack-dev-server --open --hot\" \"NODE_ENV=development nodemon -w ../quell-server/src/quell.js server/server.js\"",
+    "client": "webpack-dev-server --open --hot",
+    "test": "jest"
   },
   "keywords": [],
-  "author": "",
+  "contributors": [
+    {
+      "name": "Andrei Cabrera",
+      "url": "https://github.com/Andreicabrerao"
+    },
+    {
+      "name": "Dasha Kondratenko",
+      "url": "https://github.com/dasha-k"
+    },
+    {
+      "name": "Derek Sirola",
+      "url": "https://github.com/dsirola1"
+    },
+    {
+      "name": "Xiao Yu Omeara",
+      "url": "https://github.com/xyomeara"
+    },
+    {
+      "name": "Mike Lauri",
+      "url": "https://github.com/MichaelLauri"
+    },
+    {
+      "name": "Rob Nobile",
+      "url": "https://github.com/RobNobile"
+    },
+    {
+      "name": "Justin Jaeger",
+      "url": "https://github.com/justinjaeger"
+    },
+    {
+      "name": "Nick Kruckenberg",
+      "url": "https://github.com/kruckenberg"
+    }
+  ],
   "license": "ISC",
   "description": "",
   "dependencies": {
     "@babel/runtime": "^7.11.2",
-    "@quell/client": "1.0.1",
-    "@quell/server": "1.0.1",
+    "@quell/client": "1.1.1",
+    "@quell/server": "1.1.1",
     "concurrently": "^5.3.0",
     "dotenv": "^8.2.0",
     "express": "^4.17.1",
-    "express-graphql": "^0.11.0",
-    "graphql": "^15.3.0",
+    "graphiql": "^1.4.0",
+    "graphql": "^15.5.0",
     "pg": "^8.3.3",
-    "react": "^16.13.1",
-    "react-dom": "^16.13.1",
+    "react": "^16.14.0",
+    "react-dom": "^16.14.0",
     "react-trend": "^1.2.5",
     "redis": "^3.0.2"
   },
