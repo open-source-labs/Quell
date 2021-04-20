@@ -14,6 +14,7 @@ describe('/graphql', () => {
     });
 
     it.skip('responds with 400 status on invalid request', () => {
+      
       return request(server)
         .post('/graphql')
         .set('Content-Type', 'application/json')
