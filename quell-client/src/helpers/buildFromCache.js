@@ -178,4 +178,8 @@ function buildItem(prototype, item, map) {
   return tempObj;
 }
 
+
+let result = buildFromCache(prototype, map, null, QuellStore);
+console.log(result);
+
 module.exports = buildFromCache;

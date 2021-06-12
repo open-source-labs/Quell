@@ -103,30 +103,27 @@ const parseAST = (AST) =>{
 }
 
 
-const query = `query {
-  countries {
-    id
-    name
-    city (id: 1) {
-      id
-      name
-    }
-  }
-  book (id: 3) {
-    id
-    name
-    author (id: 4) {
-      name
-    }
-  }
-}`;
+// const query = `query {
+//   countries {
+//     id
+//     name
+//     city (id: 1) {
+//       id
+//       name
+//     }
+//   }
+//   book (id: 3) {
+//     id
+//     name
+//     author (id: 4) {
+//       name
+//     }
+//   }
+// }`;
 
-const parsedQuery = parse(query);
-const { proto, protoArgs, operationType } = parseAST(parsedQuery);
-
-console.log('query', query);
-console.log('proto', proto);
-console.log('protoArgs', protoArgs);
-console.log('opType', operationType);
+// console.log('query', query);
+// console.log('proto', proto);
+// console.log('protoArgs', protoArgs);
+// console.log('opType', operationType);
 
 module.exports = parseAST;

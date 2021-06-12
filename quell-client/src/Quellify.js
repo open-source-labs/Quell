@@ -19,7 +19,7 @@ async function Quellify(endPoint, query, map, fieldsMap) {
   const AST = parse(query);
 
   // Create object of "true" values from AST tree (w/ some eventually updated to "false" via buildItem())
-  let {prototype, protoArgs, operationType} = parseAST(AST, QuellStore);
+  let {proto, protoArgs, operationType} = parseAST(AST);
 
   // pass-through for queries and operations that QuellCache cannot handle
   if (operationType === 'unQuellable') {
@@ -38,7 +38,8 @@ async function Quellify(endPoint, query, map, fieldsMap) {
     return new Promise((resolve, reject) => resolve(parsedData));
   } else {
     // Check cache for data and build array from that cached data
-    const responseFromCache = buildFromCache(prototype, map, null, QuellStore);
+    const responseFromCache = buildFromCache(proto, map, null, QuellStore);
+    console.log(responseFromCache);
     // If no data in cache, the response array will be empty:
     if (responseFromCache.length === 0) {
       const fetchOptions = {
@@ -118,5 +119,36 @@ async function Quellify(endPoint, query, map, fieldsMap) {
     return new Promise((resolve, reject) => resolve(formattedMergedResponse));
   }
 }
+
+const query = `query {
+  countries {
+      id
+      name
+      cities {
+          id
+          name
+          population
+      }
+  }
+}`
+
+const sampleMap = {
+  countries: 'Country',
+  country: 'Country',
+  citiesByCountryId: 'City',
+  cities: 'City',
+}
+
+const sampleFieldsMap = {
+  cities: 'City'
+}
+
+Quellify('/graphQL', query, sampleMap, sampleFieldsMap);
+
+
+// '/graphQL' - endpoint
+// query - query
+// sampleMap - map
+// sampleFieldsMap - fieldsMap
 
 module.exports = Quellify;
