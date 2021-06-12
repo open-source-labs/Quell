@@ -45,13 +45,25 @@ const parseAST = (AST) =>{
     },
     Field: {
       enter(node) {
-        if (node.alias) {
+        if (node.alias && !node.arguments) {
+        // TO-DO: handle edge case of alias without any arguments
           operationType = 'unQuellable';
           return BREAK;
         }
         if (node.arguments && node.arguments.length > 0) {
           protoArgs = protoArgs || {};
-          protoArgs[node.name.value] = {};
+          console.log('node', node);
+          // protoArgs[node.name.value] = {};
+
+          // initializes args object in format { Alias: {fieldName: country, id: 1}}
+          // if no alias, stores on key of fieldName
+          // ID will be placed on this object later
+          if (node.alias) {
+            protoArgs[node.alias.value] = { fieldName: node.name.value };
+          } else {
+            protoArgs[node.name.value] = { fieldName: node.name.value };
+          }
+    
 
           // collect arguments if arguments contain id, otherwise make query unquellable
           // hint: can check for graphQl type ID instead of string 'id'
@@ -104,18 +116,11 @@ const parseAST = (AST) =>{
 
 
 const query = `query {
-  countries {
+  Canada: country (id: 1) {
     id
     name
-    city (id: 1) {
+    city {
       id
-      name
-    }
-  }
-  book (id: 3) {
-    id
-    name
-    author (id: 4) {
       name
     }
   }
@@ -128,5 +133,9 @@ console.log('query', query);
 console.log('proto', proto);
 console.log('protoArgs', protoArgs);
 console.log('opType', operationType);
+
+for (let query2 in proto) {
+  console.log('for query in proto', query2);
+}
 
 module.exports = parseAST;

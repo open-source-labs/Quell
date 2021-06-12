@@ -5,9 +5,9 @@ describe('parseAST.js', () => {
   test('should traverses the abstract syntax tree and creates a prototype object', () => {
     const query = `{countries { id name capital } }`;
     const AST = parse(query);
-    const QuellStore = { arguments: null, alias: null };
+    // const QuellStore = { arguments: null, alias: null };
 
-    expect(parseAST(AST, QuellStore)).toEqual({
+    expect(parseAST(AST)).toEqual({
       countries: {
         id: true,
         name: true,
@@ -19,9 +19,9 @@ describe('parseAST.js', () => {
   test('should work with nested query', () => {
     const query = `{countries { id name capital cities  { id country_id name population  } } }`;
     const AST = parse(query);
-    const QuellStore = { arguments: null, alias: null };
+    // const QuellStore = { arguments: null, alias: null };
 
-    expect(parseAST(AST, QuellStore)).toEqual({
+    expect(parseAST(AST)).toEqual({
       countries: {
         id: true,
         name: true,
@@ -30,4 +30,11 @@ describe('parseAST.js', () => {
       },
     });
   });
+
+  test('should work with alias', () => {
+    // produces prototype valid
+    // identifies query type
+    // save alias map
+    // doesn't overwrite arguments
+  })
 });
