@@ -1,5 +1,21 @@
 const { visit, BREAK } = require('graphql/language/visitor');
 const { parse } = require('graphql/language/parser');
+
+// TO-DO: refactor prototype to put alias / fieldname first
+// avoid aliased prototypes overwriting one-another
+
+/** TO-DO: refactor prototype to include args
+ * `${fieldName}${ID ? '-' + ID : ''}`
+ * Country-ID
+{
+  __alias: alias
+  __arg: arg
+  id: true
+  name: true
+}
+ * 
+ * /
+
 /**
  * parseAST traverses the abstract syntax tree and creates a prototype object
  * representing all the queried fields nested as they are in the query.
@@ -7,7 +23,7 @@ const { parse } = require('graphql/language/parser');
 
 const parseAST = (AST) =>{
   // initialize prototype as empty object
-  const proto = {};
+  const prototype = {};
   //let isQuellable = true;
 
   let operationType;
@@ -52,8 +68,8 @@ const parseAST = (AST) =>{
         }
         if (node.arguments && node.arguments.length > 0) {
           protoArgs = protoArgs || {};
-          console.log('node', node);
-          // protoArgs[node.name.value] = {};
+          // console.log('node', node);
+          protoArgs[node.name.value] = {};
 
           // initializes args object in format { Alias: {fieldName: country, id: 1}}
           // if no alias, stores on key of fieldName
@@ -63,7 +79,8 @@ const parseAST = (AST) =>{
           } else {
             protoArgs[node.name.value] = { fieldName: node.name.value };
           }
-    
+
+          // TO-DO: replace protoArgs
 
           // collect arguments if arguments contain id, otherwise make query unquellable
           // hint: can check for graphQl type ID instead of string 'id'
@@ -78,6 +95,7 @@ const parseAST = (AST) =>{
                 return BREAK;
               }
             }
+            // TO-DO update for new protoArgs
             protoArgs[node.name.value][key] = value;
           }
         }
@@ -107,11 +125,11 @@ const parseAST = (AST) =>{
           return index + 1 === stack.length // if last item in path
             ? (prev[curr] = tempObject) // set value
             : (prev[curr] = prev[curr]); // otherwise, if index exists, keep value
-        }, proto);
+        }, prototype);
       }
     },
   });
-  return { proto, protoArgs, operationType };
+  return { prototype, protoArgs, operationType };
 }
 
 
@@ -119,23 +137,50 @@ const query = `query {
   Canada: country (id: 1) {
     id
     name
-    city {
+    population
+  }
+  Mexico: country (id: 2) {
+    id
+    name
+    capitol
+    cities {
       id
       name
     }
   }
 }`;
 
+// ${ fieldName }${ ID ? '-'+ID : null } {
+//   id
+//   name
+//   capitol
+// }
+
+// {
+//   __alias: alias
+//   __arg: arg
+//   id: true
+//   name: true
+// }
+
+// loop(keys){
+//   if (!key.includes('__')) {
+//     // building prototype stuff
+//   }
+// }
+
+const query2 = `{countries { id name capitol } }`;
+
 const parsedQuery = parse(query);
-const { proto, protoArgs, operationType } = parseAST(parsedQuery);
+const { prototype, protoArgs, operationType } = parseAST(parsedQuery);
 
 console.log('query', query);
-console.log('proto', proto);
+console.log('proto', prototype);
 console.log('protoArgs', protoArgs);
 console.log('opType', operationType);
 
-for (let query2 in proto) {
-  console.log('for query in proto', query2);
-}
+// for (let query2 in prototype) {
+//   console.log('for query in proto', query2);
+// }
 
 module.exports = parseAST;

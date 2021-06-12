@@ -1,6 +1,6 @@
 const createQueryStr = require('../../src/helpers/createQueryStr');
 
-describe('createQueryStr.js', () => {
+xdescribe('createQueryStr.js', () => {
   test('inputs query object w/ only scalar types and outputs GCL query string', () => {
     const queryObject = {
       countries: ['id', 'name', 'capital'],
