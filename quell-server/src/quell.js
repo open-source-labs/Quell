@@ -31,6 +31,7 @@ class QuellCache {
    *  @param {Function} next - Express next middleware function, invoked when QuellCache completes its work
    */
   async query(req, res, next) {
+    console.log('reached the server');
     // handle request without query
     if (!req.body.query) {
       return next('Error: no GraphQL query found on request body');

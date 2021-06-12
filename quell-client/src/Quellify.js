@@ -19,10 +19,10 @@ async function Quellify(endPoint, query, map, fieldsMap) {
   const AST = parse(query);
 
   // Create object of "true" values from AST tree (w/ some eventually updated to "false" via buildItem())
-  let prototype = parseAST(AST, QuellStore);
+  let {prototype, protoArgs, operationType} = parseAST(AST, QuellStore);
 
   // pass-through for queries and operations that QuellCache cannot handle
-  if (prototype === 'unQuellable') {
+  if (operationType === 'unQuellable') {
     const fetchOptions = {
       method: 'POST',
       headers: {

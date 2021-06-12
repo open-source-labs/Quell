@@ -1,162 +1,132 @@
-const { visit } = require('graphql/language/visitor');
+const { visit, BREAK } = require('graphql/language/visitor');
+const { parse } = require('graphql/language/parser');
 /**
  * parseAST traverses the abstract syntax tree and creates a prototype object
  * representing all the queried fields nested as they are in the query.
  */
 
-function parseAST(AST, QuellStore) {
-  // const queryRoot = AST.definitions[0];
+const parseAST = (AST) =>{
+  // initialize prototype as empty object
+  const proto = {};
+  //let isQuellable = true;
+
+  let operationType;
+
+  // initialiaze arguments as null
+  let protoArgs = null; //{ country: { id: '2' } }
+
+  // initialize stack to keep track of depth first parsing
+  const stack = [];
 
   /**
-   * visit() -- a utility provided in the graphql-JS library-- will walk
-   * through an AST using a depth first traversal, invoking a callback
-   * when each SelectionSet node is entered.
+   * visit is a utility provided in the graphql-JS library. It performs a
+   * depth-first traversal of the abstract syntax tree, invoking a callback
+   * when each SelectionSet node is entered. That function builds the prototype.
+   * Invokes a callback when entering and leaving Field node to keep track of nodes with stack
    *
-   * More detailed documentation can be found at:
+   * Find documentation at:
    * https://graphql.org/graphql-js/language/#visit
    */
-
-  // visit() will build the prototype, declared here and returned from the function
-  const prototype = {};
-  let isQuellable = true;
-
   visit(AST, {
     enter(node) {
-      if (node.operation) {
-        if (node.operation !== 'query') {
-          isQuellable = false;
-        }
-      }
-      // // We commented this section out because we changed arguments to be Quellable
-      // if (node.arguments) {
-      //   if (node.arguments.length > 0) {
-      //     isQuellable = false;
-      //   }
-      // }
       if (node.directives) {
         if (node.directives.length > 0) {
-          isQuellable = false;
+          operationType = 'unQuellable';
+          return BREAK;
         }
       }
-      if (node.alias) {
-        isQuellable = false;
+    },
+    OperationDefinition(node) {
+      operationType = node.operation;
+      if (node.operation === 'subscription') {
+        operationType = 'unQuellable';
+        return BREAK;
       }
     },
+    Field: {
+      enter(node) {
+        if (node.alias) {
+          operationType = 'unQuellable';
+          return BREAK;
+        }
+        if (node.arguments && node.arguments.length > 0) {
+          protoArgs = protoArgs || {};
+          protoArgs[node.name.value] = {};
 
-    // Alternatively to providing enter() and leave() functions, a visitor can instead provide functions named the same as the kinds of AST nodes, or enter/leave visitors at a named key, leading to four permutations of visitor API:
-    // node – The current node being visiting.
-    // key – The index or key to this node from the parent node or Array.
-    // parent – the parent immediately above this node, which may be an Array.
-    // path – The key path to get to this node from the root node.
-    // ancestors – All nodes and Arrays visited before reaching parent of this node. These correspond to array indices in path. Note: ancestors includes arrays which contain the parent of visited node.
+          // collect arguments if arguments contain id, otherwise make query unquellable
+          // hint: can check for graphQl type ID instead of string 'id'
+          for (let i = 0; i < node.arguments.length; i++) {
+            const key = node.arguments[i].name.value;
+            const value = node.arguments[i].value.value;
+
+            // for queries cache can handle only id as argument
+            if (operationType === 'query') {
+              if (!key.includes('id')) {
+                operationType = 'unQuellable';
+                return BREAK;
+              }
+            }
+            protoArgs[node.name.value][key] = value;
+          }
+        }
+        // add value to stack
+        stack.push(node.name.value);
+      },
+      leave(node) {
+        // remove value from stack
+        stack.pop();
+      },
+    },
     SelectionSet(node, key, parent, path, ancestors) {
-      /**
-       * Exclude SelectionSet nodes whose parents' are not of the kind
+      /* Exclude SelectionSet nodes whose parents' are not of the kind
        * 'Field' to exclude nodes that do not contain information about
        *  queried fields.
        */
       if (parent.kind === 'Field') {
-        // Build the response prototype
-
-        /** GraphQL ASTs are structured such that a field's parent field
-         *  is found three three ancestors back. Hence, we subtract three.
-         */
-        let parentFieldDepth = ancestors.length - 3;
-
-        let objPath = [parent.name.value];
-
-        /** Loop through ancestors to gather all ancestor nodes. This array
-         * of nodes will be necessary for properly nesting each field in the
-         * prototype object.
-         */
-        while (parentFieldDepth >= 5) {
-          let parentFieldNode = ancestors[parentFieldDepth - 1];
-
-          let { length } = parentFieldNode;
-          objPath.unshift(parentFieldNode[length - 1].name.value);
-
-          parentFieldDepth -= 3;
-        }
-
-        /** Loop over the array of fields at current node, adding each to
-         *  an object that will be assigned to the prototype object at the
-         *  position determined by the above array of ancestor fields.
-         */
-        const collectFields = {};
-
+        // loop through selections to collect fields
+        const tempObject = {};
         for (let field of node.selections) {
-          collectFields[field.name.value] = true;
+          tempObject[field.name.value] = true;
         }
 
-        /** Helper function to convert array of ancestor fields into a
-         *  path at which to assign the `collectFields` object.
-         */
-        function setProperty(path, obj, value) {
-          return path.reduce((prev, curr, index) => {
-            return index + 1 === path.length // if last item in path
-              ? (prev[curr] = value) // set value
-              : (prev[curr] = prev[curr] || {});
-            // otherwise, if index exists, keep value or set to empty object if index does not exist
-          }, obj);
-        }
-
-        setProperty(objPath, prototype, collectFields);
-        // Build the arguments object
-
-        /** If the current node's parent has a property name arguments and the arguments' array
-         *  lengh is greater than zero and current node's parent does not have a property name alias
-         *  Loop over the parent's array of arguments, adding each
-         *  name value pair to QuellStore.arguments
-         *  QuellStore.arguments stucture: {country: { id: ‘2’ }, city: {id: 3}, author: {id: 3}}
-         */
-        if (parent.arguments && !parent.alias) {
-          if (parent.arguments.length > 0) {
-            for (let i = 0; i < parent.arguments.length; i++) {
-              const key = parent.arguments[i].name.value;
-              const value = parent.arguments[i].value.value;
-              // If isQuellable is already false prior to this loop or if we have any arguments that is not an id or _id, set it to be false and let the query pass without cache in client side
-              isQuellable = isQuellable && key.includes('id');
-              // if QuellStore.arguments is null, assign an empty object here. So we can add property-value pairs after this line. We can't use bracket notation on an object's value that is null.
-              if (!QuellStore.arguments) {
-                QuellStore.arguments = { [parent.name.value]: [] };
-              }
-              QuellStore.arguments[parent.name.value].push({ [key]: value });
-            }
-          }
-        }
-
-        /** If the current node's parent has a property name alias
-         *  then the parent must has a property name arguments and the arguments'
-         *  array length must be greater than 0
-         *  Loop over the parent's array of alias, adding each
-         *  name value pair to QuellStore.alias
-         *  QuellStore.alias stucture: {country: { id: ‘2’ }, city: {id: 3}, author: {id: 3}}
-         */
-
-        // // comment out aliases cache functionality
-        // if (parent.alias) {
-        //   for (let i = 0; i < parent.arguments.length; i++) {
-        //     const key = parent.arguments[i].name.value;
-        //     const value = parent.arguments[i].value.value;
-        //     // If isQuellable is already false prior to this loop or if we have any arguments that is not an id or _id, set it to be false and let the query pass without cache in client side
-        //     isQuellable = isQuellable && key.includes('id');
-        //     // if QuellStore.arguments is null, assign an empty object here. So we can add property-value pairs after this line. We can't use bracket notation on an object's value that is null.
-        //     if (!QuellStore.alias) {
-        //       QuellStore.alias = { [parent.name.value]: [] };
-        //     }
-        //     QuellStore.alias[parent.name.value].push(parent.alias.value);
-
-        //     if (!QuellStore.arguments) {
-        //       QuellStore.arguments = { [parent.name.value]: [] };
-        //     }
-        //     QuellStore.arguments[parent.name.value].push({ [key]: value });
-        //   }
-        // }
+        // loop through stack to get correct path in proto for temp object;
+        // mutates original prototype object;
+        const protoObj = stack.reduce((prev, curr, index) => {
+          return index + 1 === stack.length // if last item in path
+            ? (prev[curr] = tempObject) // set value
+            : (prev[curr] = prev[curr]); // otherwise, if index exists, keep value
+        }, proto);
       }
     },
   });
-
-  return isQuellable ? prototype : 'unQuellable';
+  return { proto, protoArgs, operationType };
 }
+
+
+const query = `query {
+  countries {
+    id
+    name
+    city (id: 1) {
+      id
+      name
+    }
+  }
+  book (id: 3) {
+    id
+    name
+    author (id: 4) {
+      name
+    }
+  }
+}`;
+
+const parsedQuery = parse(query);
+const { proto, protoArgs, operationType } = parseAST(parsedQuery);
+
+console.log('query', query);
+console.log('proto', proto);
+console.log('protoArgs', protoArgs);
+console.log('opType', operationType);
 
 module.exports = parseAST;
