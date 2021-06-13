@@ -35,34 +35,20 @@ describe('parseAST.js', () => {
       countries: {
         id: true,
         name: true,
-        capital: true,
+        capitol: true,
       },
     });
-    expect(protoArgs).toEqual({
-      countries: {
-        id: "1",
-      }
-    });
+    expect(protoArgs).toEqual(null);
+    expect(operationType).toEqual('query');
   });
 
-  test('should work with nested query', () => {
-    const query = `{
-      countries { 
-        id 
-        name 
-        capital 
-        cities  { 
-          id 
-          country_id 
-          name 
-          population  
-        } 
-      } 
-    }`;
-    const parsedQuery = parse(query);
-    const { proto, protoArgs, operationType } = parseAST(parsedQuery);
+  test('should return a prototype from a nested query', () => {
+    const query = `{countries { id name capital cities  { id country_id name population  } } }`;
+    const AST = parse(query);
+    const { prototype, protoArgs, operationType } = parseAST(AST);
 
-    expect(proto).toEqual({
+
+    expect(prototype).toEqual({
       countries: {
         id: true,
         name: true,
@@ -70,6 +56,55 @@ describe('parseAST.js', () => {
         cities: { id: true, country_id: true, name: true, population: true },
       },
     });
+    expect(protoArgs).toEqual(null);
+    expect(operationType).toEqual('query');
+  });
+
+  test('should return an arguments object', () => {
+    const query = `{ country (id: 1) { id name population } }`;
+    const AST = parse(query);
+    const { prototype, protoArgs, operationType } = parseAST(AST);
+
+    expect(prototype).toEqual({
+        country: {
+          id: true,
+          name: true,
+          population: true
+        }
+      }
+    );
+    expect(protoArgs).toEqual({ country: { fieldName: 'country', id: "1" }});
+    expect(operationType).toEqual('query');
+  });
+
+  // protoArgs = { alias: { fieldName: 'name', id: '1' } }
+  test('should work with alias', () => {
+    // produces prototype valid
+    // identifies query type
+    // save alias map on args object
+    // doesn't overwrite arguments
+    // doesn't overwrite other queries
+    const query = `{
+      Canada: country (id: 1) {
+        id
+        name
+        capitol
+      }
+  }`;
+    const AST = parse(query);
+    const { prototype, protoArgs, operationType } = parseAST(AST);
+
+    expect(prototype).toEqual({
+      Canada: {
+        id: true,
+        name: true,
+        capitol: true
+      }
+    });
+    expect(protoArgs).toEqual({
+      Canada: { fieldName: "country", id: "1" }
+    });
+    expect(operationType).toEqual('query');
   });
 
   test('should create prototype object for multiple queries', () => {
@@ -137,6 +172,6 @@ describe('parseAST.js', () => {
       },
     });
     expect(operationType).toBe('query');
-});
+  });
 });
 

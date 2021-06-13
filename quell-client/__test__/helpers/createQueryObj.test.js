@@ -1,6 +1,6 @@
 const createQueryObj = require('../../src/helpers/createQueryObj');
 
-describe('createQueryObj.js', () => {
+xdescribe('createQueryObj.js', () => {
   test('inputs prototype w/ all true should output empty object', () => {
     const map = {
       countries: {

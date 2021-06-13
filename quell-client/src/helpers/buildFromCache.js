@@ -12,16 +12,18 @@ function toggleProto(proto) {
  *  calling another helper function -- buildItem() -- on each. Returns an
  *  array of those collected items.
  */
-function buildFromCache(prototype, map, collection, QuellStore) {
+function buildFromCache(prototype, map, collection, protoArgs) {
   let response = [];
   for (let query in prototype) {
-    // if QuellStore.arguments is not null
-    if (QuellStore && QuellStore.arguments && !QuellStore.alias) {
-      for (let fieldName in QuellStore.arguments) {
-        for (let arg of QuellStore.arguments[fieldName]) {
+    // if protoArgs is not null
+    if (protoArgs) {
+      for (let fieldName in protoArgs) {
+        for (let arg of protoArgs[fieldName]) {
+          // store user defined ids such as authorid or bookId
+          // catches differences between id, ID, Id
           let userDefinedId;
           for (let key in arg) {
-            if (key.includes('id') && key !== 'id' && key !== '_id') {
+            if (key.includes('id') || key.includes('ID') || key.includes('Id') && key !== 'id' && key !== '_id') {
               userDefinedId = arg[key];
             }
           }
@@ -56,6 +58,7 @@ function buildFromCache(prototype, map, collection, QuellStore) {
             const itemFromCache = JSON.parse(
               sessionStorage.getItem(`${query}-${userDefinedId}`)
             );
+            console.log('itemFromCache', `${query}-${userDefinedId}`);
 
             // [{ id: '2', capital: 'Sucre', cities: ['City-5', 'City-6', 'City-7', 'City-8', 'City-9', 'City-10']] or null
 
@@ -179,7 +182,7 @@ function buildItem(prototype, item, map) {
 }
 
 
-let result = buildFromCache(prototype, map, null, QuellStore);
-console.log(result);
+// let result = buildFromCache(prototype, map, null, QuellStore);
+// console.log(result);
 
 module.exports = buildFromCache;

@@ -13,13 +13,13 @@ const joinResponses = require('./helpers/joinResponses');
 // MAIN CONTROLLER
 async function Quellify(endPoint, query, map, fieldsMap) {
   // Create QuellStore object to keep track of arguments, aliases, fragments, variables, or directives
-  const QuellStore = { arguments: null, alias: null };
+  // const QuellStore = { arguments: null, alias: null };
 
   // Create AST of query
   const AST = parse(query);
 
   // Create object of "true" values from AST tree (w/ some eventually updated to "false" via buildItem())
-  let {proto, protoArgs, operationType} = parseAST(AST);
+  let {prototype, protoArgs, operationType} = parseAST(AST);
 
   // pass-through for queries and operations that QuellCache cannot handle
   if (operationType === 'unQuellable') {
@@ -38,8 +38,7 @@ async function Quellify(endPoint, query, map, fieldsMap) {
     return new Promise((resolve, reject) => resolve(parsedData));
   } else {
     // Check cache for data and build array from that cached data
-    const responseFromCache = buildFromCache(proto, map, null, QuellStore);
-    console.log(responseFromCache);
+    const responseFromCache = buildFromCache(prototype, map, null, protoArgs);
     // If no data in cache, the response array will be empty:
     if (responseFromCache.length === 0) {
       const fetchOptions = {
@@ -120,30 +119,30 @@ async function Quellify(endPoint, query, map, fieldsMap) {
   }
 }
 
-const query = `query {
-  countries {
-      id
-      name
-      cities {
-          id
-          name
-          population
-      }
-  }
-}`
+// const query = `query {
+//   countries {
+//       id
+//       name
+//       cities {
+//           id
+//           name
+//           population
+//       }
+//   }
+// }`
 
-const sampleMap = {
-  countries: 'Country',
-  country: 'Country',
-  citiesByCountryId: 'City',
-  cities: 'City',
-}
+// const sampleMap = {
+//   countries: 'Country',
+//   country: 'Country',
+//   citiesByCountryId: 'City',
+//   cities: 'City',
+// }
 
-const sampleFieldsMap = {
-  cities: 'City'
-}
+// const sampleFieldsMap = {
+//   cities: 'City'
+// }
 
-Quellify('/graphQL', query, sampleMap, sampleFieldsMap);
+// Quellify('/graphQL', query, sampleMap, sampleFieldsMap);
 
 
 // '/graphQL' - endpoint
