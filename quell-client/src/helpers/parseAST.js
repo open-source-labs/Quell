@@ -133,22 +133,22 @@ const parseAST = (AST) =>{
 }
 
 
-const query = `query {
-  Canada: country (id: 1) {
-    id
-    name
-    population
-  }
-  Mexico: country (id: 2) {
-    id
-    name
-    capitol
-    cities {
-      id
-      name
-    }
-  }
-}`;
+// const query = `query {
+//   Canada: country (id: 1) {
+//     id
+//     name
+//     population
+//   }
+//   Mexico: country (id: 2) {
+//     id
+//     name
+//     capitol
+//     cities {
+//       id
+//       name
+//     }
+//   }
+// }`;
 
 // ${ fieldName }${ ID ? '-'+ID : null } {
 //   id
@@ -167,17 +167,17 @@ const query = `query {
 //   if (!key.includes('__')) {
 //     // building prototype stuff
 //   }
-// }
+// // }
 
-const query2 = `{countries { id name capitol } }`;
+// const query2 = `{countries { id name capitol } }`;
 
-const parsedQuery = parse(query);
-const { prototype, protoArgs, operationType } = parseAST(parsedQuery);
+// const parsedQuery = parse(query);
+// const { prototype, protoArgs, operationType } = parseAST(parsedQuery);
 
-console.log('query', query);
-console.log('proto', prototype);
-console.log('protoArgs', protoArgs);
-console.log('opType', operationType);
+// console.log('query', query);
+// console.log('proto', prototype);
+// console.log('protoArgs', protoArgs);
+// console.log('opType', operationType);
 
 // for (let query2 in prototype) {
 //   console.log('for query in proto', query2);

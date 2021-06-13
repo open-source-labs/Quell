@@ -119,4 +119,35 @@ async function Quellify(endPoint, query, map, fieldsMap) {
   }
 }
 
+// const query = `query {
+//   countries {
+//       id
+//       name
+//       cities {
+//           id
+//           name
+//           population
+//       }
+//   }
+// }`
+
+// const sampleMap = {
+//   countries: 'Country',
+//   country: 'Country',
+//   citiesByCountryId: 'City',
+//   cities: 'City',
+// }
+
+// const sampleFieldsMap = {
+//   cities: 'City'
+// }
+
+// Quellify('/graphQL', query, sampleMap, sampleFieldsMap);
+
+
+// '/graphQL' - endpoint
+// query - query
+// sampleMap - map
+// sampleFieldsMap - fieldsMap
+
 module.exports = Quellify;
