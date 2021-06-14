@@ -1,5 +1,6 @@
 /**
- createQueryObj takes in a map of field(keys) and true/false(values) creating an query object containing the fields (false) missing from cache. This will then be converted into a GQL query string in the next step.
+ createQueryObj takes in a map of field(keys) and true/false(values) creating an query object containing the fields (false) missing from cache. 
+ This will then be converted into a GQL query string in the next step.
  */
 
 function createQueryObj(map) {

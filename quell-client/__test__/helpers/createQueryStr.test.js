@@ -1,76 +1,153 @@
 const createQueryStr = require('../../src/helpers/createQueryStr');
 
-xdescribe('createQueryStr.js', () => {
+// NOTE: we changed the spacing on the results object, not sure if it matters?
+
+describe('createQueryStr.js', () => {
   test('inputs query object w/ only scalar types and outputs GCL query string', () => {
     const queryObject = {
-      countries: ['id', 'name', 'capital'],
+      countries: {
+        id: false,
+        name: false,
+        capitol: false,
+        __alias: null,
+        __args: {}
+      }
     };
-    const QuellStore = { arguments: null, alias: null };
 
-    expect(createQueryStr(queryObject, QuellStore)).toEqual(
-      `{countries  { id name capital   }}`
+    expect(createQueryStr(queryObject)).toEqual(
+      `{countries  { id name capitol } }`
     );
   });
 
-  test('inputs query object w/ only object types and outputs GCL query string', () => {
+  test('inputs query object w/ only nested objects and outputs GCL query string', () => {
     const queryObject = {
-      countries: [{ cities: ['id', 'country_id', 'name', 'population'] }],
+      countries: {
+        cities: {
+          id: false, country_id: false, name: false,
+          population: false, __alias: null, __args: {}
+        }
+      },
     };
-    const QuellStore = { arguments: null, alias: null };
 
-    expect(createQueryStr(queryObject, QuellStore)).toEqual(
-      `{countries  { cities  { id country_id name population  }  }}`
+    expect(createQueryStr(queryObject)).toEqual(
+      `{countries  { cities  { id country_id name population } } }`
     );
   });
 
   test('inputs query object w/ both scalar & object types and outputs GCL query string', () => {
     const queryObject = {
-      countries: [
-        'id',
-        'name',
-        'capital',
-        { cities: ['id', 'country_id', 'name', 'population'] },
-      ],
+      countries: {
+        id: false, name: false, capitol: false,
+        cities: {
+          id: false,
+          country_id: false,
+          name: false
+        }
+      }
     };
-    const QuellStore = { arguments: null, alias: null };
 
-    expect(createQueryStr(queryObject, QuellStore)).toEqual(
-      `{countries  { id name capital cities  { id country_id name population  }  }}`
+    expect(createQueryStr(queryObject)).toEqual(
+      `{countries  { id name capitol cities  { id country_id name } } }`
     );
   });
 
   test('inputs query object w/ an argument & w/ both scalar & object types should output GCL query string', () => {
     const queryObject = {
-      country: [
-        'id',
-        'name',
-        'capital',
-        { cities: ['id', 'country_id', 'name', 'population'] },
-      ],
+      ['country--1']: {
+        id: false,
+        name: false,
+        capitol: false,
+        cities: {
+          id: false,
+          country_id: false,
+          name: false,
+          population: false
+        },
+        __args: { id: 1 },
+        __alias: null
+      }
     };
-    const QuellStore = { arguments: { country: [{ id: '1' }] }, alias: null };
 
-    expect(createQueryStr(queryObject, QuellStore)).toEqual(
-      `{country ( id : 1  ) { id name capital cities  { id country_id name population  }  }}`
+    expect(createQueryStr(queryObject)).toEqual(
+      `{country ( id : 1  ) { id name capitol cities  { id country_id name population } } }`
     );
   });
 
   test('inputs query object w/ multiple arguments & w/ both scalar & object types should output GCL query string', () => {
     const queryObject = {
-      country: [
-        'id',
-        'name',
-        'capital',
-        { cities: ['id', 'country_id', 'name', 'population'] },
-      ],
-    };
-    const QuellStore = {
-      arguments: { country: [{ name: 'China' }, { capital: 'Beijing' }] },
-      alias: null,
+      country: {
+        id: false,
+        name: false,
+        capital: false,
+        __args: {
+          name: "China", 
+          capitol: "Beijing"
+        },
+        __alias: null,
+        cities: {
+          id: false,
+          country_id: false,
+          name: false,
+          population: false,
+          __args: {},
+          __alias: null,
+        },
+      },
     };
 
-    expect(createQueryStr(queryObject, QuellStore)).toEqual(
-      `{country ( name : China , capital : Beijing  ) { id name capital cities  { id country_id name population  }  }}`
+    expect(createQueryStr(queryObject)).toEqual(
+      `{country ( name : China , capitol : Beijing  ) { id name capital cities  { id country_id name population } } }`
     );
   });
+
+  test('inputs query object with alias should output GCL query string', () => {
+    const queryObject = {
+      country: {
+        id: false,
+        cities: {
+          id: false,
+          name: false,
+          __args: {id: 3},
+          __alias: "Canada"
+        }
+    }
+    };
+
+    expect(createQueryStr(queryObject)).toEqual(
+      `{Canada: country(id: 3){ id }}`
+    );
+  });
+
+  test('inputs query object with multiple queries should output GCL query string', () => {
+    const queryObject = {
+      ['country--1']: {
+        id: false,
+        name: false,
+        cities: {
+          id: false,
+          name: false,
+          __args: {},
+          __alias: null,
+        },
+        __args: { id: 1 },
+        __alias: null,
+      },
+      ['book--2']: {
+        id: false,
+        title: false,
+        author: {
+          id: false,
+          name: false,
+          __args: {},
+          __alias: null,
+        },
+        __args: { id: 2 },
+        __alias: null,
+      },
+    };
+
+    expect(createQueryStr(queryObject)).toEqual(
+      `{country ( id: 1 ) { id name cities { id name } } book ( id: 2 ) { id title author { id name } } }`
+    );
+  })
 });

@@ -1,5 +1,7 @@
 /**
- joinResponses combines two arrays containing results from the cached response and fetched (uncached) and outputs a single array response that will ultimately be formatted and delivered to the client. the copied Proto parameter sets a reference to combine the fields in the same order as the original query.
+ joinResponses combines two arrays containing results from the cached response and fetched (uncached) and outputs a single array response 
+ that will ultimately be formatted and delivered to the client. 
+ the copied Proto parameter sets a reference to combine the fields in the same order as the original query.
  */
 
 function joinResponses(responseArray, fetchedResponseArray, proto) {

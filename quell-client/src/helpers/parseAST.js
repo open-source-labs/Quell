@@ -180,20 +180,20 @@ const parseAST = (AST) => {
 
 // TO-DO: remove testing before final commits
 // // query strings for testing
-// const queryPlain = `{countries { id name capitol } }`;
-// const queryNest = `{ countries { id name cities{ id name attractions{ id name price location{ longitude latitude{ lets just throw a few more in here{ why not{ thats the point right }}}}}}}}`;
-// const queryArg = `query { country(id: 1, name: Jonathan) { id name }}`;
-// const queryInnerArg = `query {country (id: 1) { id name city (id: 2) { id name }}}`
-// const queryAlias = `query { Canada: country (id: 1) { id name } }`;
-// const queryAliasNoArgs = `query { Canada: country { id name } }`;
-// const queryNestAlias = `query { countries { id name Toronto: city (id: 1) { id name TastyTreat: food (id: 2) { name nutrition (id: 3) { calories, protein, fat, carbs }} } } }`
-// const queryMultiple = `query { Canada: country (id: 1) { id name capitol { id name population } } Mexico: country (id: 2) { id name climate { seasons } }}`
-// const queryFragment = `query { Canada: country { id name ...fragment } }`;
+const queryPlain = `{countries { id name capitol } }`;
+const queryNest = `{ countries { id name cities{ id name attractions{ id name price location{ longitude latitude{ lets just throw a few more in here{ why not{ thats the point right }}}}}}}}`;
+const queryArg = `query { country(id: 1, name: Jonathan) { id name }}`;
+const queryInnerArg = `query {country (id: 1) { id name city (id: 2) { id name }}}`
+const queryAlias = `query { Canada: country (id: 1) { id name } }`;
+const queryAliasNoArgs = `query { Canada: country { id name } }`;
+const queryNestAlias = `query { countries { id name Toronto: city (id: 1) { id name TastyTreat: food (id: 2) { name nutrition (id: 3) { calories, protein, fat, carbs }} } } }`
+const queryMultiple = `query { Canada: country (id: 1) { id name capitol { id name population } } Mexico: country (id: 2) { id name climate { seasons } }}`
+const queryFragment = `query { Canada: country { id name ...fragment } }`;
 
 // // // execute function for testing
-// const parsedQuery = parse(queryFragment);
-// const { prototype } = parseAST(parsedQuery);
-// console.log('proto', prototype);
+const parsedQuery = parse(queryArg);
+const { prototype } = parseAST(parsedQuery);
+console.log('proto', prototype);
 // console.log('nest proto', prototype['countries']['city--1'])
 
 module.exports = parseAST;
