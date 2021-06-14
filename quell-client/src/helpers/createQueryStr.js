@@ -27,7 +27,7 @@ function createQueryStr(queryObject) {
   // iterate over every key in queryObject
   // place key into query object
   for (let key in queryObject) {
-    mainStr += `${makeKey(queryObject[key], key)} ${getArgs
+    mainStr += `${makeKey(queryObject[key], key)}${getArgs
       (queryObject[key])} ${openCurly} ${stringify(
         queryObject[key])}${closeCurly} `;
   }
@@ -45,7 +45,7 @@ function createQueryStr(queryObject) {
       }
       // is key object? && !key.includes('__'), recurse stringify
       if (typeof fields[key] === 'object' && !key.includes('__')) {
-        innerStr += `${makeKey(fields[key], key)} ${getArgs(
+        innerStr += `${makeKey(fields[key], key)}${getArgs(
           fields[key])} ${openCurly} ${stringify(
             fields[key])}${closeCurly} `;
         }
@@ -60,13 +60,14 @@ function createQueryStr(queryObject) {
     if (Object.keys(fields.__args) !== 0) {
       Object.keys(fields.__args).forEach((key) => {
         argString
-          ? (argString += `, ${key} : ${fields.__args[key]} `)
-          : (argString += `${key} : ${fields.__args[key]} `);
+          ? (argString += `, ${key}: ${fields.__args[key]}`)
+          : (argString += `${key}: ${fields.__args[key]}`);
       });
     }
 
+    argString.slice(0, argString.length - 2);
     // return arg string in parentheses, or an empty string
-    return argString ? `${openParen} ${argString} ${closeParen}` : '';
+    return argString ? `${openParen}${argString}${closeParen}` : '';
   }
 
   // makeKey takes in the fields object and cache key,

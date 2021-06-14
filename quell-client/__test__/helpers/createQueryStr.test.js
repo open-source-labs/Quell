@@ -15,7 +15,7 @@ describe('createQueryStr.js', () => {
     };
 
     expect(createQueryStr(queryObject)).toEqual(
-      `{countries  { id name capitol } }`
+      `{countries { id name capitol } }`
     );
   });
 
@@ -30,7 +30,7 @@ describe('createQueryStr.js', () => {
     };
 
     expect(createQueryStr(queryObject)).toEqual(
-      `{countries  { cities  { id country_id name population } } }`
+      `{countries { cities { id country_id name population } } }`
     );
   });
 
@@ -47,7 +47,7 @@ describe('createQueryStr.js', () => {
     };
 
     expect(createQueryStr(queryObject)).toEqual(
-      `{countries  { id name capitol cities  { id country_id name } } }`
+      `{countries { id name capitol cities { id country_id name } } }`
     );
   });
 
@@ -69,7 +69,7 @@ describe('createQueryStr.js', () => {
     };
 
     expect(createQueryStr(queryObject)).toEqual(
-      `{country ( id : 1  ) { id name capitol cities  { id country_id name population } } }`
+      `{country(id: 1) { id name capitol cities { id country_id name population } } }`
     );
   });
 
@@ -96,25 +96,27 @@ describe('createQueryStr.js', () => {
     };
 
     expect(createQueryStr(queryObject)).toEqual(
-      `{country ( name : China , capitol : Beijing  ) { id name capital cities  { id country_id name population } } }`
+      `{country(name: China, capitol: Beijing) { id name capital cities { id country_id name population } } }`
     );
   });
 
   test('inputs query object with alias should output GCL query string', () => {
     const queryObject = {
-      country: {
+      ['country--3']: {
         id: false,
         cities: {
           id: false,
           name: false,
-          __args: {id: 3},
-          __alias: "Canada"
-        }
-    }
+          __args: {},
+          __alias: null,
+        },
+        __args: {id: 3},
+        __alias: "Canada"
+      }
     };
 
     expect(createQueryStr(queryObject)).toEqual(
-      `{Canada: country(id: 3){ id }}`
+      `{Canada: country(id: 3) { id cities { id name } } }`
     );
   });
 
@@ -147,7 +149,50 @@ describe('createQueryStr.js', () => {
     };
 
     expect(createQueryStr(queryObject)).toEqual(
-      `{country ( id: 1 ) { id name cities { id name } } book ( id: 2 ) { id title author { id name } } }`
+      `{country(id: 1) { id name cities { id name } } book(id: 2) { id title author { id name } } }`
+    );
+  });
+
+  test('deeply nested query object', () => {
+    const queryObject = {
+      countries: {
+        id: true,
+        __alias: null,
+        __args: {},
+        cities: {
+          id: true,
+          __alias: null,
+          __args: {},
+          attractions: {
+            id: true,
+            __alias: null,
+            __args: {},
+            location: {
+              id: true,
+              __alias: null,
+              __args: {},
+              latitude: {
+                id: true,
+                __alias: null,
+                __args: {},
+                here: {
+                  id: true,
+                  __alias: null,
+                  __args: {},
+                  not: {
+                    id: true,
+                    __alias: null,
+                    __args: {}
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    };
+    expect(createQueryStr(queryObject)).toEqual(
+      `{countries { id cities { id attractions { id location { id latitude { id here { id not { id } } } } } } } }`
     );
   })
 });

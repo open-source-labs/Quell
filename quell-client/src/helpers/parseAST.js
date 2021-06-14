@@ -191,9 +191,9 @@ const queryMultiple = `query { Canada: country (id: 1) { id name capitol { id na
 const queryFragment = `query { Canada: country { id name ...fragment } }`;
 
 // // // execute function for testing
-const parsedQuery = parse(queryArg);
+const parsedQuery = parse(queryNest);
 const { prototype } = parseAST(parsedQuery);
 console.log('proto', prototype);
-// console.log('nest proto', prototype['countries']['city--1'])
+console.log('nest proto', prototype['countries']['cities']['attractions']['location']['latitude'])
 
 module.exports = parseAST;
