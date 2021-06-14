@@ -22,6 +22,8 @@ const parseAST = (AST) => {
   // information from AST is distilled into the prototype for easy access during caching, rebuilding query strings, etc.
   const prototype = {};
 
+  let operationType = '';
+
   // initialize stack to keep track of depth first parsing path,
   // need original names as reference to prevent doubling with uniqueIDs
   const stack = [];
@@ -48,16 +50,16 @@ const parseAST = (AST) => {
       //TO-DO: cannot cache directives, return as unquellable until support
       if (node.directives) {
         if (node.directives.length > 0) {
-          prototype.operationType = 'unQuellable';
+          operationType = 'unQuellable';
           return BREAK;
         }
       }
     },
     OperationDefinition(node) {
       //TO-DO: cannot cache subscriptions or mutations, return as unquellable
-      prototype.operationType = node.operation;
+      operationType = node.operation;
       if (node.operation === 'subscription' || node.operation === 'mutation') {
-        prototype.operationType = 'unQuellable';
+        operationType = 'unQuellable';
         return BREAK;
       }
     },
@@ -68,8 +70,8 @@ const parseAST = (AST) => {
         const argsObj = {};
         node.arguments.forEach(arg => {
           // TO-DO: cannot currently handle variables in query
-          if (arg.value.kind === 'Variable' && prototype.operationType === 'query') {
-            prototype.operationType = 'unQuellable';
+          if (arg.value.kind === 'Variable' && operationType === 'query') {
+            operationType = 'unQuellable';
             return BREAK;
           }
           argsObj[arg.name.value] = arg.value.value;
@@ -163,7 +165,7 @@ const parseAST = (AST) => {
       },
     },
   });
-  return prototype;
+  return { prototype, operationType };
 };
 
 // loop(keys){
