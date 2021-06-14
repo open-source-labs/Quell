@@ -2,19 +2,7 @@
  createQueryStr converts the query object into a formal GCL query string.
  */
 
-//  const queryObject = {
-//   countries: {
-//     id: false,
-//     name: false,
-//     capitol: false,
-//     __alias: null,
-//     __args: {}
-//   }
-//  };
-
-// `{countries  { id name capitol   }}`
-
-// TO-DO: add support for operation definitions input at the front
+// TO-DO: add support for operation definitions input at the front ie "query" "mutation" "subscription"
 
 function createQueryStr(queryObject) {
   const openCurly = '{';
