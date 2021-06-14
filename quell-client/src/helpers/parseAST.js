@@ -62,10 +62,8 @@ const parseAST = (AST) => {
       }
     },
     Field: {
-      // enter the node to construct a unique field-ID for critical fields
+      // enter the node to construct a unique fieldID for critical fields
       enter(node) {
-        // TO-DO: re - implement "if argument" statement?
-        
         // populates argsObj from current node
         const argsObj = {};
         node.arguments.forEach(arg => {
@@ -77,30 +75,37 @@ const parseAST = (AST) => {
           argsObj[arg.name.value] = arg.value.value;
         });
 
+
         // identify unique ID from args
-        // TO-DO: could expand to support user-defined IDs (ie key.includes('id') for "authorid")
+        // TO-DO: make this more general instead of hard-coded? 
+        // string.includes() is too general and would catch non-uniqueID fields
         let uniqueID = '';
         for (const key in argsObj) {
-          if (key === 'id' || key === '_id' || key === 'ID') {
+          if (key === 'id' || key === '_id' || key === 'ID' || key === 'Id') {
             uniqueID = argsObj[key];
           }
         }
 
-        // create fieldName unique ID in format "fieldName - uniqueID"
-        const fieldID = `${node.name.value}${uniqueID ? '--' + uniqueID : ''}`
-        // TO-DO: does not work for deeply nested objects
-        // add alias, args values to appropriate fields
+        // stores alias for Field
         const alias = node.alias ? node.alias.value : null
+
+        // create fieldID in format "fieldName - uniqueID"
+        // otherwise returns the original field name
+        const fieldID = `${node.name.value}${uniqueID ? '--' + uniqueID : ''}`;
+
+        // add alias, args values to appropriate fields
         fieldArgs[fieldID] = {
           ...fieldArgs[fieldID],
           __alias: alias,
           __args: argsObj
         };
-        // add value to stack to keep track of depth-first parsing path
+
+        // add value to stacks to keep track of depth-first parsing path
         stack.push(node.name.value);
         stackIDs.push(fieldID);
       },
       leave() {
+        // pop stacks to keep track of depth-first parsing path
         stack.pop();
         stackIDs.pop();
       },
@@ -170,7 +175,7 @@ const parseAST = (AST) => {
 // TO-DO: remove testing before final commits
 // query strings for testing
 // const queryPlain = `{countries { id name capitol } }`;
-// const queryNest = `{ countries { id name cities { id name attractions { id name price } } } }`;
+// const queryNest = `{ countries { id name cities{ id name attractions{ id name price location{ longitude latitude{ lets just throw a few more in here{ why not{ thats the point right }}}}}}}}`;
 // const queryArg = `query { country(id: 1, name: Jonathan) { id name }}`;
 // const queryInnerArg = `query {country (id: 1) { id name city (id: 2) { id name }}}`
 // const queryAlias = `query { Canada: country (id: 1) { id name } }`;
@@ -179,9 +184,9 @@ const parseAST = (AST) => {
 // const queryMultiple = `query { Canada: country (id: 1) { id name capitol { id name population } } Mexico: country (id: 2) { id name climate { seasons } }}`
 
 // // execute function for testing
-// const parsedQuery = parse(queryMultiple);
+// const parsedQuery = parse(queryNest);
 // const prototype = parseAST(parsedQuery);
 // console.log('proto', prototype);
-// console.log('nest proto', prototype['countries']['city--1'])
+// console.log('nest proto', prototype['countries']['cities']['attractions']['location']['latitude'])
 
 module.exports = parseAST;
