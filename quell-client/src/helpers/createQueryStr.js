@@ -36,11 +36,12 @@ function createQueryStr(queryObject) {
         innerStr += `${makeTypeKey(fields[key], key)}${getArgs(
           fields[key])} ${openCurly} ${stringify(
             fields[key])}${closeCurly} `;
-        }
       }
+    }
     return innerStr;
   }
 
+  // 
   function getArgs(fields) {
     let argString = '';
     if (!fields.__args) return '';

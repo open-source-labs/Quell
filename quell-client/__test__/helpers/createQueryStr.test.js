@@ -3,6 +3,12 @@ const createQueryStr = require('../../src/helpers/createQueryStr');
 // NOTE: we changed the spacing on the results object, not sure if it matters?
 
 describe('createQueryStr.js', () => {
+  xtest('inputs query object w/ no values', () => {
+    expect(createQueryStr(queryObject)).toEqual(
+
+    );
+  });
+
   test('inputs query object w/ only scalar types and outputs GCL query string', () => {
     const queryObject = {
       countries: {
@@ -23,9 +29,13 @@ describe('createQueryStr.js', () => {
     const queryObject = {
       countries: {
         cities: {
-          id: false, country_id: false, name: false,
-          population: false, __alias: null, __args: {}
-        }
+          id: false,
+          country_id: false,
+          name: false,
+          population: false,
+          __alias: null,
+          __args: {}
+        },
       },
     };
 
