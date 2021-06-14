@@ -34,6 +34,7 @@ const parseAST = (AST) => {
   let selectionSetDepth = 0;
 
   // tracks arguments, aliases, etc. for specific fields
+  // eventually merged with prototype object
   const fieldArgs = {};
 
   /**
@@ -54,6 +55,9 @@ const parseAST = (AST) => {
           return BREAK;
         }
       }
+    },
+    FragmentDefinition(node) {
+      // storing fragment info
     },
     OperationDefinition(node) {
       //TO-DO: cannot cache subscriptions or mutations, return as unquellable
@@ -88,12 +92,12 @@ const parseAST = (AST) => {
           }
         }
 
-        // stores alias for Field
-        const alias = node.alias ? node.alias.value : null
-
         // create fieldID in format "fieldName - uniqueID"
         // otherwise returns the original field name
         const fieldID = `${node.name.value}${uniqueID ? '--' + uniqueID : ''}`;
+
+        // stores alias for Field
+        const alias = node.alias ? node.alias.value : null
 
         // add alias, args values to appropriate fields
         fieldArgs[fieldID] = {
@@ -176,19 +180,20 @@ const parseAST = (AST) => {
 
 // TO-DO: remove testing before final commits
 // query strings for testing
-// const queryPlain = `{countries { id name capitol } }`;
-// const queryNest = `{ countries { id name cities{ id name attractions{ id name price location{ longitude latitude{ lets just throw a few more in here{ why not{ thats the point right }}}}}}}}`;
-// const queryArg = `query { country(id: 1, name: Jonathan) { id name }}`;
-// const queryInnerArg = `query {country (id: 1) { id name city (id: 2) { id name }}}`
-// const queryAlias = `query { Canada: country (id: 1) { id name } }`;
-// const queryAliasNoArgs = `query { Canada: country { id name } }`;
-// const queryNestAlias = `query { countries { id name Toronto: city (id: 1) { id name TastyTreat: food (id: 2) { name nutrition (id: 3) { calories, protein, fat, carbs }} } } }`
-// const queryMultiple = `query { Canada: country (id: 1) { id name capitol { id name population } } Mexico: country (id: 2) { id name climate { seasons } }}`
+const queryPlain = `{countries { id name capitol } }`;
+const queryNest = `{ countries { id name cities{ id name attractions{ id name price location{ longitude latitude{ lets just throw a few more in here{ why not{ thats the point right }}}}}}}}`;
+const queryArg = `query { country(id: 1, name: Jonathan) { id name }}`;
+const queryInnerArg = `query {country (id: 1) { id name city (id: 2) { id name }}}`
+const queryAlias = `query { Canada: country (id: 1) { id name } }`;
+const queryAliasNoArgs = `query { Canada: country { id name } }`;
+const queryNestAlias = `query { countries { id name Toronto: city (id: 1) { id name TastyTreat: food (id: 2) { name nutrition (id: 3) { calories, protein, fat, carbs }} } } }`
+const queryMultiple = `query { Canada: country (id: 1) { id name capitol { id name population } } Mexico: country (id: 2) { id name climate { seasons } }}`
+const queryFragment = `query { Canada: country { id name ...fragment } }`;
 
 // // execute function for testing
-// const parsedQuery = parse(queryNest);
-// const prototype = parseAST(parsedQuery);
-// console.log('proto', prototype);
-// console.log('nest proto', prototype['countries']['cities']['attractions']['location']['latitude'])
+const parsedQuery = parse(queryFragment);
+const { prototype } = parseAST(parsedQuery);
+console.log('proto', prototype);
+// console.log('nest proto', prototype['countries']['city--1'])
 
 module.exports = parseAST;
