@@ -15,7 +15,7 @@ function createQueryStr(queryObject) {
   // iterate over every key in queryObject
   // place key into query object
   for (let key in queryObject) {
-    mainStr += `${makeKey(queryObject[key], key)}${getArgs
+    mainStr += `${makeTypeKey(queryObject[key], key)}${getArgs
       (queryObject[key])} ${openCurly} ${stringify(
         queryObject[key])}${closeCurly} `;
   }
@@ -33,7 +33,7 @@ function createQueryStr(queryObject) {
       }
       // is key object? && !key.includes('__'), recurse stringify
       if (typeof fields[key] === 'object' && !key.includes('__')) {
-        innerStr += `${makeKey(fields[key], key)}${getArgs(
+        innerStr += `${makeTypeKey(fields[key], key)}${getArgs(
           fields[key])} ${openCurly} ${stringify(
             fields[key])}${closeCurly} `;
         }
@@ -60,7 +60,7 @@ function createQueryStr(queryObject) {
 
   // makeKey takes in the fields object and cache key,
   // produces the appropriate graphQL key, and pairs it with any existing Alias
-  function makeKey(fields, key) {
+  function makeTypeKey(fields, key) {
     // find the index of the - character String.indexOf(--) and store it
     const index = key.indexOf("--");
     // if index -1 ('--' not found), return key 
