@@ -19,6 +19,7 @@ const { parse } = require('graphql/language/parser');
 
 const parseAST = (AST) => {
   // initialize prototype as empty object
+  // information from AST is distilled into the prototype for easy access during caching, rebuilding query strings, etc.
   const prototype = {};
 
   // initialize stack to keep track of depth first parsing path,
@@ -30,8 +31,8 @@ const parseAST = (AST) => {
   // tracks depth of selection Set
   let selectionSetDepth = 0;
 
-  // keep track of current fieldID
-  let fieldID = '';
+  // tracks arguments, aliases, etc. for specific fields
+  const fieldArgs = {};
 
   /**
    * visit is a utility provided in the graphql-JS library. It performs a
@@ -62,74 +63,46 @@ const parseAST = (AST) => {
     },
     Field: {
       // enter the node to construct a unique field-ID for critical fields
-      enter(node, key, parent, path, ancestors) {
-        // if (node.alias && !node.arguments) {
-        //   // TO-DO: handle edge case of alias without any arguments
-        //     prototype.operationType = 'unQuellable';
-        //     return BREAK;
-        // }
-        // TO-DO: re-implement "if argument" statement
-        if (true) {
-          // populates argsObj from node
-          const argsObj = {};
-          node.arguments.forEach(arg => {
-            // TO-DO: cannot currently handle variables in query
-            if (arg.value.kind === 'Variable' && prototype.operationType === 'query') {
-              prototype.operationType = 'unQuellable';
-              return BREAK;
-            }
-            argsObj[arg.name.value] = arg.value.value;
-          });
-  
-          // identify unique ID from args
-          // TO-DO: could expand to support user-defined IDs (ie key.includes('id') for "authorid")
-          let uniqueID = '';
-          for (const key in argsObj) {
-            if (key === 'id' || key === '_id' || key === 'ID') {
-              uniqueID = argsObj[key];
-            }
+      enter(node) {
+        // TO-DO: re - implement "if argument" statement?
+        
+        // populates argsObj from current node
+        const argsObj = {};
+        node.arguments.forEach(arg => {
+          // TO-DO: cannot currently handle variables in query
+          if (arg.value.kind === 'Variable' && prototype.operationType === 'query') {
+            prototype.operationType = 'unQuellable';
+            return BREAK;
           }
-  
-          // create fieldName unique ID in format "fieldName - uniqueID"
-          fieldID = `${node.name.value}${uniqueID ? '--' + uniqueID : ''}`
+          argsObj[arg.name.value] = arg.value.value;
+        });
 
-          if (uniqueID) {
-            if (selectionSetDepth > 1) {
-              // when depth is >= 1, we need to add it to parent object instead of prototype-base
-              const finalIndex = stack.length - 1;
-              const parentObj = stackIDs[finalIndex]
-              // current value for fieldID is current Object
-              const currentObj = fieldID;
-
-              // add args to prototype object at correct key
-              prototype[parentObj][currentObj] = { ...prototype[parentObj][currentObj], __args: argsObj }
-    
-              // // check for Alias and add if it exists, otherwise set to null
-              if (node.alias) prototype[parentObj][currentObj] = { ...prototype[parentObj][currentObj], __alias: node.alias.value }
-              else prototype[parentObj][currentObj] = { ...prototype[parentObj][currentObj], __alias: null }
-
-            } else {
-              // when depth is 0, we can add fieldID section to prototype argument straight away
-              // add args to prototype object
-              prototype[fieldID] = { ...prototype[fieldID], __args: argsObj }
-    
-              // check for Alias and add if it exists, otherwise set to null
-              if (node.alias) prototype[fieldID] = { ...prototype[fieldID], __alias: node.alias.value }
-              else prototype[fieldID] = { ...prototype[fieldID], __alias: null }
-            }
+        // identify unique ID from args
+        // TO-DO: could expand to support user-defined IDs (ie key.includes('id') for "authorid")
+        let uniqueID = '';
+        for (const key in argsObj) {
+          if (key === 'id' || key === '_id' || key === 'ID') {
+            uniqueID = argsObj[key];
           }
         }
 
+        // create fieldName unique ID in format "fieldName - uniqueID"
+        const fieldID = `${node.name.value}${uniqueID ? '--' + uniqueID : ''}`
+        // TO-DO: does not work for deeply nested objects
+        // add alias, args values to appropriate fields
+        const alias = node.alias ? node.alias.value : null
+        fieldArgs[fieldID] = {
+          ...fieldArgs[fieldID],
+          __alias: alias,
+          __args: argsObj
+        };
         // add value to stack to keep track of depth-first parsing path
         stack.push(node.name.value);
         stackIDs.push(fieldID);
-        // console.log('stack', stack);
-        // console.log('stackIDs', stackIDs);
       },
-      leave(node, key, parent, path, ancestors) {
+      leave() {
         stack.pop();
         stackIDs.pop();
-        console.log('leaving stack', stack);
       },
     },
     SelectionSet: {
@@ -144,33 +117,37 @@ const parseAST = (AST) => {
        */
         if (parent.kind === 'Field') {
           // loop through selections to collect fields
-          const fieldsObject = {};
+          const fieldsValues = {};
           for (let field of node.selections) {
-            fieldsObject[field.name.value] = true;
+            fieldsValues[field.name.value] = true;
           };
-  
-          // if selection set depth > 1, remove the field that exists at top of stack from the object
-          // otherwise proto-object will have duplicate entries for nested queries with arguments
-          // ie "city" and "city--3"
 
-          // TO-DO to delete just the LAST in the loop, need to go through all inner parts
-          // at the moment it just looks for the last 2 and doesn't work for deeply nested queries
+          // place fieldArgs object onto fieldsObject so it gets passed along to prototype
+          // fieldArgs contains arguments, aliases, etc.
+          const fieldsObject = { ...fieldsValues, ...fieldArgs[stackIDs[stackIDs.length - 1]] };
 
-          // if (selectionSetDepth > 2) {
-          //   const finalIndex = stack.length - 1;
-          //   const penultimateIndex = stack.length - 2;
-
-          //   console.log('depth', selectionSetDepth, 'proto', prototype, 'stack', stack, 'IDs', stackIDs, 'fieldID', fieldID)
-          //   console.log(prototype[stackIDs[0]])
-          //   delete prototype[stackIDs[penultimateIndex]][stack[finalIndex]];
-          // }
+          /* For nested objects, we must prevent duplicate entries for nested queries with arguments (ie "city" and "city--3")
+          * We go into the prototype and delete the duplicate entry
+          */
+          if (selectionSetDepth > 2) {
+            let miniProto = prototype;
+            // loop through stack to access layers of prototype object
+            for (let i = 0; i < stack.length; i++) {
+              // access layers of prototype object
+              miniProto = miniProto[stackIDs[i]]
+              if (i === stack.length - 2) {
+                // when final index, delete
+                delete miniProto[stack[i + 1]];
+              }
+            }
+          }
           
           // loop through stack to get correct path in proto for temp object;
           // mutates original prototype object WITH values from tempObject
           // "prev" is accumulator ie the prototype
           stackIDs.reduce((prev, curr, index) => {
             return index + 1 === stack.length // if last item in path
-              ? (prev[curr] = {...prev[curr], ...fieldsObject}) //set value
+              ? (prev[curr] = {...fieldsObject}) //set value
               : (prev[curr] = prev[curr]); // otherwise, if index exists, keep value
           }, prototype);
         }
@@ -190,20 +167,21 @@ const parseAST = (AST) => {
 //   }
 // }
 
-// TO-DO: remove testing
+// TO-DO: remove testing before final commits
 // query strings for testing
-const queryPlain = `{countries { id name capitol } }`;
-const queryNest = `{ countries { id name cities { id name attractions { id name price } } } }`;
-const queryArg = `query { country(id: 1) { id name }}`;
-const queryInnerArg = `query {country (id: 1) { id name city (id: 2) { id name }}}`
-const queryAlias = `query { Canada: country (id: 1) { id name } }`;
-const queryAliasNoArgs = `query { Canada: country { id name } }`;
-const queryMultiple = `query { Canada: country (id: 1) { id name capitol } Mexico: country (id: 2) { id name climate }}`
+// const queryPlain = `{countries { id name capitol } }`;
+// const queryNest = `{ countries { id name cities { id name attractions { id name price } } } }`;
+// const queryArg = `query { country(id: 1, name: Jonathan) { id name }}`;
+// const queryInnerArg = `query {country (id: 1) { id name city (id: 2) { id name }}}`
+// const queryAlias = `query { Canada: country (id: 1) { id name } }`;
+// const queryAliasNoArgs = `query { Canada: country { id name } }`;
+// const queryNestAlias = `query { countries { id name Toronto: city (id: 1) { id name TastyTreat: food (id: 2) { name nutrition (id: 3) { calories, protein, fat, carbs }} } } }`
+// const queryMultiple = `query { Canada: country (id: 1) { id name capitol { id name population } } Mexico: country (id: 2) { id name climate { seasons } }}`
 
-const parsedQuery = parse(queryNest);
-const prototype = parseAST(parsedQuery);
-
-// console.log('query', query);
-console.log('proto', prototype);
+// // execute function for testing
+// const parsedQuery = parse(queryMultiple);
+// const prototype = parseAST(parsedQuery);
+// console.log('proto', prototype);
+// console.log('nest proto', prototype['countries']['city--1'])
 
 module.exports = parseAST;
