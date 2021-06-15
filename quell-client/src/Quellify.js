@@ -19,7 +19,7 @@ async function Quellify(endPoint, query, map, fieldsMap) {
   const AST = parse(query);
 
   // Create object of "true" values from AST tree (w/ some eventually updated to "false" via buildItem())
-  let {prototype, protoArgs, operationType} = parseAST(AST);
+  const { prototype, operationType } = parseAST(AST);
 
   // pass-through for queries and operations that QuellCache cannot handle
   if (operationType === 'unQuellable') {
@@ -37,8 +37,9 @@ async function Quellify(endPoint, query, map, fieldsMap) {
     // Return response as a promise
     return new Promise((resolve, reject) => resolve(parsedData));
   } else {
+    // if it is "quellable"
     // Check cache for data and build array from that cached data
-    const responseFromCache = buildFromCache(prototype, map, null, protoArgs);
+    const responseFromCache = buildFromCache(prototype, map, null);
     // If no data in cache, the response array will be empty:
     if (responseFromCache.length === 0) {
       const fetchOptions = {
@@ -53,20 +54,24 @@ async function Quellify(endPoint, query, map, fieldsMap) {
       const responseFromFetch = await fetch(endPoint, fetchOptions);
       const parsedData = await responseFromFetch.json();
       // Normalize returned data into cache
-      normalizeForCache(parsedData.data, map, fieldsMap, QuellStore);
+      normalizeForCache(parsedData.data, map, fieldsMap);
 
       // Return response as a promise
       return new Promise((resolve, reject) => resolve(parsedData));
-    }
+    };
 
     // If found data in cache:
+    // Create query object from only false prototype fields
     let mergedResponse;
-    const queryObject = createQueryObj(prototype); // Create query object from only false prototype fields
+    const queryObject = createQueryObj(prototype);
+
+    // TO-DO: queryName restricts our cache to just the first query
     const queryName = Object.keys(prototype)[0];
 
     // Partial data in cache:  (i.e. keys in queryObject will exist)
     if (Object.keys(queryObject).length > 0) {
-      const newQuery = createQueryStr(queryObject, QuellStore); // Create formal GQL query string from query object
+      // Create formal GQL query string from query object
+      const newQuery = createQueryStr(queryObject); 
       const fetchOptions = {
         method: 'POST',
         headers: {
@@ -78,10 +83,13 @@ async function Quellify(endPoint, query, map, fieldsMap) {
       // Execute fetch request with new query
       const responseFromFetch = await fetch(endPoint, fetchOptions);
       const parsedData = await responseFromFetch.json();
+
+      // TO-DO: why put it into an array?
       const parsedResponseFromFetch = Array.isArray(parsedData.data[queryName])
         ? parsedData.data[queryName]
         : [parsedData.data[queryName]];
 
+      // TO-DO: look at joinResponses
       // Stitch together cached response and the newly fetched data and assign to variable
       mergedResponse = joinResponses(
         responseFromCache,
@@ -89,10 +97,13 @@ async function Quellify(endPoint, query, map, fieldsMap) {
         prototype
       );
     } else {
-      mergedResponse = responseFromCache; // If everything needed was already in cache, only assign cached response to variable
+      // If everything needed was already in cache, only assign cached response to variable
+      mergedResponse = responseFromCache;
     }
 
-    // If everything needed was already in cache, only assign cached response to variable
+    // TO-DO: WHAT IS THIS
+    // prep mergedResponse to store in the cache
+    // merged response should already factor in joinResponses
     if (QuellStore.arguments && !QuellStore.alias) {
       if (mergedResponse.length === 1) {
         mergedResponse = mergedResponse[0];
@@ -112,7 +123,18 @@ async function Quellify(endPoint, query, map, fieldsMap) {
       : { data: { [queryName]: mergedResponse } };
 
     // Cache newly stitched response
-    normalizeForCache(formattedMergedResponse.data, map, fieldsMap, QuellStore);
+    normalizeForCache(formattedMergedResponse.data, map, fieldsMap);
+
+    // normalizeForCache expects data as if it just got back from graphQL like so:
+    // {
+    //   "data": {
+    //     "country": {
+    //       "id": "1",
+    //       "name": "Andorra"
+    //     }
+    //   }
+    // }
+    // need to convert mergedResponse into graphQL response format
 
     // Return formattedMergedResponse as a promise
     return new Promise((resolve, reject) => resolve(formattedMergedResponse));

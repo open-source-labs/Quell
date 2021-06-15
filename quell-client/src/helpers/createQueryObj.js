@@ -5,8 +5,6 @@
 
 function createQueryObj(map) {
   const output = {};
-  // !! assumes there is only ONE main query, and not multiples !!
-
   // iterate over every key in map
   // send fields object to reducer to filter out trues
   // place all false categories on output object
@@ -18,38 +16,37 @@ function createQueryObj(map) {
     }
   }
 
-  // go through fields object
-  // if value is false, place on return object
-  // if value is true, ignore it
-  // if value is object, recurse
-  // if object is all true, do not pass through
+  // filter fields object to contain only values needed from server
   function reducer(fields) {
+    // filter stores values needed from server
     const filter = {};
+    // propsFilter for properties such as args, aliases, etc.
     const propsFilter = {};
 
     for (let key in fields) {
-      // For each property, determine if the property is a false value...
+      // if value is false, place directly on filter
       if (fields[key] === false) {
-        // add key to filter
+        // add key & value to filter
         filter[key] = false;
       }
 
-      // if args or alias put them in propsFilter
-      if (key === '__args' || key === '__alias') {
-        propsFilter[key] = fields[key];
-      }
-
-      // ...or another object type
+      // if value is an object, recurse to determine nested values
       if (typeof fields[key] === 'object' && !key.includes('__')) {
-        // check keys of that object to see if those values are false
-        // via RECURSION
+        // check keys of object to see if those values are false via recursion
         const reduced = reducer(fields[key]);
+        // if reduced object has any values to pass, place on filter
         if (Object.keys(reduced).length > 0) {
           filter[key] = reduced;
         }
       }
+
+      // if reserved property such as args or alias, place on propsFilter
+      if (key.includes('__')) {
+        propsFilter[key] = fields[key];
+      }
     }
 
+    // if the filter has any values to pass, return filter & propsFilter, otherwise return empty object
     return Object.keys(filter).length > 0
       ? { ...filter, ...propsFilter }
       : {};

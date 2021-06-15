@@ -2,7 +2,24 @@
  normalizeForCache traverses server response data and creates objects out of responses for cache. Furthermore, it identifies fields that are 'object types' then replaces those array elements with references (helper), creates separate normalized objectes out of replaced elements, and saves all to cache (helper) with unique identifiers (helper)
  */
 
-function normalizeForCache(response, map, fieldsMap, protoArgs) {
+// TO-DO: update with new style of parseAST, buildFromCache, etc.
+//  response data examples
+/* 
+{
+  "data": {
+    "USA": {
+      "id": "1",
+      "name": "Andorra"
+    },
+    "country": {
+      "id": "2",
+      "name": "Bolivia"
+    }
+  }
+}
+*/
+
+function normalizeForCache(response, map, fieldsMap) {
 
   if (protoArgs) {
     // If query has arguments

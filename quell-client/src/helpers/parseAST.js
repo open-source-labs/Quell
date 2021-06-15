@@ -70,40 +70,43 @@ const parseAST = (AST) => {
     Field: {
       // enter the node to construct a unique fieldID for critical fields
       enter(node) {
-        // populates argsObj from current node
+        // populates argsObj from current node's arguments
+        // generates uniqueID from arguments
         const argsObj = {};
+        let uniqueID = '';
         node.arguments.forEach(arg => {
+          const key = arg.name.value;
           // TO-DO: cannot currently handle variables in query
           if (arg.value.kind === 'Variable' && operationType === 'query') {
             operationType = 'unQuellable';
             return BREAK;
           }
-          argsObj[arg.name.value] = arg.value.value;
-        });
+          argsObj[key] = arg.value.value;
 
-
-        // identify unique ID from args
-        // TO-DO: make this more general instead of hard-coded? 
-        // string.includes() is too general and would catch non-uniqueID fields
-        let uniqueID = '';
-        for (const key in argsObj) {
+          // CHANGE: placed uniqueID in initial node.arguments.forEach so we don't loop as many times
+          // identify uniqueID from args
+          // TO-DO: make this more general instead of hard-coded? 
+          // string.includes() is too general and would catch non-uniqueID fields such as authorid
           if (key === 'id' || key === '_id' || key === 'ID' || key === 'Id') {
-            uniqueID = argsObj[key];
+            uniqueID = arg.value.value;
           }
-        }
+        });
 
         // create fieldID in format "fieldName - uniqueID"
         // otherwise returns the original field name
         const fieldID = `${node.name.value}${uniqueID ? '--' + uniqueID : ''}`;
 
         // stores alias for Field
-        const alias = node.alias ? node.alias.value : null
+        const alias = node.alias ? node.alias.value : null;
+
+        // finalize argsObj as null
+        const finalArgs = Object.keys(argsObj).length > 0 ? argsObj : null;
 
         // add alias, args values to appropriate fields
         fieldArgs[fieldID] = {
           ...fieldArgs[fieldID],
           __alias: alias,
-          __args: argsObj
+          __args: finalArgs,
         };
 
         // add value to stacks to keep track of depth-first parsing path

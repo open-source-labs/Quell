@@ -4,7 +4,7 @@
 
 // TO-DO: add support for operation definitions input at the front ie "query" "mutation" "subscription"
 
-function createQueryStr(queryObject) {
+function createQueryStr(queryObject, operationType) {
   const openCurly = '{';
   const closeCurly = '}';
   const openParen = '(';
@@ -41,21 +41,18 @@ function createQueryStr(queryObject) {
     return innerStr;
   }
 
-  // 
+  // iterates through arguments object for current field and creates arg string to attach to query string
   function getArgs(fields) {
     let argString = '';
     if (!fields.__args) return '';
 
-    if (Object.keys(fields.__args) !== 0) {
-      Object.keys(fields.__args).forEach((key) => {
-        argString
-          ? (argString += `, ${key}: ${fields.__args[key]}`)
-          : (argString += `${key}: ${fields.__args[key]}`);
-      });
-    }
+    Object.keys(fields.__args).forEach((key) => {
+      argString
+        ? (argString += `, ${key}: ${fields.__args[key]}`)
+        : (argString += `${key}: ${fields.__args[key]}`);
+    });
 
-    argString.slice(0, argString.length - 2);
-    // return arg string in parentheses, or an empty string
+    // return arg string in parentheses, or if no arguments, return an empty string
     return argString ? `${openParen}${argString}${closeParen}` : '';
   }
 
@@ -72,7 +69,10 @@ function createQueryStr(queryObject) {
     return fields.__alias ? `${fields.__alias}: ${newKey}` : newKey;
   }
 
-  return openCurly + mainStr + closeCurly;
+  // create final query string
+  const queryStr = openCurly + mainStr + closeCurly;
+  // if operation type supplied, place in front of queryString, otherwise just pass queryStr
+  return operationType ? operationType + ' ' + queryStr : queryStr;
 };
 
 module.exports = createQueryStr;

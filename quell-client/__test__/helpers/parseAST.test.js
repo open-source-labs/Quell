@@ -1,8 +1,8 @@
 const parseAST = require('../../src/helpers/parseAST');
 const { parse } = require('graphql/language/parser');
 
-xdescribe('parseAST.js', () => {
-  test('should traverses the abstract syntax tree and creates a prototype object', () => {
+describe('parseAST.js', () => {
+  test('should traverse the abstract syntax tree and create a prototype object', () => {
     const query = `query {
       countries {
         id
@@ -11,12 +11,14 @@ xdescribe('parseAST.js', () => {
       }
     }`;
     const parsedQuery = parse(query);
-    const { proto, protoArgs, operationType } = parseAST(parsedQuery);
-    expect(proto).toEqual({
+    const { prototype, operationType } = parseAST(parsedQuery);
+    expect(prototype).toEqual({
       countries: {
         id: true,
         name: true,
         capital: true,
+        __args: null,
+        __alias: null
       },
     });
   });
@@ -26,26 +28,27 @@ xdescribe('parseAST.js', () => {
       countries(id: 1) {
         id
         name
-        capital
+        capitol
       }
     }`;
     const parsedQuery = parse(query);
-    const { proto, protoArgs, operationType } = parseAST(parsedQuery);
-    expect(proto).toEqual({
-      countries: {
+    const { prototype, operationType } = parseAST(parsedQuery);
+    expect(prototype).toEqual({
+      ['countries--1']: {
         id: true,
         name: true,
         capitol: true,
+        __args: { id: "1" },
+        __alias: null
       },
     });
-    expect(protoArgs).toEqual(null);
     expect(operationType).toEqual('query');
   });
 
   test('should return a prototype from a nested query', () => {
     const query = `{countries { id name capital cities  { id country_id name population  } } }`;
     const AST = parse(query);
-    const { prototype, protoArgs, operationType } = parseAST(AST);
+    const { prototype, operationType } = parseAST(AST);
 
 
     expect(prototype).toEqual({
@@ -53,37 +56,39 @@ xdescribe('parseAST.js', () => {
         id: true,
         name: true,
         capital: true,
-        cities: { id: true, country_id: true, name: true, population: true },
+        cities: { 
+          id: true, 
+          country_id: true, 
+          name: true, 
+          population: true, 
+          __args: null,
+        __alias: null
+      },
+        __args: null,
+        __alias: null
       },
     });
-    expect(protoArgs).toEqual(null);
     expect(operationType).toEqual('query');
   });
 
-  test('should return an arguments object', () => {
+  test('should return arguments on prototype', () => {
     const query = `{ country (id: 1) { id name population } }`;
     const AST = parse(query);
-    const { prototype, protoArgs, operationType } = parseAST(AST);
+    const { prototype, operationType } = parseAST(AST);
 
     expect(prototype).toEqual({
-        country: {
-          id: true,
-          name: true,
-          population: true
-        }
+      ['country--1']: {
+        id: true,
+        name: true,
+        population: true,
+        __args: { id: "1" },
+        __alias: null
       }
-    );
-    expect(protoArgs).toEqual({ country: { fieldName: 'country', id: "1" }});
+    });
     expect(operationType).toEqual('query');
   });
 
-  // protoArgs = { alias: { fieldName: 'name', id: '1' } }
   test('should work with alias', () => {
-    // produces prototype valid
-    // identifies query type
-    // save alias map on args object
-    // doesn't overwrite arguments
-    // doesn't overwrite other queries
     const query = `{
       Canada: country (id: 1) {
         id
@@ -92,17 +97,16 @@ xdescribe('parseAST.js', () => {
       }
   }`;
     const AST = parse(query);
-    const { prototype, protoArgs, operationType } = parseAST(AST);
+    const { prototype, operationType } = parseAST(AST);
 
     expect(prototype).toEqual({
-      Canada: {
+      ['country--1']: {
         id: true,
         name: true,
-        capitol: true
+        capitol: true,
+        __args: { id: "1" },
+        __alias: 'Canada',
       }
-    });
-    expect(protoArgs).toEqual({
-      Canada: { fieldName: "country", id: "1" }
     });
     expect(operationType).toEqual('query');
   });
@@ -120,19 +124,24 @@ xdescribe('parseAST.js', () => {
       }
     }`;
     const parsedQuery = parse(query);
-    const { proto, protoArgs, operationType } = parseAST(parsedQuery);
+    const { prototype, operationType } = parseAST(parsedQuery);
 
-    expect(proto).toEqual({
+    expect(prototype).toEqual({
       countries: { 
         id: true,
         name: true, 
-        capital: true, 
+        capital: true,
+        __args: null,
+        __alias: null,
       }, 
       book: {
         name: true,
-        genre: true
+        genre: true,
+        __args: null,
+        __alias: null,
       },
     });
+    expect(operationType).toEqual('query');
   });
 
   test('should create prototype object for multiple nested queries', () => {
@@ -153,21 +162,29 @@ xdescribe('parseAST.js', () => {
       }
     }`;
     const parsedQuery = parse(query);
-    const { proto, protoArgs, operationType } = parseAST(parsedQuery);
+    const { prototype, operationType } = parseAST(parsedQuery);
 
-    expect(proto).toEqual({
+    expect(prototype).toEqual({
       countries: { 
         id: true,
-        name: true, 
+        name: true,
+        __args: null,
+        __alias: null,
         cities: {
           name: true,
+          __args: null,
+          __alias: null,
         }
       }, 
       book: {
         name: true,
         genre: true,
+        __args: null,
+        __alias: null,
         similarBooks: {
           name: true,
+          __args: null,
+          __alias: null,
         }
       },
     });
