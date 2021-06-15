@@ -8,6 +8,7 @@ const joinResponses = require('./helpers/joinResponses');
 
 // NOTE:
 // Map: Query to Object Types map - Get from server or user provided (check introspection)
+// https://graphql.org/learn/introspection/
 // Fields Map:  Fields to Object Type map (possibly combine with this.map from server-side)
 
 // MAIN CONTROLLER

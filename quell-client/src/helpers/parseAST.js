@@ -87,7 +87,7 @@ const parseAST = (AST) => {
           // identify uniqueID from args
           // TO-DO: make this more general instead of hard-coded? 
           // string.includes() is too general and would catch non-uniqueID fields such as authorid
-          if (key === 'id' || key === '_id' || key === 'ID' || key === 'Id') {
+          if (key === 'id' || key === '_id' || key === 'ID' || key === 'Id' || key === userDefinedID) {
             uniqueID = arg.value.value;
           }
         });
