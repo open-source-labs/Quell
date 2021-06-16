@@ -18,7 +18,12 @@ const { parse } = require('graphql/language/parser');
  * as well as auxillary data (arguments, aliases, etc.)
  */
 
-const parseAST = (AST, options = { userDefinedID: null }) => {
+// default options so parseAST doesn't 
+const defaultOptions = {
+  userDefinedID: null
+}
+
+const parseAST = (AST, options = defaultOptions) => {
   // initialize prototype as empty object
   // information from AST is distilled into the prototype for easy access during caching, rebuilding query strings, etc.
   const prototype = {};
@@ -79,9 +84,12 @@ const parseAST = (AST, options = { userDefinedID: null }) => {
         const argsObj = {};
 
         // TO-DO: document viable options
-        // populates optionsObj from current node's arguments for TYPE-SPECIFIC options only
+        // NOTE: type-specific options are still experimental, not integrated through Quell's lifecycle
+        // non-viable options should not break system but /shouldn't change app behavior/
+
+        // auxillary object for storing arguments, aliases, type-specific options, and more
         // query-wide options should be handled on Quell's options object
-        const optionsObj = {};
+        const auxObj = {};
 
         let uniqueID = '';
         node.arguments.forEach(arg => {
@@ -99,13 +107,17 @@ const parseAST = (AST, options = { userDefinedID: null }) => {
           // identify uniqueID from args
           // TO-DO: make this more general instead of hard-coded? 
           // string.includes('id') is too general and would catch non-uniqueID fields such as "ideology"
-          if (key === 'id' || key === '_id' || key === 'ID' || key === 'Id' || key === userDefinedID) {
+          if (key === 'id' || key === '_id' || key === 'ID' || key === 'Id') {
+            uniqueID = arg.value.value;
+          } else if (userDefinedID ? key === userDefinedID : false) {
+            // grabs userDefinedIDs if one is supplied on options object
             uniqueID = arg.value.value;
           }
 
           // handle custom options passed in as arguments (ie customCache)
+          // TO-DO: comment out before production build if we have not thoroughly tested type-specific options for app stability and safety
           if (key.includes('__')) {
-            optionsObj[key] = arg.value.value;
+            auxObj[key] = arg.value.value;
           }
         });
 
@@ -113,20 +125,18 @@ const parseAST = (AST, options = { userDefinedID: null }) => {
         // otherwise returns the original field name
         const fieldID = `${node.name.value}${uniqueID ? '--' + uniqueID : ''}`;
 
-        // stores alias for Field
-        const alias = node.alias ? node.alias.value : null;
+        // stores alias for Field on auxillary object
+        auxObj.__alias = node.alias ? node.alias.value : null;
 
-        // if argsObj has no values, set as null on prototype
-        const args = Object.keys(argsObj).length > 0 ? argsObj : null;
+        // if argsObj has no values, set as null, then set on auxObj
+        auxObj.__args = Object.keys(argsObj).length > 0 ? argsObj : null;
 
         // if 
 
         // add alias, args values to appropriate fields
         fieldArgs[fieldID] = {
           ...fieldArgs[fieldID],
-          ...optionsObj,
-          __alias: alias,
-          __args: args,
+          ...auxObj
         };
 
         // add value to stacks to keep track of depth-first parsing path

@@ -301,6 +301,29 @@ describe('parseAST.js', () => {
     expect(operationType).toBe('query');
   });
 
+  test('should add type-specific options to prototype when supplied', () => {
+    const query = `query {
+      country(id: 1, name: "USA", __cacheTime: 1000) {
+        id
+        name
+        capitol
+      }
+    }`;
+    const parsedQuery = parse(query);
+    const { prototype, operationType } = parseAST(parsedQuery);
+    expect(prototype).toEqual({
+      ['country--1']: {
+        id: true,
+        name: true,
+        capitol: true,
+        __args: { id: "1", name: "USA" },
+        __alias: null,
+        __cacheTime: "1000",
+      },
+    });
+    expect(operationType).toEqual('query');
+  });
+
   // currently fails
   test('should create prototype for query with fragments', () => {
     const query = `query { 
