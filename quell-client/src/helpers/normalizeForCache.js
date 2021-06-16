@@ -27,18 +27,6 @@
       {
         "id": "2",
         "name": "Bolivia"
-      },
-      {
-        "id": "3",
-        "name": "Armenia"
-      },
-      {
-        "id": "4",
-        "name": "American Samoa"
-      },
-      {
-        "id": "5",
-        "name": "Aruba"
       }
     ]
   }
@@ -61,7 +49,6 @@
     replace sub-property with ref
   create uniqueID, store object in cache
 
-
 */
 
 // const sampleMap = {
@@ -75,56 +62,83 @@
 //   cities: 'City'
 // }
 
+// TO-DO: check cache format
+// do we store nested values or do we store REFs to values
+// { id: 1, name: Andorra, cities: [city--1, city--2] }
 function normalizeForCache(responseData, map, fieldsMap) {
-
   // iterate over keys in our response data object 
   for (const resultName in responseData) {
+    // currentField we are iterating over
     const currField = responseData[resultName];
     // check if the value stored at that key is array 
-    
+    if (Array.isArray(currField)) {
+      // RIGHT NOW: countries: [{}, {}]
+      // GOAL: countries: ["Country--1", "Country--2"]
+
+      // create empty array to store refs
+      const refList = [];
+
+      // iterate over countries array
+      currField.forEach(el => {
+        // for each object
+        // "resultName" is key on "map" for our Data Type
+        const dataType = map[resultName];
+        // grab ID from object we are iterating over
+        let id;
+        for (const key in el) {
+          if (key === 'id') {
+            id = el[key];
+          }
+        }
+        // push onto refList "map[resultName]--id"
+        refList.push(`${dataType}--${id}`);
+      })
+
+      sessionStorage.setItem(resultName, JSON.stringify(refList));
+    }
+    // {
+    //     "countries": [
+    //       {
+    //         "id": "1",
+    //         "name": "Andorra"
+    //       },
+    //       {
+    //         "id": "2",
+    //         "name": "Bolivia"
+    //       }
+    //     ]
+    // }
+
     // check if the value stored at that key is an object
-    if (typeof currField === 'object') {
+    // "country"
+    else if (typeof currField === 'object') {
+      // temporary store for field properties
+      const fieldStore = {};
       
       // if object has id, generate fieldID 
       let uniqueID = resultName;
+
       // iterate over keys in object
+      // "id, name, cities"
       for (const key in currField) {
         // if ID, create fieldID
-        if (key === 'id') uniqueID += `--${currField[key]}`
-        // if object, recurse normalizeForChache passign in that object
-        if (typeof key === 'object') {
-        // city--3
+        if (key === 'id') uniqueID += `--${currField[key]}`;
+        fieldStore[key] = currField[key];
+
+        // if object, recurse normalizeForCache assign in that object
+        if (typeof currField[key] === 'object') {
+          normalizeForCache({ [key]: currField[key] });
         }
       }
+      // store "current object" on cache in JSON format
+      // "country--3": { id: 3, name: Bolivia }
+      console.log('storing id: ', uniqueID, fieldStore);
+      sessionStorage.setItem(uniqueID, JSON.stringify(fieldStore));
     }
-
-    // should return referenceName to object ie "country--1"
   }
-  // if object, recurse normalizeForChache passign in that object
-  // if fieldID was generated, 
-  //send the object to the cache 
-
-    // {
-    // "country": {
-    //   "id": "2",
-    //    "name": "Bolivia"
-  // city: {
-  //   id
-  //   name
-  //         }
-    // },
-    // "book": {
-    //   id: 1,
-    //     name: Harry Potter
-    // }
-    // }
-
-
 }
 
-function testCache(object) {
-  console.log(object);
-}
+
   // WARNING: HERE THERE BE DRAGONS ---------------
   // If query has arguments they are not the response data
   // if current target is Object
@@ -308,7 +322,6 @@ function testCache(object) {
 // countries: [{ id, name }, {id, name}, ...] becomes countries: [country--1, country--2, ...]
 // Replaces object field types with an array of references to normalized items (elements)
 function replaceItemsWithReferences(field, array, fieldsMap) {
-  (cities, {[]}, map)
   const arrayOfReferences = [];
   const collectionName = fieldsMap[field];
 

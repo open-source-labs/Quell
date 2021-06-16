@@ -2,8 +2,8 @@ const createQueryStr = require('../../src/helpers/createQueryStr');
 
 // NOTE: we changed the spacing on the results object, not sure if it matters?
 
-describe('createQueryStr.js', () => {
-  xtest('inputs query object w/ no values', () => {
+xdescribe('createQueryStr.js', () => {
+  test('inputs query object w/ no values', () => {
     expect(createQueryStr(queryObject)).toEqual(
 
     );
