@@ -192,11 +192,27 @@ const parseAST = (AST) => {
 // const queryNestAlias = `query { countries { id name Toronto: city (id: 1) { id name TastyTreat: food (id: 2) { name nutrition (id: 3) { calories, protein, fat, carbs }} } } }`
 // const queryMultiple = `query { Canada: country (id: 1) { id name capitol { id name population } } Mexico: country (id: 2) { id name climate { seasons } }}`
 // const queryFragment = `query { Canada: country { id name ...fragment } }`;
+// const normalizeTest = `query { country { id name state { id name county { id name city { id name mayor { id name hobby { id name } } } } } } }`;
+// const normalizeTest2 = `query { countries { id name } }`
+// {
+//   "countries": [
+//     {
+//       "id": 1,
+//       "name": "Andorra",
+//     },
+//     {
+//       "id": 2,
+//       "name": "Bolivia"
+//     }
+//   ]
+// }
+
 
 // // // // execute function for testing
-// const parsedQuery = parse(queryMultiple);
+// const parsedQuery = parse(normalizeTest2);
 // const { prototype } = parseAST(parsedQuery);
 // console.log('proto', prototype);
-// // console.log('nest proto', prototype['countries']['cities']['attractions']['location']['latitude'])
+// console.log('nest proto', prototype['country']['state']['county'])
+// console.log('nest proto2', prototype['country']['state']['county']['city']['mayor'])
 
 module.exports = parseAST;

@@ -36,19 +36,6 @@
   data: {},
   error: {}
 }
-
-1) is it an array?
-  recurse(store objects in cache)
-  replace objects with references to cache ie country--1
-  store array w/ refs in cache ie countries: [country--1, country--2]
-
-2) is it an object? 
-  if sub-property is object? recurse(store object in cache)
-    replace sub-property with ref
-  if sub-property is array? recurse(store array in cache)
-    replace sub-property with ref
-  create uniqueID, store object in cache
-
 */
 
 // const sampleMap = {
@@ -65,14 +52,24 @@
 // TO-DO: check cache format
 // do we store nested values or do we store REFs to values
 // { id: 1, name: Andorra, cities: [city--1, city--2] }
-function normalizeForCache(responseData, map, fieldsMap) {
+
+/** Iterates & recurses over response object & preps data to be sent to cache
+ * and sends data to cache
+ * responseData: the data from the graphQL response object
+ * map: a map of graphQL fields to their corresponding graphQL Types, 
+ *   necessary for cache consistency
+ * fieldsMap: potentially deprecated?
+ * protoField: the prototype object, or a section of the prototype object, 
+ *   for accessing arguments, aliases, etc.
+ */
+
+function normalizeForCache(responseData, map, protoField, fieldsMap) {
   // iterate over keys in our response data object 
   for (const resultName in responseData) {
     // currentField we are iterating over
     const currField = responseData[resultName];
     // check if the value stored at that key is array 
     if (Array.isArray(currField)) {
-      console.log('array found', currField);
       // RIGHT NOW: countries: [{}, {}]
       // GOAL: countries: ["Country--1", "Country--2"]
 
@@ -86,23 +83,24 @@ function normalizeForCache(responseData, map, fieldsMap) {
         // for each object
         // "resultName" is key on "map" for our Data Type
         const dataType = map[resultName];
+
         // grab ID from object we are iterating over
-        let id;
+        let fieldID = dataType;
         for (const key in el) {
-          if (key === 'id') {
-            id = el[key];
+          // if key is an ID, append to fieldID for caching
+          if (key === 'id' || key === '_id' || key === 'ID' || key === 'Id') {
+            fieldID += `--${el[key]}`;
+            // push fieldID onto refList
+            refList.push(fieldID);
           }
         }
-        // push onto refList "map[resultName]--id"
-        refList.push(`${dataType}--${id}`);
 
-        // add current el to cache as individual entry by recursing to normalizeForCache
+        // if object, recurse to add all nested values of el to cache as individual entries
         if (typeof el === 'object') {
-          normalizeForCache({ [dataType]: el });
+          normalizeForCache({ [dataType]: el }, map,  { [dataType]: protoField[resultName][fieldID]});
         }
       })
 
-      console.log('refList', refList);
       sessionStorage.setItem(resultName, JSON.stringify(refList));
     }
     else if (typeof currField === 'object') {
@@ -110,24 +108,25 @@ function normalizeForCache(responseData, map, fieldsMap) {
       const fieldStore = {};
       
       // if object has id, generate fieldID 
-      let uniqueID = resultName;
+      let fieldID = resultName;
 
       // iterate over keys in object
       // "id, name, cities"
       for (const key in currField) {
         // if ID, create fieldID
-        if (key === 'id') uniqueID += `--${currField[key]}`;
+        if (key === 'id' || key === '_id' || key === 'ID' || key === 'Id') {
+          fieldID += `--${currField[key]}`;
+        }
         fieldStore[key] = currField[key];
 
         // if object, recurse normalizeForCache assign in that object
+        // must also pass in protoFields object to pair arguments, aliases with response
         if (typeof currField[key] === 'object') {
-          normalizeForCache({ [key]: currField[key] });
+          normalizeForCache({ [key]: currField[key] }, map, { [key]: protoField[resultName][key]});
         }
       }
       // store "current object" on cache in JSON format
-      // "country--3": { id: 3, name: Bolivia }
-      console.log('storing id: ', uniqueID, fieldStore);
-      sessionStorage.setItem(uniqueID, JSON.stringify(fieldStore));
+      sessionStorage.setItem(fieldID, JSON.stringify(fieldStore));
     }
   }
 }
@@ -192,18 +191,6 @@ function normalizeForCache(responseData, map, fieldsMap) {
   // } else if (args && alias) {
 // if (proto.__alias) 
     // also pass in currentField name so we can map alias -> country--1
-// {
-//   "data": {
-//     "USA": {
-//       "id": "1",
-//       "name": "USA"
-//     },
-//     "country": {
-//       "id": "2",
-//       "name": "Bolivia"
-//     }
-//   }
-// }
 
     /**
      * Can fully cache aliaes by different id,
@@ -327,7 +314,7 @@ function replaceItemsWithReferences(field, array, fieldsMap) {
   return arrayOfReferences;
 }
 
-// Creates unique ID (key) for cached item
+// Create fieldID (key) for cached item
 function generateId(collection, item) {
   let userDefinedId;
   for (let key in item) {
