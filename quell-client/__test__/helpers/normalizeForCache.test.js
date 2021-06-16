@@ -190,18 +190,18 @@ describe('normalizeForCache.test.js', () => {
     const responseObj =     {
       "countries": [
         {
-          "id": "1",
+          "id": 1,
           "name": "Andorra",
         },
         {
-          "id": "2",
+          "id": 2,
           "name": "Bolivia"
         }
       ]
     };
     
     const map = {
-      countries: 'Country',
+      countries: 'country',
     };
 
     normalizeForCache(responseObj, map);
@@ -221,5 +221,9 @@ describe('normalizeForCache.test.js', () => {
         "name": "Bolivia"
       })
     );
+  });
+
+  test('a response with alias values can go to the cache', () => {
+
   });
 });

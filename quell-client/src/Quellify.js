@@ -13,9 +13,6 @@ const joinResponses = require('./helpers/joinResponses');
 
 // MAIN CONTROLLER
 async function Quellify(endPoint, query, map, fieldsMap) {
-  // Create QuellStore object to keep track of arguments, aliases, fragments, variables, or directives
-  // const QuellStore = { arguments: null, alias: null };
-
   // Create AST of query
   const AST = parse(query);
 

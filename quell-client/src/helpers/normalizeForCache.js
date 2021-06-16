@@ -72,14 +72,17 @@ function normalizeForCache(responseData, map, fieldsMap) {
     const currField = responseData[resultName];
     // check if the value stored at that key is array 
     if (Array.isArray(currField)) {
+      console.log('array found', currField);
       // RIGHT NOW: countries: [{}, {}]
       // GOAL: countries: ["Country--1", "Country--2"]
 
       // create empty array to store refs
+      // ie countries: ["country--1", "country--2"]
       const refList = [];
 
       // iterate over countries array
       currField.forEach(el => {
+        // el1 = {id: 1, name: Andorra}, el2 =  {id: 2, name: Bolivia}
         // for each object
         // "resultName" is key on "map" for our Data Type
         const dataType = map[resultName];
@@ -92,25 +95,16 @@ function normalizeForCache(responseData, map, fieldsMap) {
         }
         // push onto refList "map[resultName]--id"
         refList.push(`${dataType}--${id}`);
+
+        // add current el to cache as individual entry by recursing to normalizeForCache
+        if (typeof el === 'object') {
+          normalizeForCache({ [dataType]: el });
+        }
       })
 
+      console.log('refList', refList);
       sessionStorage.setItem(resultName, JSON.stringify(refList));
     }
-    // {
-    //     "countries": [
-    //       {
-    //         "id": "1",
-    //         "name": "Andorra"
-    //       },
-    //       {
-    //         "id": "2",
-    //         "name": "Bolivia"
-    //       }
-    //     ]
-    // }
-
-    // check if the value stored at that key is an object
-    // "country"
     else if (typeof currField === 'object') {
       // temporary store for field properties
       const fieldStore = {};
