@@ -1,52 +1,48 @@
 const parseAST = require('../../src/helpers/parseAST');
 const { parse } = require('graphql/language/parser');
 
-xdescribe('parseAST.js', () => {
+describe('parseAST.js', () => {
   test('should traverse the abstract syntax tree and create a prototype object', () => {
+    // define a query string
     const query = `query {
       countries {
-        id
-        name
-        capital
-      }
-    }`;
-    const parsedQuery = parse(query);
-    const { prototype, operationType } = parseAST(parsedQuery);
-    expect(prototype).toEqual({
-      countries: {
-        id: true,
-        name: true,
-        capital: true,
-        __args: null,
-        __alias: null
-      },
-    });
-  });
-
-  test('should work with arguments', () => {
-    const query = `query {
-      countries(id: 1) {
         id
         name
         capitol
       }
     }`;
+    // parse query, and parse AST
     const parsedQuery = parse(query);
     const { prototype, operationType } = parseAST(parsedQuery);
+
+    // compare expected prototype & operation Type to actual
     expect(prototype).toEqual({
-      ['countries--1']: {
+      countries: {
         id: true,
         name: true,
         capitol: true,
-        __args: { id: "1" },
+        __args: null,
         __alias: null
       },
     });
-    expect(operationType).toEqual('query');
+    expect(operationType).toBe('query');
   });
 
   test('should return a prototype from a nested query', () => {
-    const query = `{countries { id name capital cities  { id country_id name population  } } }`;
+    const query = `query {
+      countries {
+         id
+         name
+         capitol
+         cities {
+            id
+            country_id
+            name
+            population
+          }
+        }
+      }`;
+    
     const AST = parse(query);
     const { prototype, operationType } = parseAST(AST);
 
@@ -55,7 +51,7 @@ xdescribe('parseAST.js', () => {
       countries: {
         id: true,
         name: true,
-        capital: true,
+        capitol: true,
         cities: { 
           id: true, 
           country_id: true, 
@@ -71,24 +67,29 @@ xdescribe('parseAST.js', () => {
     expect(operationType).toEqual('query');
   });
 
-  test('should return arguments on prototype', () => {
-    const query = `{ country (id: 1) { id name population } }`;
-    const AST = parse(query);
-    const { prototype, operationType } = parseAST(AST);
-
+  test('should work with multiple arguments', () => {
+    const query = `query {
+      country(id: 1, name: "USA") {
+        id
+        name
+        capitol
+      }
+    }`;
+    const parsedQuery = parse(query);
+    const { prototype, operationType } = parseAST(parsedQuery);
     expect(prototype).toEqual({
       ['country--1']: {
         id: true,
         name: true,
-        population: true,
-        __args: { id: "1" },
+        capitol: true,
+        __args: { id: "1", name: "USA" },
         __alias: null
-      }
+      },
     });
     expect(operationType).toEqual('query');
   });
 
-  test('should work with alias', () => {
+  test('should create prototype that stores alias information', () => {
     const query = `{
       Canada: country (id: 1) {
         id
@@ -187,6 +188,145 @@ xdescribe('parseAST.js', () => {
           __alias: null,
         }
       },
+    });
+    expect(operationType).toBe('query');
+  });
+
+  test('should create prototype for query with nested arguments', () => {
+    const query = `query {
+      country(id: 1) {
+        id
+        name
+        city(id: 2) {
+          id
+          name
+        }
+      }
+    }`;
+    const parsedQuery = parse(query);
+    const { prototype, operationType } = parseAST(parsedQuery);
+
+    expect(prototype).toEqual({
+      ['country--1']: { 
+        id: true,
+        name: true,
+        __args: { id: '1'},
+        __alias: null,
+        ['city--2']: {
+          id: true,
+          name: true,
+          __args: { id: '2'},
+          __alias: null,
+        },
+      },
+    });
+    expect(operationType).toBe('query');
+  });
+
+  test('EDGE- should create prototype for query with alias even without arguments', () => {
+    const query = `query {
+      Canada: country {
+        id
+        name
+      }
+    }`;
+
+    const parsedQuery = parse(query);
+    const { prototype, operationType } = parseAST(parsedQuery);
+
+    expect(prototype).toEqual({
+      country: {
+        id: true,
+        name: true,
+        __args: null,
+        __alias: 'Canada'
+      }
+    });
+    expect(operationType).toBe('query');
+  });
+
+  test('should create prototype for query with nested aliases & arguments', () => {
+    const query = `query { 
+      countries {
+        id
+        name
+        Toronto: city(id: 1) {
+          id
+          name
+          IceCream: food(id: 2) {
+            id
+            name
+            nutrition(id: 3) {
+              calories,
+              protein,
+              fat,
+              carbs
+            }
+          }
+        }
+      }
+    }`;
+
+    const parsedQuery = parse(query);
+    const { prototype, operationType } = parseAST(parsedQuery);
+
+    expect(prototype).toEqual({
+      countries: {
+        id: true,
+        name: true,
+        __args: null,
+        __alias: null,
+        ['city--1']: {
+          id: true,
+          name: true,
+          __args: { id: '1' },
+          __alias: 'Toronto',
+          ['food--2']: {
+            id: true,
+            name: true,
+            __args: { id: '2' },
+            __alias: 'IceCream',
+            ['nutrition--3']: {
+              calories: true,
+              protein: true,
+              fat: true,
+              carbs: true,
+              __args: { id: '3' },
+              __alias: null
+            }
+          }
+        }
+      }
+    });
+    expect(operationType).toBe('query');
+  });
+
+  // currently fails
+  test('should create prototype for query with fragments', () => {
+    const query = `query { 
+      Canada: country {
+        id
+        name
+        ...fragment
+      }
+    }
+    fragment CountryInfo on Country {
+      capitol,
+      population
+    }`;
+
+    const parsedQuery = parse(query);
+    const { prototype, operationType } = parseAST(parsedQuery);
+
+    expect(prototype).toEqual({
+      country: {
+        id: true,
+        name: true,
+        capitol: true,
+        population: true,
+        __args: null,
+        __alias: 'Canada'
+      }
     });
     expect(operationType).toBe('query');
   });

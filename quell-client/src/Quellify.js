@@ -11,8 +11,25 @@ const joinResponses = require('./helpers/joinResponses');
 // https://graphql.org/learn/introspection/
 // Fields Map:  Fields to Object Type map (possibly combine with this.map from server-side)
 
+// NOTE: 
+// options feature is currently EXPERIMENTAL
+// keys beginning with __ are set aside for future development
+// defaultOptions provides default configurations so users only have to supply options they want control over
+const defaultOptions = {
+  // default time that data stays in cache before expires
+  __defaultCacheTime: 600,
+  // configures type of cache storage used (client-side only)
+  __cacheType: 'session',
+  // custom field that defines the uniqueID used for caching
+  __userDefinedID: null,
+};
+
 // MAIN CONTROLLER
-async function Quellify(endPoint, query, map, fieldsMap) {
+async function Quellify(endPoint, query, map, fieldsMap, userOptions) {
+  // merge defaultOptions with userOptions
+  // defaultOptions will supply any necessary options that the user hasn't specified
+  const options = { ...defaultOptions, ...userOptions };
+
   // Create AST of query
   const AST = parse(query);
 
