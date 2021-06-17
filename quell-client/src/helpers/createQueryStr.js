@@ -1,5 +1,5 @@
 /**
- createQueryStr converts the query object into a formal GCL query string.
+ createQueryStr converts the query object into a formal GQL query string.
  */
 
 // TO-DO: add support for operation definitions input at the front ie "query" "mutation" "subscription"
@@ -38,6 +38,11 @@ function createQueryStr(queryObject, operationType) {
             fields[key])}${closeCurly} `;
       }
     }
+
+    if (!innerStr.includes(idStyle)) {
+      innerStr += idStyle + ' '
+    };
+
     return innerStr;
   }
 

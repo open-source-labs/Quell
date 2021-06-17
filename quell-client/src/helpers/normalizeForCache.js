@@ -17,6 +17,7 @@
     }
   }
 }
+
 {
   "data": {
     "countries": [
@@ -62,6 +63,9 @@
  * protoField: the prototype object, or a section of the prototype object, 
  *   for accessing arguments, aliases, etc.
  */
+
+// TO-DO: check if error object exists and then break out of function to avoid caching bad data?
+// brainstorm general error strategy
 
 function normalizeForCache(responseData, map, protoField, fieldsMap) {
   // iterate over keys in our response data object 
