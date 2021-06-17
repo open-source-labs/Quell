@@ -8,7 +8,8 @@ const { parse } = require('graphql/language/parser');
  * 3) add support for directives
  * 4) add support for mutations
  * 5) add support for subscriptions???
- * 4) method for parsing only PARTS of queries as "unquellable" so we can get more cache hits
+ * 6) method for parsing only PARTS of queries as "unquellable" so we can get more cache hits
+ * 7) add support for type-specific options (ie cache time) & document those options
  * /
 
 /**
@@ -17,7 +18,12 @@ const { parse } = require('graphql/language/parser');
  * as well as auxillary data (arguments, aliases, etc.)
  */
 
-const parseAST = (AST) => {
+// default options so parseAST doesn't 
+const defaultOptions = {
+  userDefinedID: null
+}
+
+const parseAST = (AST, options = defaultOptions) => {
   // initialize prototype as empty object
   // information from AST is distilled into the prototype for easy access during caching, rebuilding query strings, etc.
   const prototype = {};
@@ -36,6 +42,9 @@ const parseAST = (AST) => {
   // tracks arguments, aliases, etc. for specific fields
   // eventually merged with prototype object
   const fieldArgs = {};
+
+  // extract options
+  const userDefinedID = options.__userDefinedID;
 
   /**
    * visit is a utility provided in the graphql-JS library. It performs a
@@ -70,40 +79,65 @@ const parseAST = (AST) => {
     Field: {
       // enter the node to construct a unique fieldID for critical fields
       enter(node) {
-        // populates argsObj from current node
+        // populates argsObj from current node's arguments
+        // generates uniqueID from arguments
         const argsObj = {};
+
+        // TO-DO: document viable options
+        // NOTE: type-specific options are still experimental, not integrated through Quell's lifecycle
+        // non-viable options should not break system but /shouldn't change app behavior/
+
+        // auxillary object for storing arguments, aliases, type-specific options, and more
+        // query-wide options should be handled on Quell's options object
+        const auxObj = {};
+
+        let uniqueID = '';
         node.arguments.forEach(arg => {
+          const key = arg.name.value;
           // TO-DO: cannot currently handle variables in query
           if (arg.value.kind === 'Variable' && operationType === 'query') {
             operationType = 'unQuellable';
             return BREAK;
           }
-          argsObj[arg.name.value] = arg.value.value;
-        });
+          // assign args to argsObj, skipping type-specific options ('__')
+          if (!key.includes('__')) {
+            argsObj[key] = arg.value.value;
+          };
 
-
-        // identify unique ID from args
-        // TO-DO: make this more general instead of hard-coded? 
-        // string.includes() is too general and would catch non-uniqueID fields
-        let uniqueID = '';
-        for (const key in argsObj) {
+          // identify uniqueID from args
+          // TO-DO: make this more general instead of hard-coded? 
+          // string.includes('id') is too general and would catch non-uniqueID fields such as "ideology"
           if (key === 'id' || key === '_id' || key === 'ID' || key === 'Id') {
-            uniqueID = argsObj[key];
+            uniqueID = arg.value.value;
+          } else if (userDefinedID ? key === userDefinedID : false) {
+            // grabs userDefinedIDs if one is supplied on options object
+            uniqueID = arg.value.value;
           }
-        }
+
+          // handle custom options passed in as arguments (ie customCache)
+          // TO-DO: comment out before production build if we have not thoroughly tested type-specific options for app stability and safety
+          if (key.includes('__')) {
+            auxObj[key] = arg.value.value;
+          }
+        });
 
         // create fieldID in format "fieldName - uniqueID"
         // otherwise returns the original field name
+        // used for caching later, & for distinguishing aliases on prototype
         const fieldID = `${node.name.value}${uniqueID ? '--' + uniqueID : ''}`;
 
-        // stores alias for Field
-        const alias = node.alias ? node.alias.value : null
+        // stores alias for Field on auxillary object
+        auxObj.__alias = node.alias ? node.alias.value : null;
+
+        // if argsObj has no values, set as null, then set on auxObj
+        auxObj.__args = Object.keys(argsObj).length > 0 ? argsObj : null;
+
+        // if 
 
         // add alias, args values to appropriate fields
         fieldArgs[fieldID] = {
           ...fieldArgs[fieldID],
-          __alias: alias,
-          __args: argsObj
+          ...auxObj
         };
 
         // add value to stacks to keep track of depth-first parsing path
@@ -180,20 +214,11 @@ const parseAST = (AST) => {
 
 // TO-DO: remove testing before final commits
 // // query strings for testing
-// const queryPlain = `{countries { id name capitol } }`;
-// const queryNest = `{ countries { id name cities{ id name attractions{ id name price location{ longitude latitude{ lets just throw a few more in here{ why not{ thats the point right }}}}}}}}`;
-// const queryArg = `query { country(id: 1, name: Jonathan) { id name }}`;
-// const queryInnerArg = `query {country (id: 1) { id name city (id: 2) { id name }}}`
-// const queryAlias = `query { Canada: country (id: 1) { id name } }`;
-// const queryAliasNoArgs = `query { Canada: country { id name } }`;
-// const queryNestAlias = `query { countries { id name Toronto: city (id: 1) { id name TastyTreat: food (id: 2) { name nutrition (id: 3) { calories, protein, fat, carbs }} } } }`
-// const queryMultiple = `query { Canada: country (id: 1) { id name capitol { id name population } } Mexico: country (id: 2) { id name climate { seasons } }}`
 // const queryFragment = `query { Canada: country { id name ...fragment } }`;
 
-// // // execute function for testing
-// const parsedQuery = parse(queryFragment);
+// TESTING FUNCTIONS
+// const parsedQuery = parse(normalizeTest2);
 // const { prototype } = parseAST(parsedQuery);
 // console.log('proto', prototype);
-// console.log('nest proto', prototype['countries']['city--1'])
 
 module.exports = parseAST;

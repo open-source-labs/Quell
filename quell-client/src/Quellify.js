@@ -8,18 +8,40 @@ const joinResponses = require('./helpers/joinResponses');
 
 // NOTE:
 // Map: Query to Object Types map - Get from server or user provided (check introspection)
+// https://graphql.org/learn/introspection/
 // Fields Map:  Fields to Object Type map (possibly combine with this.map from server-side)
 
+// TO-DO: error handling from graphQL? currently gets lost in formatting
+// TO-DO: expand defaultOptions feature
+
+// NOTE: 
+// options feature is currently EXPERIMENTAL
+// keys beginning with __ are set aside for future development
+// defaultOptions provides default configurations so users only have to supply options they want control over
+const defaultOptions = {
+  // default time that data stays in cache before expires
+  __defaultCacheTime: 600,
+  // configures type of cache storage used (client-side only)
+  __cacheType: 'session',
+  // custom field that defines the uniqueID used for caching
+  __userDefinedID: null,
+  // default fetchHeaders, user can overwrite
+  __fetchHeaders: {
+    'Content-Type': 'application/json',
+  },
+};
+
 // MAIN CONTROLLER
-async function Quellify(endPoint, query, map, fieldsMap) {
-  // Create QuellStore object to keep track of arguments, aliases, fragments, variables, or directives
-  // const QuellStore = { arguments: null, alias: null };
+async function Quellify(endPoint, query, map, fieldsMap, userOptions) {
+  // merge defaultOptions with userOptions
+  // defaultOptions will supply any necessary options that the user hasn't specified
+  const options = { ...defaultOptions, ...userOptions };
 
   // Create AST of query
   const AST = parse(query);
 
   // Create object of "true" values from AST tree (w/ some eventually updated to "false" via buildItem())
-  let {prototype, protoArgs, operationType} = parseAST(AST);
+  const { prototype, operationType } = parseAST(AST, options);
 
   // pass-through for queries and operations that QuellCache cannot handle
   if (operationType === 'unQuellable') {
@@ -37,7 +59,10 @@ async function Quellify(endPoint, query, map, fieldsMap) {
     // Return response as a promise
     return new Promise((resolve, reject) => resolve(parsedData));
   } else {
+    // if it is "quellable"
     // Check cache for data and build array from that cached data
+    // TO-DO: check output of buildFromCache
+    // may need to store as const response = { data: buildFromCache(prototype, prototypeKeys) }
     const prototypeKeys = Object.keys(prototype); 
     const responseFromCache = buildFromCache(prototype, prototypeKeys);
     // If no data in cache, the response array will be empty:
@@ -54,20 +79,21 @@ async function Quellify(endPoint, query, map, fieldsMap) {
       const responseFromFetch = await fetch(endPoint, fetchOptions);
       const parsedData = await responseFromFetch.json();
       // Normalize returned data into cache
-      normalizeForCache(parsedData.data, map, fieldsMap, QuellStore);
+      normalizeForCache(parsedData.data, map, fieldsMap);
 
       // Return response as a promise
       return new Promise((resolve, reject) => resolve(parsedData));
-    }
+    };
 
     // If found data in cache:
+    // Create query object from only false prototype fields
     let mergedResponse;
-    const queryObject = createQueryObj(prototype); // Create query object from only false prototype fields
-    const queryName = Object.keys(prototype)[0];
+    const queryObject = createQueryObj(prototype);
 
     // Partial data in cache:  (i.e. keys in queryObject will exist)
     if (Object.keys(queryObject).length > 0) {
-      const newQuery = createQueryStr(queryObject, QuellStore); // Create formal GQL query string from query object
+      // Create formal GQL query string from query object
+      const newQuery = createQueryStr(queryObject); 
       const fetchOptions = {
         method: 'POST',
         headers: {
@@ -79,76 +105,62 @@ async function Quellify(endPoint, query, map, fieldsMap) {
       // Execute fetch request with new query
       const responseFromFetch = await fetch(endPoint, fetchOptions);
       const parsedData = await responseFromFetch.json();
-      const parsedResponseFromFetch = Array.isArray(parsedData.data[queryName])
-        ? parsedData.data[queryName]
-        : [parsedData.data[queryName]];
 
+
+      // NOTE: trying this commented out, 
+      // // TO-DO: queryName restricts our cache to just the first query
+      // const queryName = Object.keys(prototype)[0];
+
+      // // TO-DO: why put it into an array?
+      // const parsedResponseFromFetch = Array.isArray(parsedData.data[queryName])
+      //   ? parsedData.data[queryName]
+      //   : [parsedData.data[queryName]];
+
+      // TO-DO: look at joinResponses
       // Stitch together cached response and the newly fetched data and assign to variable
-      mergedResponse = joinResponses(
-        responseFromCache,
-        parsedResponseFromFetch,
-        prototype
-      );
-    } else {
-      mergedResponse = responseFromCache; // If everything needed was already in cache, only assign cached response to variable
-    }
-
-    // If everything needed was already in cache, only assign cached response to variable
-    if (QuellStore.arguments && !QuellStore.alias) {
-      if (mergedResponse.length === 1) {
-        mergedResponse = mergedResponse[0];
+      mergedResponse = {
+        data: joinResponses(
+          responseFromCache,
+          parsedResponseFromFetch,
+          prototype
+        )
       }
-    } else if (QuellStore.arguments && QuellStore.alias) {
-      newMergedReponse = {};
-      mergedResponse.forEach(
-        (e) => (newMergedReponse[Object.keys(e)[0]] = e[Object.keys(e)[0]])
-      );
-      mergedResponse = newMergedReponse;
     } else {
-      mergedResponse = mergedResponse;
+      // If everything needed was already in cache, only assign cached response to variable
+      mergedResponse = responseFromCache;
     }
 
-    const formattedMergedResponse = QuellStore.alias
-      ? { data: mergedResponse }
-      : { data: { [queryName]: mergedResponse } };
+    // TO-DO: legacy code, commented out for now, I believe it is deprecated but don't want to get rid of it until we have done further testing
+    // commented out because I don't think it matters at all
+    // prep mergedResponse to store in the cache
+    // merged response should already factor in joinResponses
+    // if (QuellStore.arguments && !QuellStore.alias) {
+    //   // if response is just one, set it to merged response?
+    //   if (mergedResponse.length === 1) {
+    //     mergedResponse = mergedResponse[0];
+    //   }
+    // } else if (QuellStore.arguments && QuellStore.alias) {
+    //   // ???
+    //   newMergedReponse = {};
+    //   mergedResponse.forEach(
+    //     (e) => (newMergedReponse[Object.keys(e)[0]] = e[Object.keys(e)[0]])
+    //   );
+    //   mergedResponse = newMergedReponse;
+    // } else {
+    //   mergedResponse = mergedResponse;
+    // }
 
-    // Cache newly stitched response
-    normalizeForCache(formattedMergedResponse.data, map, fieldsMap, QuellStore);
+    // // TO-DO: this step should be unnecessary with current system
+    // const formattedMergedResponse = QuellStore.alias
+    //   ? { data: mergedResponse }
+    //   : { data: { [queryName]: mergedResponse } };
+
+    // cache the response
+    normalizeForCache(mergedResponse.data, map, fieldsMap);
 
     // Return formattedMergedResponse as a promise
-    return new Promise((resolve, reject) => resolve(formattedMergedResponse));
+    return new Promise((resolve, reject) => resolve(mergedResponse));
   }
-}
-
-// const query = `query {
-//   countries {
-//       id
-//       name
-//       cities {
-//           id
-//           name
-//           population
-//       }
-//   }
-// }`
-
-// const sampleMap = {
-//   countries: 'Country',
-//   country: 'Country',
-//   citiesByCountryId: 'City',
-//   cities: 'City',
-// }
-
-// const sampleFieldsMap = {
-//   cities: 'City'
-// }
-
-// Quellify('/graphQL', query, sampleMap, sampleFieldsMap);
-
-
-// '/graphQL' - endpoint
-// query - query
-// sampleMap - map
-// sampleFieldsMap - fieldsMap
+};
 
 module.exports = Quellify;
