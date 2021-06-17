@@ -66,7 +66,7 @@ describe('joinResponses', () => {
   xtest('inputs two flat response objects and outputs combined object', () => {
     const cacheResponse = {
       data: {
-        artist: {
+        ['artist--1']: {
           id: '1',
           name: 'John Coltrane'
         }
@@ -82,7 +82,7 @@ describe('joinResponses', () => {
     };
 
     const proto = {
-      artist: {
+      ['artist--1']: {
         id: true,
         name: true,
         instrument: true,
@@ -101,11 +101,11 @@ describe('joinResponses', () => {
   xtest('inputs two nested response objects and outputs combined object', () => {
     const cacheResponse = {
       data: {
-        artist: {
+        ['artist--1']: {
           id: '1',
           instrument: 'saxophone',
-          topAlbum: {
-            id:'1',
+          ['album--2']: {
+            id:'2',
             name: 'Ring Around the Rose-y'
           },
         },
@@ -117,7 +117,7 @@ describe('joinResponses', () => {
         artist: {
           id: '1',
           name: 'John Coltrane',
-          topAlbum: {
+          album: {
             yearOfRelease: '1800'
           },
         },
@@ -125,11 +125,11 @@ describe('joinResponses', () => {
     };
 
     const prototype = {
-      artist: {
+      ['artist--1']: {
         id: true,
         name: false,
         instrument: true,
-        topAlbum: {
+        ['album--2']: {
           id: true,
           name: true,
           yearOfRelease: false
@@ -142,8 +142,8 @@ describe('joinResponses', () => {
         id: '1',
         name: 'John Coltrane',
         instrument: 'saxophone',
-        topAlbum: {
-          id: '1',
+        album: {
+          id: '2',
           name: 'Ring Around the Rose-y',
           yearOfRelease: '1800'
         }
@@ -151,7 +151,7 @@ describe('joinResponses', () => {
     });
   });
 
-  test('inputs a list retrieved from cache and a list retrieved from server and outputs combined List response', () => {
+  xtest('inputs a list retrieved from cache and a list retrieved from server and outputs combined List response', () => {
     const cacheResponse = {
       data: {
         albums: [
@@ -199,7 +199,7 @@ describe('joinResponses', () => {
     });
   });
 
-  xtest('inputs a list retrieved from cache and a list retrieved from server with different fields and outputs combined List response', () => {
+  test('inputs a list retrieved from cache and a list retrieved from server with different fields and outputs combined List response', () => {
     const cacheResponse = {
       data: {
         albums: [
@@ -241,120 +241,86 @@ describe('joinResponses', () => {
     });
   });
 
-  xtest('inputs two arrays (scalar <<< non-scalar) and outputs combined array', () => {
-    const scalar3 = [
-      { id: '1', name: 'John Coltrane' },
-      { id: '2', name: 'Miles Davis' },
-      { id: '3', name: 'Thelonious Monk' },
-    ];
-
-    const nonScalar3 = [
-      {
-        albums: [
-          { album_id: '1', id: '101', name: 'Blue Train', release_year: 1957 },
-          { album_id: '2', id: '201', name: 'Giant Steps', release_year: 1965 },
-        ],
-        instrument: 'saxophone',
-      },
-      {
-        albums: [
-          {
-            album_id: '3',
-            id: '301',
-            name: 'Kind of Blue',
-            release_year: 1959,
-          },
-          {
-            album_id: '4',
-            id: '401',
-            name: 'In a Silent Way',
-            release_year: 1969,
-          },
-        ],
-        instrument: 'trumpet',
-      },
-      {
-        albums: [
-          {
-            album_id: '5',
-            id: '501',
-            name: 'Brilliant Corners',
-            release_year: 1957,
-          },
-          { album_id: '6', id: '601', name: 'Monks Dream', release_year: 1963 },
-        ],
-        instrument: 'piano',
-      },
-    ];
-
-    expect(joinResponses(scalar3, nonScalar3, protoObj)).toEqual(result);
-  });
-
-  xtest('inputs two arrays (non-scalar <<< non-scalar) and outputs combined array', () => {
-    const nonScalar4 = [
-      {
-        id: '1',
-        name: 'John Coltrane',
-        albums: [
-          { album_id: '1', id: '101', release_year: 1957 },
-          { album_id: '2', id: '201', release_year: 1965 },
-        ],
-      },
-      {
-        id: '2',
-        name: 'Miles Davis',
-        albums: [
-          { album_id: '3', id: '301', release_year: 1959 },
-          { album_id: '4', id: '401', release_year: 1969 },
-        ],
-      },
-      {
-        id: '3',
-        name: 'Thelonious Monk',
-        albums: [
-          { album_id: '5', id: '501', release_year: 1957 },
-          { album_id: '6', id: '601', release_year: 1963 },
-        ],
-      },
-    ];
-
-    const nonScalar5 = [
-      {
-        albums: [{ name: 'Blue Train' }, { name: 'Giant Steps' }],
-        instrument: 'saxophone',
-      },
-      {
-        albums: [{ name: 'Kind of Blue' }, { name: 'In a Silent Way' }],
-        instrument: 'trumpet',
-      },
-      {
-        albums: [{ name: 'Brilliant Corners' }, { name: 'Monks Dream' }],
-        instrument: 'piano',
-      },
-    ];
-
-    expect(joinResponses(nonScalar4, nonScalar5, protoObj)).toEqual(result);
-  });
-
-  xtest('two arrays', () => {
+  test('inputs a query with a nested list', () => {
     const cacheResponse = {
       data: {
-        artists: [
-          { id: '1', name: 'John Coltrane' },
-          { id: '2', name: 'Miles Davis' },
-          { id: '3', name: 'Thelonious Monk' },
-        ]
-      }
+        ['artist--1']: {
+          id: '1',
+          genre: 'Pop',
+          albums: [
+            {
+              id:'1',
+              name: 'Tigermilk'
+            },
+            {
+              id: '2',
+              name: 'If You\'re Feeling Sinister'
+            },
+            {
+              id: '3',
+              name: 'The Boy With The Arab Strap'
+            }
+          ],
+        },
+      },
     };
 
     const serverResponse = {
       data: {
-        artists: [
-          { instrument: 'saxophone' },
-          { instrument: 'trumpet' },
-          { instrument: 'piano' },
-        ]
+        artist: {
+          id: '1',
+          name: 'Belle & Sebastian',
+          albums: [
+            {
+              yearOfRelease: '1996'
+            },
+            {
+              yearOfRelease: '1996'
+            },
+            {
+              yearOfRelease: '1998'
+            }
+          ],
+        },
+      },
+    };
+
+    const prototype = {
+      ['artist--1']: {
+        id: true,
+        name: false,
+        instrument: true,
+        albums: {
+          id: true,
+          name: true,
+          yearOfRelease: false
+        }
       }
     };
-  })
+  
+    expect(joinResponses(cacheResponse.data, serverResponse.data, prototype)).toEqual({
+      artist: {
+        id: '1',
+        name: 'Belle & Sebastian',
+        genre: 'Pop',
+        albums: [
+          {
+            id:'1',
+            name: 'Tigermilk',
+            yearOfRelease: '1996'
+          },
+          {
+            id: '2',
+            name: 'If You\'re Feeling Sinister',
+            yearOfRelease: '1996'
+          },
+          {
+            id: '3',
+            name: 'The Boy With The Arab Strap',
+            yearOfRelease: '1998'
+          }
+        ],
+      },
+    });
+  });
 });

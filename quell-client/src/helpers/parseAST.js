@@ -123,6 +123,7 @@ const parseAST = (AST, options = defaultOptions) => {
 
         // create fieldID in format "fieldName - uniqueID"
         // otherwise returns the original field name
+        // used for caching later, & for distinguishing aliases on prototype
         const fieldID = `${node.name.value}${uniqueID ? '--' + uniqueID : ''}`;
 
         // stores alias for Field on auxillary object
