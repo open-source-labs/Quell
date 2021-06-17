@@ -1,7 +1,7 @@
 const parseAST = require('../../src/helpers/parseAST');
 const { parse } = require('graphql/language/parser');
 
-describe('parseAST.js', () => {
+xdescribe('parseAST.js', () => {
   test('should traverses the abstract syntax tree and creates a prototype object', () => {
     const query = `query {
       countries {
