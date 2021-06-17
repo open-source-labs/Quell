@@ -61,7 +61,10 @@ async function Quellify(endPoint, query, map, fieldsMap, userOptions) {
   } else {
     // if it is "quellable"
     // Check cache for data and build array from that cached data
-    const responseFromCache = buildFromCache(prototype, map, null);
+    // TO-DO: check output of buildFromCache
+    // may need to store as const response = { data: buildFromCache(prototype, prototypeKeys) }
+    const prototypeKeys = Object.keys(prototype); 
+    const responseFromCache = buildFromCache(prototype, prototypeKeys);
     // If no data in cache, the response array will be empty:
     if (responseFromCache.length === 0) {
       const fetchOptions = {
@@ -127,7 +130,7 @@ async function Quellify(endPoint, query, map, fieldsMap, userOptions) {
       mergedResponse = responseFromCache;
     }
 
-    // TO-DO: WHAT IS THIS
+    // TO-DO: legacy code, commented out for now, I believe it is deprecated but don't want to get rid of it until we have done further testing
     // commented out because I don't think it matters at all
     // prep mergedResponse to store in the cache
     // merged response should already factor in joinResponses
