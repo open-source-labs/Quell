@@ -4,6 +4,7 @@
 
 // TO-DO: add support for operation definitions input at the front ie "query" "mutation" "subscription"
 
+// inputting a comment here to test git commits
 function createQueryStr(queryObject, operationType) {
   const openCurly = '{';
   const closeCurly = '}';
