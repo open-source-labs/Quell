@@ -54,7 +54,7 @@ async function Quellify(endPoint, query, map, fieldsMap, userOptions) {
     };
 
     // Execute fetch request with original query
-    const responseFromFetch = await fetch(endPoint, fetchOptions);
+    // const responseFromFetch = await fetch(endPoint, fetchOptions);
     const parsedData = await responseFromFetch.json();
     // Return response as a promise
     return new Promise((resolve, reject) => resolve(parsedData));
