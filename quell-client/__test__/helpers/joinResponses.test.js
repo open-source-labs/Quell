@@ -1,6 +1,6 @@
 const joinResponses = require('../../src/helpers/joinResponses');
 
-describe('joinResponses', () => {
+xdescribe('joinResponses', () => {
   const protoObj = {
     artists: {
       id: true,

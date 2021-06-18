@@ -77,7 +77,7 @@ const parseAST = (AST, options = defaultOptions) => {
       }
     },
     Field: {
-      // enter the node to construct a unique fieldID for critical fields
+      // enter the node to construct a unique fieldType for critical fields
       enter(node) {
         // populates argsObj from current node's arguments
         // generates uniqueID from arguments
@@ -121,11 +121,13 @@ const parseAST = (AST, options = defaultOptions) => {
           }
         });
 
-        // create fieldID in format "fieldName - uniqueID"
-        // otherwise returns the original field name
-        // used for caching later, & for distinguishing aliases on prototype
-        const fieldID = `${node.name.value}${uniqueID ? '--' + uniqueID : ''}`;
+        // specifies whether field is stored as fieldType or Alias Name
+        const fieldType = node.alias ? node.alias.value : node.name.value;
 
+        // stores node Field Type on aux object, 
+        auxObj.__type = node.name.value;
+
+        // TO-DO: clean up __alias, should be deprecated
         // stores alias for Field on auxillary object
         auxObj.__alias = node.alias ? node.alias.value : null;
 
@@ -134,15 +136,16 @@ const parseAST = (AST, options = defaultOptions) => {
 
         // if 
 
-        // add alias, args values to appropriate fields
-        fieldArgs[fieldID] = {
-          ...fieldArgs[fieldID],
+        // adds auxObj fields to prototype, allowing future access to type, alias, args, etc.
+        fieldArgs[fieldType] = {
+          ...fieldArgs[fieldType],
           ...auxObj
         };
 
+        // TO-DO: stack and stackIDs should now be identical, deprecated
         // add value to stacks to keep track of depth-first parsing path
         stack.push(node.name.value);
-        stackIDs.push(fieldID);
+        stackIDs.push(fieldType);
       },
       leave() {
         // pop stacks to keep track of depth-first parsing path

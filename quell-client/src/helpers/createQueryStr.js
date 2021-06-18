@@ -2,6 +2,7 @@
  createQueryStr converts the query object into a formal GQL query string.
  */
 
+//  TO-DO: fix makeTyepKey
 // TO-DO: add support for operation definitions input at the front ie "query" "mutation" "subscription"
 
 function createQueryStr(queryObject, operationType) {
@@ -39,9 +40,9 @@ function createQueryStr(queryObject, operationType) {
       }
     }
 
-    if (!innerStr.includes(idStyle)) {
-      innerStr += idStyle + ' '
-    };
+    // if (!innerStr.includes(idStyle)) {
+    //   innerStr += idStyle + ' '
+    // };
 
     return innerStr;
   }
@@ -61,17 +62,13 @@ function createQueryStr(queryObject, operationType) {
     return argString ? `${openParen}${argString}${closeParen}` : '';
   }
 
+
   // makeKey takes in the fields object and cache key,
   // produces the appropriate graphQL key, and pairs it with any existing Alias
   function makeTypeKey(fields, key) {
     // find the index of the - character String.indexOf(--) and store it
-    const index = key.indexOf("--");
-    // if index -1 ('--' not found), return key 
-    if (index === -1) return key;
-    // store slice from 0 to index as key 
-    const newKey = key.slice(0, index);
     // if there is an alias, include it, otherwise pass back the new key
-    return fields.__alias ? `${fields.__alias}: ${newKey}` : newKey;
+    return fields.__alias;
   }
 
   // create final query string

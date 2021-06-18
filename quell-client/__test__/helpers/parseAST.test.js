@@ -1,7 +1,7 @@
 const parseAST = require('../../src/helpers/parseAST');
 const { parse } = require('graphql/language/parser');
 
-xdescribe('parseAST.js', () => {
+describe('parseAST.js', () => {
   test('should traverse the abstract syntax tree and create a prototype object', () => {
     // define a query string
     const query = `query {
@@ -22,7 +22,8 @@ xdescribe('parseAST.js', () => {
         name: true,
         capitol: true,
         __args: null,
-        __alias: null
+        __alias: null,
+        __type: 'countries'
       },
     });
     expect(operationType).toBe('query');
@@ -49,19 +50,21 @@ xdescribe('parseAST.js', () => {
 
     expect(prototype).toEqual({
       countries: {
+        __type: 'countries',
+        __args: null,
+        __alias: null,
         id: true,
         name: true,
         capitol: true,
-        cities: { 
+        cities: {
+          __type: 'cities',
+          __args: null,
+          __alias: null,
           id: true, 
           country_id: true, 
           name: true, 
           population: true, 
-          __args: null,
-        __alias: null
-      },
-        __args: null,
-        __alias: null
+        },
       },
     });
     expect(operationType).toEqual('query');
@@ -78,12 +81,13 @@ xdescribe('parseAST.js', () => {
     const parsedQuery = parse(query);
     const { prototype, operationType } = parseAST(parsedQuery);
     expect(prototype).toEqual({
-      ['country--1']: {
+      country: {
+        __type: 'country',
+        __args: { id: "1", name: "USA" },
+        __alias: null,
         id: true,
         name: true,
         capitol: true,
-        __args: { id: "1", name: "USA" },
-        __alias: null
       },
     });
     expect(operationType).toEqual('query');
@@ -101,12 +105,13 @@ xdescribe('parseAST.js', () => {
     const { prototype, operationType } = parseAST(AST);
 
     expect(prototype).toEqual({
-      ['country--1']: {
+      Canada: {
+        __type: 'country',
+        __args: { id: "1" },
+        __alias: 'Canada',
         id: true,
         name: true,
         capitol: true,
-        __args: { id: "1" },
-        __alias: 'Canada',
       }
     });
     expect(operationType).toEqual('query');
@@ -128,18 +133,20 @@ xdescribe('parseAST.js', () => {
     const { prototype, operationType } = parseAST(parsedQuery);
 
     expect(prototype).toEqual({
-      countries: { 
+      countries: {
+        __type: 'countries', 
+        __args: null,
+        __alias: null,
         id: true,
         name: true, 
         capital: true,
-        __args: null,
-        __alias: null,
       }, 
       book: {
-        name: true,
-        genre: true,
+        __type: 'book',
         __args: null,
         __alias: null,
+        name: true,
+        genre: true,
       },
     });
     expect(operationType).toEqual('query');
@@ -166,26 +173,30 @@ xdescribe('parseAST.js', () => {
     const { prototype, operationType } = parseAST(parsedQuery);
 
     expect(prototype).toEqual({
-      countries: { 
-        id: true,
-        name: true,
+      countries: {
+        __type: 'countries',
         __args: null,
         __alias: null,
+        id: true,
+        name: true,
         cities: {
-          name: true,
+          __type: 'cities',
           __args: null,
           __alias: null,
+          name: true,
         }
       }, 
       book: {
-        name: true,
-        genre: true,
+        __type: 'book',
         __args: null,
         __alias: null,
+        name: true,
+        genre: true,
         similarBooks: {
-          name: true,
+          __type: 'similarBooks',
           __args: null,
           __alias: null,
+          name: true,
         }
       },
     });
@@ -207,16 +218,18 @@ xdescribe('parseAST.js', () => {
     const { prototype, operationType } = parseAST(parsedQuery);
 
     expect(prototype).toEqual({
-      ['country--1']: { 
-        id: true,
-        name: true,
+      country: {
+        __type: 'country',
         __args: { id: '1'},
         __alias: null,
-        ['city--2']: {
-          id: true,
-          name: true,
+        id: true,
+        name: true,
+        city: {
+          __type: 'city',
           __args: { id: '2'},
           __alias: null,
+          id: true,
+          name: true,
         },
       },
     });
@@ -235,11 +248,12 @@ xdescribe('parseAST.js', () => {
     const { prototype, operationType } = parseAST(parsedQuery);
 
     expect(prototype).toEqual({
-      country: {
+      Canada: {
+        __type: 'country',
+        __args: null,
+        __alias: 'Canada',
         id: true,
         name: true,
-        __args: null,
-        __alias: 'Canada'
       }
     });
     expect(operationType).toBe('query');
@@ -272,27 +286,31 @@ xdescribe('parseAST.js', () => {
 
     expect(prototype).toEqual({
       countries: {
-        id: true,
-        name: true,
+        __type: 'countries',
         __args: null,
         __alias: null,
-        ['city--1']: {
-          id: true,
-          name: true,
+        id: true,
+        name: true,
+        Toronto: {
+          __type: 'city',
           __args: { id: '1' },
           __alias: 'Toronto',
-          ['food--2']: {
-            id: true,
-            name: true,
+          id: true,
+          name: true,
+          IceCream: {
+            __type: 'food',
             __args: { id: '2' },
             __alias: 'IceCream',
-            ['nutrition--3']: {
+            id: true,
+            name: true,
+            nutrition: {
+              __type: 'nutrition',
+              __args: { id: '3' },
+              __alias: null,
               calories: true,
               protein: true,
               fat: true,
               carbs: true,
-              __args: { id: '3' },
-              __alias: null
             }
           }
         }
@@ -312,20 +330,21 @@ xdescribe('parseAST.js', () => {
     const parsedQuery = parse(query);
     const { prototype, operationType } = parseAST(parsedQuery);
     expect(prototype).toEqual({
-      ['country--1']: {
-        id: true,
-        name: true,
-        capitol: true,
+      country: {
+        __type: 'country',
         __args: { id: "1", name: "USA" },
         __alias: null,
         __cacheTime: "1000",
+        id: true,
+        name: true,
+        capitol: true,
       },
     });
     expect(operationType).toEqual('query');
   });
 
-  // currently fails
-  test('should create prototype for query with fragments', () => {
+  // TO-DO
+  xtest('should create prototype for query with fragments', () => {
     const query = `query { 
       Canada: country {
         id
@@ -342,13 +361,14 @@ xdescribe('parseAST.js', () => {
     const { prototype, operationType } = parseAST(parsedQuery);
 
     expect(prototype).toEqual({
-      country: {
+      Canada: {
+        __type: 'country',
+        __args: null,
+        __alias: 'Canada',
         id: true,
         name: true,
         capitol: true,
         population: true,
-        __args: null,
-        __alias: 'Canada'
       }
     });
     expect(operationType).toBe('query');

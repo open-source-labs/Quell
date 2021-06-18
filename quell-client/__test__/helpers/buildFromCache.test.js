@@ -1,6 +1,6 @@
 const buildFromCache = require('../../src/helpers/buildFromCache');
 
-describe('buildFromCache.test.js', () => {
+xdescribe('buildFromCache.test.js', () => {
   // inputs: prototype object (which contains args), collection (defaults to an empty array)
   // outputs: protoype object with fields that were not found in the cache set to false 
   beforeAll(() => {

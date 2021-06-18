@@ -118,18 +118,7 @@ module.exports = joinResponses;
 // allows comparison of Prototype, Cache, Response keys
 // grab back alias
 
-/*
-{
-  ['country--1']: {
-    id: true,
-    name: true,
-    capitol: true,
-    __args: { id: "1" },
-    __alias: 'Canada',
-  }
-}
-*/
-
+// TO-DO: stripKey should be deprecated after Alias integration
 const stripKey = (uniqueStr, prototype = {}) => {
   const index = uniqueStr.indexOf('--');
 
