@@ -1,6 +1,6 @@
 const joinResponses = require('../../src/helpers/joinResponses');
 
-xdescribe('joinResponses', () => {
+describe('joinResponses', () => {
   const protoObj = {
     artists: {
       id: true,
@@ -66,7 +66,7 @@ xdescribe('joinResponses', () => {
   test('inputs two flat response objects and outputs combined object', () => {
     const cacheResponse = {
       data: {
-        ['artist--1']: {
+        artist: {
           id: '1',
           name: 'John Coltrane'
         }
@@ -82,7 +82,10 @@ xdescribe('joinResponses', () => {
     };
 
     const proto = {
-      ['artist--1']: {
+      artist: {
+        __args: { id: 1 },
+        __alias: null,
+        __type: 'artist',
         id: true,
         name: true,
         instrument: true,
@@ -101,10 +104,10 @@ xdescribe('joinResponses', () => {
   test('inputs two nested response objects and outputs combined object', () => {
     const cacheResponse = {
       data: {
-        ['artist--1']: {
+        artist: {
           id: '1',
           instrument: 'saxophone',
-          ['album--2']: {
+          album: {
             id:'2',
             name: 'Ring Around the Rose-y'
           },
@@ -125,11 +128,17 @@ xdescribe('joinResponses', () => {
     };
 
     const prototype = {
-      ['artist--1']: {
+      artist: {
+        __args: { id: 1 },
+        __alias: null,
+        __type: 'artist',
         id: true,
         name: false,
         instrument: true,
-        ['album--2']: {
+        album: {
+          __args: { id: 2 },
+          __alias: null,
+          __type: 'album',
           id: true,
           name: true,
           yearOfRelease: false
@@ -182,6 +191,9 @@ xdescribe('joinResponses', () => {
     
     const prototype = {
       albums: {
+        __args: null,
+        __alias: null,
+        __type: 'albums',
         album_id: false,
         id: false,
         name: false,
@@ -224,6 +236,9 @@ xdescribe('joinResponses', () => {
     
     const prototype = {
       albums: {
+        __args: null,
+        __alias: null,
+        __type: 'albums',
         album_id: false,
         id: false,
         name: false,
@@ -244,7 +259,7 @@ xdescribe('joinResponses', () => {
   test('inputs a query with a nested list', () => {
     const cacheResponse = {
       data: {
-        ['artist--1']: {
+        artist: {
           id: '1',
           genre: 'Pop',
           albums: [
@@ -286,11 +301,17 @@ xdescribe('joinResponses', () => {
     };
 
     const prototype = {
-      ['artist--1']: {
+      artist: {
+        __args: { id: 1 },
+        __alias: null,
+        __type: 'artist',
         id: true,
         name: false,
         instrument: true,
         albums: {
+          __args: null,
+          __alias: null,
+          __type: 'albums',
           id: true,
           name: true,
           yearOfRelease: false

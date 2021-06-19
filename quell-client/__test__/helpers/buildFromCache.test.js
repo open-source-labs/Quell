@@ -1,6 +1,6 @@
 const buildFromCache = require('../../src/helpers/buildFromCache');
 
-xdescribe('buildFromCache.test.js', () => {
+describe('buildFromCache.test.js', () => {
   // inputs: prototype object (which contains args), collection (defaults to an empty array)
   // outputs: protoype object with fields that were not found in the cache set to false 
   beforeAll(() => {
@@ -12,24 +12,26 @@ xdescribe('buildFromCache.test.js', () => {
 
   test('Basic query', () => {
     const testProto = {
-      'country--3': {
+      country: {
         id: true,
         name: true,
         __alias: null,
         __args: { id: '3' },
+        __type: 'country',
         }
       };
     const endProto = {
-      'country--3': {
+      country: {
         id: true,
         name: false,
         __alias: null,
         __args: { id: '3' },
+        __type: 'country',
         }
       };
     const expectedResponseFromCache = {
       data: {
-        'country--3': {
+        country: {
           'id': '3'
         }
       }
@@ -43,59 +45,74 @@ xdescribe('buildFromCache.test.js', () => {
 
   test('Multiple nested queries that include args and aliases', () => {
     const testProto = {
-      'country--1': {
+      Canada: {
         id: true,
         name: true,
         __alias: 'Canada',
         __args: { id: '1' },
+        __type: 'country',
         capitol: {
           id: true,
           name: true,
           population: true,
           __alias: null,
-          __args: {}
+          __args: {},
+          __type: 'capitol',
         }
       },
-      'country--2': {
+      Mexico: {
         id: true,
         name: true,
         __alias: 'Mexico',
         __args: { id: '2' },
-        climate: { seasons: true, __alias: null, __args: {} }
+        __type: 'country',
+        climate: {
+          seasons: true,
+          __alias: null,
+          __args: {},
+          __type: 'climate',
+        }
       }
     }
     const endProto = {
-      'country--1': {
+      Canada: {
         id: true,
         name: false,
         __alias: 'Canada',
         __args: { id: '1' },
+        __type: 'country',
         capitol: {
           id: true,
           name: true,
           population: false,
           __alias: null,
-          __args: {}
+          __args: {},
+          __type: 'capitol',
         }
       },
-      'country--2': {
+      Mexico: {
         id: true,
         name: false,
         __alias: 'Mexico',
         __args: { id: '2' },
-        climate: { seasons: false, __alias: null, __args: {} }
+        __type: 'country',
+        climate: {
+          seasons: false,
+          __alias: null,
+          __args: {}
+        }
       }
     }
     const expectedResponseFromCache = {
       data: {
-        'country--1': {
+        Canada: {
           id: '1',
           capitol: {
             id: '2',
             name: 'DC'
           }
         },
-        'country--2': {
+        Mexico: {
           id: '2'
         }
       }
@@ -106,26 +123,28 @@ xdescribe('buildFromCache.test.js', () => {
     expect(responseFromCache).toEqual(expectedResponseFromCache);
   });
 
-  xtest('Countries test', () => {
+  test('Countries test', () => {
     const testProto = {
-      'countries': {
+      countries: {
         id: true,
         name: true,
         __alias: null,
         __args: {},
+        __type: 'countries',
       }
     }
     const endProto = {
-      'countries': {
+      countries: {
         id: true,
         name: false, 
         __alias: null,
         __args: {},
+        __type: 'countries',
       },
     }
     const expectedResponseFromCache = {
       data: {
-        "countries": [
+        countries: [
           {
             "id": "1"
           },
