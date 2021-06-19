@@ -18,7 +18,8 @@ const { parse } = require('graphql/language/parser');
  * as well as auxillary data (arguments, aliases, etc.)
  */
 
-// default options so parseAST doesn't 
+// TO-DO: should be deprecated once options object is supported
+// default options so parseAST doesn't have to supply everything
 const defaultOptions = {
   userDefinedID: null
 }
@@ -30,11 +31,8 @@ const parseAST = (AST, options = defaultOptions) => {
 
   let operationType = '';
 
-  // initialize stack to keep track of depth first parsing path,
-  // need original names as reference to prevent doubling with uniqueIDs
+  // initialize stack to keep track of depth first parsing path
   const stack = [];
-  // initialize stack of uniqueIDs to reference any pathways of unique IDs made
-  const stackIDs = [];
 
   // tracks depth of selection Set
   let selectionSetDepth = 0;
@@ -91,7 +89,6 @@ const parseAST = (AST, options = defaultOptions) => {
         // query-wide options should be handled on Quell's options object
         const auxObj = {};
 
-        let uniqueID = '';
         node.arguments.forEach(arg => {
           const key = arg.name.value;
           // TO-DO: cannot currently handle variables in query
@@ -104,14 +101,14 @@ const parseAST = (AST, options = defaultOptions) => {
             argsObj[key] = arg.value.value;
           };
 
-          // identify uniqueID from args
-          // TO-DO: make this more general instead of hard-coded? 
-          // string.includes('id') is too general and would catch non-uniqueID fields such as "ideology"
-          if (key === 'id' || key === '_id' || key === 'ID' || key === 'Id') {
-            uniqueID = arg.value.value;
-          } else if (userDefinedID ? key === userDefinedID : false) {
-            // grabs userDefinedIDs if one is supplied on options object
-            uniqueID = arg.value.value;
+          // identify uniqueID from args, options
+          // note: does not use key.includes('id') to avoid automatically assigning fields such as "idea" or "idiom"
+          if (userDefinedID ? key === userDefinedID : false) {
+            // assigns ID as userDefinedID if one is supplied on options object
+            auxObj.__id = arg.value.value;
+          } else if (key === 'id' || key === '_id' || key === 'ID' || key === 'Id') {
+            // assigns ID automatically from args
+            auxObj.__id = arg.value.value;
           }
 
           // handle custom options passed in as arguments (ie customCache)
@@ -145,12 +142,10 @@ const parseAST = (AST, options = defaultOptions) => {
         // TO-DO: stack and stackIDs should now be identical, deprecated
         // add value to stacks to keep track of depth-first parsing path
         stack.push(node.name.value);
-        stackIDs.push(fieldType);
       },
       leave() {
         // pop stacks to keep track of depth-first parsing path
         stack.pop();
-        stackIDs.pop();
       },
     },
     SelectionSet: {
@@ -172,7 +167,7 @@ const parseAST = (AST, options = defaultOptions) => {
 
           // place fieldArgs object onto fieldsObject so it gets passed along to prototype
           // fieldArgs contains arguments, aliases, etc.
-          const fieldsObject = { ...fieldsValues, ...fieldArgs[stackIDs[stackIDs.length - 1]] };
+          const fieldsObject = { ...fieldsValues, ...fieldArgs[stack[stack.length - 1]] };
 
           /* For nested objects, we must prevent duplicate entries for nested queries with arguments (ie "city" and "city--3")
           * We go into the prototype and delete the duplicate entry
@@ -182,7 +177,7 @@ const parseAST = (AST, options = defaultOptions) => {
             // loop through stack to access layers of prototype object
             for (let i = 0; i < stack.length; i++) {
               // access layers of prototype object
-              miniProto = miniProto[stackIDs[i]]
+              miniProto = miniProto[stack[i]]
               if (i === stack.length - 2) {
                 // when final index, delete
                 delete miniProto[stack[i + 1]];
@@ -193,7 +188,7 @@ const parseAST = (AST, options = defaultOptions) => {
           // loop through stack to get correct path in proto for temp object;
           // mutates original prototype object WITH values from tempObject
           // "prev" is accumulator ie the prototype
-          stackIDs.reduce((prev, curr, index) => {
+          stack.reduce((prev, curr, index) => {
             return index + 1 === stack.length // if last item in path
               ? (prev[curr] = {...fieldsObject}) //set value
               : (prev[curr] = prev[curr]); // otherwise, if index exists, keep value

@@ -135,6 +135,18 @@ function buildFromCache(prototype, prototypeKeys, itemFromCache = {}, firstRun =
 
 
 }
+
+// helper function to take in queryProto and generate a cacheID from it
+function generateCacheID(queryProto) {
+  let cacheID = '';
+
+  // identify ID fields
+  // should be part of parseAST if we want to support custom ID fields
+  cacheID += `${queryProto.__type}--${queryProto.__id}`;
+
+  return cacheID;
+}
+
 /*
 function toggleProto(proto) {
   for (const key in proto) {
