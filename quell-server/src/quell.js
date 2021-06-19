@@ -3,6 +3,13 @@ const { parse } = require('graphql/language/parser');
 const { visit, BREAK } = require('graphql/language/visitor');
 const { graphql } = require('graphql');
 
+const parseAST = require('./helpers/parseAST');
+const normalizeForCache = require('./helpers/normalizeForCache');
+const buildFromCache = require('./helpers/buildFromCache');
+const createQueryObj = require('./helpers/createQueryObj');
+const createQueryStr = require('./helpers/createQueryStr');
+const joinResponses = require('./helpers/joinResponses');
+
 class QuellCache {
   constructor(schema, redisPort, cacheExpiration = 1000) {
     this.schema = schema;
@@ -43,9 +50,11 @@ class QuellCache {
     const AST = parse(queryString);
 
     // create response prototype, referenses for arguments and operation type
-    const { proto, protoArgs, operationType } = this.parseAST(AST);
+    const { prototype, operationType } = parseAST(AST);
 
-    const protoDeepCopy = { ...proto };
+    // not a deep protype copy
+    // TO-DO: why do we need a deep copy
+    // const protoDeepCopy = { ...prototype };
 
     // pass-through for queries and operations that QuellCache cannot handle
     if (operationType === 'unQuellable') {
@@ -67,8 +76,7 @@ class QuellCache {
       // get redis key if possible and potential combined value for future update
       let { redisKey, isExist, redisValue } = await this.createRedisKey(
         this.mutationMap,
-        proto,
-        protoArgs
+        prototype
       );
 
       graphql(this.schema, queryString)
@@ -85,43 +93,52 @@ class QuellCache {
         });
     } else {
       // if QUERY
-      let protoForCache = { ...proto };
 
       // build response from cache
-      const responseFromCache = await this.buildFromCache(
-        protoForCache,
-        this.queryMap,
-        protoArgs
-      );
+      // countries -> [country--1, country--2]
+      // TO-DO: test that buildFromCache w/o queryMap doesn't produce changes
+      // update buildFromCache to update with redis info
+      const prototypeKeys = Object.keys(prototype);
+      const cacheResponse = buildFromCache(redis, prototype, prototypeKeys);
+      // const responseFromCache = await buildFromCache(
+      //   prototype,
+      //   this.queryMap,
+      // );
 
       // query for additional information, if necessary
-      let fullResponse, uncachedResponse;
+      let mergedResponse, databaseResponse;
 
       // create query object to check if we have to get something from database
-      const queryObject = this.createQueryObj(protoForCache);
+      const queryObject = createQueryObj(prototype);
 
       // if cached response is incomplete, reformulate query, handoff query, join responses, and cache joined responses
       if (Object.keys(queryObject).length > 0) {
         // create new query sting
-        const newQueryString = this.createQueryStr(queryObject, protoArgs);
+        const newQueryString = createQueryStr(queryObject);
 
         graphql(this.schema, newQueryString)
           .then(async (queryResponse) => {
-            uncachedResponse = queryResponse.data;
+            databaseResponse = queryResponse.data;
 
-            // join uncached and cached responses
-            fullResponse = this.mergeObjects(
-              protoDeepCopy,
-              uncachedResponse,
-              responseFromCache
+            // join uncached and cached responses, prototype is used as a "template" for final mergedResponse
+            mergedResponse = joinResponses(
+              cacheResponse,
+              databaseResponse,
+              prototype
             );
+
+            // TO-DO: update this.cache to use prototype instead of protoArgs
 
             const successfullyCached = await this.cache(
-              fullResponse,
-              protoArgs
+              mergedResponse,
+              prototype
             );
+            // TO-DO: what to do if not successfully cached?
+            // we want to still send response to the client
+            // do we care that cache calls are asynchronous, is it worth pausing the client response?
 
-            res.locals.queryResponse = { data: { ...fullResponse } };
+
+            res.locals.queryResponse = { data: mergedResponse };
             return next();
           })
           .catch((error) => {
@@ -129,12 +146,13 @@ class QuellCache {
           });
       } else {
         // if nothing left to query, response from cache is full response
-        res.locals.queryResponse = { data: { ...responseFromCache } };
+        res.locals.queryResponse = { data: cacheResponse };
         return next();
       }
     }
   }
 
+  // TO-DO: update mutations
   /**
    * createRedisKey creates key based on field name and argument id and returns string or null if key creation is not possible
    * @param {Object} mutationMap -
@@ -144,11 +162,13 @@ class QuellCache {
    * and isExist if we have this key in redis
    *
    */
-  async createRedisKey(mutationMap, proto, protoArgs) {
+  async createRedisKey(mutationMap, proto) {
     let isExist = false;
     let redisKey;
     let redisValue = null;
     for (const mutationName in proto) {
+      // proto.__args
+      // mutation { country { id: 123, name: 'asdlkfasldkfa' } }
       const mutationArgs = protoArgs[mutationName];
       redisKey = mutationMap[mutationName];
       for (const key in mutationArgs) {
@@ -370,6 +390,7 @@ class QuellCache {
     const customTypes = Object.keys(typesList).filter(
       (type) => !builtInTypes.includes(type) && type !== schema._queryType.name
     );
+    // loop through types
     for (const type of customTypes) {
       const fieldsObj = {};
       let fields = typesList[type]._fields;
@@ -381,10 +402,13 @@ class QuellCache {
           : fields[field].type.name;
         fieldsObj[key] = value;
       }
+      // place assembled types on fieldsMap
       fieldsMap[type] = fieldsObj;
     }
     return fieldsMap;
   }
+
+  idMap { country: }
 
   getIdMap() {
     const idMap = {};
@@ -397,111 +421,6 @@ class QuellCache {
       idMap[type] = userDefinedIds;
     }
     return idMap;
-  }
-
-  /**
-   * parseAST traverses the abstract syntax tree and creates a prototype object
-   * representing all the queried fields nested as they are in the query. The
-   * prototype object is used as
-   *  (1) a model guiding the construction of responses from cache
-   *  (2) a record of which fields were not present in cache and therefore need to be queried
-   *  (3) a model guiding the construction of a new, partial GraphQL query
-   */
-  parseAST(AST) {
-    // initialize prototype as empty object
-    const proto = {};
-    //let isQuellable = true;
-
-    let operationType;
-
-    // initialiaze arguments as null
-    let protoArgs = null; //{ country: { id: '2' } }
-
-    // initialize stack to keep track of depth first parsing
-    const stack = [];
-
-    /**
-     * visit is a utility provided in the graphql-JS library. It performs a
-     * depth-first traversal of the abstract syntax tree, invoking a callback
-     * when each SelectionSet node is entered. That function builds the prototype.
-     * Invokes a callback when entering and leaving Field node to keep track of nodes with stack
-     *
-     * Find documentation at:
-     * https://graphql.org/graphql-js/language/#visit
-     */
-    visit(AST, {
-      enter(node) {
-        if (node.directives) {
-          if (node.directives.length > 0) {
-            isQuellable = false;
-            return BREAK;
-          }
-        }
-      },
-      OperationDefinition(node) {
-        operationType = node.operation;
-        if (node.operation === 'subscription') {
-          operationType = 'unQuellable';
-          return BREAK;
-        }
-      },
-      Field: {
-        enter(node) {
-          if (node.alias) {
-            operationType = 'unQuellable';
-            return BREAK;
-          }
-          if (node.arguments && node.arguments.length > 0) {
-            protoArgs = protoArgs || {};
-            protoArgs[node.name.value] = {};
-
-            // collect arguments if arguments contain id, otherwise make query unquellable
-            // hint: can check for graphQl type ID instead of string 'id'
-            for (let i = 0; i < node.arguments.length; i++) {
-              const key = node.arguments[i].name.value;
-              const value = node.arguments[i].value.value;
-
-              // for queries cache can handle only id as argument
-              if (operationType === 'query') {
-                if (!key.includes('id')) {
-                  operationType = 'unQuellable';
-                  return BREAK;
-                }
-              }
-              protoArgs[node.name.value][key] = value;
-            }
-          }
-          // add value to stack
-          stack.push(node.name.value);
-        },
-        leave(node) {
-          // remove value from stack
-          stack.pop();
-        },
-      },
-      SelectionSet(node, key, parent, path, ancestors) {
-        /* Exclude SelectionSet nodes whose parents' are not of the kind
-         * 'Field' to exclude nodes that do not contain information about
-         *  queried fields.
-         */
-        if (parent.kind === 'Field') {
-          // loop through selections to collect fields
-          const tempObject = {};
-          for (let field of node.selections) {
-            tempObject[field.name.value] = true;
-          }
-
-          // loop through stack to get correct path in proto for temp object;
-          // mutates original prototype object;
-          const protoObj = stack.reduce((prev, curr, index) => {
-            return index + 1 === stack.length // if last item in path
-              ? (prev[curr] = tempObject) // set value
-              : (prev[curr] = prev[curr]); // otherwise, if index exists, keep value
-          }, proto);
-        }
-      },
-    });
-    return { proto, protoArgs, operationType };
   }
 
   /**
@@ -528,6 +447,7 @@ class QuellCache {
       const isCollection = Array.isArray(mapValue);
 
       // if we have current chunk as a collection we have to treat it as an array
+
       if (isCollection) {
         if (protoArgs != null && protoArgs.hasOwnProperty(superField)) {
           for (const key in protoArgs[superField]) {
@@ -592,6 +512,7 @@ class QuellCache {
    * @param {Object} proto
    * @param {Object} colleciton
    */
+
   async buildCollection(proto, collection) {
     const response = [];
     for (const superField in proto) {
@@ -614,6 +535,7 @@ class QuellCache {
     }
     return response;
   }
+  
 
   /**
    * buildItem iterates through keys -- defined on pass-in prototype object, which is always a fragment of the
@@ -642,40 +564,40 @@ class QuellCache {
     return nodeObject;
   }
 
-  /**
-   * createQueryObj traverses the prototype, removing fields that were retrieved from cache. The resulting object
-   * will be passed to createQueryStr to construct a query requesting only the data not found in cache.
-   * @param {Object} proto - the prototype with fields that still need to be queried toggled to false
-   */
-  createQueryObj(proto) {
-    const queryObj = {};
-    for (const key in proto) {
-      const reduced = this.protoReducer(proto[key]);
-      if (reduced.length > 0) queryObj[key] = reduced;
-    }
-    return queryObj;
-  }
+  // /**
+  //  * createQueryObj traverses the prototype, removing fields that were retrieved from cache. The resulting object
+  //  * will be passed to createQueryStr to construct a query requesting only the data not found in cache.
+  //  * @param {Object} proto - the prototype with fields that still need to be queried toggled to false
+  //  */
+  // createQueryObj(proto) {
+  //   const queryObj = {};
+  //   for (const key in proto) {
+  //     const reduced = this.protoReducer(proto[key]);
+  //     if (reduced.length > 0) queryObj[key] = reduced;
+  //   }
+  //   return queryObj;
+  // }
 
-  /**
-   * protoReducer is a helper function (recusively) called from within createQueryObj, allowing introspection of
-   * nested prototype fields.
-   * @param {Object} proto - prototype
-   */
-  protoReducer(proto) {
-    const fields = [];
-    for (const key in proto) {
-      if (proto[key] === false) fields.push(key);
-      if (typeof proto[key] === 'object') {
-        const nestedObj = {};
-        const reduced = this.protoReducer(proto[key]);
-        if (reduced.length > 0) {
-          nestedObj[key] = reduced;
-          fields.push(nestedObj);
-        }
-      }
-    }
-    return fields;
-  }
+  // /**
+  //  * protoReducer is a helper function (recusively) called from within createQueryObj, allowing introspection of
+  //  * nested prototype fields.
+  //  * @param {Object} proto - prototype
+  //  */
+  // protoReducer(proto) {
+  //   const fields = [];
+  //   for (const key in proto) {
+  //     if (proto[key] === false) fields.push(key);
+  //     if (typeof proto[key] === 'object') {
+  //       const nestedObj = {};
+  //       const reduced = this.protoReducer(proto[key]);
+  //       if (reduced.length > 0) {
+  //         nestedObj[key] = reduced;
+  //         fields.push(nestedObj);
+  //       }
+  //     }
+  //   }
+  //   return fields;
+  // }
 
   /**
    * createQueryStr converts the query object constructed in createQueryObj into a properly-formed GraphQL query,
@@ -823,7 +745,7 @@ class QuellCache {
       }
     }
     const identifier = userDefinedId || item.id || item._id || 'uncacheable';
-    return collection + '-' + identifier.toString();
+    return collection + '--' + identifier.toString();
   }
 
   /**
@@ -864,7 +786,15 @@ class QuellCache {
    * @param {object} responseObject - the response merged from cache and graphql query resolution
    * @param {String} queryName - the name of the query, used for identifying response arrays in cache
    */
-  async cache(responseObject, protoArgs) {
+
+  // normalizeForCache Equivalent
+  // pull down from cache
+  // merge response & cache data
+  // send updated data to cache
+
+  // can recurse through responseObject and prototype at same time because same keys
+  // currently doesn't recurse through cache, limits to bottom two levels
+  async cache(responseObject, prototype) {
     const collection = JSON.parse(JSON.stringify(responseObject));
 
     for (const field in collection) {
@@ -957,3 +887,144 @@ class QuellCache {
 }
 
 module.exports = QuellCache;
+
+// HERE THERE BE DRAGONS ----------------------
+  /**
+   * parseAST traverses the abstract syntax tree and creates a prototype object
+   * representing all the queried fields nested as they are in the query. The
+   * prototype object is used as
+   *  (1) a model guiding the construction of responses from cache
+   *  (2) a record of which fields were not present in cache and therefore need to be queried
+   *  (3) a model guiding the construction of a new, partial GraphQL query
+   */
+  // parseAST(AST) {
+  //   // initialize prototype as empty object
+  //   const proto = {};
+  //   //let isQuellable = true;
+
+  //   let operationType;
+
+  //   // initialiaze arguments as null
+  //   let protoArgs = null; //{ country: { id: '2' } }
+
+  //   // initialize stack to keep track of depth first parsing
+  //   const stack = [];
+
+  //   /**
+  //    * visit is a utility provided in the graphql-JS library. It performs a
+  //    * depth-first traversal of the abstract syntax tree, invoking a callback
+  //    * when each SelectionSet node is entered. That function builds the prototype.
+  //    * Invokes a callback when entering and leaving Field node to keep track of nodes with stack
+  //    *
+  //    * Find documentation at:
+  //    * https://graphql.org/graphql-js/language/#visit
+  //    */
+  //   visit(AST, {
+  //     enter(node) {
+  //       if (node.directives) {
+  //         if (node.directives.length > 0) {
+  //           isQuellable = false;
+  //           return BREAK;
+  //         }
+  //       }
+  //     },
+  //     OperationDefinition(node) {
+  //       operationType = node.operation;
+  //       if (node.operation === 'subscription') {
+  //         operationType = 'unQuellable';
+  //         return BREAK;
+  //       }
+  //     },
+  //     Field: {
+  //       enter(node) {
+  //         if (node.alias) {
+  //           operationType = 'unQuellable';
+  //           return BREAK;
+  //         }
+  //         if (node.arguments && node.arguments.length > 0) {
+  //           protoArgs = protoArgs || {};
+  //           protoArgs[node.name.value] = {};
+
+  //           // collect arguments if arguments contain id, otherwise make query unquellable
+  //           // hint: can check for graphQl type ID instead of string 'id'
+  //           for (let i = 0; i < node.arguments.length; i++) {
+  //             const key = node.arguments[i].name.value;
+  //             const value = node.arguments[i].value.value;
+
+  //             // for queries cache can handle only id as argument
+  //             if (operationType === 'query') {
+  //               if (!key.includes('id')) {
+  //                 operationType = 'unQuellable';
+  //                 return BREAK;
+  //               }
+  //             }
+  //             protoArgs[node.name.value][key] = value;
+  //           }
+  //         }
+  //         // add value to stack
+  //         stack.push(node.name.value);
+  //       },
+  //       leave(node) {
+  //         // remove value from stack
+  //         stack.pop();
+  //       },
+  //     },
+  //     SelectionSet(node, key, parent, path, ancestors) {
+  //       /* Exclude SelectionSet nodes whose parents' are not of the kind
+  //        * 'Field' to exclude nodes that do not contain information about
+  //        *  queried fields.
+  //        */
+  //       if (parent.kind === 'Field') {
+  //         // loop through selections to collect fields
+  //         const tempObject = {};
+  //         for (let field of node.selections) {
+  //           tempObject[field.name.value] = true;
+  //         }
+
+  //         // loop through stack to get correct path in proto for temp object;
+  //         // mutates original prototype object;
+  //         const protoObj = stack.reduce((prev, curr, index) => {
+  //           return index + 1 === stack.length // if last item in path
+  //             ? (prev[curr] = tempObject) // set value
+  //             : (prev[curr] = prev[curr]); // otherwise, if index exists, keep value
+  //         }, proto);
+  //       }
+  //     },
+  //   });
+  //   return { proto, protoArgs, operationType };
+  // }
+
+    // /**
+  //  * createQueryObj traverses the prototype, removing fields that were retrieved from cache. The resulting object
+  //  * will be passed to createQueryStr to construct a query requesting only the data not found in cache.
+  //  * @param {Object} proto - the prototype with fields that still need to be queried toggled to false
+  //  */
+  // createQueryObj(proto) {
+  //   const queryObj = {};
+  //   for (const key in proto) {
+  //     const reduced = this.protoReducer(proto[key]);
+  //     if (reduced.length > 0) queryObj[key] = reduced;
+  //   }
+  //   return queryObj;
+  // }
+
+  // /**
+  //  * protoReducer is a helper function (recusively) called from within createQueryObj, allowing introspection of
+  //  * nested prototype fields.
+  //  * @param {Object} proto - prototype
+  //  */
+  // protoReducer(proto) {
+  //   const fields = [];
+  //   for (const key in proto) {
+  //     if (proto[key] === false) fields.push(key);
+  //     if (typeof proto[key] === 'object') {
+  //       const nestedObj = {};
+  //       const reduced = this.protoReducer(proto[key]);
+  //       if (reduced.length > 0) {
+  //         nestedObj[key] = reduced;
+  //         fields.push(nestedObj);
+  //       }
+  //     }
+  //   }
+  //   return fields;
+  // }
