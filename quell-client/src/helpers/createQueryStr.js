@@ -7,6 +7,7 @@
 
 // inputting a comment here to test git commits
 function createQueryStr(queryObject, operationType) {
+  if (Object.keys(queryObject).length === 0) return ''
   const openCurly = '{';
   const closeCurly = '}';
   const openParen = '(';
@@ -17,9 +18,8 @@ function createQueryStr(queryObject, operationType) {
   // iterate over every key in queryObject
   // place key into query object
   for (let key in queryObject) {
-    mainStr += `${makeTypeKey(queryObject[key], key)}${getArgs
-      (queryObject[key])} ${openCurly} ${stringify(
-        queryObject[key])}${closeCurly} `;
+    mainStr += ` ${key}${getAliasType(queryObject[key])}${getArgs(queryObject[key])} ${openCurly} ${stringify(queryObject[key])}${closeCurly}`;
+    console.log('mainStr loop', mainStr);
   }
 
   // recurse to build nested query strings
@@ -35,15 +35,12 @@ function createQueryStr(queryObject, operationType) {
       }
       // is key object? && !key.includes('__'), recurse stringify
       if (typeof fields[key] === 'object' && !key.includes('__')) {
-        innerStr += `${makeTypeKey(fields[key], key)}${getArgs(
+        console.log('about to recurse on', key, fields[key]);
+        innerStr += `${key}${getAliasType(fields[key])}${getArgs(
           fields[key])} ${openCurly} ${stringify(
             fields[key])}${closeCurly} `;
       }
     }
-
-    // if (!innerStr.includes(idStyle)) {
-    //   innerStr += idStyle + ' '
-    // };
 
     return innerStr;
   }
@@ -63,17 +60,21 @@ function createQueryStr(queryObject, operationType) {
     return argString ? `${openParen}${argString}${closeParen}` : '';
   }
 
+  // if Alias exists, formats alias for query string
+  function getAliasType(fields) {
+    return fields.__alias ? `: ${fields.__type}` : '';
+  };
 
   // makeKey takes in the fields object and cache key,
   // produces the appropriate graphQL key, and pairs it with any existing Alias
-  function makeTypeKey(fields, key) {
-    // find the index of the - character String.indexOf(--) and store it
-    // if there is an alias, include it, otherwise pass back the new key
-    return fields.__alias;
-  }
+//   function makeTypeKey(fields, key) {
+//     // find the index of the - character String.indexOf(--) and store it
+//     // if there is an alias, include it, otherwise pass back the new key
+//     return fields.__alias;
+//   }
 
   // create final query string
-  const queryStr = openCurly + mainStr + closeCurly;
+  const queryStr = openCurly + mainStr + ' ' + closeCurly;
   // if operation type supplied, place in front of queryString, otherwise just pass queryStr
   return operationType ? operationType + ' ' + queryStr : queryStr;
 };

@@ -4,6 +4,14 @@
  the copied Proto parameter sets a reference to combine the fields in the same order as the original query.
  */
 
+/*
+on artist {
+  albums []
+}
+
+the albums array is not being added to artist
+*/
+
 // Prototype: "country--1"
 // Cache: "country--1" 
 // server: "country"
@@ -11,9 +19,9 @@ function joinResponses(cacheResponse, serverResponse, queryProto, fromArray = fa
   // we have serverResponse & cache response in format of
   // { data: { country { id name } } } w/ different fields on cache & server
 
-  console.log('loop on queryProto', queryProto);
-  console.log('cache', cacheResponse);
-  console.log('server', serverResponse);
+  // console.log('loop on queryProto', queryProto);
+  // console.log('cache', cacheResponse);
+  // console.log('server', serverResponse);
 
   // initialize a "merged response" to be returned
   let mergedResponse = {};
@@ -30,20 +38,20 @@ function joinResponses(cacheResponse, serverResponse, queryProto, fromArray = fa
 
     if (Array.isArray(cacheResponse[key])) {
       // start figuring out how to merge these arrays
-      console.log('found array', cacheResponse[key], serverResponse[key]);
-      console.log('key', key);
+      // console.log('found array', cacheResponse[key], serverResponse[key]);
+      // console.log('key', key);
 
       // if # of keys is the same, then Objects are 
       // FIXED: cacheResponse[key] is an ARRAY, not an OBJECT
       // needed to access an element on cacheResponse in order to properly handle
       if (Object.keys(queryProto[key]).length === Object.keys(cacheResponse[key][0]).length) {
-        console.log('length same');
+        // console.log('length same');
         // 1) if objects are different, we can concat
         // concat the arrays 
         mergedResponse[key] = [...cacheResponse[key], ...serverResponse[key]];
       } else {
         // if # of keys is not the same, objects represent similar objects & are missing data
-        console.log('length not same');
+        // console.log('length not same');
         // 2) if objects are "same" w/ different fields, we cannot concat
         // iterate over an array
         const mergedArray = [];
@@ -60,7 +68,7 @@ function joinResponses(cacheResponse, serverResponse, queryProto, fromArray = fa
           mergedArray.push(joinedResponse);
         }
         // set merged array to mergedResponse at key
-        mergedResponse[albums] = [{}, {}, {}]
+        // mergedResponse[albums] = [{}, {}, {}]
         mergedResponse[key] = mergedArray;
       }
     }
@@ -73,7 +81,7 @@ function joinResponses(cacheResponse, serverResponse, queryProto, fromArray = fa
       // result { artist: { fields }}
 
       const stripped = stripKey(key);
-      console.log('stripKey', stripped);
+      // console.log('stripKey', stripped);
       // object spread
       if (!fromArray) {
         mergedResponse[stripped.key] = { ...cacheResponse[key], ...serverResponse[stripped.key] };
@@ -101,7 +109,7 @@ function joinResponses(cacheResponse, serverResponse, queryProto, fromArray = fa
           mergedResponse[stripped.key] = { ...mergedResponse[stripped.key], ...mergedRecursion };
 
           // delete shallow copy of cacheResponse's nested object from mergedResponse
-          delete mergedResponse[stripped.key][fieldName]
+          if (fieldName !== fieldStrip.key) delete mergedResponse[stripped.key][fieldName]
         }
       }
     }

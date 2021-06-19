@@ -10,7 +10,7 @@ xdescribe('buildFromCache.test.js', () => {
     sessionStorage.setItem('countries', JSON.stringify(['country--1', 'country--2', 'country--3']));
   })
 
-  xtest('Basic query', () => {
+  test('Basic query', () => {
     const testProto = {
       'country--3': {
         id: true,
@@ -41,7 +41,7 @@ xdescribe('buildFromCache.test.js', () => {
     expect(responseFromCache).toEqual(expectedResponseFromCache);
   });
 
-  xtest('Multiple nested queries that include args and aliases', () => {
+  test('Multiple nested queries that include args and aliases', () => {
     const testProto = {
       'country--1': {
         id: true,
@@ -106,7 +106,7 @@ xdescribe('buildFromCache.test.js', () => {
     expect(responseFromCache).toEqual(expectedResponseFromCache);
   });
 
-  test('Countries test', () => {
+  xtest('Countries test', () => {
     const testProto = {
       'countries': {
         id: true,

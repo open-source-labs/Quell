@@ -4,12 +4,12 @@ const createQueryStr = require('../../src/helpers/createQueryStr');
 
 describe('createQueryStr.js', () => {
   test('inputs query object w/ no values', () => {
-    expect(createQueryStr(queryObject)).toEqual(
+    const queryObject = {};
 
-    );
+    expect(createQueryStr(queryObject)).toEqual('');
   });
 
-  test('inputs query object w/ only scalar types and outputs GCL query string', () => {
+  test('inputs query object w/ only scalar types and outputs GQL query string', () => {
     const queryObject = {
       countries: {
         __alias: null,
@@ -22,7 +22,7 @@ describe('createQueryStr.js', () => {
     };
 
     expect(createQueryStr(queryObject)).toEqual(
-      `{countries { id name capitol } }`
+      `{ countries { id name capitol } }`
     );
   });
 
@@ -45,11 +45,11 @@ describe('createQueryStr.js', () => {
     };
 
     expect(createQueryStr(queryObject)).toEqual(
-      `{countries { cities { id country_id name population } } }`
+      `{ countries { cities { id country_id name population } } }`
     );
   });
 
-  test('inputs query object w/ both scalar & object types and outputs GCL query string', () => {
+  test('inputs query object w/ both scalar & object types and outputs GQL query string', () => {
     const queryObject = {
       countries: {
         __type: 'countries',
@@ -70,11 +70,11 @@ describe('createQueryStr.js', () => {
     };
 
     expect(createQueryStr(queryObject)).toEqual(
-      `{countries { id name capitol cities { id country_id name } } }`
+      `{ countries { id name capitol cities { id country_id name } } }`
     );
   });
 
-  test('inputs query object w/ an argument & w/ both scalar & object types should output GCL query string', () => {
+  test('inputs query object w/ an argument & w/ both scalar & object types should output GQL query string', () => {
     const queryObject = {
       country: {
         __type: 'country',
@@ -96,11 +96,11 @@ describe('createQueryStr.js', () => {
     };
 
     expect(createQueryStr(queryObject)).toEqual(
-      `{country(id: 1) { id name capitol cities { id country_id name population } } }`
+      `{ country(id: 1) { id name capitol cities { id country_id name population } } }`
     );
   });
 
-  test('inputs query object w/ multiple arguments & w/ both scalar & object types should output GCL query string', () => {
+  test('inputs query object w/ multiple arguments & w/ both scalar & object types should output GQL query string', () => {
     const queryObject = {
       country: {
         __type: 'country',
@@ -125,13 +125,13 @@ describe('createQueryStr.js', () => {
     };
 
     expect(createQueryStr(queryObject)).toEqual(
-      `{country(name: China, capitol: Beijing) { id name capital cities { id country_id name population } } }`
+      `{ country(name: China, capitol: Beijing) { id name capital cities { id country_id name population } } }`
     );
   });
 
-  test('inputs query object with alias should output GCL query string', () => {
+  test('inputs query object with alias should output GQL query string', () => {
     const queryObject = {
-      country: {
+      Canada: {
         __type: 'country',
         __args: {id: 3},
         __alias: "Canada",
@@ -147,11 +147,33 @@ describe('createQueryStr.js', () => {
     };
 
     expect(createQueryStr(queryObject)).toEqual(
-      `{Canada: country(id: 3) { id cities { id name } } }`
+      `{ Canada: country(id: 3) { id cities { id name } } }`
     );
   });
 
-  test('inputs query object with multiple queries should output GCL query string', () => {
+  test('inputs query object with nested alias should output GQL query string', () => {
+    const queryObject = {
+      Canada: {
+        __type: 'country',
+        __args: {id: 3},
+        __alias: 'Toronto',
+        id: false,
+        Toronto: {
+          __type: 'city',
+          __args: {id: 5},
+          __alias: 'Toronto',
+          id: false,
+          name: false,
+        },
+      }
+    };
+
+    expect(createQueryStr(queryObject)).toEqual(
+      `{ Canada: country(id: 3) { id Toronto: city(id: 5) { id name } } }`
+    );
+  });
+
+  test('inputs query object with multiple queries should output GQL query string', () => {
     const queryObject = {
       country: {
         __type: 'country',
@@ -184,7 +206,7 @@ describe('createQueryStr.js', () => {
     };
 
     expect(createQueryStr(queryObject)).toEqual(
-      `{country(id: 1) { id name cities { id name } } book(id: 2) { id title author { id name } } }`
+      `{ country(id: 1) { id name cities { id name } } book(id: 2) { id title author { id name } } }`
     );
   });
 
@@ -234,7 +256,7 @@ describe('createQueryStr.js', () => {
       }
     };
     expect(createQueryStr(queryObject)).toEqual(
-      `{countries { id cities { id attractions { id location { id latitude { id here { id not { id } } } } } } } }`
+      `{ countries { id cities { id attractions { id location { id latitude { id here { id not { id } } } } } } } }`
     );
   })
 });

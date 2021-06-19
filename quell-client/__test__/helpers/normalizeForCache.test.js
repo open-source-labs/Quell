@@ -3,11 +3,11 @@ const normalizeForCache = require('../../src/helpers/normalizeForCache');
 // normalizeForCache does not return any values, rather writes to the cache
 // way to mock sessionStorage like in buildFromCache tests?
 
-xdescribe('normalizeForCache.test.js', () => {
+describe('normalizeForCache.test.js', () => {
   // inputs: response data object
   // outputs: none, but values should be on session storage when done 
 
-  xtest('Basic response, with no arrays or nested objects', () => {
+  test('Basic response, with no arrays or nested objects', () => {
     const objBasic = {
       "country": {
         "id": 2,
@@ -23,7 +23,7 @@ xdescribe('normalizeForCache.test.js', () => {
     );
   });
 
-  xtest('nested response should produce individual values for both queries inside of it', () => {
+  test('nested response should produce individual values for both queries inside of it', () => {
     const nestedObj = {
       "country": {
         "id": 2,
@@ -55,7 +55,7 @@ xdescribe('normalizeForCache.test.js', () => {
     )
   });
 
-  xtest('deeply nested response should produce individual values for all queries on response', () => {
+  test('deeply nested response should produce individual values for all queries on response', () => {
     const deeplyNestedObj = {
       country: {
         id: 1,
@@ -203,7 +203,7 @@ xdescribe('normalizeForCache.test.js', () => {
     );
   });
 
-  xtest('individual items on same response object should be cached individually', () => {
+  test('individual items on same response object should be cached individually', () => {
     const multipleRes = {
       country: {
         id: 3,
@@ -235,7 +235,7 @@ xdescribe('normalizeForCache.test.js', () => {
     );
   });
 
-  xtest('a response array should cache an array of refs along with information on individual elements', () => {
+  test('a response array should cache an array of refs along with information on individual elements', () => {
     const responseObj = {
       "countries": [
         {
