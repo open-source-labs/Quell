@@ -63,8 +63,6 @@ function buildFromCache(prototype, prototypeKeys, itemFromCache = {}, firstRun =
       // cached data must persist 
       // create a property on itemFromCache and set the value to the fetched response from cache
       itemFromCache[typeKey] = JSON.parse(sessionStorage.getItem(typeKey));
-      console.log('itemFromCache: ', itemFromCache);
-      console.log('itemFromCache[typeKey] ', itemFromCache[typeKey]);
     }
     // if itemFromCache is an array (Array.isArray()) 
     if (Array.isArray(itemFromCache[typeKey])) {
@@ -78,7 +76,6 @@ function buildFromCache(prototype, prototypeKeys, itemFromCache = {}, firstRun =
         //iterate through iterimCache (for ... in loop)
         for (let property in interimCache) {
           let tempObj = {};
-          console.log('property: ', property);
           //if current interimCache property I'm looking for is in prototype
           if(prototype[typeKey].hasOwnProperty(property)){
             //then create item in itemFromCache from proto at index i
@@ -89,14 +86,11 @@ function buildFromCache(prototype, prototypeKeys, itemFromCache = {}, firstRun =
       })
       // reasign itemFromCache[typeKey] to false
       // itemFromCache[typeKey] = false;
-      console.log('itemFromCache -- is it bust?', itemFromCache);
     }
       // recurse through buildFromCache using typeKey, prototype
     // if itemFromCache is empty, then check the cache for data, else, persist itemFromCache
     // if this iteration is a nested query (i.e. if typeKey is a field in the query)
     if (firstRun === false) {
-      console.log('itemFromCache: ', itemFromCache);
-      console.log('prototype[typeKey]: ', prototype[typeKey]);
       // if this field is NOT in the cache, then set this field's value to false
       if (
         (itemFromCache === null || !itemFromCache.hasOwnProperty(typeKey)) && 
@@ -115,8 +109,8 @@ function buildFromCache(prototype, prototypeKeys, itemFromCache = {}, firstRun =
     // if the current element is not a nested query, then iterate through every field on the typeKey
     else {
       for (let field in prototype[typeKey]) {
-        console.log('field: ', field);
-        console.log('itemFromCache[typeKey]: ', itemFromCache[typeKey])
+        // console.log('field: ', field);
+        // console.log('itemFromCache[typeKey]: ', itemFromCache[typeKey])
         // if itemFromCache[typeKey] === false then break
         if (
           // if field is not found in cache then toggle to false
@@ -129,8 +123,8 @@ function buildFromCache(prototype, prototypeKeys, itemFromCache = {}, firstRun =
           // if field contains a nested query, then recurse the function and iterate through the nested query
           !field.includes('__') && 
           typeof prototype[typeKey][field] === 'object') {
-            console.log("PRE-RECURSE prototype[typeKey][field]: ", prototype[typeKey][field]);
-            console.log("PRE-RECURSE itemFromCache: ", itemFromCache);
+            // console.log("PRE-RECURSE prototype[typeKey][field]: ", prototype[typeKey][field]);
+            // console.log("PRE-RECURSE itemFromCache: ", itemFromCache);
             buildFromCache(prototype[typeKey][field], prototypeKeys, itemFromCache[typeKey][field], false);
           } 
       }  

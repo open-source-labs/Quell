@@ -2,14 +2,14 @@ const createQueryStr = require('../../src/helpers/createQueryStr');
 
 // NOTE: we changed the spacing on the results object, not sure if it matters?
 
-xdescribe('createQueryStr.js', () => {
+describe('createQueryStr.js', () => {
   test('inputs query object w/ no values', () => {
-    expect(createQueryStr(queryObject)).toEqual(
+    const queryObject = {};
 
-    );
+    expect(createQueryStr(queryObject)).toEqual('');
   });
 
-  test('inputs query object w/ only scalar types and outputs GCL query string', () => {
+  test('inputs query object w/ only scalar types and outputs GQL query string', () => {
     const queryObject = {
       countries: {
         id: false,
@@ -25,7 +25,7 @@ xdescribe('createQueryStr.js', () => {
     );
   });
 
-  test('inputs query object w/ only nested objects and outputs GCL query string', () => {
+  test('inputs query object w/ only nested objects and outputs GQL query string', () => {
     const queryObject = {
       countries: {
         cities: {
@@ -44,7 +44,7 @@ xdescribe('createQueryStr.js', () => {
     );
   });
 
-  test('inputs query object w/ both scalar & object types and outputs GCL query string', () => {
+  test('inputs query object w/ both scalar & object types and outputs GQL query string', () => {
     const queryObject = {
       countries: {
         id: false, name: false, capitol: false,
@@ -61,7 +61,7 @@ xdescribe('createQueryStr.js', () => {
     );
   });
 
-  test('inputs query object w/ an argument & w/ both scalar & object types should output GCL query string', () => {
+  test('inputs query object w/ an argument & w/ both scalar & object types should output GQL query string', () => {
     const queryObject = {
       ['country--1']: {
         id: false,
@@ -83,7 +83,7 @@ xdescribe('createQueryStr.js', () => {
     );
   });
 
-  test('inputs query object w/ multiple arguments & w/ both scalar & object types should output GCL query string', () => {
+  test('inputs query object w/ multiple arguments & w/ both scalar & object types should output GQL query string', () => {
     const queryObject = {
       country: {
         id: false,
@@ -110,7 +110,7 @@ xdescribe('createQueryStr.js', () => {
     );
   });
 
-  test('inputs query object with alias should output GCL query string', () => {
+  test('inputs query object with alias should output GQL query string', () => {
     const queryObject = {
       ['country--3']: {
         id: false,
@@ -130,7 +130,7 @@ xdescribe('createQueryStr.js', () => {
     );
   });
 
-  test('inputs query object with multiple queries should output GCL query string', () => {
+  test('inputs query object with multiple queries should output GQL query string', () => {
     const queryObject = {
       ['country--1']: {
         id: false,

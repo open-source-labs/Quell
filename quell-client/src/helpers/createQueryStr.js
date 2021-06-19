@@ -5,6 +5,7 @@
 // TO-DO: add support for operation definitions input at the front ie "query" "mutation" "subscription"
 
 function createQueryStr(queryObject, operationType) {
+  if (Object.keys(queryObject).length === 0) return ''
   const openCurly = '{';
   const closeCurly = '}';
   const openParen = '(';
@@ -39,9 +40,10 @@ function createQueryStr(queryObject, operationType) {
       }
     }
 
-    if (!innerStr.includes(idStyle)) {
-      innerStr += idStyle + ' '
-    };
+    // experimental code for user-defined unique IDs
+    // if (!innerStr.includes(idStyle)) {
+    //   innerStr += idStyle + ' '
+    // };
 
     return innerStr;
   }

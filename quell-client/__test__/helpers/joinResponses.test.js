@@ -63,7 +63,7 @@ describe('joinResponses', () => {
     },
   ];
 
-  xtest('inputs two flat response objects and outputs combined object', () => {
+  test('inputs two flat response objects and outputs combined object', () => {
     const cacheResponse = {
       data: {
         ['artist--1']: {
@@ -98,7 +98,7 @@ describe('joinResponses', () => {
       });
   });
 
-  xtest('inputs two nested response objects and outputs combined object', () => {
+  test('inputs two nested response objects and outputs combined object', () => {
     const cacheResponse = {
       data: {
         ['artist--1']: {
@@ -151,7 +151,7 @@ describe('joinResponses', () => {
     });
   });
 
-  xtest('inputs a list retrieved from cache and a list retrieved from server and outputs combined List response', () => {
+  test('inputs a list retrieved from cache and a list retrieved from server and outputs combined List response', () => {
     const cacheResponse = {
       data: {
         albums: [
