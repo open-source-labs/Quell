@@ -4,7 +4,7 @@ buildFromCache - iterates through the output of parseAST (which is an object) an
 Inputs
   @prototype - object representation of a user's query after passing through parseAST
   e.g. samplePrototype = {
-      'country--1': {
+      country: {
         id: true,
         name: true,
         __alias: null,
@@ -22,66 +22,72 @@ Side effects
 ----
 */
 
-//create callback function
-// function buildPrototypeKeys(prototype, prohasRun = false) { 
-
-//   // declaring a variable called obj with empty object as value
-//   const obj = {}; 
-
-//   // declare a function called innerFunc with 1 parameter, hasRun = false
-//   function innerFunc() {
-//     // if hasRun == true then we are going to return obj
-//     if (hasRun) { return obj; }
-//     // else iterate over prototpe and toggle hasRun to true and return obj
-//     else {
-//       for (let keys in prototype) {
-//         // store every key inside of an obj
-//         obj[keys] = true;
-//       }
-//       hasRun = true;
-//       return obj;
-//     } 
-//   }
-//   return innerFunc;
-// }
-
 //wrap all of buildFromCache in outer function
 // all this outer function would do is create an object of prototype keys
 //defines an innerFunc
 //at the end of buildFromCache, we come out to the end of 
+// TO-DO: update all getItems
 function buildFromCache(prototype, prototypeKeys, itemFromCache = {}, firstRun = true) {
   
+  // can we build prototypeKeys within the application?
+  // const prototypeKeys = Object.keys(prototype)
+
   // update function to include responseFromCache
   // const buildProtoFunc = buildPrototypeKeys(prototype);
   // const prototypeKeys = buildProtoFunc();
 
+  // 
   for (let typeKey in prototype) {
     // check if typeKey is a rootQuery (i.e. if it includes '--') or if its a field nested in a query
     // end goal: delete typeKey.includes('--') and check if protoObj.includes(typeKey)
-    if (prototypeKeys.includes(typeKey)) { //To do - won't always cache, bring map back or persist -- in parsedAST function?
+    if (prototypeKeys.includes(typeKey)) {
+      const cacheID = generateCacheID(prototype[typeKey]);
+      //To do - won't always cache, bring map back or persist -- in parsedAST function?
       // if typeKey is a rootQuery, then clear the cache and set firstRun to true 
       // cached data must persist 
       // create a property on itemFromCache and set the value to the fetched response from cache
-      itemFromCache[typeKey] = JSON.parse(sessionStorage.getItem(typeKey));
+      itemFromCache[typeKey] = JSON.parse(sessionStorage.getItem(cacheID));
     }
     // if itemFromCache is an array (Array.isArray()) 
     if (Array.isArray(itemFromCache[typeKey])) {
       // iterate over countries
       itemFromCache[typeKey].forEach((currTypeKey, i) => {
+        const cacheID = generateCacheID(prototype);
         const interimCache = JSON.parse(sessionStorage.getItem(currTypeKey));
-        // console.log('prototype in forEach: ', prototype)
-        // console.log('prototype[typeKey] in forEach: ', prototype[typeKey])
-        // console.log('interimCache: ', interimCache);
+
+        console.log('currTypeKey', currTypeKey);
+        console.log('prototype in forEach: ', prototype)
+        console.log('[typeKey]: ', typeKey)
+        console.log('interimCache: ', interimCache);
 
         //iterate through iterimCache (for ... in loop)
-        for (let property in interimCache) {
+        // for (let property in interimCache) {
+
+        //   let tempObj = {};
+        //   //if current interimCache property I'm looking for is in prototype
+        //   if (prototype[typeKey].hasOwnProperty(property)) {
+        //     //then create item in itemFromCache from proto at index i
+        //     tempObj[property] = interimCache[property]
+        //     itemFromCache[typeKey][i] = tempObj;
+        //   }
+
+          
+        // }
+
+        // loop through prototype at typeKey
+        for (const property in prototype[typeKey]) {
           let tempObj = {};
-          //if current interimCache property I'm looking for is in prototype
-          if(prototype[typeKey].hasOwnProperty(property)){
-            //then create item in itemFromCache from proto at index i
+
+          // if interimCache has the property
+          if (interimCache.hasOwnProperty(property) && !property.includes('__')) {
+            // place on tempObj, set into array
             tempObj[property] = interimCache[property]
             itemFromCache[typeKey][i] = tempObj;
+          } else if (!property.includes('__')) {
+            // if interimCache does not have property, set to false on prototype so it is fetched
+            prototype[typeKey][property] = false;
           }
+
         }
       })
       // reasign itemFromCache[typeKey] to false
@@ -90,59 +96,63 @@ function buildFromCache(prototype, prototypeKeys, itemFromCache = {}, firstRun =
       // recurse through buildFromCache using typeKey, prototype
     // if itemFromCache is empty, then check the cache for data, else, persist itemFromCache
     // if this iteration is a nested query (i.e. if typeKey is a field in the query)
-    if (firstRun === false) {
+    else if (firstRun === false) {
+      // console.log('iFC', itemFromCache);
+
       // if this field is NOT in the cache, then set this field's value to false
       if (
         (itemFromCache === null || !itemFromCache.hasOwnProperty(typeKey)) && 
-        typeof prototype[typeKey] !== 'object') {
+        typeof prototype[typeKey] !== 'object' && !typeKey.includes('__')) {
           prototype[typeKey] = false; 
       } 
       // if this field is a nested query, then recurse the buildFromCache function and iterate through the nested query
       if (
         (itemFromCache === null || itemFromCache.hasOwnProperty(typeKey)) && 
         !typeKey.includes('__') && // do not iterate through __args or __alias
-        typeof prototype[typeKey] === 'object') { 
+        typeof prototype[typeKey] === 'object') {
+          const cacheID = generateCacheID(prototype);
+          // console.log('cacheID not first Run', cacheID, 'typeKey', typeKey);
+          itemFromCache[typeKey] = JSON.parse(sessionStorage.getItem(cacheID));
           // repeat function inside of the nested query
-          buildFromCache(prototype[typeKey], prototypeKeys, itemFromCache[typeKey], false);
+        buildFromCache(prototype[typeKey], prototypeKeys, itemFromCache[typeKey], false);
       } 
     }
     // if the current element is not a nested query, then iterate through every field on the typeKey
     else {
       for (let field in prototype[typeKey]) {
-        // console.log('field: ', field);
-        // console.log('itemFromCache[typeKey]: ', itemFromCache[typeKey])
+        // console.log('typeKey', typeKey, 'field: ', field);
+        // console.log('itemFromCache: ', itemFromCache)
         // if itemFromCache[typeKey] === false then break
+
         if (
           // if field is not found in cache then toggle to false
           !itemFromCache[typeKey].hasOwnProperty(field) && 
           !field.includes("__") && // ignore __alias and __args
           typeof prototype[typeKey][field] !== 'object') {
             prototype[typeKey][field] = false; 
-        } 
+        }
+        
         if ( 
           // if field contains a nested query, then recurse the function and iterate through the nested query
           !field.includes('__') && 
           typeof prototype[typeKey][field] === 'object') {
             // console.log("PRE-RECURSE prototype[typeKey][field]: ", prototype[typeKey][field]);
             // console.log("PRE-RECURSE itemFromCache: ", itemFromCache);
-            buildFromCache(prototype[typeKey][field], prototypeKeys, itemFromCache[typeKey][field], false);
+          
+          buildFromCache(prototype[typeKey][field], prototypeKeys, itemFromCache[typeKey][field], false);
           } 
       }  
     }
   }
   // assign the value of an object with a key of data and a value of itemFromCache and return
   return { data: itemFromCache }
-
-
 }
 
 // helper function to take in queryProto and generate a cacheID from it
 function generateCacheID(queryProto) {
-  let cacheID = '';
 
-  // identify ID fields
-  // should be part of parseAST if we want to support custom ID fields
-  cacheID += `${queryProto.__type}--${queryProto.__id}`;
+  // if ID field exists, set cache ID to 'fieldType--ID', otherwise just use fieldType
+  const cacheID = queryProto.__id ? `${queryProto.__type}--${queryProto.__id}` : queryProto.__type;
 
   return cacheID;
 }
