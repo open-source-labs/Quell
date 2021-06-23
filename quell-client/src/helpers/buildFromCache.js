@@ -55,10 +55,10 @@ function buildFromCache(prototype, prototypeKeys, itemFromCache = {}, firstRun =
         const cacheID = generateCacheID(prototype);
         const interimCache = JSON.parse(sessionStorage.getItem(currTypeKey));
 
-        console.log('currTypeKey', currTypeKey);
-        console.log('prototype in forEach: ', prototype)
-        console.log('[typeKey]: ', typeKey)
-        console.log('interimCache: ', interimCache);
+        // console.log('currTypeKey', currTypeKey);
+        // console.log('prototype in forEach: ', prototype)
+        // console.log('[typeKey]: ', typeKey)
+        // console.log('interimCache: ', interimCache);
 
         //iterate through iterimCache (for ... in loop)
         // for (let property in interimCache) {

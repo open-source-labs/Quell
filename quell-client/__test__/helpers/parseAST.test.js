@@ -1,7 +1,7 @@
 const parseAST = require('../../src/helpers/parseAST');
 const { parse } = require('graphql/language/parser');
 
-xdescribe('parseAST.js', () => {
+describe('parseAST.js', () => {
   test('should traverse the abstract syntax tree and create a prototype object', () => {
     // define a query string
     const query = `query {
@@ -23,7 +23,8 @@ xdescribe('parseAST.js', () => {
         capitol: true,
         __args: null,
         __alias: null,
-        __type: 'countries'
+        __type: 'countries',
+        __id: null,
       },
     });
     expect(operationType).toBe('query');
@@ -53,6 +54,7 @@ xdescribe('parseAST.js', () => {
         __type: 'countries',
         __args: null,
         __alias: null,
+        __id: null,
         id: true,
         name: true,
         capitol: true,
@@ -60,6 +62,7 @@ xdescribe('parseAST.js', () => {
           __type: 'cities',
           __args: null,
           __alias: null,
+          __id: null,
           id: true, 
           country_id: true, 
           name: true, 
@@ -85,6 +88,7 @@ xdescribe('parseAST.js', () => {
         __type: 'country',
         __args: { id: "1", name: "USA" },
         __alias: null,
+        __id: "1",
         id: true,
         name: true,
         capitol: true,
@@ -109,6 +113,7 @@ xdescribe('parseAST.js', () => {
         __type: 'country',
         __args: { id: "1" },
         __alias: 'Canada',
+        __id: "1",
         id: true,
         name: true,
         capitol: true,
@@ -137,6 +142,7 @@ xdescribe('parseAST.js', () => {
         __type: 'countries', 
         __args: null,
         __alias: null,
+        __id: null,
         id: true,
         name: true, 
         capital: true,
@@ -145,6 +151,7 @@ xdescribe('parseAST.js', () => {
         __type: 'book',
         __args: null,
         __alias: null,
+        __id: null,
         name: true,
         genre: true,
       },
@@ -177,12 +184,14 @@ xdescribe('parseAST.js', () => {
         __type: 'countries',
         __args: null,
         __alias: null,
+        __id: null,
         id: true,
         name: true,
         cities: {
           __type: 'cities',
           __args: null,
           __alias: null,
+          __id: null,
           name: true,
         }
       }, 
@@ -190,12 +199,14 @@ xdescribe('parseAST.js', () => {
         __type: 'book',
         __args: null,
         __alias: null,
+        __id: null,
         name: true,
         genre: true,
         similarBooks: {
           __type: 'similarBooks',
           __args: null,
           __alias: null,
+          __id: null,
           name: true,
         }
       },
@@ -222,12 +233,14 @@ xdescribe('parseAST.js', () => {
         __type: 'country',
         __args: { id: '1'},
         __alias: null,
+        __id: "1",
         id: true,
         name: true,
         city: {
           __type: 'city',
           __args: { id: '2'},
           __alias: null,
+          __id: "2",
           id: true,
           name: true,
         },
@@ -252,6 +265,7 @@ xdescribe('parseAST.js', () => {
         __type: 'country',
         __args: null,
         __alias: 'Canada',
+        __id: null,
         id: true,
         name: true,
       }
@@ -289,24 +303,28 @@ xdescribe('parseAST.js', () => {
         __type: 'countries',
         __args: null,
         __alias: null,
+        __id: null,
         id: true,
         name: true,
         Toronto: {
           __type: 'city',
           __args: { id: '1' },
           __alias: 'Toronto',
+          __id: "1",
           id: true,
           name: true,
           IceCream: {
             __type: 'food',
             __args: { id: '2' },
             __alias: 'IceCream',
+            __id: "2",
             id: true,
             name: true,
             nutrition: {
               __type: 'nutrition',
               __args: { id: '3' },
               __alias: null,
+              __id: "3",
               calories: true,
               protein: true,
               fat: true,
@@ -335,6 +353,7 @@ xdescribe('parseAST.js', () => {
         __args: { id: "1", name: "USA" },
         __alias: null,
         __cacheTime: "1000",
+        __id: "1",
         id: true,
         name: true,
         capitol: true,

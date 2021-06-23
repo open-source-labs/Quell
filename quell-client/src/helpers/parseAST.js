@@ -87,7 +87,9 @@ const parseAST = (AST, options = defaultOptions) => {
 
         // auxillary object for storing arguments, aliases, type-specific options, and more
         // query-wide options should be handled on Quell's options object
-        const auxObj = {};
+        const auxObj = {
+          __id: null,
+        };
 
         node.arguments.forEach(arg => {
           const key = arg.name.value;
@@ -141,7 +143,7 @@ const parseAST = (AST, options = defaultOptions) => {
 
         // TO-DO: stack and stackIDs should now be identical, deprecated
         // add value to stacks to keep track of depth-first parsing path
-        stack.push(node.name.value);
+        stack.push(fieldType);
       },
       leave() {
         // pop stacks to keep track of depth-first parsing path
@@ -162,7 +164,9 @@ const parseAST = (AST, options = defaultOptions) => {
           // loop through selections to collect fields
           const fieldsValues = {};
           for (let field of node.selections) {
-            fieldsValues[field.name.value] = true;
+            // sets any fields values to true
+            // UNLESS they are a nested object
+            if (!field.selectionSet) fieldsValues[field.name.value] = true;
           };
 
           // place fieldArgs object onto fieldsObject so it gets passed along to prototype

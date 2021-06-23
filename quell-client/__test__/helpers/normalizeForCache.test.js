@@ -3,7 +3,7 @@ const normalizeForCache = require('../../src/helpers/normalizeForCache');
 // normalizeForCache does not return any values, rather writes to the cache
 // way to mock sessionStorage like in buildFromCache tests?
 
-describe('normalizeForCache.test.js', () => {
+xdescribe('normalizeForCache.test.js', () => {
   // inputs: response data object
   // outputs: none, but values should be on session storage when done 
 
