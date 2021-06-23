@@ -408,8 +408,6 @@ class QuellCache {
     return fieldsMap;
   }
 
-  idMap { country: }
-
   getIdMap() {
     const idMap = {};
     for (const type in this.fieldsMap) {

@@ -1,5 +1,5 @@
-const QuellCache = require('../src/quell.js');
-const schema = require('./test-config/testSchema');
+const QuellCache = require('../../src/quell.js');
+const schema = require('../test-config/testSchema');
 const { parse } = require('graphql/language/parser');
 
 const redisPort = 6379;
@@ -10,7 +10,7 @@ const Quell = new QuellCache(schema, redisPort, timeout);
 // const { proto, protoArgs, operationType } Quell.parseAST();
 
 
-describe('parseAST.js', () => {
+xdescribe('parseAST.js', () => {
 
   beforeAll(() => {
     const Quell = new QuellCache(schema, redisPort, timeout);

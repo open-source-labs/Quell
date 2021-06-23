@@ -49,7 +49,7 @@ Side effects
 // all this outer function would do is create an object of prototype keys
 //defines an innerFunc
 //at the end of buildFromCache, we come out to the end of 
-function buildFromCache(cache, prototype, prototypeKeys, itemFromCache = {}, firstRun = true) {
+async function buildFromCache(cache, prototype, prototypeKeys, itemFromCache = {}, firstRun = true) {
   
   // update function to include responseFromCache
   // const buildProtoFunc = buildPrototypeKeys(prototype);
@@ -62,13 +62,16 @@ function buildFromCache(cache, prototype, prototypeKeys, itemFromCache = {}, fir
       // if typeKey is a rootQuery, then clear the cache and set firstRun to true 
       // cached data must persist 
       // create a property on itemFromCache and set the value to the fetched response from cache
-      itemFromCache[typeKey] = JSON.parse(sessionStorage.getItem(typeKey));
+      // pull from redis using get
+      const cacheResult = await cache.get(typeKey);
+      itemFromCache[typeKey] = JSON.parse(cacheResult);
     }
     // if itemFromCache is an array (Array.isArray()) 
     if (Array.isArray(itemFromCache[typeKey])) {
       // iterate over countries
       itemFromCache[typeKey].forEach((currTypeKey, i) => {
-        const interimCache = JSON.parse(sessionStorage.getItem(currTypeKey));
+        const cacheResult = await cache.get(currTypeKey);
+        const interimCache = JSON.parse(cacheResult);
         // console.log('prototype in forEach: ', prototype)
         // console.log('prototype[typeKey] in forEach: ', prototype[typeKey])
         // console.log('interimCache: ', interimCache);
@@ -77,7 +80,7 @@ function buildFromCache(cache, prototype, prototypeKeys, itemFromCache = {}, fir
         for (let property in interimCache) {
           let tempObj = {};
           //if current interimCache property I'm looking for is in prototype
-          if(prototype[typeKey].hasOwnProperty(property)){
+          if (prototype[typeKey].hasOwnProperty(property)){
             //then create item in itemFromCache from proto at index i
             tempObj[property] = interimCache[property]
             itemFromCache[typeKey][i] = tempObj;
@@ -103,7 +106,7 @@ function buildFromCache(cache, prototype, prototypeKeys, itemFromCache = {}, fir
         !typeKey.includes('__') && // do not iterate through __args or __alias
         typeof prototype[typeKey] === 'object') { 
           // repeat function inside of the nested query
-          buildFromCache(prototype[typeKey], prototypeKeys, itemFromCache[typeKey], false);
+          buildFromCache(cache, prototype[typeKey], prototypeKeys, itemFromCache[typeKey], false);
       } 
     }
     // if the current element is not a nested query, then iterate through every field on the typeKey
@@ -125,7 +128,7 @@ function buildFromCache(cache, prototype, prototypeKeys, itemFromCache = {}, fir
           typeof prototype[typeKey][field] === 'object') {
             // console.log("PRE-RECURSE prototype[typeKey][field]: ", prototype[typeKey][field]);
             // console.log("PRE-RECURSE itemFromCache: ", itemFromCache);
-            buildFromCache(prototype[typeKey][field], prototypeKeys, itemFromCache[typeKey][field], false);
+            buildFromCache(cache, prototype[typeKey][field], prototypeKeys, itemFromCache[typeKey][field], false);
           } 
       }  
     }
