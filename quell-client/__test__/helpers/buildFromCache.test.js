@@ -142,6 +142,7 @@ describe('buildFromCache.test.js', () => {
         __alias: null,
         __args: {},
         __type: 'countries',
+        __id: null,
       }
     }
     const endProto = {
@@ -151,6 +152,7 @@ describe('buildFromCache.test.js', () => {
         __alias: null,
         __args: {},
         __type: 'countries',
+        __id: null,
       },
     }
     const expectedResponseFromCache = {

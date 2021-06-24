@@ -381,6 +381,7 @@ describe('parseAST.js', () => {
 
     expect(prototype).toEqual({
       Canada: {
+        __id: null,
         __type: 'country',
         __args: null,
         __alias: 'Canada',
