@@ -135,8 +135,6 @@ async function buildFromCache(cache, prototype, prototypeKeys, itemFromCache = {
   }
   // assign the value of an object with a key of data and a value of itemFromCache and return
   return { data: itemFromCache }
-
-
 }
 
 // helper function to take in queryProto and generate a cacheID from it

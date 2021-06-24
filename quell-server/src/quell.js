@@ -5,7 +5,7 @@ const { graphql } = require('graphql');
 
 const parseAST = require('./helpers/parseAST');
 const normalizeForCache = require('./helpers/normalizeForCache');
-const buildFromCache = require('./helpers/buildFromCache');
+// const buildFromCache = require('./helpers/buildFromCache');
 const createQueryObj = require('./helpers/createQueryObj');
 const createQueryStr = require('./helpers/createQueryStr');
 const joinResponses = require('./helpers/joinResponses');
@@ -22,6 +22,8 @@ class QuellCache {
     this.redisCache = redis.createClient(redisPort);
     this.query = this.query.bind(this);
     this.clearCache = this.clearCache.bind(this);
+    this.buildFromCache = this.buildFromCache.bind(this);
+    this.generateCacheID = this.generateCacheID.bind(this);
   }
 
   /**
@@ -99,7 +101,7 @@ class QuellCache {
       // TO-DO: test that buildFromCache w/o queryMap doesn't produce changes
       // update buildFromCache to update with redis info
       const prototypeKeys = Object.keys(prototype);
-      const cacheResponse = buildFromCache(redis, prototype, prototypeKeys);
+      const cacheResponse = await buildFromCache(prototype, prototypeKeys);
       // const responseFromCache = await buildFromCache(
       //   prototype,
       //   this.queryMap,
@@ -128,6 +130,7 @@ class QuellCache {
             );
 
             // TO-DO: update this.cache to use prototype instead of protoArgs
+            normalizeForCache(mergedResponse.data, map, prototype, fieldsMap);
 
             const successfullyCached = await this.cache(
               mergedResponse,
@@ -285,7 +288,7 @@ class QuellCache {
   checkFromRedis(key) {
     return new Promise((resolve, reject) => {
       this.redisCache.exists(key, (error, result) =>
-        error ? reject(error) : resolve(result)
+      error ? reject(error) : resolve(result)
       );
     });
   }
@@ -433,76 +436,310 @@ class QuellCache {
     }
     return proto;
   }
+  // to do: remove deprecated
+  // async buildFromCacheDeprecated(proto, map, protoArgs) {
+  //   const response = {};
 
-  async buildFromCache(proto, map, protoArgs) {
-    const response = {};
+  //   for (const superField in proto) {
+  //     let identifierForRedis = superField;
 
-    for (const superField in proto) {
-      let identifierForRedis = superField;
+  //     // check if current chunk of data is collection or single item based on what we have in map
+  //     const mapValue = map[superField];
+  //     const isCollection = Array.isArray(mapValue);
 
-      // check if current chunk of data is collection or single item based on what we have in map
-      const mapValue = map[superField];
-      const isCollection = Array.isArray(mapValue);
+  //     // if we have current chunk as a collection we have to treat it as an array
 
-      // if we have current chunk as a collection we have to treat it as an array
+  //     if (isCollection) {
+  //       if (protoArgs != null && protoArgs.hasOwnProperty(superField)) {
+  //         for (const key in protoArgs[superField]) {
+  //           if (key.includes('id')) {
+  //             identifierForRedis =
+  //               identifierForRedis + '-' + protoArgs[superField][key];
+  //           }
+  //         }
+  //       }
 
-      if (isCollection) {
-        if (protoArgs != null && protoArgs.hasOwnProperty(superField)) {
-          for (const key in protoArgs[superField]) {
-            if (key.includes('id')) {
-              identifierForRedis =
-                identifierForRedis + '-' + protoArgs[superField][key];
-            }
+  //       let collection;
+  //       const currentCollection = [];
+
+  //       // try to retrieve array of references from cache
+  //       const collectionFromCache = await this.getFromRedis(identifierForRedis);
+
+  //       if (!collectionFromCache) collection = [];
+  //       else collection = JSON.parse(collectionFromCache);
+
+  //       if (collection.length === 0) {
+  //         const toggledProto = this.toggleProto(proto[superField]); // have to refactor to create deep copy instead of mutation of proto
+  //         proto[superField] = { ...toggledProto };
+  //       }
+
+  //       for (const item of collection) {
+  //         let itemFromCache = await this.getFromRedis(item);
+  //         itemFromCache = itemFromCache ? JSON.parse(itemFromCache) : {};
+  //         const builtItem = await this.buildItem(
+  //           proto[superField],
+  //           itemFromCache
+  //         );
+  //         currentCollection.push(builtItem);
+  //       }
+  //       response[superField] = currentCollection;
+  //     } else {
+  //       // we have an object
+  //       const idKey =
+  //         protoArgs[superField]['id'] || protoArgs[superField]['_id'] || null;
+  //       const item = `${map[superField]}-${idKey}`;
+
+  //       let itemFromCache = await this.getFromRedis(item);
+  //       itemFromCache = itemFromCache ? JSON.parse(itemFromCache) : {};
+  //       const builtItem = await this.buildItem(
+  //         proto[superField],
+  //         itemFromCache
+  //       );
+
+  //       response[superField] = builtItem;
+
+  //       if (Object.keys(builtItem).length === 0) {
+  //         const toggledProto = this.toggleProto(proto[superField]); // have to refactor to create deep copy instead of mutation of proto
+  //         proto[superField] = { ...toggledProto };
+  //       }
+  //     }
+  //   }
+
+  //   return response;
+  // }
+
+  // async buildFromCacheAlsoDeprecated(prototype, prototypeKeys, itemFromCache = {}, firstRun = true) {
+  
+  //   // update function to include responseFromCache
+  //   // const buildProtoFunc = buildPrototypeKeys(prototype);
+  //   // const prototypeKeys = buildProtoFunc();
+  
+  //   for (let typeKey in prototype) {
+  //     // check if typeKey is a rootQuery (i.e. if it includes '--') or if its a field nested in a query
+  //     // end goal: delete typeKey.includes('--') and check if protoObj.includes(typeKey)
+  //     if (prototypeKeys.includes(typeKey)) { //To do - won't always cache, bring map back or persist -- in parsedAST function?
+  //       // if typeKey is a rootQuery, then clear the cache and set firstRun to true 
+  //       // cached data must persist 
+  //       // create a property on itemFromCache and set the value to the fetched response from cache
+  //       // pull from redis using get
+  //       const cacheResult = this.getFromRedis(typeKey);
+  //       itemFromCache[typeKey] = JSON.parse(cacheResult);
+  //     }
+  //     // if itemFromCache is an array (Array.isArray()) 
+  //     if (Array.isArray(itemFromCache[typeKey])) {
+  //       // iterate over countries
+  //       itemFromCache[typeKey].forEach((currTypeKey, i) => {
+  //         const cacheResult = this.getFromRedis(currTypeKey);
+  //         const interimCache = JSON.parse(cacheResult);
+  //         // console.log('prototype in forEach: ', prototype)
+  //         // console.log('prototype[typeKey] in forEach: ', prototype[typeKey])
+  //         // console.log('interimCache: ', interimCache);
+  
+  //         //iterate through iterimCache (for ... in loop)
+  //         for (let property in interimCache) {
+  //           let tempObj = {};
+  //           //if current interimCache property I'm looking for is in prototype
+  //           if (prototype[typeKey].hasOwnProperty(property)){
+  //             //then create item in itemFromCache from proto at index i
+  //             tempObj[property] = interimCache[property]
+  //             itemFromCache[typeKey][i] = tempObj;
+  //           }
+  //         }
+  //       })
+  //       // reasign itemFromCache[typeKey] to false
+  //       // itemFromCache[typeKey] = false;
+  //     }
+  //       // recurse through buildFromCache using typeKey, prototype
+  //     // if itemFromCache is empty, then check the cache for data, else, persist itemFromCache
+  //     // if this iteration is a nested query (i.e. if typeKey is a field in the query)
+  //     if (firstRun === false) {
+  //       // if this field is NOT in the cache, then set this field's value to false
+  //       if (
+  //         (itemFromCache === null || !itemFromCache.hasOwnProperty(typeKey)) && 
+  //         typeof prototype[typeKey] !== 'object') {
+  //           prototype[typeKey] = false; 
+  //       } 
+  //       // if this field is a nested query, then recurse the buildFromCache function and iterate through the nested query
+  //       if (
+  //         (itemFromCache === null || itemFromCache.hasOwnProperty(typeKey)) && 
+  //         !typeKey.includes('__') && // do not iterate through __args or __alias
+  //         typeof prototype[typeKey] === 'object') { 
+  //           // repeat function inside of the nested query
+  //           this.buildFromCache(prototype[typeKey], prototypeKeys, itemFromCache[typeKey], false);
+  //       } 
+  //     }
+  //     // if the current element is not a nested query, then iterate through every field on the typeKey
+  //     else {
+  //       for (let field in prototype[typeKey]) {
+  //         // console.log('field: ', field);
+  //         // console.log('itemFromCache[typeKey]: ', itemFromCache[typeKey])
+  //         // if itemFromCache[typeKey] === false then break
+  //         if (
+  //           // if field is not found in cache then toggle to false
+  //           !itemFromCache[typeKey].hasOwnProperty(field) && 
+  //           !field.includes("__") && // ignore __alias and __args
+  //           typeof prototype[typeKey][field] !== 'object') {
+  //             prototype[typeKey][field] = false; 
+  //         } 
+  //         if ( 
+  //           // if field contains a nested query, then recurse the function and iterate through the nested query
+  //           !field.includes('__') && 
+  //           typeof prototype[typeKey][field] === 'object') {
+  //             // console.log("PRE-RECURSE prototype[typeKey][field]: ", prototype[typeKey][field]);
+  //             // console.log("PRE-RECURSE itemFromCache: ", itemFromCache);
+  //             this.buildFromCache(prototype[typeKey][field], prototypeKeys, itemFromCache[typeKey][field], false);
+  //           } 
+  //       }  
+  //     }
+  //   }
+  //   // assign the value of an object with a key of data and a value of itemFromCache and return
+  //   return { data: itemFromCache }
+  // }
+
+  async buildFromCache(prototype, prototypeKeys, itemFromCache = {}, firstRun = true) {
+  
+    // can we build prototypeKeys within the application?
+    // const prototypeKeys = Object.keys(prototype)
+  
+    // update function to include responseFromCache
+    // const buildProtoFunc = buildPrototypeKeys(prototype);
+    // const prototypeKeys = buildProtoFunc();
+  
+    // 
+    for (let typeKey in prototype) {
+      // check if typeKey is a rootQuery (i.e. if it includes '--') or if its a field nested in a query
+      // end goal: delete typeKey.includes('--') and check if protoObj.includes(typeKey)
+      if (prototypeKeys.includes(typeKey)) {
+        const cacheID = this.generateCacheID(prototype[typeKey]);
+        //To do - won't always cache, bring map back or persist -- in parsedAST function?
+        // if typeKey is a rootQuery, then clear the cache and set firstRun to true 
+        // cached data must persist 
+        // create a property on itemFromCache and set the value to the fetched response from cache
+        const isExist = await this.checkFromRedis(cacheID);
+        if (isExist) {
+          const cacheResponse = await this.getFromRedis(cacheID);
+          // console.log(`cacheResponse is ${cacheResponse}`);
+          itemFromCache[typeKey] = JSON.parse(cacheResponse);
+          console.log(`itemFromCache[typeKey] is`, itemFromCache[typeKey]);
+          console.log(`keys saved to itemFromCache are ${Object.keys(itemFromCache)}`);
+          // console.log(`itemFromCache: ${itemFromCache}`);
+        }
+      }
+      // if itemFromCache is an array (Array.isArray()) 
+      if (Array.isArray(itemFromCache[typeKey])) {
+        // iterate over countries
+        itemFromCache[typeKey].forEach(async (currTypeKey, i) => {
+          // TO-DO: decide between redisKey vs generateCacheId
+          console.log(`currTypeKey is ${currTypeKey} and typeof is ${typeof currTypeKey}`);
+          // TO-DO: error handling in the getFromRedis test
+          const cacheResponse = await this.getFromRedis(currTypeKey);
+          // const isExist = await this.getFromRedis(currTypeKey);
+          console.log(`cacheResponse is ${cacheResponse} for ${currTypeKey}`);
+          if (cacheResponse) {
+            const cacheID = this.generateCacheID(prototype);
+            const interimCache = JSON.parse(cacheResponse);
+            console.log(`interimCache's keys are ${Object.keys(interimCache)}`);
+            console.log(`cacheResponse is ${cacheResponse}`);
+
+          // loop through prototype at typeKey
+          for (const property in prototype[typeKey]) {
+            let tempObj = {};
+            console.log(property, Object.keys(interimCache));
+            // if interimCache has the property
+            if (interimCache.hasOwnProperty(property) && !property.includes('__')) {
+              console.log(`interimCache[property] is ${interimCache[property]} for ${property}`);
+              // place on tempObj, set into array
+              tempObj[property] = interimCache[property]
+              itemFromCache[typeKey][i] = tempObj;
+            } else if (!property.includes('__')) {
+              // if interimCache does not have property, set to false on prototype so it is fetched
+              prototype[typeKey][property] = false;
+            } 
+            
+          }
+        }
+        // if there is nothign in the cache for this key, then toggle all fields to false
+        // TO-DO make sure this works for nested objects
+        else {
+          for (const property in prototype[typeKey]) {
+            // if interimCache has the property
+            if (!property.includes('__')) {
+              // if interimCache does not have property, set to false on prototype so it is fetched
+              prototype[typeKey][property] = false;
+            } 
           }
         }
 
-        let collection;
-        const currentCollection = [];
-
-        // try to retrieve array of references from cache
-        const collectionFromCache = await this.getFromRedis(identifierForRedis);
-
-        if (!collectionFromCache) collection = [];
-        else collection = JSON.parse(collectionFromCache);
-
-        if (collection.length === 0) {
-          const toggledProto = this.toggleProto(proto[superField]); // have to refactor to create deep copy instead of mutation of proto
-          proto[superField] = { ...toggledProto };
-        }
-
-        for (const item of collection) {
-          let itemFromCache = await this.getFromRedis(item);
-          itemFromCache = itemFromCache ? JSON.parse(itemFromCache) : {};
-          const builtItem = await this.buildItem(
-            proto[superField],
-            itemFromCache
-          );
-          currentCollection.push(builtItem);
-        }
-        response[superField] = currentCollection;
-      } else {
-        // we have an object
-        const idKey =
-          protoArgs[superField]['id'] || protoArgs[superField]['_id'] || null;
-        const item = `${map[superField]}-${idKey}`;
-
-        let itemFromCache = await this.getFromRedis(item);
-        itemFromCache = itemFromCache ? JSON.parse(itemFromCache) : {};
-        const builtItem = await this.buildItem(
-          proto[superField],
-          itemFromCache
-        );
-
-        response[superField] = builtItem;
-
-        if (Object.keys(builtItem).length === 0) {
-          const toggledProto = this.toggleProto(proto[superField]); // have to refactor to create deep copy instead of mutation of proto
-          proto[superField] = { ...toggledProto };
-        }
+        })
+        // reasign itemFromCache[typeKey] to false
+        // itemFromCache[typeKey] = false;
+      }
+        // recurse through buildFromCache using typeKey, prototype
+      // if itemFromCache is empty, then check the cache for data, else, persist itemFromCache
+      // if this iteration is a nested query (i.e. if typeKey is a field in the query)
+      else if (firstRun === false) {
+        // console.log('iFC', itemFromCache);
+  
+        // if this field is NOT in the cache, then set this field's value to false
+        if (
+          (itemFromCache === null || !itemFromCache.hasOwnProperty(typeKey)) && 
+          typeof prototype[typeKey] !== 'object' && !typeKey.includes('__')) {
+            prototype[typeKey] = false; 
+        } 
+        // if this field is a nested query, then recurse the buildFromCache function and iterate through the nested query
+        if (
+          (itemFromCache === null || itemFromCache.hasOwnProperty(typeKey)) && 
+          !typeKey.includes('__') && // do not iterate through __args or __alias
+          typeof prototype[typeKey] === 'object') {
+            const cacheID = this.generateCacheID(prototype);
+            // console.log('cacheID not first Run', cacheID, 'typeKey', typeKey);
+            const cacheResponse = this.getFromRedis(currTypeKey);
+            itemFromCache[typeKey] = JSON.parse(cacheResponse);
+            // repeat function inside of the nested query
+          this.buildFromCache(prototype[typeKey], prototypeKeys, itemFromCache[typeKey], false);
+        } 
+      }
+      // if the current element is not a nested query, then iterate through every field on the typeKey
+      else {
+        for (let field in prototype[typeKey]) {
+          // console.log('typeKey', typeKey, 'field: ', field);
+          // console.log('itemFromCache: ', itemFromCache)
+          // if itemFromCache[typeKey] === false then break
+  
+          if (
+            // if field is not found in cache then toggle to false
+            itemFromCache[typeKey] &&
+            !itemFromCache[typeKey].hasOwnProperty(field) && 
+            !field.includes("__") && // ignore __alias and __args
+            typeof prototype[typeKey][field] !== 'object') {
+              // console.log(`itemFromCache[typeKey] is ${itemFromCache[typeKey]}`);
+              console.log(`field is ${field} and typeof itemFromCache[typeKey] is ${typeof itemFromCache[typeKey]}`);
+              prototype[typeKey][field] = false; 
+          }
+          
+          if ( 
+            // if field contains a nested query, then recurse the function and iterate through the nested query
+            !field.includes('__') && 
+            typeof prototype[typeKey][field] === 'object') {
+              // console.log("PRE-RECURSE prototype[typeKey][field]: ", prototype[typeKey][field]);
+              // console.log("PRE-RECURSE itemFromCache: ", itemFromCache);
+            
+            this.buildFromCache(prototype[typeKey][field], prototypeKeys, itemFromCache[typeKey][field], false);
+            } 
+        }  
       }
     }
-
-    return response;
+    // assign the value of an object with a key of data and a value of itemFromCache and return
+    return { data: itemFromCache }
+  }
+  
+  // helper function to take in queryProto and generate a cacheID from it
+  generateCacheID(queryProto) {
+  
+    // if ID field exists, set cache ID to 'fieldType--ID', otherwise just use fieldType
+    const cacheID = queryProto.__id ? `${queryProto.__type}--${queryProto.__id}` : queryProto.__type;
+  
+    return cacheID;
   }
 
   /**
@@ -747,7 +984,7 @@ class QuellCache {
   }
 
   /**
-   * writeToCache writes a value to the cache unless the key indicates that the item is uncacheable.
+   * writeToCache writes a value to the cache unless the key indicates that the item is uncacheable. Note: writeToCache will JSON.stringify the input item
    * writeTochache will set expiration time for each item written to cache
    * @param {String} key - unique id under which the cached data will be stored
    * @param {Object} item - item to be cached
@@ -792,6 +1029,7 @@ class QuellCache {
 
   // can recurse through responseObject and prototype at same time because same keys
   // currently doesn't recurse through cache, limits to bottom two levels
+  // TO-DO replace cache with normalizeForCache and introduce it as a method on this object (so that it can have access to redisCache)
   async cache(responseObject, prototype) {
     const collection = JSON.parse(JSON.stringify(responseObject));
 
@@ -867,9 +1105,77 @@ class QuellCache {
         this.writeToCache(cacheId, joinedWithCache);
       }
     }
-
     return true;
   }
+
+  async normalizeForCache(responseData, map, protoField, fieldsMap) {
+    // iterate over keys in our response data object 
+    for (const resultName in responseData) {
+      // currentField we are iterating over
+      const currField = responseData[resultName];
+      // check if the value stored at that key is array 
+      if (Array.isArray(currField)) {
+        // RIGHT NOW: countries: [{}, {}]
+        // GOAL: countries: ["Country--1", "Country--2"]
+  
+        // create empty array to store refs
+        // ie countries: ["country--1", "country--2"]
+        const refList = [];
+  
+        // iterate over countries array
+        currField.forEach(el => {
+          // el1 = {id: 1, name: Andorra}, el2 =  {id: 2, name: Bolivia}
+          // for each object
+          // "resultName" is key on "map" for our Data Type
+          const dataType = map[resultName];
+  
+          // grab ID from object we are iterating over
+          let fieldID = dataType;
+          for (const key in el) {
+            // if key is an ID, append to fieldID for caching
+            if (key === 'id' || key === '_id' || key === 'ID' || key === 'Id') {
+              fieldID += `--${el[key]}`;
+              // push fieldID onto refList
+              refList.push(fieldID);
+            }
+          }
+  
+          // if object, recurse to add all nested values of el to cache as individual entries
+          if (typeof el === 'object') {
+            normalizeForCache({ [dataType]: el }, map,  { [dataType]: protoField[resultName][fieldID]});
+          }
+        })
+  
+        await this.writeToCache(resultName, JSON.stringify(refList));
+      }
+      else if (typeof currField === 'object') {
+        // temporary store for field properties
+        const fieldStore = {};
+        
+        // if object has id, generate fieldID 
+        let fieldID = resultName;
+  
+        // iterate over keys in object
+        // "id, name, cities"
+        for (const key in currField) {
+          // if ID, create fieldID
+          if (key === 'id' || key === '_id' || key === 'ID' || key === 'Id') {
+            fieldID += `--${currField[key]}`;
+          }
+          fieldStore[key] = currField[key];
+  
+          // if object, recurse normalizeForCache assign in that object
+          // must also pass in protoFields object to pair arguments, aliases with response
+          if (typeof currField[key] === 'object') {
+            normalizeForCache({ [key]: currField[key] }, map, { [key]: protoField[resultName][key]});
+          }
+        }
+        // store "current object" on cache in JSON format
+        await this.writeToCache(fieldID, JSON.stringify(fieldStore));
+      }
+    }
+  }
+  
 
   /**
    * clearCache flushes the Redis cache. To clear the cache from the client, establish an endpoint that

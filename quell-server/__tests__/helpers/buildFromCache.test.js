@@ -1,21 +1,35 @@
 const QuellCache = require('../../src/quell.js');
-const schema = require('../test-config/testSchema');
+const schema = require('../../test-config/testSchema');
 
 const redisPort = 6379;
-const timeout = 100;
+// const timeout = 100;
 
-describe('buildFromCache.test.js', () => {
+describe('server test for buildFromCache', () => {
   // inputs: prototype object (which contains args), collection (defaults to an empty array)
   // outputs: protoype object with fields that were not found in the cache set to false 
+  const Quell = new QuellCache(schema, redisPort);
   beforeAll(() => {
-    const Quell = new QuellCache(schema, redisPort, timeout);
-    Quell.writeToCache('country--1', JSON.stringify({id: "1", capitol: {id: "2", name: "DC"}}));
-    Quell.writeToCache('country--2', JSON.stringify({id: "2"})); 
-    Quell.writeToCache('country--3', JSON.stringify({id: "3"}));
-    // sessionStorage.setItem('countries', JSON.stringify(['country--1', 'country--2', 'country--3']));
+    const promise1 = new Promise((resolve, reject) => {
+      resolve(Quell.writeToCache('country--1', {id: "1", capitol: {id: "2", name: "DC"}}));
+    });
+    const promise2 = new Promise((resolve, reject) => {
+      resolve(Quell.writeToCache('country--2', {id: "2"}));
+    }); 
+    const promise3 = new Promise((resolve, reject) => {
+      resolve(Quell.writeToCache('country--3', {id: "3"}));
+    });
+    const promise4 = new Promise((resolve, reject) => {
+      resolve(Quell.writeToCache('countries', ['country--1', 'country--2', 'country--3']));
+    });
+    return Promise.all([promise1, promise2, promise3, promise4]);
   })
 
-  test('Basic query', () => {
+  afterAll((done) => {
+    Quell.redisCache.quit(() => console.log('closing redis server'));
+    done();
+  });
+
+  xtest('Basic query', async () => {
     const testProto = {
       country: {
         id: true,
@@ -23,6 +37,7 @@ describe('buildFromCache.test.js', () => {
         __alias: null,
         __args: { id: '3' },
         __type: 'country',
+        __id: '3',
         }
       };
     const endProto = {
@@ -32,6 +47,7 @@ describe('buildFromCache.test.js', () => {
         __alias: null,
         __args: { id: '3' },
         __type: 'country',
+        __id: '3',
         }
       };
     const expectedResponseFromCache = {
@@ -42,13 +58,13 @@ describe('buildFromCache.test.js', () => {
       }
     }
     const prototypeKeys = Object.keys(testProto); 
-    const responseFromCache = buildFromCache(testRedis, testProto, prototypeKeys);
+    const responseFromCache = await Quell.buildFromCache(testProto, prototypeKeys);
     // we expect prototype after running through buildFromCache to have id has stayed true but every other field has been toggled to false (if not found in sessionStorage)
     expect(testProto).toEqual(endProto);
     expect(responseFromCache).toEqual(expectedResponseFromCache);
   });
 
-  xtest('Multiple nested queries that include args and aliases', () => {
+  xtest('Multiple nested queries that include args and aliases', async () => {
     const testProto = {
       Canada: {
         id: true,
@@ -56,6 +72,7 @@ describe('buildFromCache.test.js', () => {
         __alias: 'Canada',
         __args: { id: '1' },
         __type: 'country',
+        __id: '1',
         capitol: {
           id: true,
           name: true,
@@ -63,6 +80,7 @@ describe('buildFromCache.test.js', () => {
           __alias: null,
           __args: {},
           __type: 'capitol',
+          __id: null,
         }
       },
       Mexico: {
@@ -71,11 +89,13 @@ describe('buildFromCache.test.js', () => {
         __alias: 'Mexico',
         __args: { id: '2' },
         __type: 'country',
+        __id: '2',
         climate: {
           seasons: true,
           __alias: null,
           __args: {},
           __type: 'climate',
+          __id: null
         }
       }
     }
@@ -86,6 +106,7 @@ describe('buildFromCache.test.js', () => {
         __alias: 'Canada',
         __args: { id: '1' },
         __type: 'country',
+        __id: '1',
         capitol: {
           id: true,
           name: true,
@@ -93,6 +114,7 @@ describe('buildFromCache.test.js', () => {
           __alias: null,
           __args: {},
           __type: 'capitol',
+          __id: null
         }
       },
       Mexico: {
@@ -101,10 +123,13 @@ describe('buildFromCache.test.js', () => {
         __alias: 'Mexico',
         __args: { id: '2' },
         __type: 'country',
+        __id: '2',
         climate: {
           seasons: false,
           __alias: null,
-          __args: {}
+          __args: {},
+          __type: 'climate',
+          __id: null,
         }
       }
     }
@@ -123,12 +148,12 @@ describe('buildFromCache.test.js', () => {
       }
     };
     const prototypeKeys = Object.keys(testProto); 
-    const responseFromCache = buildFromCache(testProto, prototypeKeys);
+    const responseFromCache = await Quell.buildFromCache(testProto, prototypeKeys);
     expect(testProto).toEqual(endProto);
     expect(responseFromCache).toEqual(expectedResponseFromCache);
   });
 
-  test('Countries test', () => {
+  test('Handles array', async () => {
     const testProto = {
       countries: {
         id: true,
@@ -163,8 +188,11 @@ describe('buildFromCache.test.js', () => {
       }
     };
     const prototypeKeys = Object.keys(testProto); 
-    const responseFromCache = buildFromCache(testProto, prototypeKeys);
+    const responseFromCache = await Quell.buildFromCache(testProto, prototypeKeys);
     expect(testProto).toEqual(endProto);
     expect(responseFromCache).toEqual(expectedResponseFromCache);
   });
+
+  // TO-DO
+  xtest('Handles deeply nested queries', () => { });
 });
