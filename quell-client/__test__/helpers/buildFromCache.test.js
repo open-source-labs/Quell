@@ -8,7 +8,7 @@ describe('buildFromCache.test.js', () => {
     sessionStorage.setItem('country--2', JSON.stringify({id: "2"})); 
     sessionStorage.setItem('country--3', JSON.stringify({id: "3"}));
     sessionStorage.setItem('countries', JSON.stringify(['country--1', 'country--2', 'country--3']));
-  })
+  });
 
   test('Basic query', () => {
     const testProto = {

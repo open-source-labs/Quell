@@ -2,7 +2,7 @@ const createQueryObj = require('../../src/helpers/createQueryObj');
 
 describe('createQueryObj.js', () => {
   test('inputs prototype w/ all true should output empty object', () => {
-    const map = {
+    const prototype = {
       countries: {
         __alias: null,
         __args: {},
@@ -22,7 +22,7 @@ describe('createQueryObj.js', () => {
       },
     };
 
-    expect(createQueryObj(map)).toEqual({});
+    expect(createQueryObj(prototype)).toEqual({});
   });
 
   test('inputs prototype w/ only false scalar types should output same object', () => {

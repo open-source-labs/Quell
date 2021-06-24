@@ -60,26 +60,15 @@ function buildFromCache(prototype, prototypeKeys, itemFromCache = {}, firstRun =
         // console.log('[typeKey]: ', typeKey)
         // console.log('interimCache: ', interimCache);
 
-        //iterate through iterimCache (for ... in loop)
-        // for (let property in interimCache) {
-
-        //   let tempObj = {};
-        //   //if current interimCache property I'm looking for is in prototype
-        //   if (prototype[typeKey].hasOwnProperty(property)) {
-        //     //then create item in itemFromCache from proto at index i
-        //     tempObj[property] = interimCache[property]
-        //     itemFromCache[typeKey][i] = tempObj;
-        //   }
-
-          
-        // }
-
         // loop through prototype at typeKey
         for (const property in prototype[typeKey]) {
           let tempObj = {};
 
           // if interimCache has the property
-          if (interimCache.hasOwnProperty(property) && !property.includes('__')) {
+          if (
+            interimCache.hasOwnProperty(property)
+            && !property.includes('__')
+          ) {
             // place on tempObj, set into array
             tempObj[property] = interimCache[property]
             itemFromCache[typeKey][i] = tempObj;

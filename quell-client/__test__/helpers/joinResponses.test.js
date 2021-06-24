@@ -3,10 +3,18 @@ const joinResponses = require('../../src/helpers/joinResponses');
 describe('joinResponses', () => {
   const protoObj = {
     artists: {
+      __id: null,
+      __args: null,
+      __alias: null,
+      __type: 'artists',
       id: true,
       name: true,
       instrument: true,
       albums: {
+        __id: null,
+        __args: null,
+        __alias: null,
+        __type: 'albums',
         album_id: true,
         id: true,
         name: true,
@@ -83,7 +91,8 @@ describe('joinResponses', () => {
 
     const proto = {
       artist: {
-        __args: { id: 1 },
+        __id: '1',
+        __args: { id: '1' },
         __alias: null,
         __type: 'artist',
         id: true,
