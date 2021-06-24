@@ -6,6 +6,9 @@ const normalizeForCache = require('../../src/helpers/normalizeForCache');
 describe('normalizeForCache.test.js', () => {
   // inputs: response data object
   // outputs: none, but values should be on session storage when done 
+  beforeEach(() => {
+    sessionStorage.clear();
+  })
 
   test('Basic response, with no arrays or nested objects', () => {
     const objBasic = {
@@ -15,8 +18,19 @@ describe('normalizeForCache.test.js', () => {
       }
     };
 
+    const protoObj = {
+      country: {
+        "id": true,
+        "name": true,
+        __id: '2',
+        __args: null,
+        __alias: null,
+        __type: 'country',
+      }
+    };
+
     // normalize object & set on cache
-    normalizeForCache(objBasic);
+    normalizeForCache(objBasic, {}, protoObj);
     // make sure object is on cache
     expect(sessionStorage.getItem('country--2')).toEqual(
       "{\"id\":2,\"name\":\"Bolivia\"}"
@@ -39,9 +53,18 @@ describe('normalizeForCache.test.js', () => {
       country: {
         id: true,
         name: true,
-        __alias: null,
+        __id: '2',
         __args: null,
-        city: { id: true, name: true, __alias: null, __args: null }
+        __alias: null,
+        __type: 'country',
+        city: {
+          id: true,
+          name: true,
+          __id: '1',
+          __args: null,
+          __alias: null,
+          __type: 'city',
+        }
       }
     }
     
@@ -87,33 +110,45 @@ describe('normalizeForCache.test.js', () => {
       country: {
         id: true,
         name: true,
-        __alias: null,
+        __id: '1',
         __args: null,
+        __alias: null,
+        __type: 'country',
         state: {
           id: true,
           name: true,
-          __alias: null,
+          __id: '2',
           __args: null,
+          __alias: null,
+          __type: 'state',
           county: {
             id: true,
             name: true,
-            __alias: null,
+            __id: '3',
             __args: null,
+            __alias: null,
+            __type: 'county',
             city: {
               id: true,
               name: true,
-              __alias: null,
+              __id: '4',
               __args: null,
+              __alias: null,
+              __type: 'city',
               mayor: {
                 id: true,
                 name: true,
-                __alias: null,
+                __id: '5',
                 __args: null,
+                __alias: null,
+                __type: 'mayor',
                 hobby: {
                   id: true,
                   name: true,
+                  __id: '6',
+                  __args: null,
                   __alias: null,
-                  __args: null
+                  __type: 'hobby',
                 }
               }
             }
@@ -217,7 +252,28 @@ describe('normalizeForCache.test.js', () => {
       }
     };
 
-    normalizeForCache(multipleRes);
+    const protoObj = {
+      country: {
+        id: true,
+        name: true,
+        cuisine: true,
+        __id: '3',
+        __args: null,
+        __alias: null,
+        __type: 'country',
+      },
+      book: {
+        __id: '10',
+        __args: null,
+        __alias: null,
+        __type: 'book',
+        id: true,
+        title: true,
+        author: true
+      }
+    }
+
+    normalizeForCache(multipleRes, {}, protoObj);
 
     expect(sessionStorage.getItem('country--3')).toEqual(
       JSON.stringify({
@@ -253,8 +309,10 @@ describe('normalizeForCache.test.js', () => {
       countries: {
         id: true,
         name: true,
+        __id: null,
+        __args: null,
         __alias: null,
-        __args: null
+        __type: 'countries',
       }
     };
     
@@ -282,6 +340,38 @@ describe('normalizeForCache.test.js', () => {
   });
 
   test('a response with alias values can go to the cache', () => {
+    const responseObj = {
+        USA: {
+          id: '1',
+          name: 'United States of America',
+          location: 'Northern Hemisphere'
+        },
+    };
 
-  });
+    const prototype = {
+      USA: {
+        id: true,
+        name: true,
+        location: true,
+        __alias: 'USA',
+        __args: null,
+        __id: '1',
+        __type: 'country',
+      }
+    };
+
+    const map = {
+      countries: 'country',
+    };
+
+    normalizeForCache(responseObj, map, prototype);
+
+    expect(sessionStorage.getItem('country--1')).toEqual(
+      JSON.stringify({
+        "id": '1',
+        "name": "United States of America",
+        "location": "Northern Hemisphere"
+      })
+    );
+  })
 });
