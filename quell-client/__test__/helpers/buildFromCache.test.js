@@ -8,7 +8,7 @@ describe('buildFromCache.test.js', () => {
     sessionStorage.setItem('country--2', JSON.stringify({id: "2"})); 
     sessionStorage.setItem('country--3', JSON.stringify({id: "3"}));
     sessionStorage.setItem('countries', JSON.stringify(['country--1', 'country--2', 'country--3']));
-  })
+  });
 
   test('Basic query', () => {
     const testProto = {
@@ -18,6 +18,7 @@ describe('buildFromCache.test.js', () => {
         __alias: null,
         __args: { id: '3' },
         __type: 'country',
+        __id: '3',
         }
       };
     const endProto = {
@@ -27,6 +28,7 @@ describe('buildFromCache.test.js', () => {
         __alias: null,
         __args: { id: '3' },
         __type: 'country',
+        __id: '3',
         }
       };
     const expectedResponseFromCache = {
@@ -51,6 +53,7 @@ describe('buildFromCache.test.js', () => {
         __alias: 'Canada',
         __args: { id: '1' },
         __type: 'country',
+        __id: '1',
         capitol: {
           id: true,
           name: true,
@@ -58,6 +61,7 @@ describe('buildFromCache.test.js', () => {
           __alias: null,
           __args: {},
           __type: 'capitol',
+          __id: null,
         }
       },
       Mexico: {
@@ -66,11 +70,13 @@ describe('buildFromCache.test.js', () => {
         __alias: 'Mexico',
         __args: { id: '2' },
         __type: 'country',
+        __id: '2',
         climate: {
           seasons: true,
           __alias: null,
           __args: {},
           __type: 'climate',
+          __id: null
         }
       }
     }
@@ -81,6 +87,7 @@ describe('buildFromCache.test.js', () => {
         __alias: 'Canada',
         __args: { id: '1' },
         __type: 'country',
+        __id: '1',
         capitol: {
           id: true,
           name: true,
@@ -88,6 +95,7 @@ describe('buildFromCache.test.js', () => {
           __alias: null,
           __args: {},
           __type: 'capitol',
+          __id: null
         }
       },
       Mexico: {
@@ -96,10 +104,13 @@ describe('buildFromCache.test.js', () => {
         __alias: 'Mexico',
         __args: { id: '2' },
         __type: 'country',
+        __id: '2',
         climate: {
           seasons: false,
           __alias: null,
-          __args: {}
+          __args: {},
+          __type: 'climate',
+          __id: null,
         }
       }
     }
@@ -123,7 +134,7 @@ describe('buildFromCache.test.js', () => {
     expect(responseFromCache).toEqual(expectedResponseFromCache);
   });
 
-  test('Countries test', () => {
+  test('Handles array', () => {
     const testProto = {
       countries: {
         id: true,
@@ -131,6 +142,7 @@ describe('buildFromCache.test.js', () => {
         __alias: null,
         __args: {},
         __type: 'countries',
+        __id: null,
       }
     }
     const endProto = {
@@ -140,6 +152,7 @@ describe('buildFromCache.test.js', () => {
         __alias: null,
         __args: {},
         __type: 'countries',
+        __id: null,
       },
     }
     const expectedResponseFromCache = {
@@ -162,4 +175,7 @@ describe('buildFromCache.test.js', () => {
     expect(testProto).toEqual(endProto);
     expect(responseFromCache).toEqual(expectedResponseFromCache);
   });
+
+  // TO-DO
+  xtest('Handles deeply nested queries', () => { });
 });

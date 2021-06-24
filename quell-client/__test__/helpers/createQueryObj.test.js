@@ -2,8 +2,9 @@ const createQueryObj = require('../../src/helpers/createQueryObj');
 
 describe('createQueryObj.js', () => {
   test('inputs prototype w/ all true should output empty object', () => {
-    const map = {
+    const prototype = {
       countries: {
+        __id: null,
         __alias: null,
         __args: {},
         __type: 'countries',
@@ -11,6 +12,7 @@ describe('createQueryObj.js', () => {
         name: true,
         capitol: true,
         cities: {
+          __id: null,
           __alias: null,
           __args: {},
           __type: 'cities',
@@ -22,12 +24,13 @@ describe('createQueryObj.js', () => {
       },
     };
 
-    expect(createQueryObj(map)).toEqual({});
+    expect(createQueryObj(prototype)).toEqual({});
   });
 
   test('inputs prototype w/ only false scalar types should output same object', () => {
     const map = {
       countries: {
+        __id: null,
         __alias: null,
         __args: {},
         __type: 'countries',
@@ -39,6 +42,7 @@ describe('createQueryObj.js', () => {
 
     expect(createQueryObj(map)).toEqual({
       countries: {
+        __id: null,
         __alias: null,
         __args: {},
         __type: 'countries',
@@ -52,6 +56,7 @@ describe('createQueryObj.js', () => {
   test('inputs prototype w/ false for only scalar types should output object for scalar types only', () => {
     const map = {
       countries: {
+        __id: null,
         __alias: null,
         __args: {},
         __type: 'countries',
@@ -59,6 +64,7 @@ describe('createQueryObj.js', () => {
         name: false,
         capitol: false,
         cities: {
+          __id: null,
           __alias: null,
           __args: {},
           __type: 'cities',
@@ -72,6 +78,7 @@ describe('createQueryObj.js', () => {
 
     expect(createQueryObj(map)).toEqual({
       countries: {
+        __id: null,
         __alias: null,
         __args: {},
         __type: 'countries',
@@ -85,6 +92,7 @@ describe('createQueryObj.js', () => {
   test('inputs prototype w/ false for only object types should output object for object types only', () => {
     const map = {
       countries: {
+        __id: null,
         __alias: null,
         __args: {},
         __type: 'countries',
@@ -92,6 +100,7 @@ describe('createQueryObj.js', () => {
         name: true,
         capital: true,
         cities: {
+          __id: null,
           __alias: null,
           __args: {},
           __type: 'cities',
@@ -105,10 +114,12 @@ describe('createQueryObj.js', () => {
 
     expect(createQueryObj(map)).toEqual({
       countries: {
+        __id: null,
         __alias: null,
         __args: {},
         __type: 'countries',
         cities: {
+          __id: null,
           __alias: null,
           __args: {},
           __type: 'cities',
@@ -124,6 +135,7 @@ describe('createQueryObj.js', () => {
   test('inputs prototype w/ true/false for both scalar & object types and outputs object for all false', () => {
     const map = {
       countries: {
+        __id: null,
         __alias: null,
         __args: {},
         __type: 'countries',
@@ -131,6 +143,7 @@ describe('createQueryObj.js', () => {
         name: false,
         capital: false,
         cities: {
+          __id: null,
           __alias: null,
           __args: {},
           __type: 'cities',
@@ -144,12 +157,14 @@ describe('createQueryObj.js', () => {
 
     expect(createQueryObj(map)).toEqual({
       countries: {
+        __id: null,
         __alias: null,
         __args: {},
         __type: 'countries',
         name: false,
         capital: false,
         cities: {
+          __id: null,
           __alias: null,
           __args: {},
           __type: 'cities',
@@ -163,29 +178,31 @@ describe('createQueryObj.js', () => {
   test('inputs prototype with multiple queries', () => {
     const map = {
       Canada: {
+        __id: '1',
         __alias: 'Canada',
         __args: { id: '1' },
         __type: 'country',
         id: true,
         name: false,
         capitol: {
+          __id: null,
           __alias: null,
           __args: {},
           __type: 'capitol',
           id: false,
           name: true,
           population: false,
-          __alias: null,
-          __args: {}
         }
       },
       Mexico: {
+        __id: '2',
         __alias: 'Mexico',
         __args: { id: '2' },
         __type: 'country',
         id: true,
         name: false,
         climate: {
+          __id: null,
           __alias: null,
           __args: {},
           __type: 'climate',
@@ -196,6 +213,7 @@ describe('createQueryObj.js', () => {
 
     expect(createQueryObj(map)).toEqual({
       Canada: {
+        __id: '1',
         __type: 'country',
         name: false,
         __alias: 'Canada',
@@ -206,6 +224,7 @@ describe('createQueryObj.js', () => {
           __alias: null,
           __args: {},
           __type: 'capitol',
+          __id: null,
         }
       },
       Mexico: {
@@ -213,6 +232,7 @@ describe('createQueryObj.js', () => {
         __alias: 'Mexico',
         __args: { id: '2' },
         __type: 'country',
+        __id: '2',
       }
     });
   })

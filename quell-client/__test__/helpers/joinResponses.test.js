@@ -3,10 +3,18 @@ const joinResponses = require('../../src/helpers/joinResponses');
 describe('joinResponses', () => {
   const protoObj = {
     artists: {
+      __id: null,
+      __args: null,
+      __alias: null,
+      __type: 'artists',
       id: true,
       name: true,
       instrument: true,
       albums: {
+        __id: null,
+        __args: null,
+        __alias: null,
+        __type: 'albums',
         album_id: true,
         id: true,
         name: true,
@@ -83,7 +91,8 @@ describe('joinResponses', () => {
 
     const proto = {
       artist: {
-        __args: { id: 1 },
+        __id: '1',
+        __args: { id: '1' },
         __alias: null,
         __type: 'artist',
         id: true,
@@ -129,14 +138,16 @@ describe('joinResponses', () => {
 
     const prototype = {
       artist: {
-        __args: { id: 1 },
+        __id: '1',
+        __args: { id: '1' },
         __alias: null,
         __type: 'artist',
         id: true,
         name: false,
         instrument: true,
         album: {
-          __args: { id: 2 },
+          __id: '2',
+          __args: { id: '2' },
           __alias: null,
           __type: 'album',
           id: true,
@@ -191,6 +202,7 @@ describe('joinResponses', () => {
     
     const prototype = {
       albums: {
+        __id: null,
         __args: null,
         __alias: null,
         __type: 'albums',
@@ -236,6 +248,7 @@ describe('joinResponses', () => {
     
     const prototype = {
       albums: {
+        __id: null,
         __args: null,
         __alias: null,
         __type: 'albums',
@@ -344,4 +357,6 @@ describe('joinResponses', () => {
       },
     });
   });
+
+  // TO-DO: test for alias compatibility (should be fine- server & bFC both create objects with alias as keys)
 });

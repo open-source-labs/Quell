@@ -12,6 +12,7 @@ describe('createQueryStr.js', () => {
   test('inputs query object w/ only scalar types and outputs GQL query string', () => {
     const queryObject = {
       countries: {
+        __id: null,
         __alias: null,
         __args: {},
         __type: 'countries',
@@ -29,10 +30,12 @@ describe('createQueryStr.js', () => {
   test('inputs query object w/ only nested objects and outputs GQL query string', () => {
     const queryObject = {
       countries: {
+        __id: null,
         __type: 'countries',
         __alias: null,
         __args: {},
         cities: {
+          __id: null,
           __type: 'cities',
           __alias: null,
           __args: {},
@@ -52,6 +55,7 @@ describe('createQueryStr.js', () => {
   test('inputs query object w/ both scalar & object types and outputs GQL query string', () => {
     const queryObject = {
       countries: {
+        __id: null,
         __type: 'countries',
         __alias: null,
         __args: {},
@@ -59,6 +63,7 @@ describe('createQueryStr.js', () => {
         name: false,
         capitol: false,
         cities: {
+          __id: null,
           __type: 'cities',
           __alias: null,
           __args: {},
@@ -77,13 +82,15 @@ describe('createQueryStr.js', () => {
   test('inputs query object w/ an argument & w/ both scalar & object types should output GQL query string', () => {
     const queryObject = {
       country: {
+        __id: '1',
         __type: 'country',
         __alias: null,
-        __args: { id: 1 },
+        __args: { id: '1' },
         id: false,
         name: false,
         capitol: false,
         cities: {
+          __id: null,
           __type: 'cities',
           __alias: null,
           __args: {},
@@ -103,6 +110,7 @@ describe('createQueryStr.js', () => {
   test('inputs query object w/ multiple arguments & w/ both scalar & object types should output GQL query string', () => {
     const queryObject = {
       country: {
+        __id: null,
         __type: 'country',
         __alias: null,
         __args: {
@@ -113,6 +121,7 @@ describe('createQueryStr.js', () => {
         name: false,
         capital: false,
         cities: {
+          __id: null,
           __type: 'cities',
           __alias: null,
           __args: {},
@@ -132,11 +141,13 @@ describe('createQueryStr.js', () => {
   test('inputs query object with alias should output GQL query string', () => {
     const queryObject = {
       Canada: {
+        __id: '3',
         __type: 'country',
-        __args: {id: 3},
+        __args: {id: '3'},
         __alias: "Canada",
         id: false,
         cities: {
+          __id: null,
           __type: 'cities',
           __args: {},
           __alias: null,
@@ -176,12 +187,14 @@ describe('createQueryStr.js', () => {
   test('inputs query object with multiple queries should output GQL query string', () => {
     const queryObject = {
       country: {
+        __id: '1',
         __type: 'country',
-        __args: { id: 1},
+        __args: { id: '1' },
         __alias: null,
         id: false,
         name: false,
         cities: {
+          __id: null,
           __type: 'cities',
           __args: {},
           __alias: null,
@@ -190,12 +203,14 @@ describe('createQueryStr.js', () => {
         },
       },
       book: {
+        __id: '2',
         __type: 'book',
-        __args: { id: 2},
+        __args: { id: '2' },
         __alias: null,
         id: false,
         title: false,
         author: {
+          __id: null,
           __type: 'author',
           id: false,
           name: false,
@@ -217,36 +232,43 @@ describe('createQueryStr.js', () => {
         __type: 'countries',
         __alias: null,
         __args: {},
+        __id: null,
         cities: {
           id: true,
           __type: 'cities',
           __alias: null,
           __args: {},
+          __id: null,
           attractions: {
             id: true,
             __type: 'attractions',
             __alias: null,
             __args: {},
+            __id: null,
             location: {
               id: true,
               __type: 'location',
               __alias: null,
               __args: {},
+              __id: null,
               latitude: {
                 id: true,
                 __type: 'latitude',
                 __alias: null,
                 __args: {},
+                __id: null,
                 here: {
                   id: true,
                   __type: 'here',
                   __alias: null,
                   __args: {},
+                  __id: null,
                   not: {
                     id: true,
                     __type: 'not',
                     __alias: null,
-                    __args: {}
+                    __args: {},
+                    __id: null,
                   }
                 }
               }
