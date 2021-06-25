@@ -3,12 +3,10 @@ const { parse } = require('graphql/language/parser');
 const { visit, BREAK } = require('graphql/language/visitor');
 const { graphql } = require('graphql');
 
-const parseAST = require('./helpers/parseAST');
-const normalizeForCache = require('./helpers/normalizeForCache');
-// const buildFromCache = require('./helpers/buildFromCache');
-const createQueryObj = require('./helpers/createQueryObj');
-const createQueryStr = require('./helpers/createQueryStr');
-const joinResponses = require('./helpers/joinResponses');
+// const normalizeForCache = require('./helpers/normalizeForCache');
+// const createQueryObj = require('./helpers/createQueryObj');
+// const createQueryStr = require('./helpers/createQueryStr');
+// const joinResponses = require('./helpers/joinResponses');
 
 class QuellCache {
   constructor(schema, redisPort, cacheExpiration = 1000) {
@@ -41,6 +39,7 @@ class QuellCache {
    */
   async query(req, res, next) {
     console.log('reached the server');
+    console.log('req.body is ', req.body);
     // handle request without query
     if (!req.body.query) {
       return next('Error: no GraphQL query found on request body');
@@ -50,9 +49,12 @@ class QuellCache {
 
     // create abstract syntax tree with graphql-js parser
     const AST = parse(queryString);
+    console.log('AST is ', AST);
 
     // create response prototype, referenses for arguments and operation type
-    const { prototype, operationType } = parseAST(AST);
+    const { prototype, operationType } = this.parseAST(AST);
+    console.log('prototype ', prototype);
+    console.log('operation type is ', operationType);
 
     // not a deep protype copy
     // TO-DO: why do we need a deep copy
@@ -101,7 +103,10 @@ class QuellCache {
       // TO-DO: test that buildFromCache w/o queryMap doesn't produce changes
       // update buildFromCache to update with redis info
       const prototypeKeys = Object.keys(prototype);
-      const cacheResponse = await buildFromCache(prototype, prototypeKeys);
+      console.log('prototype keys', prototypeKeys);
+      const cacheResponse = await this.buildFromCache(prototype, prototypeKeys);
+      console.log('cache resonse is ', cacheResponse);
+      console.log('prototype after buildfrom cache', prototype);
       // const responseFromCache = await buildFromCache(
       //   prototype,
       //   this.queryMap,
@@ -111,37 +116,46 @@ class QuellCache {
       let mergedResponse, databaseResponse;
 
       // create query object to check if we have to get something from database
-      const queryObject = createQueryObj(prototype);
+      const queryObject = this.createQueryObj(prototype);
+      console.log('queryObject is ', queryObject);
 
       // if cached response is incomplete, reformulate query, handoff query, join responses, and cache joined responses
       if (Object.keys(queryObject).length > 0) {
         // create new query sting
-        const newQueryString = createQueryStr(queryObject);
+        const newQueryString = this.createQueryStr(queryObject);
+        console.log('newQuery string ', newQueryString);
 
         graphql(this.schema, newQueryString)
-          .then(async (queryResponse) => {
-            databaseResponse = queryResponse.data;
-
+          .then(async (databaseResponse) => {
+            // databaseResponse = queryResponse.data;
+            console.log('databaseResponse from graphql is ', databaseResponse);
+            // const obj = Object.assign({}, databaseResponse);
+            // console.log('after', obj);
+            // To-DO remove this console log
+            for (let prop in databaseResponse.data.countries) {
+              console.log('merged reponse after joinResponses', databaseResponse.data.countries[prop]);
+            }
             // join uncached and cached responses, prototype is used as a "template" for final mergedResponse
-            mergedResponse = joinResponses(
-              cacheResponse,
-              databaseResponse,
+            mergedResponse = this.joinResponses(
+              cacheResponse.data,
+              databaseResponse.data,
               prototype
             );
-
             // TO-DO: update this.cache to use prototype instead of protoArgs
-            normalizeForCache(mergedResponse.data, map, prototype, fieldsMap);
-
-            const successfullyCached = await this.cache(
-              mergedResponse,
-              prototype
-            );
-            // TO-DO: what to do if not successfully cached?
-            // we want to still send response to the client
-            // do we care that cache calls are asynchronous, is it worth pausing the client response?
-
+            // TO-DO check if await is needed here
+            // this.normalizeForCache(mergedResponse.data, map, prototype);
+            
+            // const successfullyCached = await this.cache(
+              //   mergedResponse,
+              //   prototype
+              // );
+              // TO-DO: what to do if not successfully cached?
+              // we want to still send response to the client
+              // do we care that cache calls are asynchronous, is it worth pausing the client response?
+              
 
             res.locals.queryResponse = { data: mergedResponse };
+            console.log('data to be sent back to client ', res.locals.queryResponse);
             return next();
           })
           .catch((error) => {
@@ -154,6 +168,190 @@ class QuellCache {
       }
     }
   }
+  
+  parseAST (AST, options = {userDefinedID: null}) {
+    // initialize prototype as empty object
+    // information from AST is distilled into the prototype for easy access during caching, rebuilding query strings, etc.
+    const prototype = {};
+  
+    let operationType = '';
+  
+    // initialize stack to keep track of depth first parsing path
+    const stack = [];
+  
+    // tracks depth of selection Set
+    let selectionSetDepth = 0;
+  
+    // tracks arguments, aliases, etc. for specific fields
+    // eventually merged with prototype object
+    const fieldArgs = {};
+  
+    // extract options
+    const userDefinedID = options.__userDefinedID;
+  
+    /**
+     * visit is a utility provided in the graphql-JS library. It performs a
+     * depth-first traversal of the abstract syntax tree, invoking a callback
+     * when each SelectionSet node is entered. That function builds the prototype.
+     * Invokes a callback when entering and leaving Field node to keep track of nodes with stack
+     *
+     * Find documentation at:
+     * https://graphql.org/graphql-js/language/#visit
+     */
+    visit(AST, {
+      enter(node) {
+        //TO-DO: cannot cache directives, return as unquellable until support
+        if (node.directives) {
+          if (node.directives.length > 0) {
+            operationType = 'unQuellable';
+            return BREAK;
+          }
+        }
+      },
+      FragmentDefinition(node) {
+        // storing fragment info
+      },
+      OperationDefinition(node) {
+        //TO-DO: cannot cache subscriptions or mutations, return as unquellable
+        operationType = node.operation;
+        if (node.operation === 'subscription' || node.operation === 'mutation') {
+          operationType = 'unQuellable';
+          return BREAK;
+        }
+      },
+      Field: {
+        // enter the node to construct a unique fieldType for critical fields
+        enter(node) {
+          // populates argsObj from current node's arguments
+          // generates uniqueID from arguments
+          const argsObj = {};
+  
+          // TO-DO: document viable options
+          // NOTE: type-specific options are still experimental, not integrated through Quell's lifecycle
+          // non-viable options should not break system but /shouldn't change app behavior/
+  
+          // auxillary object for storing arguments, aliases, type-specific options, and more
+          // query-wide options should be handled on Quell's options object
+          const auxObj = {
+            __id: null,
+          };
+  
+          node.arguments.forEach(arg => {
+            const key = arg.name.value;
+            // TO-DO: cannot currently handle variables in query
+            if (arg.value.kind === 'Variable' && operationType === 'query') {
+              operationType = 'unQuellable';
+              return BREAK;
+            }
+            // assign args to argsObj, skipping type-specific options ('__')
+            if (!key.includes('__')) {
+              argsObj[key] = arg.value.value;
+            };
+  
+            // identify uniqueID from args, options
+            // note: does not use key.includes('id') to avoid automatically assigning fields such as "idea" or "idiom"
+            if (userDefinedID ? key === userDefinedID : false) {
+              // assigns ID as userDefinedID if one is supplied on options object
+              auxObj.__id = arg.value.value;
+            } else if (key === 'id' || key === '_id' || key === 'ID' || key === 'Id') {
+              // assigns ID automatically from args
+              auxObj.__id = arg.value.value;
+            }
+  
+            // handle custom options passed in as arguments (ie customCache)
+            // TO-DO: comment out before production build if we have not thoroughly tested type-specific options for app stability and safety
+            if (key.includes('__')) {
+              auxObj[key] = arg.value.value;
+            }
+          });
+  
+          // specifies whether field is stored as fieldType or Alias Name
+          const fieldType = node.alias ? node.alias.value : node.name.value;
+  
+          // stores node Field Type on aux object, 
+          auxObj.__type = node.name.value;
+  
+          // TO-DO: clean up __alias, should be deprecated
+          // stores alias for Field on auxillary object
+          auxObj.__alias = node.alias ? node.alias.value : null;
+  
+          // if argsObj has no values, set as null, then set on auxObj
+          auxObj.__args = Object.keys(argsObj).length > 0 ? argsObj : null;
+  
+          // if 
+  
+          // adds auxObj fields to prototype, allowing future access to type, alias, args, etc.
+          fieldArgs[fieldType] = {
+            ...fieldArgs[fieldType],
+            ...auxObj
+          };
+  
+          // TO-DO: stack and stackIDs should now be identical, deprecated
+          // add value to stacks to keep track of depth-first parsing path
+          stack.push(fieldType);
+        },
+        leave() {
+          // pop stacks to keep track of depth-first parsing path
+          stack.pop();
+        },
+      },
+      SelectionSet: {
+        // selection sets contain all of the sub-fields
+        // iterate through the sub-fields to construct fieldsObject
+        enter(node, key, parent, path, ancestors) {
+          selectionSetDepth++;
+  
+        /* Exclude SelectionSet nodes whose parents' are not of the kind
+         * 'Field' to exclude nodes that do not contain information about
+         *  queried fields.
+         */
+          if (parent.kind === 'Field') {
+            // loop through selections to collect fields
+            const fieldsValues = {};
+            for (let field of node.selections) {
+              // sets any fields values to true
+              // UNLESS they are a nested object
+              if (!field.selectionSet) fieldsValues[field.name.value] = true;
+            };
+  
+            // place fieldArgs object onto fieldsObject so it gets passed along to prototype
+            // fieldArgs contains arguments, aliases, etc.
+            const fieldsObject = { ...fieldsValues, ...fieldArgs[stack[stack.length - 1]] };
+  
+            /* For nested objects, we must prevent duplicate entries for nested queries with arguments (ie "city" and "city--3")
+            * We go into the prototype and delete the duplicate entry
+            */
+            if (selectionSetDepth > 2) {
+              let miniProto = prototype;
+              // loop through stack to access layers of prototype object
+              for (let i = 0; i < stack.length; i++) {
+                // access layers of prototype object
+                miniProto = miniProto[stack[i]]
+                if (i === stack.length - 2) {
+                  // when final index, delete
+                  delete miniProto[stack[i + 1]];
+                }
+              }
+            }
+            
+            // loop through stack to get correct path in proto for temp object;
+            // mutates original prototype object WITH values from tempObject
+            // "prev" is accumulator ie the prototype
+            stack.reduce((prev, curr, index) => {
+              return index + 1 === stack.length // if last item in path
+                ? (prev[curr] = {...fieldsObject}) //set value
+                : (prev[curr] = prev[curr]); // otherwise, if index exists, keep value
+            }, prototype);
+          }
+        },
+        leave() {
+          // tracking depth of selection set
+          selectionSetDepth--;
+        },
+      },
+    });
+    return { prototype, operationType };
+  };
 
   // TO-DO: update mutations
   /**
@@ -436,165 +634,6 @@ class QuellCache {
     }
     return proto;
   }
-  // to do: remove deprecated
-  // async buildFromCacheDeprecated(proto, map, protoArgs) {
-  //   const response = {};
-
-  //   for (const superField in proto) {
-  //     let identifierForRedis = superField;
-
-  //     // check if current chunk of data is collection or single item based on what we have in map
-  //     const mapValue = map[superField];
-  //     const isCollection = Array.isArray(mapValue);
-
-  //     // if we have current chunk as a collection we have to treat it as an array
-
-  //     if (isCollection) {
-  //       if (protoArgs != null && protoArgs.hasOwnProperty(superField)) {
-  //         for (const key in protoArgs[superField]) {
-  //           if (key.includes('id')) {
-  //             identifierForRedis =
-  //               identifierForRedis + '-' + protoArgs[superField][key];
-  //           }
-  //         }
-  //       }
-
-  //       let collection;
-  //       const currentCollection = [];
-
-  //       // try to retrieve array of references from cache
-  //       const collectionFromCache = await this.getFromRedis(identifierForRedis);
-
-  //       if (!collectionFromCache) collection = [];
-  //       else collection = JSON.parse(collectionFromCache);
-
-  //       if (collection.length === 0) {
-  //         const toggledProto = this.toggleProto(proto[superField]); // have to refactor to create deep copy instead of mutation of proto
-  //         proto[superField] = { ...toggledProto };
-  //       }
-
-  //       for (const item of collection) {
-  //         let itemFromCache = await this.getFromRedis(item);
-  //         itemFromCache = itemFromCache ? JSON.parse(itemFromCache) : {};
-  //         const builtItem = await this.buildItem(
-  //           proto[superField],
-  //           itemFromCache
-  //         );
-  //         currentCollection.push(builtItem);
-  //       }
-  //       response[superField] = currentCollection;
-  //     } else {
-  //       // we have an object
-  //       const idKey =
-  //         protoArgs[superField]['id'] || protoArgs[superField]['_id'] || null;
-  //       const item = `${map[superField]}-${idKey}`;
-
-  //       let itemFromCache = await this.getFromRedis(item);
-  //       itemFromCache = itemFromCache ? JSON.parse(itemFromCache) : {};
-  //       const builtItem = await this.buildItem(
-  //         proto[superField],
-  //         itemFromCache
-  //       );
-
-  //       response[superField] = builtItem;
-
-  //       if (Object.keys(builtItem).length === 0) {
-  //         const toggledProto = this.toggleProto(proto[superField]); // have to refactor to create deep copy instead of mutation of proto
-  //         proto[superField] = { ...toggledProto };
-  //       }
-  //     }
-  //   }
-
-  //   return response;
-  // }
-
-  // async buildFromCacheAlsoDeprecated(prototype, prototypeKeys, itemFromCache = {}, firstRun = true) {
-  
-  //   // update function to include responseFromCache
-  //   // const buildProtoFunc = buildPrototypeKeys(prototype);
-  //   // const prototypeKeys = buildProtoFunc();
-  
-  //   for (let typeKey in prototype) {
-  //     // check if typeKey is a rootQuery (i.e. if it includes '--') or if its a field nested in a query
-  //     // end goal: delete typeKey.includes('--') and check if protoObj.includes(typeKey)
-  //     if (prototypeKeys.includes(typeKey)) { //To do - won't always cache, bring map back or persist -- in parsedAST function?
-  //       // if typeKey is a rootQuery, then clear the cache and set firstRun to true 
-  //       // cached data must persist 
-  //       // create a property on itemFromCache and set the value to the fetched response from cache
-  //       // pull from redis using get
-  //       const cacheResult = this.getFromRedis(typeKey);
-  //       itemFromCache[typeKey] = JSON.parse(cacheResult);
-  //     }
-  //     // if itemFromCache is an array (Array.isArray()) 
-  //     if (Array.isArray(itemFromCache[typeKey])) {
-  //       // iterate over countries
-  //       itemFromCache[typeKey].forEach((currTypeKey, i) => {
-  //         const cacheResult = this.getFromRedis(currTypeKey);
-  //         const interimCache = JSON.parse(cacheResult);
-  //         // console.log('prototype in forEach: ', prototype)
-  //         // console.log('prototype[typeKey] in forEach: ', prototype[typeKey])
-  //         // console.log('interimCache: ', interimCache);
-  
-  //         //iterate through iterimCache (for ... in loop)
-  //         for (let property in interimCache) {
-  //           let tempObj = {};
-  //           //if current interimCache property I'm looking for is in prototype
-  //           if (prototype[typeKey].hasOwnProperty(property)){
-  //             //then create item in itemFromCache from proto at index i
-  //             tempObj[property] = interimCache[property]
-  //             itemFromCache[typeKey][i] = tempObj;
-  //           }
-  //         }
-  //       })
-  //       // reasign itemFromCache[typeKey] to false
-  //       // itemFromCache[typeKey] = false;
-  //     }
-  //       // recurse through buildFromCache using typeKey, prototype
-  //     // if itemFromCache is empty, then check the cache for data, else, persist itemFromCache
-  //     // if this iteration is a nested query (i.e. if typeKey is a field in the query)
-  //     if (firstRun === false) {
-  //       // if this field is NOT in the cache, then set this field's value to false
-  //       if (
-  //         (itemFromCache === null || !itemFromCache.hasOwnProperty(typeKey)) && 
-  //         typeof prototype[typeKey] !== 'object') {
-  //           prototype[typeKey] = false; 
-  //       } 
-  //       // if this field is a nested query, then recurse the buildFromCache function and iterate through the nested query
-  //       if (
-  //         (itemFromCache === null || itemFromCache.hasOwnProperty(typeKey)) && 
-  //         !typeKey.includes('__') && // do not iterate through __args or __alias
-  //         typeof prototype[typeKey] === 'object') { 
-  //           // repeat function inside of the nested query
-  //           this.buildFromCache(prototype[typeKey], prototypeKeys, itemFromCache[typeKey], false);
-  //       } 
-  //     }
-  //     // if the current element is not a nested query, then iterate through every field on the typeKey
-  //     else {
-  //       for (let field in prototype[typeKey]) {
-  //         // console.log('field: ', field);
-  //         // console.log('itemFromCache[typeKey]: ', itemFromCache[typeKey])
-  //         // if itemFromCache[typeKey] === false then break
-  //         if (
-  //           // if field is not found in cache then toggle to false
-  //           !itemFromCache[typeKey].hasOwnProperty(field) && 
-  //           !field.includes("__") && // ignore __alias and __args
-  //           typeof prototype[typeKey][field] !== 'object') {
-  //             prototype[typeKey][field] = false; 
-  //         } 
-  //         if ( 
-  //           // if field contains a nested query, then recurse the function and iterate through the nested query
-  //           !field.includes('__') && 
-  //           typeof prototype[typeKey][field] === 'object') {
-  //             // console.log("PRE-RECURSE prototype[typeKey][field]: ", prototype[typeKey][field]);
-  //             // console.log("PRE-RECURSE itemFromCache: ", itemFromCache);
-  //             this.buildFromCache(prototype[typeKey][field], prototypeKeys, itemFromCache[typeKey][field], false);
-  //           } 
-  //       }  
-  //     }
-  //   }
-  //   // assign the value of an object with a key of data and a value of itemFromCache and return
-  //   return { data: itemFromCache }
-  // }
 
   async buildFromCache(prototype, prototypeKeys, itemFromCache = {}, firstRun = true) {
   
@@ -605,7 +644,7 @@ class QuellCache {
     // const buildProtoFunc = buildPrototypeKeys(prototype);
     // const prototypeKeys = buildProtoFunc();
   
-    // 
+    console.log(`the input prototype has keys of ${Object.keys(prototype)}`);
     for (let typeKey in prototype) {
       // check if typeKey is a rootQuery (i.e. if it includes '--') or if its a field nested in a query
       // end goal: delete typeKey.includes('--') and check if protoObj.includes(typeKey)
@@ -615,9 +654,10 @@ class QuellCache {
         // if typeKey is a rootQuery, then clear the cache and set firstRun to true 
         // cached data must persist 
         // create a property on itemFromCache and set the value to the fetched response from cache
-        const isExist = await this.checkFromRedis(cacheID);
-        if (isExist) {
-          const cacheResponse = await this.getFromRedis(cacheID);
+        const cacheResponse = await this.getFromRedis(cacheID);
+        console.log('cacheresponse inside of buildfrom cache', cacheResponse);
+        // const isExist = await this.checkFromRedis(cacheID);
+        if (cacheResponse) {
           // console.log(`cacheResponse is ${cacheResponse}`);
           itemFromCache[typeKey] = JSON.parse(cacheResponse);
           console.log(`itemFromCache[typeKey] is`, itemFromCache[typeKey]);
@@ -628,49 +668,40 @@ class QuellCache {
       // if itemFromCache is an array (Array.isArray()) 
       if (Array.isArray(itemFromCache[typeKey])) {
         // iterate over countries
-        itemFromCache[typeKey].forEach(async (currTypeKey, i) => {
-          // TO-DO: decide between redisKey vs generateCacheId
-          console.log(`currTypeKey is ${currTypeKey} and typeof is ${typeof currTypeKey}`);
+        for (let i = 0; i < itemFromCache[typeKey].length; i++) {
+          const currTypeKey = itemFromCache[typeKey][i];
           // TO-DO: error handling in the getFromRedis test
           const cacheResponse = await this.getFromRedis(currTypeKey);
-          // const isExist = await this.getFromRedis(currTypeKey);
-          console.log(`cacheResponse is ${cacheResponse} for ${currTypeKey}`);
           if (cacheResponse) {
-            const cacheID = this.generateCacheID(prototype);
             const interimCache = JSON.parse(cacheResponse);
-            console.log(`interimCache's keys are ${Object.keys(interimCache)}`);
-            console.log(`cacheResponse is ${cacheResponse}`);
-
-          // loop through prototype at typeKey
-          for (const property in prototype[typeKey]) {
-            let tempObj = {};
-            console.log(property, Object.keys(interimCache));
-            // if interimCache has the property
-            if (interimCache.hasOwnProperty(property) && !property.includes('__')) {
-              console.log(`interimCache[property] is ${interimCache[property]} for ${property}`);
-              // place on tempObj, set into array
-              tempObj[property] = interimCache[property]
-              itemFromCache[typeKey][i] = tempObj;
-            } else if (!property.includes('__')) {
-              // if interimCache does not have property, set to false on prototype so it is fetched
-              prototype[typeKey][property] = false;
-            } 
-            
-          }
+            // loop through prototype at typeKey
+            for (const property in prototype[typeKey]) {
+              let tempObj = {};
+              // if interimCache has the property
+              if (interimCache.hasOwnProperty(property) && !property.includes('__')) {
+                // place on tempObj, set into array
+                tempObj[property] = interimCache[property]
+                itemFromCache[typeKey][i] = tempObj;
+              } else if (!property.includes('__') && typeof interimCache[property] !== 'object') {
+                // if interimCache does not have property, set to false on prototype so it is fetched
+                prototype[typeKey][property] = false;
+              }
+            }
         }
-        // if there is nothign in the cache for this key, then toggle all fields to false
+        // if there is nothing in the cache for this key, then toggle all fields to false
         // TO-DO make sure this works for nested objects
         else {
+          console.log(`nothing in the cache for property ${typeKey}`);
           for (const property in prototype[typeKey]) {
             // if interimCache has the property
-            if (!property.includes('__')) {
+            if (!property.includes('__') && typeof prototype[typeKey][property] !== 'object') {
               // if interimCache does not have property, set to false on prototype so it is fetched
               prototype[typeKey][property] = false;
             } 
           }
         }
 
-        })
+        }
         // reasign itemFromCache[typeKey] to false
         // itemFromCache[typeKey] = false;
       }
@@ -705,7 +736,8 @@ class QuellCache {
           // console.log('typeKey', typeKey, 'field: ', field);
           // console.log('itemFromCache: ', itemFromCache)
           // if itemFromCache[typeKey] === false then break
-  
+          // TO-DO find the issue with queries from the demo client
+          console.log('item from cache inside the buildfrom cache ', itemFromCache[typeKey]);
           if (
             // if field is not found in cache then toggle to false
             itemFromCache[typeKey] &&
@@ -723,9 +755,18 @@ class QuellCache {
             typeof prototype[typeKey][field] === 'object') {
               // console.log("PRE-RECURSE prototype[typeKey][field]: ", prototype[typeKey][field]);
               // console.log("PRE-RECURSE itemFromCache: ", itemFromCache);
-            
+            console.log(`prototype[typeKey][field] is ${prototype[typeKey][field]}`); 
+            console.log(`prototypeKeys are ${prototypeKeys}`);
+            console.log(`itemFromCache's keys are ${Object.keys(itemFromCache)}`);
+            console.log(`itemFromCache[typeKey] is ${itemFromCache[typeKey]}`);
+            console.log(`itemFromCache at the property ${typeKey} has keys ${Object.keys(itemFromCache[typeKey])}`);
             this.buildFromCache(prototype[typeKey][field], prototypeKeys, itemFromCache[typeKey][field], false);
-            } 
+            }
+          // if there are no data in itemFromCache
+          else if (!itemFromCache[typeKey] && !field.includes('__') && typeof prototype[typeKey][field] !== 'object') {
+            // then toggle to false
+            prototype[typeKey][field] = false;
+          }
         }  
       }
     }
@@ -741,6 +782,131 @@ class QuellCache {
   
     return cacheID;
   }
+
+  /**
+ createQueryObj takes in a map of field(keys) and true/false(values) creating an query object containing the fields (false) missing from cache. 
+ This will then be converted into a GQL query string in the next step.
+ */
+
+  createQueryObj(map) {
+    const output = {};
+    // iterate over every key in map
+    // send fields object to reducer to filter out trues
+    // place all false categories on output object
+    for (let key in map) {
+      const reduced = reducer(map[key]);
+      // greater than args & alias
+      if (Object.keys(reduced).length > 0) {
+        output[key] = reduced;
+      }
+    }
+
+    // filter fields object to contain only values needed from server
+    function reducer(fields) {
+      // filter stores values needed from server
+      const filter = {};
+      // propsFilter for properties such as args, aliases, etc.
+      const propsFilter = {};
+
+      for (let key in fields) {
+        // if value is false, place directly on filter
+        if (fields[key] === false) {
+          // add key & value to filter
+          filter[key] = false;
+        }
+
+        // if value is an object, recurse to determine nested values
+        if (typeof fields[key] === 'object' && !key.includes('__')) {
+          // check keys of object to see if those values are false via recursion
+          const reduced = reducer(fields[key]);
+          // if reduced object has any values to pass, place on filter
+          if (Object.keys(reduced).length > 0) {
+            filter[key] = reduced;
+          }
+        }
+
+        // if reserved property such as args or alias, place on propsFilter
+        if (key.includes('__')) {
+          propsFilter[key] = fields[key];
+        }
+      }
+
+      // if the filter has any values to pass, return filter & propsFilter, otherwise return empty object
+      return Object.keys(filter).length > 0
+        ? { ...filter, ...propsFilter }
+        : {};
+    }
+
+    return output;
+  }
+
+  /**
+ createQueryStr converts the query object into a formal GQL query string.
+ */
+
+// inputting a comment here to test git commits
+createQueryStr(queryObject, operationType) {
+  if (Object.keys(queryObject).length === 0) return ''
+  const openCurly = '{';
+  const closeCurly = '}';
+  const openParen = '(';
+  const closeParen = ')';
+
+  let mainStr = '';
+
+  // iterate over every key in queryObject
+  // place key into query object
+  for (let key in queryObject) {
+    mainStr += ` ${key}${getAliasType(queryObject[key])}${getArgs(queryObject[key])} ${openCurly} ${stringify(queryObject[key])}${closeCurly}`;
+  }
+
+  // recurse to build nested query strings
+  // ignore all __values (ie __alias and __args)
+  function stringify(fields) {
+    // initialize inner string
+    let innerStr = '';
+    // iterate over KEYS in OBJECT
+    for (const key in fields) {
+      // is fields[key] string? concat with inner string & empty space
+      if (typeof fields[key] === "boolean") {
+        innerStr += key + ' ';
+      }
+      // is key object? && !key.includes('__'), recurse stringify
+      if (typeof fields[key] === 'object' && !key.includes('__')) {
+        innerStr += `${key}${getAliasType(fields[key])}${getArgs(
+          fields[key])} ${openCurly} ${stringify(
+            fields[key])}${closeCurly} `;
+      }
+    }
+
+    return innerStr;
+  }
+
+  // iterates through arguments object for current field and creates arg string to attach to query string
+  function getArgs(fields) {
+    let argString = '';
+    if (!fields.__args) return '';
+
+    Object.keys(fields.__args).forEach((key) => {
+      argString
+        ? (argString += `, ${key}: ${fields.__args[key]}`)
+        : (argString += `${key}: ${fields.__args[key]}`);
+    });
+
+    // return arg string in parentheses, or if no arguments, return an empty string
+    return argString ? `${openParen}${argString}${closeParen}` : '';
+  }
+
+  // if Alias exists, formats alias for query string
+  function getAliasType(fields) {
+    return fields.__alias ? `: ${fields.__type}` : '';
+  };
+
+  // create final query string
+  const queryStr = openCurly + mainStr + ' ' + closeCurly;
+  // if operation type supplied, place in front of queryString, otherwise just pass queryStr
+  return operationType ? operationType + ' ' + queryStr : queryStr;
+};
 
   /**
    * buildCollection
@@ -799,100 +965,97 @@ class QuellCache {
     return nodeObject;
   }
 
-  // /**
-  //  * createQueryObj traverses the prototype, removing fields that were retrieved from cache. The resulting object
-  //  * will be passed to createQueryStr to construct a query requesting only the data not found in cache.
-  //  * @param {Object} proto - the prototype with fields that still need to be queried toggled to false
-  //  */
-  // createQueryObj(proto) {
-  //   const queryObj = {};
-  //   for (const key in proto) {
-  //     const reduced = this.protoReducer(proto[key]);
-  //     if (reduced.length > 0) queryObj[key] = reduced;
-  //   }
-  //   return queryObj;
-  // }
-
-  // /**
-  //  * protoReducer is a helper function (recusively) called from within createQueryObj, allowing introspection of
-  //  * nested prototype fields.
-  //  * @param {Object} proto - prototype
-  //  */
-  // protoReducer(proto) {
-  //   const fields = [];
-  //   for (const key in proto) {
-  //     if (proto[key] === false) fields.push(key);
-  //     if (typeof proto[key] === 'object') {
-  //       const nestedObj = {};
-  //       const reduced = this.protoReducer(proto[key]);
-  //       if (reduced.length > 0) {
-  //         nestedObj[key] = reduced;
-  //         fields.push(nestedObj);
-  //       }
-  //     }
-  //   }
-  //   return fields;
-  // }
 
   /**
-   * createQueryStr converts the query object constructed in createQueryObj into a properly-formed GraphQL query,
-   * requesting just those fields not found in cache.
-   * @param {Object} queryObject - object representing queried fields not found in cache
-   */
-  createQueryStr(queryObject, queryArgsObject) {
-    const openCurl = " { ";
-    const closedCurl = " } ";
-    let queryString = "";
-    for (const key in queryObject) {
-      if (queryArgsObject && queryArgsObject[key]) {
-        let argString = '';
+ joinResponses combines two objects containing results from the cached response and fetched (uncached) and outputs a single array response 
+ that will ultimately be formatted and delivered to the client. 
+ the copied Proto parameter sets a reference to combine the fields in the same order as the original query.
+ */
 
-        const openBrackets = ' (';
-        const closeBrackets = ' )';
-        argString += openBrackets;
-        for (const item in queryArgsObject[key]) {
-          argString += item + ': ' + queryArgsObject[key][item];
-        }
-        argString += closeBrackets;
-        queryString +=
-          key +
-          argString +
-          openCurl +
-          this.queryStringify(queryObject[key]) +
-          closedCurl;
+// TO-DO: this could maybe be optimized by separating out some of the logic into a helper function we recurse upon
+joinResponses(cacheResponse, serverResponse, queryProto, fromArray = false) {
+  // initialize a "merged response" to be returned
+  let mergedResponse = {};
+
+  // loop through fields object keys, the "source of truth" for structure
+  // store combined responses in mergedResponse
+
+  // first loop for different queries on response
+  for (const key in queryProto) {
+
+    // TO-DO: caching for arrays is likely imperfect, needs more edge-case testing
+    // for each key, check whether data stored at that key is an array or an object
+    if (Array.isArray(cacheResponse[key]) || Array.isArray(serverResponse[key]) ) {
+      // merging data stored as array
+      // remove reserved properties from queryProto so we can compare # of properties on prototype to # of properties on responses
+      const filterKeys = Object.keys(queryProto[key]).filter(propKey => !propKey.includes('__'));
+
+      // if # of keys is the same between prototype & cached response, then the objects on the array represent different things
+      if (filterKeys.length === Math.max(Object.keys(cacheResponse[key][0]).length, Object.keys(serverResponse[key][0]).length)) {
+        //if the objects are "different", each object represents unique instance, we can concat
+        mergedResponse[key] = [...cacheResponse[key], ...serverResponse[key]];
       } else {
-        queryString +=
-          key + openCurl + this.queryStringify(queryObject[key]) + closedCurl;
+        // if # of keys is not the same, cache was missing data for each object, need to merge cache objects with server objects
+        
+        // iterate over an array
+        const mergedArray = [];
+        for (let i = 0; i < cacheResponse[key].length; i++) {
+
+          // for each index of array, combine cache and server response objects
+          const joinedResponse = this.joinResponses(
+            { [key]: cacheResponse[key][i] },
+            { [key]: serverResponse[key][i] },
+            { [key]: queryProto[key] },
+            true
+          );
+
+          // place joinedResponse on our array of all merged objects
+          mergedArray.push(joinedResponse);
+        }
+        // set merged array to mergedResponse at key
+        mergedResponse[key] = mergedArray;
       }
     }
-    return openCurl + queryString + closedCurl;
-  }
-  /**
-   * queryStringify is a helper function called from within createQueryStr. It iterates through an
-   * array of field names, concatenating them into a fragment of the query string being constructed
-   * in createQueryStr.
-   * @param {Array} fieldsArray - array listing fields to be added to GraphQL query
-   */
-  queryStringify(fieldsArray) {
-    const openCurl = ' { ';
-    const closedCurl = ' } ';
-    let innerStr = '';
-    for (let i = 0; i < fieldsArray.length; i += 1) {
-      if (typeof fieldsArray[i] === 'string') {
-        innerStr += fieldsArray[i] + ' ';
+    else {
+      // if not an array, it is a regular object data structure
+
+      // object spread
+      if (!fromArray) {
+        // if object doesn't come from an array, we must assign on the object at the given key
+        // results in { key: values }
+        mergedResponse[key] = { ...cacheResponse[key], ...serverResponse[key] };
+      } else {
+        // if the object comes from an array, we do not want to assign to a key as per GQL spec
+        // results in [{fields}, {fields}, {fields}]
+        mergedResponse = { ...cacheResponse[key], ...serverResponse[key] }
       }
-      if (typeof fieldsArray[i] === 'object') {
-        for (const key in fieldsArray[i]) {
-          innerStr +=
-            key +
-            openCurl +
-            this.queryStringify(fieldsArray[i][key]) +
-            closedCurl;
+      
+      // loop through fields on queryProto
+      for (const fieldName in queryProto[key]) {
+
+        // check for nested objects
+        if (typeof queryProto[key][fieldName] === 'object' && !fieldName.includes('__')) {
+          // recurse joinResponses on that object to create deep copy on mergedResponse
+
+          const mergedRecursion = this.joinResponses(
+            { [fieldName]: cacheResponse[key][fieldName] },
+            { [fieldName]: serverResponse[key][fieldName] }, 
+            { [fieldName]: queryProto[key][fieldName] }
+          );
+  
+          // place on merged response
+          mergedResponse[key] = { ...mergedResponse[key], ...mergedRecursion };
+
+          // // delete shallow copy of cacheResponse's nested object from mergedResponse
+          // if (fieldName !== fieldStrip.key) delete mergedResponse[stripped.key][fieldName]
         }
       }
     }
-    return innerStr;
   }
+  // return result should be { data: { country { ...cacheValues, ...serverValues } }
+  return mergedResponse;
+}
+
 
   async joinArrays(cachedData, uncachedData) {
     let joinedData;
@@ -1108,11 +1271,13 @@ class QuellCache {
     return true;
   }
 
-  async normalizeForCache(responseData, map, protoField, fieldsMap) {
+  async normalizeForCache(responseData, map = {}, protoField, fieldsMap = {}) {
     // iterate over keys in our response data object 
     for (const resultName in responseData) {
-      // currentField we are iterating over
+      // currentField we are iterating over & corresponding Prototype
       const currField = responseData[resultName];
+      const currProto = protoField[resultName];
+  
       // check if the value stored at that key is array 
       if (Array.isArray(currField)) {
         // RIGHT NOW: countries: [{}, {}]
@@ -1121,9 +1286,9 @@ class QuellCache {
         // create empty array to store refs
         // ie countries: ["country--1", "country--2"]
         const refList = [];
-  
         // iterate over countries array
-        currField.forEach(el => {
+        for (let i = 0; i < currField.length; i++) {
+          const el = currField[i];
           // el1 = {id: 1, name: Andorra}, el2 =  {id: 2, name: Bolivia}
           // for each object
           // "resultName" is key on "map" for our Data Type
@@ -1131,52 +1296,60 @@ class QuellCache {
   
           // grab ID from object we are iterating over
           let fieldID = dataType;
+  
           for (const key in el) {
             // if key is an ID, append to fieldID for caching
             if (key === 'id' || key === '_id' || key === 'ID' || key === 'Id') {
               fieldID += `--${el[key]}`;
               // push fieldID onto refList
-              refList.push(fieldID);
             }
           }
   
+          refList.push(fieldID);
           // if object, recurse to add all nested values of el to cache as individual entries
           if (typeof el === 'object') {
-            normalizeForCache({ [dataType]: el }, map,  { [dataType]: protoField[resultName][fieldID]});
+            await this.normalizeForCache({ [dataType]: el }, map,  { [dataType]: currProto});
           }
-        })
+        }
   
-        await this.writeToCache(resultName, JSON.stringify(refList));
+        this.writeToCache(resultName, refList);
       }
       else if (typeof currField === 'object') {
+        // need to get non-Alias ID for cache
+        // const cacheID = currProto.__id ? `${currProto.__type}--${currProto.__id}` : currProto.__type;
         // temporary store for field properties
         const fieldStore = {};
         
         // if object has id, generate fieldID 
-        let fieldID = resultName;
+        let cacheID = map.hasOwnProperty(currProto.__type)
+          ? map[currProto.__type]
+          : currProto.__type;
+        
+        // if prototype has ID, append it to cacheID
+        cacheID += currProto.__id
+          ? `--${currProto.__id}`
+          : '';
   
         // iterate over keys in object
         // "id, name, cities"
         for (const key in currField) {
-          // if ID, create fieldID
-          if (key === 'id' || key === '_id' || key === 'ID' || key === 'Id') {
-            fieldID += `--${currField[key]}`;
+          // if prototype has no ID, check field keys for ID (mostly for arrays)
+          if (!currProto.__id && (key === 'id' || key === '_id' || key === 'ID' || key === 'Id')) {
+            cacheID += `--${currField[key]}`;
           }
           fieldStore[key] = currField[key];
   
           // if object, recurse normalizeForCache assign in that object
           // must also pass in protoFields object to pair arguments, aliases with response
           if (typeof currField[key] === 'object') {
-            normalizeForCache({ [key]: currField[key] }, map, { [key]: protoField[resultName][key]});
+            await this.normalizeForCache({ [key]: currField[key] }, map, { [key]: protoField[resultName][key]});
           }
         }
         // store "current object" on cache in JSON format
-        await this.writeToCache(fieldID, JSON.stringify(fieldStore));
+        this.writeToCache(cacheID, fieldStore);
       }
     }
   }
-  
-
   /**
    * clearCache flushes the Redis cache. To clear the cache from the client, establish an endpoint that
    * passes the request and response objects to an instance of QuellCache.clearCache.
@@ -1191,144 +1364,3 @@ class QuellCache {
 }
 
 module.exports = QuellCache;
-
-// HERE THERE BE DRAGONS ----------------------
-  /**
-   * parseAST traverses the abstract syntax tree and creates a prototype object
-   * representing all the queried fields nested as they are in the query. The
-   * prototype object is used as
-   *  (1) a model guiding the construction of responses from cache
-   *  (2) a record of which fields were not present in cache and therefore need to be queried
-   *  (3) a model guiding the construction of a new, partial GraphQL query
-   */
-  // parseAST(AST) {
-  //   // initialize prototype as empty object
-  //   const proto = {};
-  //   //let isQuellable = true;
-
-  //   let operationType;
-
-  //   // initialiaze arguments as null
-  //   let protoArgs = null; //{ country: { id: '2' } }
-
-  //   // initialize stack to keep track of depth first parsing
-  //   const stack = [];
-
-  //   /**
-  //    * visit is a utility provided in the graphql-JS library. It performs a
-  //    * depth-first traversal of the abstract syntax tree, invoking a callback
-  //    * when each SelectionSet node is entered. That function builds the prototype.
-  //    * Invokes a callback when entering and leaving Field node to keep track of nodes with stack
-  //    *
-  //    * Find documentation at:
-  //    * https://graphql.org/graphql-js/language/#visit
-  //    */
-  //   visit(AST, {
-  //     enter(node) {
-  //       if (node.directives) {
-  //         if (node.directives.length > 0) {
-  //           isQuellable = false;
-  //           return BREAK;
-  //         }
-  //       }
-  //     },
-  //     OperationDefinition(node) {
-  //       operationType = node.operation;
-  //       if (node.operation === 'subscription') {
-  //         operationType = 'unQuellable';
-  //         return BREAK;
-  //       }
-  //     },
-  //     Field: {
-  //       enter(node) {
-  //         if (node.alias) {
-  //           operationType = 'unQuellable';
-  //           return BREAK;
-  //         }
-  //         if (node.arguments && node.arguments.length > 0) {
-  //           protoArgs = protoArgs || {};
-  //           protoArgs[node.name.value] = {};
-
-  //           // collect arguments if arguments contain id, otherwise make query unquellable
-  //           // hint: can check for graphQl type ID instead of string 'id'
-  //           for (let i = 0; i < node.arguments.length; i++) {
-  //             const key = node.arguments[i].name.value;
-  //             const value = node.arguments[i].value.value;
-
-  //             // for queries cache can handle only id as argument
-  //             if (operationType === 'query') {
-  //               if (!key.includes('id')) {
-  //                 operationType = 'unQuellable';
-  //                 return BREAK;
-  //               }
-  //             }
-  //             protoArgs[node.name.value][key] = value;
-  //           }
-  //         }
-  //         // add value to stack
-  //         stack.push(node.name.value);
-  //       },
-  //       leave(node) {
-  //         // remove value from stack
-  //         stack.pop();
-  //       },
-  //     },
-  //     SelectionSet(node, key, parent, path, ancestors) {
-  //       /* Exclude SelectionSet nodes whose parents' are not of the kind
-  //        * 'Field' to exclude nodes that do not contain information about
-  //        *  queried fields.
-  //        */
-  //       if (parent.kind === 'Field') {
-  //         // loop through selections to collect fields
-  //         const tempObject = {};
-  //         for (let field of node.selections) {
-  //           tempObject[field.name.value] = true;
-  //         }
-
-  //         // loop through stack to get correct path in proto for temp object;
-  //         // mutates original prototype object;
-  //         const protoObj = stack.reduce((prev, curr, index) => {
-  //           return index + 1 === stack.length // if last item in path
-  //             ? (prev[curr] = tempObject) // set value
-  //             : (prev[curr] = prev[curr]); // otherwise, if index exists, keep value
-  //         }, proto);
-  //       }
-  //     },
-  //   });
-  //   return { proto, protoArgs, operationType };
-  // }
-
-    // /**
-  //  * createQueryObj traverses the prototype, removing fields that were retrieved from cache. The resulting object
-  //  * will be passed to createQueryStr to construct a query requesting only the data not found in cache.
-  //  * @param {Object} proto - the prototype with fields that still need to be queried toggled to false
-  //  */
-  // createQueryObj(proto) {
-  //   const queryObj = {};
-  //   for (const key in proto) {
-  //     const reduced = this.protoReducer(proto[key]);
-  //     if (reduced.length > 0) queryObj[key] = reduced;
-  //   }
-  //   return queryObj;
-  // }
-
-  // /**
-  //  * protoReducer is a helper function (recusively) called from within createQueryObj, allowing introspection of
-  //  * nested prototype fields.
-  //  * @param {Object} proto - prototype
-  //  */
-  // protoReducer(proto) {
-  //   const fields = [];
-  //   for (const key in proto) {
-  //     if (proto[key] === false) fields.push(key);
-  //     if (typeof proto[key] === 'object') {
-  //       const nestedObj = {};
-  //       const reduced = this.protoReducer(proto[key]);
-  //       if (reduced.length > 0) {
-  //         nestedObj[key] = reduced;
-  //         fields.push(nestedObj);
-  //       }
-  //     }
-  //   }
-  //   return fields;
-  // }

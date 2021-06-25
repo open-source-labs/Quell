@@ -4,10 +4,12 @@ const schema = require('../../test-config/testSchema');
 const redisPort = 6379;
 // const timeout = 100;
 
+const Quell = new QuellCache(schema, redisPort);
+
 describe('server test for buildFromCache', () => {
   // inputs: prototype object (which contains args), collection (defaults to an empty array)
   // outputs: protoype object with fields that were not found in the cache set to false 
-  const Quell = new QuellCache(schema, redisPort);
+  
   beforeAll(() => {
     const promise1 = new Promise((resolve, reject) => {
       resolve(Quell.writeToCache('country--1', {id: "1", capitol: {id: "2", name: "DC"}}));
@@ -25,11 +27,14 @@ describe('server test for buildFromCache', () => {
   })
 
   afterAll((done) => {
-    Quell.redisCache.quit(() => console.log('closing redis server'));
-    done();
+    Quell.redisCache.flushall();
+    Quell.redisCache.quit(() => {
+      console.log('closing redis server');
+      done();
+    });
   });
 
-  xtest('Basic query', async () => {
+  test('Basic query', async () => {
     const testProto = {
       country: {
         id: true,
@@ -64,7 +69,40 @@ describe('server test for buildFromCache', () => {
     expect(responseFromCache).toEqual(expectedResponseFromCache);
   });
 
-  xtest('Multiple nested queries that include args and aliases', async () => {
+  test('Basic query for data not in the cache', async () => {
+    const testProto = {
+      book: {
+        id: true,
+        name: true,
+        __alias: null,
+        __args: { id: '3' },
+        __type: 'book',
+        __id: '3',
+        }
+      };
+    const endProto = {
+      book: {
+        id: false,
+        name: false,
+        __alias: null,
+        __args: { id: '3' },
+        __type: 'book',
+        __id: '3',
+        }
+      };
+    const expectedResponseFromCache = {
+      data: {
+        book: null
+      }
+    }
+    const prototypeKeys = Object.keys(testProto); 
+    const responseFromCache = await Quell.buildFromCache(testProto, prototypeKeys);
+    // we expect prototype after running through buildFromCache to have id has stayed true but every other field has been toggled to false (if not found in sessionStorage)
+    expect(testProto).toEqual(endProto);
+    expect(responseFromCache).toEqual(expectedResponseFromCache);
+  });
+
+  test('Multiple nested queries that include args and aliases', async () => {
     const testProto = {
       Canada: {
         id: true,

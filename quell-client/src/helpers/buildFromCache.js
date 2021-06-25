@@ -51,7 +51,8 @@ function buildFromCache(prototype, prototypeKeys, itemFromCache = {}, firstRun =
     // if itemFromCache is an array (Array.isArray()) 
     if (Array.isArray(itemFromCache[typeKey])) {
       // iterate over countries
-      itemFromCache[typeKey].forEach((currTypeKey, i) => {
+      for (let i = 0; i < itemFromCache[typeKey].length; i++) {
+        const currTypeKey = itemFromCache[typeKey][i];
         const cacheID = generateCacheID(prototype);
         const interimCache = JSON.parse(sessionStorage.getItem(currTypeKey));
 
@@ -78,7 +79,7 @@ function buildFromCache(prototype, prototypeKeys, itemFromCache = {}, firstRun =
           }
 
         }
-      })
+      }
       // reasign itemFromCache[typeKey] to false
       // itemFromCache[typeKey] = false;
     }

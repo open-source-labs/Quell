@@ -3,8 +3,6 @@
  This will then be converted into a GQL query string in the next step.
  */
 
-
-//  TO-DO: make variable values consistent with rest of application
  function createQueryObj(map) {
   const output = {};
   // iterate over every key in map
