@@ -46,8 +46,10 @@ const Demo = () => {
         country: 'Country',
         citiesByCountry: 'City',
         cities: 'City',
+        books: 'Book'
+        //potentially book too? 
       },
-      { cities: 'City' }
+      {}
     )
       .then((res) => {
         endTime = performance.now(); // stop the timer

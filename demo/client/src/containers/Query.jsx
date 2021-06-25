@@ -15,7 +15,7 @@ import DropDownHover from '../images/buttons/dropdown-button-hover.svg';
 */
 
 const Query = (props) => {
-  const { output, setOutput } = props;
+  let { output, setOutput } = props;
 
   const [theQuery, setTheQuery] = useState("blank"); 
 
@@ -61,8 +61,12 @@ const Query = (props) => {
     It makes a change to the state in the parent component, Demo
   */
   const outputFunction = () => {
-    // const newOutput = ResultsHelper(newList, sub, query, id, output);
-    setOutput({countries: ["id", "name"]});
+    // if (theQuery === 'simple query') {
+    //   setOutput({countries: ["id", "name"]}); 
+    // }
+    // if (theQuery === 'simple query with argument') {
+    //   setOutput({'country (id:1)': ["id", "name"]}); 
+    // }
   };
 
   // Change Query Selection - fires from DropdownItem child - comes in like ('Countries')
@@ -131,10 +135,16 @@ const Query = (props) => {
 
   const displaySimpleQuery = () => {
     setTheQuery("simple query");
+    output = setOutput({countries: ["id", "name"]});
   }
 
   const displayMultipleQueries = () => {
     setTheQuery("multiple queries");
+  }
+
+  const displaySimpleQueryWithArg = () => {
+    setTheQuery("simple query with argument");
+    output = setOutput({'country (id:1)': ["id", "name"]});
   }
 
  const buttons = 
@@ -146,15 +156,15 @@ const Query = (props) => {
         classname={'button-query button-query-secondary'}
       />
       <DemoButton
-        text={'Multiple Queries'}
-        func={displayMultipleQueries}
+        text={'Basic Query With Argument'}
+        func={displaySimpleQueryWithArg}
         classname={'button-query button-query-secondary'}
       />
-      <DemoButton
+      {/* <DemoButton
         text={'Output'}
         func={outputFunction}
         classname={'button-query button-query-secondary'}
-      />
+      /> */}
       {/* <DemoButton
         text={'Reset All'}
         func={handleResetAll}
@@ -181,8 +191,12 @@ const Query = (props) => {
     }
 
   if (theQuery === "simple query") {
+    // useEffect(() => {
+    //   outputFunction();
+    // });
   return (
     <>
+    {outputFunction()}
     {buttons}
       <div className="query-div">
         <div className="queryLine">{ob}</div>
@@ -203,6 +217,30 @@ const Query = (props) => {
     </>
   );
   }
+
+  if (theQuery === "simple query with argument") {
+    return (
+      <>
+      {buttons}
+        <div className="query-div">
+          <div className="queryLine">{ob}</div>
+          <div className="queryLine">
+            {space}{space}{"country (id: 1)"} {ob}
+          </div>
+          <div className="queryLine">
+            {tab}{"id"} 
+          </div>
+          <div className="queryLine">
+            {tab}{"name"} 
+          </div>
+          <div className="queryLine">
+            {space}{space}{cb}
+          </div>
+          <div className="queryLine">{cb}</div>
+        </div>
+      </>
+    );
+    }
 
   if (theQuery === "multiple queries") {
     return (
