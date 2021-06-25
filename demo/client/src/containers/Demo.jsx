@@ -32,6 +32,8 @@ const Demo = () => {
   const handleRunQueryClick = () => {
     // Run ResultsParser on output to get the query
     let parsedResult = CreateQueryStr(output);
+    console.log(output)
+    console.log(parsedResult)
 
     // start the timer (eventually displayed in Metrics)
     let startTime, endTime;
@@ -55,7 +57,7 @@ const Demo = () => {
 
         // Set Query Response state
         setQueryResponse(res.data);
-
+        console.log(res.data)
         // Set Timer State
         const fTime = formatTimer(rawTime);
         setFetchTime(fTime);

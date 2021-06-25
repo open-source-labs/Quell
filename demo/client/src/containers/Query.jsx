@@ -58,6 +58,8 @@ const Query = (props) => {
   */
   const outputFunction = (newList, sub, query, id) => {
     const newOutput = ResultsHelper(newList, sub, query, id, output);
+    console.log(newList)
+    // console.log('new output', newOutput)
     setOutput(newOutput);
   };
 
@@ -198,6 +200,7 @@ const Query = (props) => {
         <div className="queryLine">
           {tab} {cb}
         </div>
+        
         <div className="queryLine">{cb}</div>
       </div>
     </>
