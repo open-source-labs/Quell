@@ -4,9 +4,9 @@ const schema = require('../../test-config/testSchema');
 const redisPort = 6379;
 const timeout = 100;
 
-const Quell = new QuellCache(schema, redisPort, timeout);
 
 describe('server test for normalizeForCache', () => {
+  const Quell = new QuellCache(schema, redisPort, timeout);
   // inputs: prototype object (which contains args), collection (defaults to an empty array)
   // outputs: protoype object with fields that were not found in the cache set to false 
 

@@ -4,9 +4,9 @@ const schema = require('../../test-config/testSchema');
 const redisPort = 6379;
 const timeout = 100;
 
-const Quell = new QuellCache(schema, redisPort, timeout);
 
 describe('tests for joinResponses on the server side', () => {
+  const Quell = new QuellCache(schema, redisPort, timeout);
 
   afterAll((done) => {
     Quell.redisCache.flushall();
@@ -372,6 +372,94 @@ describe('tests for joinResponses on the server side', () => {
       },
     });
   });
+
+  test('queries when the server and the response contain different piece of data relevant to the client request', () => {
+    const cacheResponse = {
+      data: {
+        artist: {
+          id: '1',
+          instrument: 'saxophone',
+          name: 'John Coltrane',
+          album: {
+            id:'2',
+            name: 'Ring Around the Rose-y',
+            yearOfRelease: '1800'
+          },
+        },
+      },
+    };
+
+    const serverResponse = {
+      data: {
+        author: {
+          id: '10',
+          name: 'Jeane Steinbeck',
+          book: {
+            name: 'Crepes of Wrath',
+            year: '1945'
+          },
+        },
+      },
+    };
+
+    const prototype = {
+      artist: {
+        __id: '1',
+        __args: { id: '1' },
+        __alias: null,
+        __type: 'artist',
+        id: true,
+        name: true,
+        instrument: true,
+        album: {
+          __id: '2',
+          __args: { id: '2' },
+          __alias: null,
+          __type: 'album',
+          id: true,
+          name: true,
+          yearOfRelease: true
+        }
+      },
+      author: {
+        __id: '10',
+        __args: { id: '10' },
+        __alias: null,
+        __type: 'author',
+        id: false,
+        name: false,
+        book: {
+          __id: null,
+          __args: { },
+          __alias: null,
+          __type: 'book',
+          name: false,
+          year: false
+        }
+      }
+    };
+  
+    expect(Quell.joinResponses(cacheResponse.data, serverResponse.data, prototype)).toEqual({
+      artist: {
+        id: '1',
+        name: 'John Coltrane',
+        instrument: 'saxophone',
+        album: {
+          id: '2',
+          name: 'Ring Around the Rose-y',
+          yearOfRelease: '1800'
+        }
+      }, 
+      author: {
+        id: '10',
+        name: 'Jeane Steinbeck',
+        book: {
+          name: 'Crepes of Wrath',
+          year: '1945'
+        },
+      }
+    });
+  })
 
   // TO-DO: test for alias compatibility (should be fine- server & bFC both create objects with alias as keys)
 });

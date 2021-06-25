@@ -39,7 +39,9 @@ class QuellCache {
    */
   async query(req, res, next) {
     console.log('reached the server');
-    console.log('req.body is ', req.body);
+    console.log('req.body.query.query is ', req.body.query.query);
+    console.log('req.body.query.__schema is ', req.body.query.__schema);
+    console.log('req.body.query queries are ', req.body.query.__schema);
     // handle request without query
     if (!req.body.query) {
       return next('Error: no GraphQL query found on request body');
@@ -49,13 +51,14 @@ class QuellCache {
 
     // create abstract syntax tree with graphql-js parser
     const AST = parse(queryString);
-    console.log('AST is ', AST);
+    // console.log('AST is ', AST);
 
     // create response prototype, referenses for arguments and operation type
     const { prototype, operationType } = this.parseAST(AST);
-    console.log('prototype ', prototype);
-    console.log('operation type is ', operationType);
-
+    // console.log('prototype ', prototype);
+    // console.log('operation type is ', operationType);
+    // TO-DO: filter out introspection queries and set operationType to unquellable 
+    // if (operationDefinition.name.value == ''
     // not a deep protype copy
     // TO-DO: why do we need a deep copy
     // const protoDeepCopy = { ...prototype };
@@ -103,10 +106,11 @@ class QuellCache {
       // TO-DO: test that buildFromCache w/o queryMap doesn't produce changes
       // update buildFromCache to update with redis info
       const prototypeKeys = Object.keys(prototype);
-      console.log('prototype keys', prototypeKeys);
+      // console.log('prototype keys', prototypeKeys);
       const cacheResponse = await this.buildFromCache(prototype, prototypeKeys);
-      console.log('cache resonse is ', cacheResponse);
-      console.log('prototype after buildfrom cache', prototype);
+
+      // console.log('cache resonse is ', cacheResponse);
+      // console.log('prototype after buildfrom cache', prototype);
       // const responseFromCache = await buildFromCache(
       //   prototype,
       //   this.queryMap,
@@ -117,30 +121,33 @@ class QuellCache {
 
       // create query object to check if we have to get something from database
       const queryObject = this.createQueryObj(prototype);
-      console.log('queryObject is ', queryObject);
+      // console.log('queryObject is ', queryObject);
 
       // if cached response is incomplete, reformulate query, handoff query, join responses, and cache joined responses
       if (Object.keys(queryObject).length > 0) {
         // create new query sting
         const newQueryString = this.createQueryStr(queryObject);
-        console.log('newQuery string ', newQueryString);
+        // console.log('newQuery string ', newQueryString);
 
         graphql(this.schema, newQueryString)
           .then(async (databaseResponse) => {
             // databaseResponse = queryResponse.data;
-            console.log('databaseResponse from graphql is ', databaseResponse);
+            // console.log('databaseResponse from graphql is ', databaseResponse);
             // const obj = Object.assign({}, databaseResponse);
             // console.log('after', obj);
             // To-DO remove this console log
             for (let prop in databaseResponse.data.countries) {
-              console.log('merged reponse after joinResponses', databaseResponse.data.countries[prop]);
+              // console.log('merged reponse after joinResponses', databaseResponse.data.countries[prop]);
             }
             // join uncached and cached responses, prototype is used as a "template" for final mergedResponse
-            mergedResponse = this.joinResponses(
-              cacheResponse.data,
-              databaseResponse.data,
-              prototype
-            );
+            // if the cacheresponse does not contain any of the data requested by the client 
+            mergedResponse = Object.keys(cacheResponse.data) > 0 
+              ? this.joinResponses(
+                cacheResponse.data,
+                databaseResponse.data,
+                prototype
+              ) 
+              : databaseResponse.data;
             // TO-DO: update this.cache to use prototype instead of protoArgs
             // TO-DO check if await is needed here
             // this.normalizeForCache(mergedResponse.data, map, prototype);
@@ -155,7 +162,7 @@ class QuellCache {
               
 
             res.locals.queryResponse = { data: mergedResponse };
-            console.log('data to be sent back to client ', res.locals.queryResponse);
+            // console.log('data to be sent back to client ', res.locals.queryResponse);
             return next();
           })
           .catch((error) => {
@@ -225,7 +232,11 @@ class QuellCache {
           // populates argsObj from current node's arguments
           // generates uniqueID from arguments
           const argsObj = {};
-  
+          // Introspection queries will not be cached
+          if (node.name.value.includes('__')) {
+            operationType = 'unQuellable';
+            return BREAK;
+          }
           // TO-DO: document viable options
           // NOTE: type-specific options are still experimental, not integrated through Quell's lifecycle
           // non-viable options should not break system but /shouldn't change app behavior/
@@ -643,8 +654,9 @@ class QuellCache {
     // update function to include responseFromCache
     // const buildProtoFunc = buildPrototypeKeys(prototype);
     // const prototypeKeys = buildProtoFunc();
-  
-    console.log(`the input prototype has keys of ${Object.keys(prototype)}`);
+
+    console.log('keys on the prototype are ', Object.keys(prototype));
+    // console.log(`the input prototype has keys of ${Object.keys(prototype)}`);
     for (let typeKey in prototype) {
       // check if typeKey is a rootQuery (i.e. if it includes '--') or if its a field nested in a query
       // end goal: delete typeKey.includes('--') and check if protoObj.includes(typeKey)
@@ -655,13 +667,13 @@ class QuellCache {
         // cached data must persist 
         // create a property on itemFromCache and set the value to the fetched response from cache
         const cacheResponse = await this.getFromRedis(cacheID);
-        console.log('cacheresponse inside of buildfrom cache', cacheResponse);
+        // console.log('cacheresponse inside of buildfrom cache', cacheResponse);
         // const isExist = await this.checkFromRedis(cacheID);
         if (cacheResponse) {
           // console.log(`cacheResponse is ${cacheResponse}`);
           itemFromCache[typeKey] = JSON.parse(cacheResponse);
-          console.log(`itemFromCache[typeKey] is`, itemFromCache[typeKey]);
-          console.log(`keys saved to itemFromCache are ${Object.keys(itemFromCache)}`);
+          // console.log(`itemFromCache[typeKey] is`, itemFromCache[typeKey]);
+          // console.log(`keys saved to itemFromCache are ${Object.keys(itemFromCache)}`);
           // console.log(`itemFromCache: ${itemFromCache}`);
         }
       }
@@ -691,7 +703,7 @@ class QuellCache {
         // if there is nothing in the cache for this key, then toggle all fields to false
         // TO-DO make sure this works for nested objects
         else {
-          console.log(`nothing in the cache for property ${typeKey}`);
+          // console.log(`nothing in the cache for property ${typeKey}`);
           for (const property in prototype[typeKey]) {
             // if interimCache has the property
             if (!property.includes('__') && typeof prototype[typeKey][property] !== 'object') {
@@ -737,7 +749,7 @@ class QuellCache {
           // console.log('itemFromCache: ', itemFromCache)
           // if itemFromCache[typeKey] === false then break
           // TO-DO find the issue with queries from the demo client
-          console.log('item from cache inside the buildfrom cache ', itemFromCache[typeKey]);
+          // console.log('item from cache inside the buildfrom cache ', itemFromCache[typeKey]);
           if (
             // if field is not found in cache then toggle to false
             itemFromCache[typeKey] &&
@@ -745,7 +757,7 @@ class QuellCache {
             !field.includes("__") && // ignore __alias and __args
             typeof prototype[typeKey][field] !== 'object') {
               // console.log(`itemFromCache[typeKey] is ${itemFromCache[typeKey]}`);
-              console.log(`field is ${field} and typeof itemFromCache[typeKey] is ${typeof itemFromCache[typeKey]}`);
+              // console.log(`field is ${field} and typeof itemFromCache[typeKey] is ${typeof itemFromCache[typeKey]}`);
               prototype[typeKey][field] = false; 
           }
           
@@ -755,11 +767,12 @@ class QuellCache {
             typeof prototype[typeKey][field] === 'object') {
               // console.log("PRE-RECURSE prototype[typeKey][field]: ", prototype[typeKey][field]);
               // console.log("PRE-RECURSE itemFromCache: ", itemFromCache);
-            console.log(`prototype[typeKey][field] is ${prototype[typeKey][field]}`); 
-            console.log(`prototypeKeys are ${prototypeKeys}`);
-            console.log(`itemFromCache's keys are ${Object.keys(itemFromCache)}`);
-            console.log(`itemFromCache[typeKey] is ${itemFromCache[typeKey]}`);
-            console.log(`itemFromCache at the property ${typeKey} has keys ${Object.keys(itemFromCache[typeKey])}`);
+            // console.log(`prototype[typeKey][field] is ${prototype[typeKey][field]}`); 
+            // console.log(`prototypeKeys are ${prototypeKeys}`);
+            // console.log(`itemFromCache's keys are ${Object.keys(itemFromCache)}`);
+            // console.log(`itemFromCache[typeKey] is ${itemFromCache[typeKey]}`);
+            // console.log(`itemFromCache at the property ${typeKey} has keys ${Object.keys(itemFromCache[typeKey])}`);
+            // TO-DO: when the demo starts up, this line of code throws the following error -> TypeError: Cannot read property 'queryType' of undefined
             this.buildFromCache(prototype[typeKey][field], prototypeKeys, itemFromCache[typeKey][field], false);
             }
           // if there are no data in itemFromCache
@@ -985,13 +998,13 @@ joinResponses(cacheResponse, serverResponse, queryProto, fromArray = false) {
 
     // TO-DO: caching for arrays is likely imperfect, needs more edge-case testing
     // for each key, check whether data stored at that key is an array or an object
-    if (Array.isArray(cacheResponse[key]) || Array.isArray(serverResponse[key]) ) {
+    if (Array.isArray(cacheResponse[key])) {
       // merging data stored as array
       // remove reserved properties from queryProto so we can compare # of properties on prototype to # of properties on responses
       const filterKeys = Object.keys(queryProto[key]).filter(propKey => !propKey.includes('__'));
 
       // if # of keys is the same between prototype & cached response, then the objects on the array represent different things
-      if (filterKeys.length === Math.max(Object.keys(cacheResponse[key][0]).length, Object.keys(serverResponse[key][0]).length)) {
+      if (filterKeys.length === Object.keys(cacheResponse[key][0]).length) {
         //if the objects are "different", each object represents unique instance, we can concat
         mergedResponse[key] = [...cacheResponse[key], ...serverResponse[key]];
       } else {
@@ -1036,12 +1049,22 @@ joinResponses(cacheResponse, serverResponse, queryProto, fromArray = false) {
         // check for nested objects
         if (typeof queryProto[key][fieldName] === 'object' && !fieldName.includes('__')) {
           // recurse joinResponses on that object to create deep copy on mergedResponse
-
-          const mergedRecursion = this.joinResponses(
-            { [fieldName]: cacheResponse[key][fieldName] },
-            { [fieldName]: serverResponse[key][fieldName] }, 
-            { [fieldName]: queryProto[key][fieldName] }
-          );
+          // TO-DO: before recursing, if the cacheResponse and serverResponse contain keys that are not the same, then 
+          let mergedRecursion = {};
+          // console.log('key is ', key, ' and field name is ', fieldName);
+          if (cacheResponse.hasOwnProperty(key) && serverResponse.hasOwnProperty(key)) {
+             mergedRecursion = this.joinResponses(
+              { [fieldName]: cacheResponse[key][fieldName] },
+              { [fieldName]: serverResponse[key][fieldName] }, 
+              { [fieldName]: queryProto[key][fieldName] }
+            );
+          }
+          else if (cacheResponse.hasOwnProperty(key)) {
+            mergedRecursion[fieldName] = cacheResponse[key][fieldName];
+          }
+          else {
+            mergedRecursion[fieldName] = serverResponse[key][fieldName];
+          }
   
           // place on merged response
           mergedResponse[key] = { ...mergedResponse[key], ...mergedRecursion };

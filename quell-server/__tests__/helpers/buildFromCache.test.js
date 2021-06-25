@@ -4,9 +4,9 @@ const schema = require('../../test-config/testSchema');
 const redisPort = 6379;
 // const timeout = 100;
 
-const Quell = new QuellCache(schema, redisPort);
 
 describe('server test for buildFromCache', () => {
+  const Quell = new QuellCache(schema, redisPort);
   // inputs: prototype object (which contains args), collection (defaults to an empty array)
   // outputs: protoype object with fields that were not found in the cache set to false 
   
@@ -91,9 +91,7 @@ describe('server test for buildFromCache', () => {
         }
       };
     const expectedResponseFromCache = {
-      data: {
-        book: null
-      }
+      data: {}
     }
     const prototypeKeys = Object.keys(testProto); 
     const responseFromCache = await Quell.buildFromCache(testProto, prototypeKeys);

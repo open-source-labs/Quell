@@ -3,9 +3,9 @@ const schema = require('../../test-config/testSchema');
 const redisPort = 6379;
 const timeout = 100;
 
-const Quell = new QuellCache(schema, redisPort, timeout);
 
 describe('server side tests for createQueryObj.js', () => {
+  const Quell = new QuellCache(schema, redisPort, timeout);
 
   afterAll((done) => {
     Quell.redisCache.flushall();
@@ -15,6 +15,7 @@ describe('server side tests for createQueryObj.js', () => {
     });
   });
 
+  // TO-DO: Add the same test to the client side test folder 
   test('inputs prototype w/ all true should output empty object', () => {
     const prototype = {
       countries: {
@@ -247,6 +248,61 @@ describe('server side tests for createQueryObj.js', () => {
         __args: { id: '2' },
         __type: 'country',
         __id: '2',
+      }
+    });
+  })
+
+  test('test requests with multiple queries in which half of the request if managed by the cache and the other half is managed by the response', () => {
+    const map = {
+      Canada: {
+        __id: '1',
+        __alias: 'Canada',
+        __args: { id: '1' },
+        __type: 'country',
+        id: true,
+        name: true,
+        capitol: {
+          __id: null,
+          __alias: null,
+          __args: {},
+          __type: 'capitol',
+          id: true,
+          name: true,
+          population: true,
+        }
+      },
+      WarBook: {
+        __id: '2',
+        __alias: 'WarBook',
+        __args: { id: '10' },
+        __type: 'book',
+        id: false,
+        name: false,
+        author: {
+          __id: null,
+          __alias: null,
+          __args: {},
+          __type: 'author',
+          name: false,
+        }
+      }
+    };
+
+    expect(Quell.createQueryObj(map)).toEqual({
+      WarBook: {
+        __id: '2',
+        __alias: 'WarBook',
+        __args: { id: '10' },
+        __type: 'book',
+        id: false,
+        name: false,
+        author: {
+          __id: null,
+          __alias: null,
+          __args: {},
+          __type: 'author',
+          name: false,
+        }
       }
     });
   })

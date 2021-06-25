@@ -3,9 +3,9 @@ const schema = require('../../test-config/testSchema');
 const redisPort = 6379;
 const timeout = 100;
 
-const Quell = new QuellCache(schema, redisPort, timeout);
 
 describe('server side tests for createQueryStr.js', () => {
+  const Quell = new QuellCache(schema, redisPort, timeout);
 
   afterAll((done) => {
     Quell.redisCache.flushall();

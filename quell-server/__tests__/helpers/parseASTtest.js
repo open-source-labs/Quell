@@ -10,9 +10,9 @@ const timeout = 100;
 // const Quell = new QuellCache
 // const { proto, protoArgs, operationType } Quell.Quell.parseAST();
 
-const Quell = new QuellCache(schema, redisPort, timeout);
 
 describe('server tests for Quell.parseAST.js', () => {
+  const Quell = new QuellCache(schema, redisPort, timeout);
 
   
   beforeAll(() => {
