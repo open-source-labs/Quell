@@ -1,10 +1,10 @@
-import React, { useState, useEffect, useRef } from 'react';
-import QueryFields from '../components/QueryFields.jsx';
-import DropdownItem from '../components/DropdownItem.jsx';
-import DemoButton from '../components/DemoButton';
-import { ResultsHelper } from '../helper-functions/HelperFunctions.js';
-import DropDown from '../images/buttons/dropdown-button.svg';
-import DropDownHover from '../images/buttons/dropdown-button-hover.svg';
+import React from 'react';
+// import QueryFields from '../components/QueryFields.jsx';
+// import DropdownItem from '../components/DropdownItem.jsx';
+// import DemoButton from '../components/DemoButton';
+// import { ResultsHelper } from '../helper-functions/HelperFunctions.js';
+// import DropDown from '../images/buttons/dropdown-button.svg';
+// import DropDownHover from '../images/buttons/dropdown-button-hover.svg';
 
 /*
   Container that renders the query input section
@@ -15,40 +15,40 @@ import DropDownHover from '../images/buttons/dropdown-button-hover.svg';
 */
 
 const Query = (props) => {
-  let { output, setOutput } = props;
+  let { theQuery } = props;
 
-  const [theQuery, setTheQuery] = useState("blank"); 
+  // const [theQuery, setTheQuery] = useState("blank"); 
 
   //TBD for removal
-  const [query, setQuery] = useState(''); // set the kind of query you want
-  const [type, setType] = useState('Country'); // is it a 'Country' or a 'City'?
-  const [queryDropdown, toggleDropdown] = useState(false); // toggle query dropdown
-  const [idDropdown, setIdDropdown] = useState(false); // show id dropdown (only applies to queries by id)
-  const [selectedId, setSelectedId] = useState(1); // display id dropdown (only applies to queries by id)
-  const [idDropdownMenu, toggleIdDropdownMenu] = useState(false); // toggle id dropdown menu (only applies to queries by id)
+  // const [query, setQuery] = useState(''); // set the kind of query you want
+  // const [type, setType] = useState('Country'); // is it a 'Country' or a 'City'?
+  // const [queryDropdown, toggleDropdown] = useState(false); // toggle query dropdown
+  // const [idDropdown, setIdDropdown] = useState(false); // show id dropdown (only applies to queries by id)
+  // const [selectedId, setSelectedId] = useState(1); // display id dropdown (only applies to queries by id)
+  // const [idDropdownMenu, toggleIdDropdownMenu] = useState(false); // toggle id dropdown menu (only applies to queries by id)
 
   // ====================================================================== //
   // ======= Functionality to close dropdowns when clicking outside ======= //
   // ====================================================================== //
 
-  // Attach "ref = {ref}" to the dropdown
-  const ref = useRef(null);
+  // // Attach "ref = {ref}" to the dropdown
+  // const ref = useRef(null);
 
-  // Makes it so when you click outside of a dropdown it goes away
-  const handleClickOutside = (event) => {
-    if (ref.current && !ref.current.contains(event.target)) {
-      toggleDropdown(false);
-      toggleIdDropdownMenu(false);
-    }
-  };
+  // // Makes it so when you click outside of a dropdown it goes away
+  // const handleClickOutside = (event) => {
+  //   if (ref.current && !ref.current.contains(event.target)) {
+  //     toggleDropdown(false);
+  //     toggleIdDropdownMenu(false);
+  //   }
+  // };
 
-  // Listens for clicks on the body of the dom
-  useEffect(() => {
-    document.addEventListener('click', handleClickOutside, true);
-    return () => {
-      document.removeEventListener('click', handleClickOutside, true);
-    };
-  }, []);
+  // // Listens for clicks on the body of the dom
+  // useEffect(() => {
+  //   document.addEventListener('click', handleClickOutside, true);
+  //   return () => {
+  //     document.removeEventListener('click', handleClickOutside, true);
+  //   };
+  // }, []);
 
   // ================================================= //
   // ======= Functionality for changing query ======= //
@@ -60,50 +60,50 @@ const Query = (props) => {
     See ResultsHelper function in HelperFunctions.js
     It makes a change to the state in the parent component, Demo
   */
-  const outputFunction = () => {
+  // const outputFunction = () => {
     // if (theQuery === 'simple query') {
     //   setOutput({countries: ["id", "name"]}); 
     // }
     // if (theQuery === 'simple query with argument') {
     //   setOutput({'country (id:1)': ["id", "name"]}); 
     // }
-  };
+  // };
 
   // Change Query Selection - fires from DropdownItem child - comes in like ('Countries')
-  const selectQuery = (selection) => {
-    setQuery(selection);
-    if (selection === 'Simple Query') {
-      displaySimpleQuery();
-    }
-    if (selection === 'Simple Query With Argument') {
-      displaySimpleQueryWithArg(); 
-    }
-    if (selection === 'Multiple Queries') {
-      displayMultipleQueries(); 
-    } 
-    if (selection === 'Nested Query') {
-      displayNestedQuery(); 
-    } else {
-      setIdDropdown(false);
-    }
+  // const selectQuery = (selection) => {
+  //   setQuery(selection);
+  //   if (selection === 'Simple Query') {
+  //     displaySimpleQuery();
+  //   }
+  //   if (selection === 'Simple Query With Argument') {
+  //     displaySimpleQueryWithArg(); 
+  //   }
+  //   if (selection === 'Multiple Queries') {
+  //     displayMultipleQueries(); 
+  //   } 
+  //   if (selection === 'Nested Query') {
+  //     displayNestedQuery(); 
+  //   } else {
+  //     setIdDropdown(false);
+  //   }
 
-    // Close dropdown
-    toggleDropdown(false);
-    // Update state in Demo
-    outputFunction(0, 0, selection);
-  };
+  //   // Close dropdown
+  //   toggleDropdown(false);
+  //   // Update state in Demo
+  //   outputFunction(0, 0, selection);
+  // };
 
   // ====== //
   // ====== //
   // ====== //
 
   // Fires when you change the id (only when querying by ID)
-  const selectDropdownId = (item) => {
-    // item comes in as number (2), for example
-    setSelectedId(item);
-    toggleIdDropdownMenu(false);
-    outputFunction(0, 0, 0, item);
-  };
+  // const selectDropdownId = (item) => {
+  //   // item comes in as number (2), for example
+  //   setSelectedId(item);
+  //   toggleIdDropdownMenu(false);
+  //   outputFunction(0, 0, 0, item);
+  // };
 
   // ========================= //
   // ==== RENDER / RETURN ==== //
@@ -112,23 +112,23 @@ const Query = (props) => {
   /* 
     - Array of queries to choose from
   */
-  const dropdownList = [
-    'Simple Query',
-    'Simple Query With Argument',
-    'Multiple Queries',
-    'Nested Query',
-    'Multiple Nested Query'
+  // const dropdownList = [
+  //   'Simple Query',
+  //   'Simple Query With Argument',
+  //   'Multiple Queries',
+  //   'Nested Query',
+  //   'Multiple Nested Query'
 
-  ];
+  // ];
 
   // Creates dropdown menu from the above array
-  const dropdownMenu = dropdownList.map((item, i) => {
-    return (
-      <DropdownItem func={selectQuery} item={item} key={'QueryDropdown' + i} />
-    );
-  });
+  // const dropdownMenu = dropdownList.map((item, i) => {
+  //   return (
+  //     <DropdownItem func={selectQuery} item={item} key={'QueryDropdown' + i} />
+  //   );
+  // });
 
-  // // Creates id dropdown (change the i <= # to customize)
+  // Creates id dropdown (change the i <= # to customize)
   // const idDropMenu = [];
   // for (let i = 1; i <= 5; i++) {
   //   idDropMenu.push(
@@ -136,137 +136,137 @@ const Query = (props) => {
   //   );
   // }
 
-  const displaySimpleQuery = () => {
-    setTheQuery("simple query");
-    output = setOutput({
-      countries: {
-        __id: null,
-        __alias: null,
-        __args: {},
-        __type: 'countries',
-        id: false,
-        name: false,
-      }
-    });
-  }
+//   const displaySimpleQuery = () => {
+//     setTheQuery("simple query");
+//     output = setOutput({
+//       countries: {
+//         __id: null,
+//         __alias: null,
+//         __args: {},
+//         __type: 'countries',
+//         id: false,
+//         name: false,
+//       }
+//     });
+//   }
 
-  const displaySimpleQueryWithArg = () => {
-    setTheQuery("simple query with argument");
-    output = setOutput({
-      country: {
-        __id: '1',
-        __type: 'country',
-        __alias: null,
-        __args: { id: '1' },
-        id: false,
-        name: false,
-      }
-    });
-  }
+//   const displaySimpleQueryWithArg = () => {
+//     setTheQuery("simple query with argument");
+//     output = setOutput({
+//       country: {
+//         __id: '1',
+//         __type: 'country',
+//         __alias: null,
+//         __args: { id: '1' },
+//         id: false,
+//         name: false,
+//       }
+//     });
+//   }
 
-  const displayMultipleQueries = () => {
-    setTheQuery("multiple queries");
-    output = setOutput({
-      country: {
-        __id: '1',
-        __type: 'country',
-        __args: { id: '1' },
-        __alias: null,
-        id: false,
-        name: false,
-        cities: {
-          __id: null,
-          __type: 'cities',
-          __args: {},
-          __alias: null,
-          id: false,
-          name: false,
-        },
-      },
-      book: {
-        __id: '2',
-        __type: 'book',
-        __args: { id: '2' },
-        __alias: null,
-        id: false,
-        name: false,
-      },
-    })
-}
+//   const displayMultipleQueries = () => {
+//     setTheQuery("multiple queries");
+//     output = setOutput({
+//       country: {
+//         __id: '1',
+//         __type: 'country',
+//         __args: { id: '1' },
+//         __alias: null,
+//         id: false,
+//         name: false,
+//         cities: {
+//           __id: null,
+//           __type: 'cities',
+//           __args: {},
+//           __alias: null,
+//           id: false,
+//           name: false,
+//         },
+//       },
+//       book: {
+//         __id: '2',
+//         __type: 'book',
+//         __args: { id: '2' },
+//         __alias: null,
+//         id: false,
+//         name: false,
+//       },
+//     })
+// }
 
-  const displayNestedQuery = () => {
-    setTheQuery("nested query");
-    output = setOutput({
-      countries: {
-        id: true,
-        __type: 'countries',
-        __alias: null,
-        __args: {},
-        __id: null,
-        cities: {
-          id: true,
-          __type: 'cities',
-          __alias: null,
-          __args: {},
-          __id: null,
-          attractions: {
-            id: true,
-            __type: 'attractions',
-            __alias: null,
-            __args: {},
-            __id: null,
-            location: {
-              id: true,
-              __type: 'location',
-              __alias: null,
-              __args: {},
-              __id: null,
-            }
-          }
-        }
-      }
-    });
-  }
+//   const displayNestedQuery = () => {
+//     setTheQuery("nested query");
+//     output = setOutput({
+//       countries: {
+//         id: true,
+//         __type: 'countries',
+//         __alias: null,
+//         __args: {},
+//         __id: null,
+//         cities: {
+//           id: true,
+//           __type: 'cities',
+//           __alias: null,
+//           __args: {},
+//           __id: null,
+//           attractions: {
+//             id: true,
+//             __type: 'attractions',
+//             __alias: null,
+//             __args: {},
+//             __id: null,
+//             location: {
+//               id: true,
+//               __type: 'location',
+//               __alias: null,
+//               __args: {},
+//               __id: null,
+//             }
+//           }
+//         }
+//       }
+//     });
+//   }
 
-  const dropDown = 
-  <span>
-  {/* Query Dropdown button */}
-    <button
-      className="dropdown-button"
-      onClick={() => toggleDropdown(!queryDropdown)}
-    >
-      <div className="plus-minus-icons dropdown-icon">
-        <img src={DropDown}/>
-        {/* <h3>SELECT YOUR QUERY</h3> */}
-        <img src={DropDownHover} className="hover-button" />
-      </div>
-      {/* Query Dropdown Menu */}
-      {queryDropdown && (
-        <div className="dropdown-menu" ref={ref}>
-          {dropdownMenu}
-        </div>
-      )}
-    <b>SELECT YOUR QUERY</b></button>
-</span> 
+//   const dropDown = 
+//   <span>
+//    {/* Query Dropdown button */}
+//      <button
+//       className="dropdown-button"
+//       onClick={() => toggleDropdown(!queryDropdown)}
+//     >
+//        <div className="plus-minus-icons dropdown-icon">
+//        <img src={DropDown}/>
+//         {/* <h3>SELECT YOUR QUERY</h3> */}
+//         <img src={DropDownHover} className="hover-button" />
+//        </div>
+//       {/* Query Dropdown Menu */}
+//       {queryDropdown && (
+//         <div className="dropdown-menu" ref={ref}>
+//           {dropdownMenu}
+//       </div>
+//       )}
+//      <b>SELECT YOUR QUERY</b></button>
+//  </span> 
 
-  const dropDown = <span>
-  {/* Query Dropdown button */}
-             <button
-               className="dropdown-button"
-               onClick={() => toggleDropdown(!queryDropdown)}
-             >
-               <div className="plus-minus-icons dropdown-icon">
-                 <img src={DropDown} />
-                 <img src={DropDownHover} className="hover-button" />
-               </div>
-               {/* Query Dropdown Menu */}
-               {queryDropdown && (
-                 <div className="dropdown-menu" ref={ref}>
-                   {dropdownMenu}
-                 </div>
-               )}
-             </button>
-           </span> 
+//   // const dropDown = <span>
+//   {/* Query Dropdown button */}
+//              <button
+//                className="dropdown-button"
+//                onClick={() => toggleDropdown(!queryDropdown)}
+//              >
+//                <div className="plus-minus-icons dropdown-icon">
+//                  <img src={DropDown} />
+//                  <img src={DropDownHover} className="hover-button" />
+//                </div>
+//                {/* Query Dropdown Menu */}
+//                {queryDropdown && (
+//                  <div className="dropdown-menu" ref={ref}>
+//                    {dropdownMenu}
+//                  </div>
+//                )}
+//              </button>
+//            </span> 
   
 
   const ob = '{';
@@ -275,25 +275,14 @@ const Query = (props) => {
   const eighted = <span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>;
   const space = <span>&nbsp;</span>;
 
-  // const dropdownState = (theState) => {
-  //   theState = true; 
-  //   if (theState) {
-  //   return (
-  //     <>
-  //     {dropDown}
-  //     </>
-  //   );
-  //   }
-  // };
-
 
   if (theQuery === "blank") {
     return (
       <>
-      {dropDown}
+      {/* {dropDown} */}
         <div className="query-div">
         </div>
-      {dropDown}  
+      {/* {dropDown}   */}
       </>
     );
     }
@@ -304,7 +293,7 @@ const Query = (props) => {
     // });
   return (
     <>
-    {dropDown}
+    {/* {dropDown} */}
       <div className="query-div">
         <div className="queryLine">{ob}</div>
         <div className="queryLine">
@@ -321,6 +310,20 @@ const Query = (props) => {
         </div>
         <div className="queryLine">{cb}</div>
       </div>
+      {/* Query fields are rendered here
+        <div>
+          <QueryFields
+            type={type}
+            outputFunction={outputFunction}
+            key={query}
+          />
+          The above key prop makes it so that when query changes, this component completely reloads
+        </div>  */}
+
+        {/* Close out the query  */}
+        <div className="queryLine">
+          {tab} {cb}
+          </div>
     </>
   );
   }
@@ -328,7 +331,7 @@ const Query = (props) => {
   if (theQuery === "simple query with argument") {
     return (
       <>
-      {dropDown}
+      {/* {dropDown} */}
         <div className="query-div">
           <div className="queryLine">{ob}</div>
           <div className="queryLine">
@@ -352,7 +355,7 @@ const Query = (props) => {
   if (theQuery === "multiple queries") {
     return (
       <>
-    {dropDown} 
+    {/* {dropDown}  */}
       <div className="query-div">
         <div className="queryLine">{ob}</div>
         <div className="queryLine">
@@ -389,7 +392,7 @@ const Query = (props) => {
   if (theQuery === "nested query") {
     return (
       <>
-      {dropDown}
+      {/* {dropDown} */}
       {/* `{ countries { id cities { id attractions } } }` */}
         <div className="query-div">
           <div className="queryLine">{ob}</div>
