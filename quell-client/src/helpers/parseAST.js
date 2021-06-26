@@ -27,7 +27,10 @@ const defaultOptions = {
 const parseAST = (AST, options = defaultOptions) => {
   // initialize prototype as empty object
   // information from AST is distilled into the prototype for easy access during caching, rebuilding query strings, etc.
-  const prototype = {};
+  const proto= {};
+  const frags = {};
+  // target Object will be updated to point to prototype when iterating through Field and it will point to frags when iterating through Fragment Definition
+  let targetObj;
 
   let operationType = '';
 
@@ -63,15 +66,32 @@ const parseAST = (AST, options = defaultOptions) => {
         }
       }
     },
-    FragmentDefinition(node) {
-      // storing fragment info
-    },
     OperationDefinition(node) {
+      targetObj = proto;
       //TO-DO: cannot cache subscriptions or mutations, return as unquellable
       operationType = node.operation;
       if (node.operation === 'subscription' || node.operation === 'mutation') {
         operationType = 'unQuellable';
         return BREAK;
+      }
+    },
+    FragmentDefinition: {
+      enter(node) {
+        // update stack 
+        stack.push(node.name.value);
+        // point the targetObj that we update to the frags object while inside the loop
+        targetObj = frags;
+        // extract all fields in the fragment
+        const fragName = node.name.value;
+        targetObj[fragName] = {};
+        // iterate through selections in selectionSet
+        for (let i = 0; i < node.selectionSet.selections.length; i++) {
+          // create a property for this selection on the frags obj (aka target obj)
+          targetObj[fragName][node.selectionSet.selections[i].name.value] = true;
+        }
+      },
+      leave() {
+        stack.pop();
       }
     },
     Field: {
@@ -80,6 +100,11 @@ const parseAST = (AST, options = defaultOptions) => {
         // populates argsObj from current node's arguments
         // generates uniqueID from arguments
         const argsObj = {};
+        // Introspection queries will not be cached
+        if (node.name.value.includes('__')) {
+          operationType = 'unQuellable';
+          return BREAK;
+        }
 
         // TO-DO: document viable options
         // NOTE: type-specific options are still experimental, not integrated through Quell's lifecycle
@@ -176,18 +201,18 @@ const parseAST = (AST, options = defaultOptions) => {
           /* For nested objects, we must prevent duplicate entries for nested queries with arguments (ie "city" and "city--3")
           * We go into the prototype and delete the duplicate entry
           */
-          if (selectionSetDepth > 2) {
-            let miniProto = prototype;
-            // loop through stack to access layers of prototype object
-            for (let i = 0; i < stack.length; i++) {
-              // access layers of prototype object
-              miniProto = miniProto[stack[i]]
-              if (i === stack.length - 2) {
-                // when final index, delete
-                delete miniProto[stack[i + 1]];
-              }
-            }
-          }
+          // if (selectionSetDepth > 2) {
+          //   let miniProto = prototype;
+          //   // loop through stack to access layers of prototype object
+          //   for (let i = 0; i < stack.length; i++) {
+          //     // access layers of prototype object
+          //     miniProto = miniProto[stack[i]]
+          //     if (i === stack.length - 2) {
+          //       // when final index, delete
+          //       delete miniProto[stack[i + 1]];
+          //     }
+          //   }
+          // }
           
           // loop through stack to get correct path in proto for temp object;
           // mutates original prototype object WITH values from tempObject
@@ -196,7 +221,7 @@ const parseAST = (AST, options = defaultOptions) => {
             return index + 1 === stack.length // if last item in path
               ? (prev[curr] = {...fieldsObject}) //set value
               : (prev[curr] = prev[curr]); // otherwise, if index exists, keep value
-          }, prototype);
+          }, targetObj);
         }
       },
       leave() {
@@ -205,7 +230,7 @@ const parseAST = (AST, options = defaultOptions) => {
       },
     },
   });
-  return { prototype, operationType };
+  return { proto, operationType, frags };
 };
 
 // loop(keys){

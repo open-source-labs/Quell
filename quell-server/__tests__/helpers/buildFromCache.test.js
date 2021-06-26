@@ -91,7 +91,7 @@ describe('server test for buildFromCache', () => {
         }
       };
     const expectedResponseFromCache = {
-      data: {}
+      data: { book: {} }
     }
     const prototypeKeys = Object.keys(testProto); 
     const responseFromCache = await Quell.buildFromCache(testProto, prototypeKeys);
