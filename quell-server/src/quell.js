@@ -38,10 +38,6 @@ class QuellCache {
    *  @param {Function} next - Express next middleware function, invoked when QuellCache completes its work
    */
   async query(req, res, next) {
-    console.log('reached the server');
-    console.log('req.body.query.query is ', req.body.query.query);
-    console.log('req.body.query.__schema is ', req.body.query.__schema);
-    console.log('req.body.query queries are ', req.body.query.__schema);
     // handle request without query
     if (!req.body.query) {
       return next('Error: no GraphQL query found on request body');
@@ -51,12 +47,9 @@ class QuellCache {
 
     // create abstract syntax tree with graphql-js parser
     const AST = parse(queryString);
-    // console.log('AST is ', AST);
 
     // create response prototype, referenses for arguments and operation type
-    const { prototype, operationType } = this.parseAST(AST);
-    // console.log('prototype ', prototype);
-    // console.log('operation type is ', operationType);
+    const { proto, operationType, frags } = this.parseAST(AST);
     // TO-DO: filter out introspection queries and set operationType to unquellable 
     // if (operationDefinition.name.value == ''
     // not a deep protype copy
@@ -100,7 +93,9 @@ class QuellCache {
         });
     } else {
       // if QUERY
-
+      // TO-DO: invoke function that checks if fragments were included in the client request and updates prototype accordingly
+      const prototype = this.updateProtoWithFragment(proto, frags);
+      console.log('prototype after updating with fragments', prototype);
       // build response from cache
       // countries -> [country--1, country--2]
       // TO-DO: test that buildFromCache w/o queryMap doesn't produce changes
@@ -179,7 +174,10 @@ class QuellCache {
   parseAST (AST, options = {userDefinedID: null}) {
     // initialize prototype as empty object
     // information from AST is distilled into the prototype for easy access during caching, rebuilding query strings, etc.
-    const prototype = {};
+    const proto = {};
+    const frags = {};
+    // target Object will be updated to point to prototype when iterating through Field and it will point to frags when iterating through Fragment Definition
+    let targetObj;
   
     let operationType = '';
   
@@ -195,6 +193,8 @@ class QuellCache {
   
     // extract options
     const userDefinedID = options.__userDefinedID;
+
+    let counter = 0;
   
     /**
      * visit is a utility provided in the graphql-JS library. It performs a
@@ -215,15 +215,39 @@ class QuellCache {
           }
         }
       },
-      FragmentDefinition(node) {
-        // storing fragment info
-      },
       OperationDefinition(node) {
+        targetObj = proto;
         //TO-DO: cannot cache subscriptions or mutations, return as unquellable
+        // console.log('counter in OperationDefinition is ', ++counter);
         operationType = node.operation;
         if (node.operation === 'subscription' || node.operation === 'mutation') {
           operationType = 'unQuellable';
           return BREAK;
+        }
+      },
+
+      FragmentDefinition: {
+        enter(node) {
+          // update stack 
+          stack.push(node.name.value);
+          // point the targetObj that we update to the frags object while inside the loop
+          targetObj = frags;
+          // console.log('counter in FragmentDefinition is ', ++counter);
+          // extract all fields in the fragment
+          const fragName = node.name.value;
+          targetObj[fragName] = {};
+          console.log('2 fields arrays are ', node.selectionSet.selections); // array of 2 fields object
+          // iterate through selections in selectionSet
+          for (let i = 0; i < node.selectionSet.selections.length; i++) {
+            // console.log('1st field in fragment is ', node.selectionSet.selections[i]);
+            // create a property for this selection on the frags obj (aka target obj)
+            targetObj[fragName][node.selectionSet.selections[i].name.value] = true;
+          }
+          console.log('frags object after iterating through selection set', targetObj);
+        },
+        leave() {
+          stack.pop();
+          console.log('leaving fragment definition');
         }
       },
       Field: {
@@ -332,27 +356,28 @@ class QuellCache {
             /* For nested objects, we must prevent duplicate entries for nested queries with arguments (ie "city" and "city--3")
             * We go into the prototype and delete the duplicate entry
             */
-            if (selectionSetDepth > 2) {
-              let miniProto = prototype;
-              // loop through stack to access layers of prototype object
-              for (let i = 0; i < stack.length; i++) {
-                // access layers of prototype object
-                miniProto = miniProto[stack[i]]
-                if (i === stack.length - 2) {
-                  // when final index, delete
-                  delete miniProto[stack[i + 1]];
-                }
-              }
-            }
+            // if (selectionSetDepth > 2) {
+            //   let miniProto = targetObj;
+            //   // loop through stack to access layers of prototype object
+            //   for (let i = 0; i < stack.length; i++) {
+            //     // access layers of prototype object
+            //     miniProto = miniProto[stack[i]]
+            //     if (i === stack.length - 2) {
+            //       // when final index, delete
+            //       delete miniProto[stack[i + 1]];
+            //     }
+            //   }
+            // }
             
             // loop through stack to get correct path in proto for temp object;
             // mutates original prototype object WITH values from tempObject
             // "prev" is accumulator ie the prototype
+            console.log('the stack before reducing ', stack);
             stack.reduce((prev, curr, index) => {
               return index + 1 === stack.length // if last item in path
                 ? (prev[curr] = {...fieldsObject}) //set value
                 : (prev[curr] = prev[curr]); // otherwise, if index exists, keep value
-            }, prototype);
+            }, targetObj);
           }
         },
         leave() {
@@ -361,8 +386,47 @@ class QuellCache {
         },
       },
     });
-    return { prototype, operationType };
+    return { proto, operationType, frags };
   };
+  /* [1] prototype is  {
+[1]   Canada: {
+[1]     id: true,
+[1]     CountryFragment: true,
+[1]     __id: '2',
+[1]     __type: 'country',
+[1]     __alias: 'Canada',
+[1]     __args: { id: '2' }
+[1]   },
+[1]   USA: {
+[1]     id: true,
+[1]     CountryFragment: true,
+[1]     __id: '1',
+[1]     __type: 'country',
+[1]     __alias: 'USA',
+[1]     __args: { id: '1' }
+[1]   }
+[1] }
+*/
+
+  updateProtoWithFragment (protoObj, frags) {
+    if (!protoObj) return; 
+    // iterate over the typeKeys on proto
+    for (const key in protoObj) {
+      // if the current value is an object, then recruse through prototype 
+      if (typeof protoObj[key] === 'object' && !key.includes('__')) {
+        protoObj[key] = this.updateProtoWithFragment(protoObj[key], frags);
+      }
+      // else if the current key is the fragment key, then add all properties from frags onto prototype
+      else if (frags.hasOwnProperty(key)) {
+        // console.log('frags has a property', key);
+        protoObj = {...protoObj, ...frags[key]};
+        // remove the fragment key from the prototype object
+        delete protoObj[key];
+        // console.log('prototype after copying from fragment', protoObj);
+      }
+    }
+    return protoObj;
+  }
 
   // TO-DO: update mutations
   /**
@@ -639,6 +703,7 @@ class QuellCache {
    * @param {Object} proto - The prototype or a nested field within the prototype
    */
   toggleProto(proto) {
+    if (proto === undefined) return proto
     for (const key in proto) {
       if (Object.keys(proto[key]).length > 0) this.toggleProto(proto[key]);
       else proto[key] = false;
@@ -675,6 +740,10 @@ class QuellCache {
           // console.log(`itemFromCache[typeKey] is`, itemFromCache[typeKey]);
           // console.log(`keys saved to itemFromCache are ${Object.keys(itemFromCache)}`);
           // console.log(`itemFromCache: ${itemFromCache}`);
+        }
+        else {
+          // if the cache did not have data for this typeKey, then assign it a value of an empty object
+          itemFromCache[typeKey] = {};
         }
       }
       // if itemFromCache is an array (Array.isArray()) 
@@ -764,14 +833,15 @@ class QuellCache {
           if ( 
             // if field contains a nested query, then recurse the function and iterate through the nested query
             !field.includes('__') && 
-            typeof prototype[typeKey][field] === 'object') {
-              // console.log("PRE-RECURSE prototype[typeKey][field]: ", prototype[typeKey][field]);
-              // console.log("PRE-RECURSE itemFromCache: ", itemFromCache);
-            // console.log(`prototype[typeKey][field] is ${prototype[typeKey][field]}`); 
-            // console.log(`prototypeKeys are ${prototypeKeys}`);
-            // console.log(`itemFromCache's keys are ${Object.keys(itemFromCache)}`);
-            // console.log(`itemFromCache[typeKey] is ${itemFromCache[typeKey]}`);
-            // console.log(`itemFromCache at the property ${typeKey} has keys ${Object.keys(itemFromCache[typeKey])}`);
+            typeof prototype[typeKey][field] === 'object' &&
+            itemFromCache[typeKey]) {
+              console.log("PRE-RECURSE prototype[typeKey][field]: ", prototype[typeKey][field]);
+              console.log('itemFromCache', itemFromCache)
+              console.log(`prototype[typeKey][field] is ${prototype[typeKey][field]}`); 
+              console.log(`prototypeKeys are ${prototypeKeys}`);
+              console.log(`itemFromCache's keys are ${Object.keys(itemFromCache)}`);
+              // console.log(`itemFromCache[typeKey] is ${itemFromCache[typeKey]}`);
+              // console.log(`itemFromCache at the property ${typeKey} has keys ${Object.keys(itemFromCache[typeKey])}`);
             // TO-DO: when the demo starts up, this line of code throws the following error -> TypeError: Cannot read property 'queryType' of undefined
             this.buildFromCache(prototype[typeKey][field], prototypeKeys, itemFromCache[typeKey][field], false);
             }
@@ -780,6 +850,9 @@ class QuellCache {
             // then toggle to false
             prototype[typeKey][field] = false;
           }
+          // else {
+          //   this.buildFromCache(prototype[typeKey], prototypeKeys, {}, false);
+          // }
         }  
       }
     }
