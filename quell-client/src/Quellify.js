@@ -61,9 +61,11 @@ async function Quellify(endPoint, query, map, fieldsMap, userOptions) {
   } else {
     // if it is "quellable"
     // Check cache for data and build array from that cached data
+
     // TO-DO: check output of buildFromCache
     // may need to store as const response = { data: buildFromCache(prototype, prototypeKeys) }
-    const prototypeKeys = Object.keys(prototype); 
+    // TO-DO: refactor buildFromCache to no longer require prototypeKeys as input
+    const prototypeKeys = Object.keys(prototype);
     const responseFromCache = buildFromCache(prototype, prototypeKeys);
     // If no data in cache, the response array will be empty:
     if (responseFromCache.length === 0) {

@@ -3,10 +3,18 @@ const joinResponses = require('../../src/helpers/joinResponses');
 describe('joinResponses', () => {
   const protoObj = {
     artists: {
+      __id: null,
+      __args: null,
+      __alias: null,
+      __type: 'artists',
       id: true,
       name: true,
       instrument: true,
       albums: {
+        __id: null,
+        __args: null,
+        __alias: null,
+        __type: 'albums',
         album_id: true,
         id: true,
         name: true,
@@ -66,7 +74,7 @@ describe('joinResponses', () => {
   test('inputs two flat response objects and outputs combined object', () => {
     const cacheResponse = {
       data: {
-        ['artist--1']: {
+        artist: {
           id: '1',
           name: 'John Coltrane'
         }
@@ -82,7 +90,11 @@ describe('joinResponses', () => {
     };
 
     const proto = {
-      ['artist--1']: {
+      artist: {
+        __id: '1',
+        __args: { id: '1' },
+        __alias: null,
+        __type: 'artist',
         id: true,
         name: true,
         instrument: true,
@@ -101,10 +113,10 @@ describe('joinResponses', () => {
   test('inputs two nested response objects and outputs combined object', () => {
     const cacheResponse = {
       data: {
-        ['artist--1']: {
+        artist: {
           id: '1',
           instrument: 'saxophone',
-          ['album--2']: {
+          album: {
             id:'2',
             name: 'Ring Around the Rose-y'
           },
@@ -125,11 +137,19 @@ describe('joinResponses', () => {
     };
 
     const prototype = {
-      ['artist--1']: {
+      artist: {
+        __id: '1',
+        __args: { id: '1' },
+        __alias: null,
+        __type: 'artist',
         id: true,
         name: false,
         instrument: true,
-        ['album--2']: {
+        album: {
+          __id: '2',
+          __args: { id: '2' },
+          __alias: null,
+          __type: 'album',
           id: true,
           name: true,
           yearOfRelease: false
@@ -182,6 +202,10 @@ describe('joinResponses', () => {
     
     const prototype = {
       albums: {
+        __id: null,
+        __args: null,
+        __alias: null,
+        __type: 'albums',
         album_id: false,
         id: false,
         name: false,
@@ -224,6 +248,10 @@ describe('joinResponses', () => {
     
     const prototype = {
       albums: {
+        __id: null,
+        __args: null,
+        __alias: null,
+        __type: 'albums',
         album_id: false,
         id: false,
         name: false,
@@ -244,7 +272,7 @@ describe('joinResponses', () => {
   test('inputs a query with a nested list', () => {
     const cacheResponse = {
       data: {
-        ['artist--1']: {
+        artist: {
           id: '1',
           genre: 'Pop',
           albums: [
@@ -286,11 +314,17 @@ describe('joinResponses', () => {
     };
 
     const prototype = {
-      ['artist--1']: {
+      artist: {
+        __args: { id: 1 },
+        __alias: null,
+        __type: 'artist',
         id: true,
         name: false,
         instrument: true,
         albums: {
+          __args: null,
+          __alias: null,
+          __type: 'albums',
           id: true,
           name: true,
           yearOfRelease: false
@@ -323,4 +357,6 @@ describe('joinResponses', () => {
       },
     });
   });
+
+  // TO-DO: test for alias compatibility (should be fine- server & bFC both create objects with alias as keys)
 });

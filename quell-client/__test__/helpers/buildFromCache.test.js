@@ -8,28 +8,32 @@ describe('buildFromCache.test.js', () => {
     sessionStorage.setItem('country--2', JSON.stringify({id: "2"})); 
     sessionStorage.setItem('country--3', JSON.stringify({id: "3"}));
     sessionStorage.setItem('countries', JSON.stringify(['country--1', 'country--2', 'country--3']));
-  })
+  });
 
   test('Basic query', () => {
     const testProto = {
-      'country--3': {
+      country: {
         id: true,
         name: true,
         __alias: null,
         __args: { id: '3' },
+        __type: 'country',
+        __id: '3',
         }
       };
     const endProto = {
-      'country--3': {
+      country: {
         id: true,
         name: false,
         __alias: null,
         __args: { id: '3' },
+        __type: 'country',
+        __id: '3',
         }
       };
     const expectedResponseFromCache = {
       data: {
-        'country--3': {
+        country: {
           'id': '3'
         }
       }
@@ -43,59 +47,83 @@ describe('buildFromCache.test.js', () => {
 
   test('Multiple nested queries that include args and aliases', () => {
     const testProto = {
-      'country--1': {
+      Canada: {
         id: true,
         name: true,
         __alias: 'Canada',
         __args: { id: '1' },
+        __type: 'country',
+        __id: '1',
         capitol: {
           id: true,
           name: true,
           population: true,
           __alias: null,
-          __args: {}
+          __args: {},
+          __type: 'capitol',
+          __id: null,
         }
       },
-      'country--2': {
+      Mexico: {
         id: true,
         name: true,
         __alias: 'Mexico',
         __args: { id: '2' },
-        climate: { seasons: true, __alias: null, __args: {} }
+        __type: 'country',
+        __id: '2',
+        climate: {
+          seasons: true,
+          __alias: null,
+          __args: {},
+          __type: 'climate',
+          __id: null
+        }
       }
     }
     const endProto = {
-      'country--1': {
+      Canada: {
         id: true,
         name: false,
         __alias: 'Canada',
         __args: { id: '1' },
+        __type: 'country',
+        __id: '1',
         capitol: {
           id: true,
           name: true,
           population: false,
           __alias: null,
-          __args: {}
+          __args: {},
+          __type: 'capitol',
+          __id: null
         }
       },
-      'country--2': {
+      Mexico: {
         id: true,
         name: false,
         __alias: 'Mexico',
         __args: { id: '2' },
-        climate: { seasons: false, __alias: null, __args: {} }
+        __type: 'country',
+        __id: '2',
+        climate: {
+          seasons: false,
+          __alias: null,
+          __args: {},
+          __type: 'climate',
+          __id: null,
+        }
       }
     }
     const expectedResponseFromCache = {
       data: {
-        'country--1': {
+        Canada: {
           id: '1',
           capitol: {
             id: '2',
             name: 'DC'
           }
         },
-        'country--2': {
+        Mexico: {
           id: '2'
         }
       }
@@ -106,26 +134,30 @@ describe('buildFromCache.test.js', () => {
     expect(responseFromCache).toEqual(expectedResponseFromCache);
   });
 
-  xtest('Countries test', () => {
+  test('Handles array', () => {
     const testProto = {
-      'countries': {
+      countries: {
         id: true,
         name: true,
         __alias: null,
         __args: {},
+        __type: 'countries',
+        __id: null,
       }
     }
     const endProto = {
-      'countries': {
+      countries: {
         id: true,
         name: false, 
         __alias: null,
         __args: {},
+        __type: 'countries',
+        __id: null,
       },
     }
     const expectedResponseFromCache = {
       data: {
-        "countries": [
+        countries: [
           {
             "id": "1"
           },
@@ -143,4 +175,7 @@ describe('buildFromCache.test.js', () => {
     expect(testProto).toEqual(endProto);
     expect(responseFromCache).toEqual(expectedResponseFromCache);
   });
+
+  // TO-DO
+  xtest('Handles deeply nested queries', () => { });
 });
