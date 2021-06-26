@@ -39,7 +39,8 @@ describe('server tests for Quell.parseAST.js', () => {
     });
   });
 
-  test('should traverse the abstract syntax tree and create a prototype object', () => {
+
+  test('should traverse the abstract syntax tree and create a proto object', () => {
     // define a query string
     const query = `query {
       countries {
@@ -50,10 +51,10 @@ describe('server tests for Quell.parseAST.js', () => {
     }`;
     // parse query, and parse AST
     const parsedQuery = parse(query);
-    const { prototype, operationType } = Quell.parseAST(parsedQuery);
+    const { proto, operationType } = Quell.parseAST(parsedQuery);
 
-    // compare expected prototype & operation Type to actual
-    expect(prototype).toEqual({
+    // compare expected proto & operation Type to actual
+    expect(proto).toEqual({
       countries: {
         id: true,
         name: true,
@@ -67,7 +68,7 @@ describe('server tests for Quell.parseAST.js', () => {
     expect(operationType).toBe('query');
   });
 
-  test('should return a prototype from a nested query', () => {
+  test('should return a proto from a nested query', () => {
     const query = `query {
       countries {
          id
@@ -83,10 +84,10 @@ describe('server tests for Quell.parseAST.js', () => {
       }`;
     
     const AST = parse(query);
-    const { prototype, operationType } = Quell.parseAST(AST);
+    const { proto, operationType } = Quell.parseAST(AST);
 
 
-    expect(prototype).toEqual({
+    expect(proto).toEqual({
       countries: {
         __type: 'countries',
         __args: null,
@@ -119,8 +120,9 @@ describe('server tests for Quell.parseAST.js', () => {
       }
     }`;
     const parsedQuery = parse(query);
-    const { prototype, operationType } = Quell.parseAST(parsedQuery);
-    expect(prototype).toEqual({
+    const { proto, operationType } = Quell.parseAST(parsedQuery);
+    
+    expect(proto).toEqual({
       country: {
         __type: 'country',
         __args: { id: "1", name: "USA" },
@@ -134,7 +136,7 @@ describe('server tests for Quell.parseAST.js', () => {
     expect(operationType).toEqual('query');
   });
 
-  test('should create prototype that stores alias information', () => {
+  test('should create proto that stores alias information', () => {
     const query = `{
       Canada: country (id: 1) {
         id
@@ -143,9 +145,9 @@ describe('server tests for Quell.parseAST.js', () => {
       }
   }`;
     const AST = parse(query);
-    const { prototype, operationType } = Quell.parseAST(AST);
+    const { proto, operationType } = Quell.parseAST(AST);
 
-    expect(prototype).toEqual({
+    expect(proto).toEqual({
       Canada: {
         __type: 'country',
         __args: { id: "1" },
@@ -159,7 +161,7 @@ describe('server tests for Quell.parseAST.js', () => {
     expect(operationType).toEqual('query');
   });
 
-  test('should create prototype object for multiple queries', () => {
+  test('should create proto object for multiple queries', () => {
     const query = `{
       countries { 
         id 
@@ -172,9 +174,9 @@ describe('server tests for Quell.parseAST.js', () => {
       }
     }`;
     const parsedQuery = parse(query);
-    const { prototype, operationType } = Quell.parseAST(parsedQuery);
+    const { proto, operationType } = Quell.parseAST(parsedQuery);
 
-    expect(prototype).toEqual({
+    expect(proto).toEqual({
       countries: {
         __type: 'countries', 
         __args: null,
@@ -196,7 +198,7 @@ describe('server tests for Quell.parseAST.js', () => {
     expect(operationType).toEqual('query');
   });
 
-  test('should create prototype object for multiple nested queries', () => {
+test('should create proto object for multiple nested queries', () => {
     const query = `{
       countries { 
         id 
@@ -214,9 +216,9 @@ describe('server tests for Quell.parseAST.js', () => {
       }
     }`;
     const parsedQuery = parse(query);
-    const { prototype, operationType } = Quell.parseAST(parsedQuery);
+    const { proto, operationType } = Quell.parseAST(parsedQuery);
 
-    expect(prototype).toEqual({
+    expect(proto).toEqual({
       countries: {
         __type: 'countries',
         __args: null,
@@ -251,7 +253,7 @@ describe('server tests for Quell.parseAST.js', () => {
     expect(operationType).toBe('query');
   });
 
-  test('should create prototype for query with nested arguments', () => {
+  test('should create proto for query with nested arguments', () => {
     const query = `query {
       country(id: 1) {
         id
@@ -263,9 +265,9 @@ describe('server tests for Quell.parseAST.js', () => {
       }
     }`;
     const parsedQuery = parse(query);
-    const { prototype, operationType } = Quell.parseAST(parsedQuery);
+    const { proto, operationType } = Quell.parseAST(parsedQuery);
 
-    expect(prototype).toEqual({
+    expect(proto).toEqual({
       country: {
         __type: 'country',
         __args: { id: '1'},
@@ -286,7 +288,7 @@ describe('server tests for Quell.parseAST.js', () => {
     expect(operationType).toBe('query');
   });
 
-  test('EDGE- should create prototype for query with alias even without arguments', () => {
+  test('EDGE- should create proto for query with alias even without arguments', () => {
     const query = `query {
       Canada: country {
         id
@@ -295,9 +297,9 @@ describe('server tests for Quell.parseAST.js', () => {
     }`;
 
     const parsedQuery = parse(query);
-    const { prototype, operationType } = Quell.parseAST(parsedQuery);
+    const { proto, operationType } = Quell.parseAST(parsedQuery);
 
-    expect(prototype).toEqual({
+    expect(proto).toEqual({
       Canada: {
         __type: 'country',
         __args: null,
@@ -310,7 +312,7 @@ describe('server tests for Quell.parseAST.js', () => {
     expect(operationType).toBe('query');
   });
 
-  test('should create prototype for query with nested aliases & arguments', () => {
+  test('should create proto for query with nested aliases & arguments', () => {
     const query = `query { 
       countries {
         id
@@ -333,9 +335,9 @@ describe('server tests for Quell.parseAST.js', () => {
     }`;
 
     const parsedQuery = parse(query);
-    const { prototype, operationType } = Quell.parseAST(parsedQuery);
+    const { proto, operationType } = Quell.parseAST(parsedQuery);
 
-    expect(prototype).toEqual({
+    expect(proto).toEqual({
       countries: {
         __type: 'countries',
         __args: null,
@@ -374,7 +376,7 @@ describe('server tests for Quell.parseAST.js', () => {
     expect(operationType).toBe('query');
   });
 
-  test('should add type-specific options to prototype when supplied', () => {
+  test('should add type-specific options to proto when supplied', () => {
     const query = `query {
       country(id: 1, name: "USA", __cacheTime: 1000) {
         id
@@ -383,8 +385,9 @@ describe('server tests for Quell.parseAST.js', () => {
       }
     }`;
     const parsedQuery = parse(query);
-    const { prototype, operationType } = Quell.parseAST(parsedQuery);
-    expect(prototype).toEqual({
+
+    const { proto, operationType } = Quell.parseAST(parsedQuery);
+    expect(proto).toEqual({
       country: {
         __type: 'country',
         __args: { id: "1", name: "USA" },
@@ -399,24 +402,23 @@ describe('server tests for Quell.parseAST.js', () => {
     expect(operationType).toEqual('query');
   });
 
-  // TO-DO
-  xtest('should create prototype for query with fragments', () => {
+  test('should create proto for query with fragments', () => {
     const query = `query { 
       Canada: country {
         id
         name
-        ...fragment
+        ...CountryInfo
       }
     }
-    fragment CountryInfo on Country {
+    fragment CountryInfo on country {
       capitol,
       population
     }`;
 
     const parsedQuery = parse(query);
-    const { prototype, operationType } = Quell.parseAST(parsedQuery);
+    const { proto, operationType , frags } = Quell.parseAST(parsedQuery);
 
-    expect(prototype).toEqual({
+    expect(proto).toEqual({
       Canada: {
         __id: null,
         __type: 'country',
@@ -424,8 +426,13 @@ describe('server tests for Quell.parseAST.js', () => {
         __alias: 'Canada',
         id: true,
         name: true,
+        CountryInfo: true
+      }
+    });
+    expect(frags).toEqual({
+      CountryInfo: {
         capitol: true,
-        population: true,
+        population: true
       }
     });
     expect(operationType).toBe('query');

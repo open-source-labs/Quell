@@ -5,6 +5,7 @@ const buildFromCache = require('./helpers/buildFromCache');
 const createQueryObj = require('./helpers/createQueryObj');
 const createQueryStr = require('./helpers/createQueryStr');
 const joinResponses = require('./helpers/joinResponses');
+const updateProtoWithFragment = require('./helpers/updateProtoWithFragments');
 
 // NOTE:
 // Map: Query to Object Types map - Get from server or user provided (check introspection)
@@ -41,7 +42,7 @@ async function Quellify(endPoint, query, map, fieldsMap, userOptions) {
   const AST = parse(query);
 
   // Create object of "true" values from AST tree (w/ some eventually updated to "false" via buildItem())
-  const { prototype, operationType } = parseAST(AST, options);
+  const { proto, operationType, frags } = parseAST(AST, options);
 
   // pass-through for queries and operations that QuellCache cannot handle
   if (operationType === 'unQuellable') {
@@ -54,21 +55,30 @@ async function Quellify(endPoint, query, map, fieldsMap, userOptions) {
     };
 
     // Execute fetch request with original query
-    // const responseFromFetch = await fetch(endPoint, fetchOptions);
-    const parsedData = await responseFromFetch.json();
+    // const serverResponse = await fetch(endPoint, fetchOptions);
+    const parsedData = await serverResponse.json();
     // Return response as a promise
     return new Promise((resolve, reject) => resolve(parsedData));
   } else {
     // if it is "quellable"
+    const prototype = Object.keys(frags).length > 0 ? updateProtoWithFragment(proto, frags) : proto;
     // Check cache for data and build array from that cached data
-
     // TO-DO: check output of buildFromCache
     // may need to store as const response = { data: buildFromCache(prototype, prototypeKeys) }
     // TO-DO: refactor buildFromCache to no longer require prototypeKeys as input
     const prototypeKeys = Object.keys(prototype);
-    const responseFromCache = buildFromCache(prototype, prototypeKeys);
+    const cacheResponse = buildFromCache(prototype, prototypeKeys);
+    // initialize a cacheHasData to false
+    let cacheHasData = false;
     // If no data in cache, the response array will be empty:
-    if (responseFromCache.length === 0) {
+    for (const key in cacheResponse.data) {
+      // if the current element does have more than 1 key on it, then set cacheHas Datat tot true and break
+      if (Object.keys(cacheResponse.data[key]).length > 0) {
+        cacheHasData = true;
+        break;
+      }
+    }
+    if (!cacheHasData) {
       const fetchOptions = {
         method: 'POST',
         headers: {
@@ -78,8 +88,8 @@ async function Quellify(endPoint, query, map, fieldsMap, userOptions) {
       };
 
       // Execute fetch request with original query
-      const responseFromFetch = await fetch(endPoint, fetchOptions);
-      const parsedData = await responseFromFetch.json();
+      const serverResponse = await fetch(endPoint, fetchOptions);
+      const parsedData = await serverResponse.json();
       // Normalize returned data into cache
       normalizeForCache(parsedData.data, map, fieldsMap);
 
@@ -105,8 +115,8 @@ async function Quellify(endPoint, query, map, fieldsMap, userOptions) {
       };
 
       // Execute fetch request with new query
-      const responseFromFetch = await fetch(endPoint, fetchOptions);
-      const parsedData = await responseFromFetch.json();
+      const serverResponse = await fetch(endPoint, fetchOptions);
+      const parsedData = await serverResponse.json();
 
 
       // NOTE: trying this commented out, 
@@ -114,7 +124,7 @@ async function Quellify(endPoint, query, map, fieldsMap, userOptions) {
       // const queryName = Object.keys(prototype)[0];
 
       // // TO-DO: why put it into an array?
-      // const parsedResponseFromFetch = Array.isArray(parsedData.data[queryName])
+      // const parsedserverResponse = Array.isArray(parsedData.data[queryName])
       //   ? parsedData.data[queryName]
       //   : [parsedData.data[queryName]];
 
@@ -122,14 +132,14 @@ async function Quellify(endPoint, query, map, fieldsMap, userOptions) {
       // Stitch together cached response and the newly fetched data and assign to variable
       mergedResponse = {
         data: joinResponses(
-          responseFromCache,
-          parsedResponseFromFetch,
+          cacheResponse,
+          parsedData,
           prototype
         )
       }
     } else {
       // If everything needed was already in cache, only assign cached response to variable
-      mergedResponse = responseFromCache;
+      mergedResponse = cacheResponse;
     }
 
     // TO-DO: legacy code, commented out for now, I believe it is deprecated but don't want to get rid of it until we have done further testing
