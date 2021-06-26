@@ -20,7 +20,7 @@ const Query = (props) => {
   const [theQuery, setTheQuery] = useState("blank"); 
 
   //TBD for removal
-  const [query, setQuery] = useState('countries'); // set the kind of query you want
+  const [query, setQuery] = useState(''); // set the kind of query you want
   const [type, setType] = useState('Country'); // is it a 'Country' or a 'City'?
   const [queryDropdown, toggleDropdown] = useState(false); // toggle query dropdown
   const [idDropdown, setIdDropdown] = useState(false); // show id dropdown (only applies to queries by id)
@@ -72,16 +72,17 @@ const Query = (props) => {
   // Change Query Selection - fires from DropdownItem child - comes in like ('Countries')
   const selectQuery = (selection) => {
     setQuery(selection);
-    if (selection === 'countries' || selection === 'country by id') {
-      setType('Country');
+    if (selection === 'Simple Query') {
+      displaySimpleQuery();
     }
-    if (selection === 'cities' || selection === 'cities by country id') {
-      setType('City');
+    if (selection === 'Simple Query With Argument') {
+      displaySimpleQueryWithArg(); 
     }
-    if (selection === 'country by id' || selection === 'cities by country id') {
-      setIdDropdown(true);
-      // When selecting a query by id, reset selectedId to default id (1)
-      setSelectedId(1);
+    if (selection === 'Multiple Queries') {
+      displayMultipleQueries(); 
+    } 
+    if (selection === 'Nested Query') {
+      displayNestedQuery(); 
     } else {
       setIdDropdown(false);
     }
@@ -112,10 +113,12 @@ const Query = (props) => {
     - Array of queries to choose from
   */
   const dropdownList = [
-    'countries',
-    'country by id',
-    'cities',
-    'cities by country id',
+    'Simple Query',
+    'Simple Query With Argument',
+    'Multiple Queries',
+    'Nested Query',
+    'Multiple Nested Query'
+
   ];
 
   // Creates dropdown menu from the above array
@@ -126,52 +129,125 @@ const Query = (props) => {
   });
 
   // // Creates id dropdown (change the i <= # to customize)
-  const idDropMenu = [];
-  for (let i = 1; i <= 5; i++) {
-    idDropMenu.push(
-      <DropdownItem func={selectDropdownId} item={i} key={'ID' + i} />
-    );
-  }
+  // const idDropMenu = [];
+  // for (let i = 1; i <= 5; i++) {
+  //   idDropMenu.push(
+  //     <DropdownItem func={selectDropdownId} item={i} key={'ID' + i} />
+  //   );
+  // }
 
   const displaySimpleQuery = () => {
     setTheQuery("simple query");
-    output = setOutput({countries: ["id", "name"]});
-  }
-
-  const displayMultipleQueries = () => {
-    setTheQuery("multiple queries");
+    output = setOutput({
+      countries: {
+        __id: null,
+        __alias: null,
+        __args: {},
+        __type: 'countries',
+        id: false,
+        name: false,
+      }
+    });
   }
 
   const displaySimpleQueryWithArg = () => {
     setTheQuery("simple query with argument");
-    output = setOutput({'country (id:1)': ["id", "name"]});
+    output = setOutput({
+      country: {
+        __id: '1',
+        __type: 'country',
+        __alias: null,
+        __args: { id: '1' },
+        id: false,
+        name: false,
+      }
+    });
   }
 
- const buttons = 
-//  <div className="dashboard-grid">
-    <div>
-      <DemoButton
-        text={'Basic Query'}
-        func={displaySimpleQuery}
-        classname={'button-query button-query-secondary'}
-      />
-      <DemoButton
-        text={'Basic Query With Argument'}
-        func={displaySimpleQueryWithArg}
-        classname={'button-query button-query-secondary'}
-      />
-      {/* <DemoButton
-        text={'Output'}
-        func={outputFunction}
-        classname={'button-query button-query-secondary'}
-      /> */}
-      {/* <DemoButton
-        text={'Reset All'}
-        func={handleResetAll}
-        classname={'button-query button-query-secondary'}
-      />  */}
-  {/* </div> */}
-  </div>
+  const displayMultipleQueries = () => {
+    setTheQuery("multiple queries");
+    output = setOutput({
+      country: {
+        __id: '1',
+        __type: 'country',
+        __args: { id: '1' },
+        __alias: null,
+        id: false,
+        name: false,
+        cities: {
+          __id: null,
+          __type: 'cities',
+          __args: {},
+          __alias: null,
+          id: false,
+          name: false,
+        },
+      },
+      book: {
+        __id: '2',
+        __type: 'book',
+        __args: { id: '2' },
+        __alias: null,
+        id: false,
+        name: false,
+      },
+    })
+}
+
+  const displayNestedQuery = () => {
+    setTheQuery("nested query");
+    output = setOutput({
+      countries: {
+        id: true,
+        __type: 'countries',
+        __alias: null,
+        __args: {},
+        __id: null,
+        cities: {
+          id: true,
+          __type: 'cities',
+          __alias: null,
+          __args: {},
+          __id: null,
+          attractions: {
+            id: true,
+            __type: 'attractions',
+            __alias: null,
+            __args: {},
+            __id: null,
+            location: {
+              id: true,
+              __type: 'location',
+              __alias: null,
+              __args: {},
+              __id: null,
+            }
+          }
+        }
+      }
+    });
+  }
+
+  const dropDown = 
+  <span>
+  {/* Query Dropdown button */}
+    <button
+      className="dropdown-button"
+      onClick={() => toggleDropdown(!queryDropdown)}
+    >
+      <div className="plus-minus-icons dropdown-icon">
+        <img src={DropDown}/>
+        {/* <h3>SELECT YOUR QUERY</h3> */}
+        <img src={DropDownHover} className="hover-button" />
+      </div>
+      {/* Query Dropdown Menu */}
+      {queryDropdown && (
+        <div className="dropdown-menu" ref={ref}>
+          {dropdownMenu}
+        </div>
+      )}
+    <b>SELECT YOUR QUERY</b></button>
+</span> 
 
   const dropDown = <span>
   {/* Query Dropdown button */}
@@ -199,11 +275,22 @@ const Query = (props) => {
   const eighted = <span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>;
   const space = <span>&nbsp;</span>;
 
+  // const dropdownState = (theState) => {
+  //   theState = true; 
+  //   if (theState) {
+  //   return (
+  //     <>
+  //     {dropDown}
+  //     </>
+  //   );
+  //   }
+  // };
+
 
   if (theQuery === "blank") {
     return (
       <>
-      {buttons}
+      {dropDown}
         <div className="query-div">
         </div>
       {dropDown}  
@@ -217,9 +304,7 @@ const Query = (props) => {
     // });
   return (
     <>
-    {outputFunction()}
-    {buttons}
-    {dropDown} 
+    {dropDown}
       <div className="query-div">
         <div className="queryLine">{ob}</div>
         <div className="queryLine">
@@ -243,8 +328,7 @@ const Query = (props) => {
   if (theQuery === "simple query with argument") {
     return (
       <>
-      {buttons}
-      {dropDown} 
+      {dropDown}
         <div className="query-div">
           <div className="queryLine">{ob}</div>
           <div className="queryLine">
@@ -268,7 +352,6 @@ const Query = (props) => {
   if (theQuery === "multiple queries") {
     return (
       <>
-    {buttons}
     {dropDown} 
       <div className="query-div">
         <div className="queryLine">{ob}</div>
@@ -303,6 +386,41 @@ const Query = (props) => {
     );
   }
 
+  if (theQuery === "nested query") {
+    return (
+      <>
+      {dropDown}
+      {/* `{ countries { id cities { id attractions } } }` */}
+        <div className="query-div">
+          <div className="queryLine">{ob}</div>
+          <div className="queryLine">
+            {space}{space}{"countries"} {ob}
+          </div>
+          <div className="queryLine">
+            {tab}{"id"} 
+          </div>
+          <div className="queryLine">
+            {tab}{"cities"} {ob}
+          </div>
+          <div className="queryLine">
+            {tab}{"id"} 
+          </div>
+          <div className="queryLine">
+            {space}{space}{ob}
+          </div>
+          <div className="queryLine">
+            {tab}{"attractions"} {ob}
+          </div>
+          <div className="queryLine">
+            {tab}{"id"} 
+          </div>
+          <div className="queryLine">{cb}</div>
+          <div className="queryLine">{cb}</div>
+          <div className="queryLine">{cb}</div>
+        </div>
+      </>
+    );
+  }
 
 };
 

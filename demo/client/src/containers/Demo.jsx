@@ -48,7 +48,9 @@ const Demo = () => {
         country: 'Country',
         citiesByCountry: 'City',
         cities: 'City',
-        books: 'Book'
+        book: 'Book',
+        books: 'Book',
+        // book: 'Book'
         //potentially book too? 
       },
       {}
