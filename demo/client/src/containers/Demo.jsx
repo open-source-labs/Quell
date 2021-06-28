@@ -65,15 +65,6 @@ const Demo = () => {
     See ResultsHelper function in HelperFunctions.js
     It makes a change to the state in the parent component, Demo
   */
-  // const outputFunction = () => {
-    // if (theQuery === 'simple query') {
-    //   setOutput({countries: ["id", "name"]}); 
-    // }
-    // if (theQuery === 'simple query with argument') {
-    //   setOutput({'country (id:1)': ["id", "name"]}); 
-    // }
-  // };
-
   
 
   /* 
@@ -82,14 +73,13 @@ const Demo = () => {
     const dropdownList = [
     'Simple Query',
     'Simple Query With Argument',
+    'Alias',
     'Multiple Queries',
     'Nested Query',
-    'Multiple Nested Query'
-
+    'Fragments'
   ];
 
  
-
     const selectQuery = (selection) => {
       // setTheQuery(selection);
       if (selection === 'Simple Query') {
@@ -107,8 +97,7 @@ const Demo = () => {
   
       // Close dropdown
       toggleDropdown(false);
-      // Update state in Demo
-      // outputFunction(0, 0, selection);
+     
     };
 
      // Creates dropdown menu from the above array
@@ -179,34 +168,7 @@ const Demo = () => {
     const displayNestedQuery = () => {
       setTheQuery("nested query");
       output = setOutput({
-        countries: {
-          id: true,
-          __type: 'countries',
-          __alias: null,
-          __args: {},
-          __id: null,
-          cities: {
-            id: true,
-            __type: 'cities',
-            __alias: null,
-            __args: {},
-            __id: null,
-            attractions: {
-              id: true,
-              __type: 'attractions',
-              __alias: null,
-              __args: {},
-              __id: null,
-              location: {
-                id: true,
-                __type: 'location',
-                __alias: null,
-                __args: {},
-                __id: null,
-              }
-            }
-          }
-        }
+        
       });
     }
 
@@ -386,7 +348,6 @@ const Demo = () => {
         {/* The key prop makes it so that when component changes, it completely reloads -- useful when clicking "Reset All" */}
         <Query theQuery={theQuery} />
         <Metrics fetchTime={fetchTime} cacheStatus={cacheStatus} />
-
         <QueryResults queryResponse={queryResponse} />
         <Graph fetchTimeIntegers={fetchTimeIntegers} />
       </div>
