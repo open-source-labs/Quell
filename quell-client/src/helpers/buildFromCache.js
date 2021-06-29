@@ -49,6 +49,8 @@ function buildFromCache(prototype, prototypeKeys, itemFromCache = {}, firstRun =
       const cacheResponse = sessionStorage.getItem(cacheID);
       // if data for the current typeKey is not found in sessionStorage then we receive null. Need to replace null with empty object
       itemFromCache[typeKey] = cacheResponse ? JSON.parse(cacheResponse) : {};
+      console.log('itemFromCache is ')
+      // need to check cacheResponse to see if each field was requested in proto
     }
     // if itemFromCache is an array (Array.isArray()) 
     if (Array.isArray(itemFromCache[typeKey])) {

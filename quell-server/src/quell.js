@@ -47,9 +47,10 @@ class QuellCache {
 
     // create abstract syntax tree with graphql-js parser
     const AST = parse(queryString);
-
+    console.log('AST after parsing ', AST);
     // create response prototype, referenses for arguments and operation type
     const { proto, operationType, frags } = this.parseAST(AST);
+    console.log('proto after parseing ast is ', proto, ' and operationType is ', operationType, ' and frags are ', frags);
     // TO-DO: filter out introspection queries and set operationType to unquellable 
     // if (operationDefinition.name.value == ''
     // not a deep protype copy
@@ -100,16 +101,9 @@ class QuellCache {
       // TO-DO: test that buildFromCache w/o queryMap doesn't produce changes
       // update buildFromCache to update with redis info
       const prototypeKeys = Object.keys(prototype);
-      this.redisCache.keys('*', (err, keys) => {
-        if (err) console.log(err);
-        else console.log('keys in redis cache before buildfromcache are ', keys);
-      });
       // console.log('prototype keys', prototypeKeys);
       const cacheResponse = await this.buildFromCache(prototype, prototypeKeys);
-      this.redisCache.keys('*', (err, keys) => {
-        if (err) console.log(err);
-        else console.log('keys in redis cache after buildfromcache are ', keys);
-      });
+      console.log('after building from cache in the server, the cache response is ', cacheResponse);
       // console.log('cache resonse is ', cacheResponse);
       // console.log('prototype after buildfrom cache', prototype);
       // const responseFromCache = await buildFromCache(
@@ -122,17 +116,18 @@ class QuellCache {
 
       // create query object to check if we have to get something from database
       const queryObject = this.createQueryObj(prototype);
-
+      console.log('query object after creating uqery on the server', queryObject);
       // if cached response is incomplete, reformulate query, handoff query, join responses, and cache joined responses
       if (Object.keys(queryObject).length > 0) {
         // create new query sting
         const newQueryString = this.createQueryStr(queryObject);
-
+        console.log('the new query string in the server is ', newQueryString);
         graphql(this.schema, newQueryString)
           .then(async (databaseResponse) => {
             // databaseResponse = queryResponse.data;
             // join uncached and cached responses, prototype is used as a "template" for final mergedResponse
             // if the cacheresponse does not contain any of the data requested by the client 
+            console.log('fetching data from thee server, ', databaseResponse);
             // initialize a cacheHasData to false
             let cacheHasData = false;
             // iterate over the keys in cacheresponse data
@@ -140,7 +135,7 @@ class QuellCache {
               // if the current element does have more than 1 key on it, then set cacheHas Datat tot true and break
               if (Object.keys(cacheResponse.data[key]).length > 0) {
                 cacheHasData = true;
-                break;
+                // break;
               }
             }
             mergedResponse = cacheHasData  
@@ -152,8 +147,9 @@ class QuellCache {
               : databaseResponse;
             // TO-DO: update this.cache to use prototype instead of protoArgs
             // TO-DO check if await is needed here
-            this.normalizeForCache(mergedResponse.data, {}, prototype, this.fieldsMap);
-            
+            console.log('before normazliing for cache, merged response', mergedResponse);
+            const successfulCache = await this.normalizeForCache(mergedResponse.data, {}, prototype, this.fieldsMap);
+            console.log('after normazliing for cache, merged response', mergedResponse);
             // const successfullyCached = await this.cache(
               //   mergedResponse,
               //   prototype
@@ -163,7 +159,7 @@ class QuellCache {
               // do we care that cache calls are asynchronous, is it worth pausing the client response?
               
 
-            res.locals.queryResponse = { data: mergedResponse };
+            res.locals.queryResponse = { ...mergedResponse };
             return next();
           })
           .catch((error) => {

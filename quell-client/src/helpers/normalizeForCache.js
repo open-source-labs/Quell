@@ -71,11 +71,14 @@
 
 function normalizeForCache(responseData, map = {}, protoField, fieldsMap = {}) {
   // iterate over keys in our response data object 
+  console.log('inputs to normalize for cache are responseData', responseData);
+  console.log(' and prototype is', protoField);
   for (const resultName in responseData) {
     // currentField we are iterating over & corresponding Prototype
     const currField = responseData[resultName];
     const currProto = protoField[resultName];
-
+    console.log('current field in response is ', currField); 
+    console.log('current proto is ', currProto);
     // check if the value stored at that key is array 
     if (Array.isArray(currField)) {
       // RIGHT NOW: countries: [{}, {}]
@@ -109,7 +112,7 @@ function normalizeForCache(responseData, map = {}, protoField, fieldsMap = {}) {
           normalizeForCache({ [dataType]: el }, map,  { [dataType]: currProto});
         }
       })
-
+      console.log('result name is ', resultName, ' and ref list is ', refList);
       sessionStorage.setItem(resultName, JSON.stringify(refList));
     }
     else if (typeof currField === 'object') {
