@@ -39,6 +39,7 @@ describe('server tests for Quell.parseAST.js', () => {
     });
   });
 
+
   test('should traverse the abstract syntax tree and create a proto object', () => {
     // define a query string
     const query = `query {
@@ -120,6 +121,7 @@ describe('server tests for Quell.parseAST.js', () => {
     }`;
     const parsedQuery = parse(query);
     const { proto, operationType } = Quell.parseAST(parsedQuery);
+    
     expect(proto).toEqual({
       country: {
         __type: 'country',
@@ -196,7 +198,7 @@ describe('server tests for Quell.parseAST.js', () => {
     expect(operationType).toEqual('query');
   });
 
-  test('should create proto object for multiple nested queries', () => {
+test('should create proto object for multiple nested queries', () => {
     const query = `{
       countries { 
         id 
@@ -383,6 +385,7 @@ describe('server tests for Quell.parseAST.js', () => {
       }
     }`;
     const parsedQuery = parse(query);
+
     const { proto, operationType } = Quell.parseAST(parsedQuery);
     expect(proto).toEqual({
       country: {
