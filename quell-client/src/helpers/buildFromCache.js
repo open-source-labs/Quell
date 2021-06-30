@@ -46,11 +46,11 @@ function buildFromCache(prototype, prototypeKeys, itemFromCache = {}, firstRun =
       // if typeKey is a rootQuery, then clear the cache and set firstRun to true 
       // cached data must persist 
       // create a property on itemFromCache and set the value to the fetched response from cache
-      // console.log('getting from cache', cacheID);
+      console.log('getting from cache', cacheID);
       const cacheResponse = sessionStorage.getItem(cacheID);
       // if data for the current typeKey is not found in sessionStorage then we receive null. Need to replace null with empty object
       itemFromCache[typeKey] = cacheResponse ? JSON.parse(cacheResponse) : {};
-      // console.log('tempCache at typeKey is ', itemFromCache[typeKey]);
+      console.log('tempCache at typeKey is ', itemFromCache[typeKey]);
       // need to check cacheResponse to see if each field was requested in proto
     }
     // if itemFromCache is an array (Array.isArray()) 
@@ -58,7 +58,7 @@ function buildFromCache(prototype, prototypeKeys, itemFromCache = {}, firstRun =
       // iterate over countries
       for (let i = 0; i < itemFromCache[typeKey].length; i++) {
         const currTypeKey = itemFromCache[typeKey][i];
-        // console.log('getting from cache', currTypeKey);
+        console.log('getting from cache', currTypeKey);
         const cacheResponse = sessionStorage.getItem(currTypeKey);
         let tempObj = {};
         if (cacheResponse) {
@@ -85,7 +85,7 @@ function buildFromCache(prototype, prototypeKeys, itemFromCache = {}, firstRun =
           itemFromCache[typeKey][i] = tempObj;
         }
         else {
-          // console.log(`nothing in the cache for property ${typeKey}`);
+          console.log(`nothing in the cache for property ${typeKey}`);
           for (const property in prototype[typeKey]) {
             // if interimCache has the property
             if (!property.includes('__') && typeof prototype[typeKey][property] !== 'object') {
@@ -99,7 +99,7 @@ function buildFromCache(prototype, prototypeKeys, itemFromCache = {}, firstRun =
     // if itemFromCache is empty, then check the cache for data, else, persist itemFromCache
     // if this iteration is a nested query (i.e. if typeKey is a field in the query)
     else if (firstRun === false) {
-      // console.log('iFC', itemFromCache);
+      console.log('iFC', itemFromCache);
 
       // if this field is NOT in the cache, then set this field's value to false
       if (
@@ -113,7 +113,7 @@ function buildFromCache(prototype, prototypeKeys, itemFromCache = {}, firstRun =
         !typeKey.includes('__') && // do not iterate through __args or __alias
         typeof prototype[typeKey] === 'object') {
         const cacheID = generateCacheID(prototype);
-        // console.log('getting from cache', cacheID);
+        console.log('getting from cache', cacheID);
           const cacheResponse = sessionStorage.getItem(cacheID)
           itemFromCache[typeKey] = JSON.parse(cacheResponse);
           // repeat function inside of the nested query
@@ -123,8 +123,8 @@ function buildFromCache(prototype, prototypeKeys, itemFromCache = {}, firstRun =
     // if the current element is not a nested query, then iterate through every field on the typeKey
     else {
       for (let field in prototype[typeKey]) {
-        // console.log('typeKey', typeKey, 'field: ', field);
-        // console.log('itemFromCache: ', itemFromCache)
+        console.log('typeKey', typeKey, 'field: ', field);
+        console.log('itemFromCache: ', itemFromCache)
         // if itemFromCache[typeKey] === false then break
 
         if (
@@ -141,8 +141,8 @@ function buildFromCache(prototype, prototypeKeys, itemFromCache = {}, firstRun =
           !field.includes('__') && 
           typeof prototype[typeKey][field] === 'object' &&
           itemFromCache[typeKey]) {
-            // console.log("PRE-RECURSE prototype[typeKey][field]: ", prototype[typeKey][field]);
-            // console.log("PRE-RECURSE itemFromCache: ", itemFromCache);
+            console.log("PRE-RECURSE prototype[typeKey][field]: ", prototype[typeKey][field]);
+            console.log("PRE-RECURSE itemFromCache: ", itemFromCache);
           buildFromCache(prototype[typeKey][field], prototypeKeys, itemFromCache[typeKey][field], false);
           }
         else if (!itemFromCache[typeKey] && !field.includes('__') && typeof prototype[typeKey][field] !== 'object') {
@@ -153,6 +153,7 @@ function buildFromCache(prototype, prototypeKeys, itemFromCache = {}, firstRun =
     }
   }
   // assign the value of an object with a key of data and a value of itemFromCache and return
+  console.log('returning iFC', { data: itemFromCache });
   return { data: itemFromCache }
 }
 

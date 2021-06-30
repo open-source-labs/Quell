@@ -149,7 +149,8 @@ const parseAST = (AST, options = defaultOptions) => {
         const fieldType = node.alias ? node.alias.value : node.name.value;
 
         // stores node Field Type on aux object, 
-        auxObj.__type = node.name.value;
+        // always stored as lowerCase to ensure consistent caching
+        auxObj.__type = node.name.value.toLowerCase();
 
         // TO-DO: clean up __alias, should be deprecated
         // stores alias for Field on auxillary object

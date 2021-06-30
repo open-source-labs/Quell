@@ -239,7 +239,7 @@ describe('parseAST.js', () => {
         name: true,
         genre: true,
         similarBooks: {
-          __type: 'similarBooks',
+          __type: 'similarbooks',
           __args: null,
           __alias: null,
           __id: null,

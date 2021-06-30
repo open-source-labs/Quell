@@ -33,15 +33,25 @@ const defaultOptions = {
 };
 
 // MAIN CONTROLLER
-async function Quellify(endPoint, query, map, fieldsMap, userOptions) {
+async function Quellify(endPoint, query, map, userOptions, fieldsMap) {
   // merge defaultOptions with userOptions
   // defaultOptions will supply any necessary options that the user hasn't specified
   const options = { ...defaultOptions, ...userOptions };
-  console.log('endpoint at the beginning of quell is ', endPoint);
+  // console.log('endpoint at the beginning of quell is ', endPoint);
+
+  // iterate over map to create all lowercase map for consistent caching
+  for (const props in map) {
+    const value = map[props].toLowerCase();
+    const key = props.toLowerCase();
+    delete map[props];
+    map[key] = value;
+  }
+
+
   // Create AST of query
   const AST = parse(query);
 
-  console.log('after parsing the query, AST is ', AST);
+  // console.log('after parsing the query, AST is ', AST);
 
   // Create object of "true" values from AST tree (w/ some eventually updated to "false" via buildItem())
   const { proto, operationType, frags } = parseAST(AST, options);
@@ -92,11 +102,11 @@ async function Quellify(endPoint, query, map, fieldsMap, userOptions) {
       // Execute fetch request with original query
       const serverResponse = await fetch(endPoint, fetchOptions);
       const parsedData = await serverResponse.json();
-      console.log('respnose from the server is ', parsedData);
+      console.log('response from the server is ', parsedData);
       // Normalize returned data into cache
-      console.log('prototype before normalize for cache is ', prototype)
+      // console.log('prototype before normalize for cache is ', prototype)
       normalizeForCache(parsedData.data, map, prototype);
-      console.log('after normizing for cache, the parsed data are ', parsedData);
+      // console.log('after normizing for cache, the parsed data are ', parsedData);
 
       // Return response as a promise
       return new Promise((resolve, reject) => resolve({ data: parsedData }));
@@ -104,6 +114,7 @@ async function Quellify(endPoint, query, map, fieldsMap, userOptions) {
 
     // If found data in cache:
     // Create query object from only false prototype fields
+    console.log('DATA FOUND IN CACHE BLOCK');
     let mergedResponse;
     const queryObject = createQueryObj(prototype);
 
@@ -113,7 +124,7 @@ async function Quellify(endPoint, query, map, fieldsMap, userOptions) {
     if (Object.keys(queryObject).length > 0) {
       // Create formal GQL query string from query object
       const newQuery = createQueryStr(queryObject); 
-      console.log('based on query object, the new Query is ', newQuery);
+      console.log('new Query is ', newQuery);
       const fetchOptions = {
         method: 'POST',
         headers: options.headers,

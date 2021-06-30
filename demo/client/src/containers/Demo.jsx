@@ -243,8 +243,8 @@ const Demo = () => {
       '/graphql', // our route
       parsedResult, // our input
       {
-        countries: 'Country',
-        country: 'Country',
+        Countries: 'Country',
+        Country: 'Country',
         citiesByCountry: 'City',
         cities: 'City',
         bookShelves: 'BookShelf',

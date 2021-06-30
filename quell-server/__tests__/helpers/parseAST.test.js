@@ -1,15 +1,9 @@
 const QuellCache = require('../../src/quell.js');
 const schema = require('../../test-config/testSchema');
 const { parse } = require('graphql/language/parser');
-// const Quell.parseAST = require('../../src/helpers/Quell.parseAST');
 
 const redisPort = 6379;
 const timeout = 100;
-// const Quell = new QuellCache(schema, redisPort, timeout);
-
-// const Quell = new QuellCache
-// const { proto, protoArgs, operationType } Quell.Quell.parseAST();
-
 
 describe('server tests for Quell.parseAST.js', () => {
   const Quell = new QuellCache(schema, redisPort, timeout);
