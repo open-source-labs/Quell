@@ -6,9 +6,12 @@ import Metrics from '../components/Metrics';
 import Graph from '../components/Graph';
 import { CreateQueryStr } from '../helper-functions/HelperFunctions.js';
 import Header from '../images/headers/QUELL-headers-demo w lines.svg';
-import Quell from '@quell/client';
-// import Quell from '../../../../quell-client/src/Quellify';
-
+import QuellModule from '@quell/client';
+import QuellDev from '../../../../quell-client/src/Quellify';
+const Quell =
+  process.env.NODE_ENV === "development"
+    ? QuellDev
+    : QuellModule;
 /*
   Container that renders the whole demo dashboard
 */

@@ -193,10 +193,16 @@ const parseAST = (AST, options = defaultOptions) => {
             // UNLESS they are a nested object
             if (!field.selectionSet) fieldsValues[field.name.value] = true;
           };
-
+          
+          // if ID was not included on the request then the query will not be included in the cache, but the request will be processed
+          if (!fieldsValues.hasOwnProperty('id') && !fieldsValues.hasOwnProperty('_id') && !fieldsValues.hasOwnProperty('ID') && !fieldsValues.hasOwnProperty('Id')) {
+            operationType = 'unQuellable';
+            return BREAK;
+          }
           // place fieldArgs object onto fieldsObject so it gets passed along to prototype
           // fieldArgs contains arguments, aliases, etc.
           const fieldsObject = { ...fieldsValues, ...fieldArgs[stack[stack.length - 1]] };
+
 
           /* For nested objects, we must prevent duplicate entries for nested queries with arguments (ie "city" and "city--3")
           * We go into the prototype and delete the duplicate entry
