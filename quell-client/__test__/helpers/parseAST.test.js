@@ -130,6 +130,7 @@ describe('parseAST.js', () => {
         capital 
       } 
       book {
+        id
         name
         genre
       }
@@ -152,11 +153,41 @@ describe('parseAST.js', () => {
         __args: null,
         __alias: null,
         __id: null,
+        id: true,
         name: true,
         genre: true,
       },
     });
     expect(operationType).toEqual('query');
+  });
+
+  test('should reject multiple queries if not given an id', () => {
+    const query = `{
+      countries { 
+        id 
+        name 
+        capital 
+      } 
+      book {
+        name
+        genre
+      }
+    }`;
+    const parsedQuery = parse(query);
+    const { proto, operationType , frags } = parseAST(parsedQuery);
+
+    expect(proto).toEqual({
+      countries: {
+        __type: 'countries', 
+        __args: null,
+        __alias: null,
+        __id: null,
+        id: true,
+        name: true, 
+        capital: true,
+      }, 
+    });
+    expect(operationType).toEqual('unQuellable');
   });
 
   test('should create proto object for multiple nested queries', () => {
@@ -165,13 +196,16 @@ describe('parseAST.js', () => {
         id 
         name 
         cities {
+          id
           name
         } 
       } 
       book {
+        id
         name
         genre
         similarBooks {
+          id
           name
         }
       }
@@ -192,6 +226,7 @@ describe('parseAST.js', () => {
           __args: null,
           __alias: null,
           __id: null,
+          id: true,
           name: true,
         }
       }, 
@@ -200,13 +235,15 @@ describe('parseAST.js', () => {
         __args: null,
         __alias: null,
         __id: null,
+        id: true,
         name: true,
         genre: true,
         similarBooks: {
-          __type: 'similarBooks',
+          __type: 'similarbooks',
           __args: null,
           __alias: null,
           __id: null,
+          id: true,
           name: true,
         }
       },
@@ -285,6 +322,7 @@ describe('parseAST.js', () => {
             id
             name
             nutrition(id: 3) {
+              id
               calories,
               protein,
               fat,
@@ -325,6 +363,7 @@ describe('parseAST.js', () => {
               __args: { id: '3' },
               __alias: null,
               __id: "3",
+              id: true,
               calories: true,
               protein: true,
               fat: true,
@@ -404,6 +443,7 @@ describe('parseAST.js', () => {
         id
         name
         cities {
+          id
           ...CityInfo
         }
       }
@@ -425,6 +465,7 @@ describe('parseAST.js', () => {
         id: true,
         name: true,
         cities: {
+          id: true,
           CityInfo: true,
           __alias: null,
           __args: null,

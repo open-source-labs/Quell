@@ -4,6 +4,7 @@
  */
 
 function createQueryObj(map) {
+  // console.log('prototype within createQuery Obj is ', map);
   const output = {};
   // iterate over every key in map
   // send fields object to reducer to filter out trues
@@ -29,13 +30,18 @@ function createQueryObj(map) {
         // add key & value to filter
         filter[key] = false;
       }
-
+      // if key ncludes id, then set the property to true
+      // TO DO add support for unique id
+      if (key === 'id' || key === '_id' || key === 'ID' || key === 'Id') {
+        filter[key] = false;
+      }
+      
       // if value is an object, recurse to determine nested values
       if (typeof fields[key] === 'object' && !key.includes('__')) {
         // check keys of object to see if those values are false via recursion
         const reduced = reducer(fields[key]);
         // if reduced object has any values to pass, place on filter
-        if (Object.keys(reduced).length > 0) {
+        if (Object.keys(reduced).length > 1) {
           filter[key] = reduced;
         }
       }
@@ -46,8 +52,10 @@ function createQueryObj(map) {
       }
     }
 
+    const numFields = Object.keys(fields).length;
+
     // if the filter has any values to pass, return filter & propsFilter, otherwise return empty object
-    return Object.keys(filter).length > 0
+    return Object.keys(filter).length > 1 && numFields > 5
       ? { ...filter, ...propsFilter }
       : {};
   }

@@ -7,10 +7,14 @@ import Metrics from '../components/Metrics';
 import Graph from '../components/Graph';
 import { CreateQueryStr, updateProtoWithFragment } from '../helper-functions/HelperFunctions.js';
 import Header from '../images/headers/QUELL-headers-demo w lines.svg';
-import Quell from '@quell/client';
 import DropDown from '../images/buttons/dropdown-button.svg';
 import DropDownHover from '../images/buttons/dropdown-button-hover.svg';
-// import Quell from '../../../../quell-client/src/Quellify';
+import QuellModule from '@quell/client';
+import QuellDev from '../../../../quell-client/src/Quellify';
+const Quell =
+  process.env.NODE_ENV === "development"
+    ? QuellDev
+    : QuellModule;
 
 /*
   Container that renders the whole demo dashboard
@@ -239,8 +243,8 @@ const Demo = () => {
       '/graphql', // our route
       parsedResult, // our input
       {
-        countries: 'Country',
-        country: 'Country',
+        Countries: 'Country',
+        Country: 'Country',
         citiesByCountry: 'City',
         cities: 'City',
         bookShelves: 'BookShelf',

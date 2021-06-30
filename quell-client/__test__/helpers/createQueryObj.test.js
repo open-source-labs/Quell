@@ -118,6 +118,7 @@ describe('createQueryObj.js', () => {
         __alias: null,
         __args: {},
         __type: 'countries',
+        id: false,
         cities: {
           __id: null,
           __alias: null,
@@ -161,6 +162,7 @@ describe('createQueryObj.js', () => {
         __alias: null,
         __args: {},
         __type: 'countries',
+        id: false,
         name: false,
         capital: false,
         cities: {
@@ -168,6 +170,7 @@ describe('createQueryObj.js', () => {
           __alias: null,
           __args: {},
           __type: 'cities',
+          id: false,
           country_id: false,
           population: false,
         },
@@ -206,6 +209,7 @@ describe('createQueryObj.js', () => {
           __alias: null,
           __args: {},
           __type: 'climate',
+          id: true,
           seasons: true,
         }
       }
@@ -216,6 +220,7 @@ describe('createQueryObj.js', () => {
         __id: '1',
         __type: 'country',
         name: false,
+        id: false,
         __alias: 'Canada',
         __args: { id: '1' },
         capitol: {
@@ -233,6 +238,7 @@ describe('createQueryObj.js', () => {
         __args: { id: '2' },
         __type: 'country',
         __id: '2',
+        id: false,
       }
     });
   })
