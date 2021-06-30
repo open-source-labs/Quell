@@ -102,7 +102,7 @@ async function Quellify(endPoint, query, map, fieldsMap, userOptions) {
       console.log('after normizing for cache, the parsed data are ', parsedData);
 
       // Return response as a promise
-      return new Promise((resolve, reject) => resolve(parsedData));
+      return new Promise((resolve, reject) => resolve({ data: parsedData }));
     };
 
     // If found data in cache:
