@@ -28,7 +28,6 @@ describe('server tests for Quell.parseAST.js', () => {
   afterAll((done) => {
     Quell.redisCache.flushall();
     Quell.redisCache.quit(() => {
-      console.log('closing redis server');
       done();
     });
   });
@@ -155,7 +154,7 @@ describe('server tests for Quell.parseAST.js', () => {
     expect(operationType).toEqual('query');
   });
 
-  test('should create proto object for multiple queries', () => {
+  test('should reject query without id for', () => {
     const query = `{
       countries { 
         id 
@@ -179,12 +178,43 @@ describe('server tests for Quell.parseAST.js', () => {
         id: true,
         name: true, 
         capital: true,
+      },
+    });
+    expect(operationType).toEqual('unQuellable');
+  });
+
+  test('should create proto object for multiple queries', () => {
+    const query = `{
+      countries { 
+        id 
+        name 
+        capital 
+      } 
+      book {
+        id
+        name
+        genre
+      }
+    }`;
+    const parsedQuery = parse(query);
+    const { proto, operationType } = Quell.parseAST(parsedQuery);
+
+    expect(proto).toEqual({
+      countries: {
+        __type: 'countries', 
+        __args: null,
+        __alias: null,
+        __id: null,
+        id: true,
+        name: true, 
+        capital: true,
       }, 
       book: {
         __type: 'book',
         __args: null,
         __alias: null,
         __id: null,
+        id: true,
         name: true,
         genre: true,
       },
@@ -192,19 +222,22 @@ describe('server tests for Quell.parseAST.js', () => {
     expect(operationType).toEqual('query');
   });
 
-test('should create proto object for multiple nested queries', () => {
+  test('should create proto object for multiple nested queries', () => {
     const query = `{
       countries { 
         id 
         name 
         cities {
+          id
           name
         } 
       } 
       book {
+        id
         name
         genre
         similarBooks {
+          id
           name
         }
       }
@@ -226,6 +259,7 @@ test('should create proto object for multiple nested queries', () => {
           __alias: null,
           __id: null,
           name: true,
+          id: true,
         }
       }, 
       book: {
@@ -233,14 +267,16 @@ test('should create proto object for multiple nested queries', () => {
         __args: null,
         __alias: null,
         __id: null,
+        id: true,
         name: true,
         genre: true,
         similarBooks: {
-          __type: 'similarBooks',
+          __type: 'similarbooks',
           __args: null,
           __alias: null,
           __id: null,
           name: true,
+          id: true,
         }
       },
     });
@@ -318,6 +354,7 @@ test('should create proto object for multiple nested queries', () => {
             id
             name
             nutrition(id: 3) {
+              id
               calories,
               protein,
               fat,
@@ -358,6 +395,7 @@ test('should create proto object for multiple nested queries', () => {
               __args: { id: '3' },
               __alias: null,
               __id: "3",
+              id: true,
               calories: true,
               protein: true,
               fat: true,
