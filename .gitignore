@@ -1,3 +1,4 @@
 node_modules
 .env
 demo/dump.rdb
+dump.rdb

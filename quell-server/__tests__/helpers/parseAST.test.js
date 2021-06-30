@@ -1,7 +1,45 @@
-const parseAST = require('../../src/helpers/parseAST');
+const QuellCache = require('../../src/quell.js');
+const schema = require('../../test-config/testSchema');
 const { parse } = require('graphql/language/parser');
+// const Quell.parseAST = require('../../src/helpers/Quell.parseAST');
 
-describe('parseAST.js', () => {
+const redisPort = 6379;
+const timeout = 100;
+// const Quell = new QuellCache(schema, redisPort, timeout);
+
+// const Quell = new QuellCache
+// const { proto, protoArgs, operationType } Quell.Quell.parseAST();
+
+
+describe('server tests for Quell.parseAST.js', () => {
+  const Quell = new QuellCache(schema, redisPort, timeout);
+
+  
+  beforeAll(() => {
+    const promise1 = new Promise((resolve, reject) => {
+      resolve(Quell.writeToCache('country--1', {id: "1", capitol: {id: "2", name: "DC"}}));
+    });
+    const promise2 = new Promise((resolve, reject) => {
+      resolve(Quell.writeToCache('country--2', {id: "2"}));
+    }); 
+    const promise3 = new Promise((resolve, reject) => {
+      resolve(Quell.writeToCache('country--3', {id: "3"}));
+    });
+    const promise4 = new Promise((resolve, reject) => {
+      resolve(Quell.writeToCache('countries', ['country--1', 'country--2', 'country--3']));
+    });
+    return Promise.all([promise1, promise2, promise3, promise4]);
+  })
+
+  afterAll((done) => {
+    Quell.redisCache.flushall();
+    Quell.redisCache.quit(() => {
+      console.log('closing redis server');
+      done();
+    });
+  });
+
+
   test('should traverse the abstract syntax tree and create a proto object', () => {
     // define a query string
     const query = `query {
@@ -13,7 +51,7 @@ describe('parseAST.js', () => {
     }`;
     // parse query, and parse AST
     const parsedQuery = parse(query);
-    const { proto, operationType , frags } = parseAST(parsedQuery);
+    const { proto, operationType } = Quell.parseAST(parsedQuery);
 
     // compare expected proto & operation Type to actual
     expect(proto).toEqual({
@@ -46,7 +84,7 @@ describe('parseAST.js', () => {
       }`;
     
     const AST = parse(query);
-    const { proto, operationType , frags } = parseAST(AST);
+    const { proto, operationType } = Quell.parseAST(AST);
 
 
     expect(proto).toEqual({
@@ -82,7 +120,8 @@ describe('parseAST.js', () => {
       }
     }`;
     const parsedQuery = parse(query);
-    const { proto, operationType , frags } = parseAST(parsedQuery);
+    const { proto, operationType } = Quell.parseAST(parsedQuery);
+    
     expect(proto).toEqual({
       country: {
         __type: 'country',
@@ -106,7 +145,7 @@ describe('parseAST.js', () => {
       }
   }`;
     const AST = parse(query);
-    const { proto, operationType , frags } = parseAST(AST);
+    const { proto, operationType } = Quell.parseAST(AST);
 
     expect(proto).toEqual({
       Canada: {
@@ -135,7 +174,7 @@ describe('parseAST.js', () => {
       }
     }`;
     const parsedQuery = parse(query);
-    const { proto, operationType , frags } = parseAST(parsedQuery);
+    const { proto, operationType } = Quell.parseAST(parsedQuery);
 
     expect(proto).toEqual({
       countries: {
@@ -159,7 +198,7 @@ describe('parseAST.js', () => {
     expect(operationType).toEqual('query');
   });
 
-  test('should create proto object for multiple nested queries', () => {
+test('should create proto object for multiple nested queries', () => {
     const query = `{
       countries { 
         id 
@@ -177,7 +216,7 @@ describe('parseAST.js', () => {
       }
     }`;
     const parsedQuery = parse(query);
-    const { proto, operationType , frags } = parseAST(parsedQuery);
+    const { proto, operationType } = Quell.parseAST(parsedQuery);
 
     expect(proto).toEqual({
       countries: {
@@ -226,7 +265,7 @@ describe('parseAST.js', () => {
       }
     }`;
     const parsedQuery = parse(query);
-    const { proto, operationType , frags } = parseAST(parsedQuery);
+    const { proto, operationType } = Quell.parseAST(parsedQuery);
 
     expect(proto).toEqual({
       country: {
@@ -258,7 +297,7 @@ describe('parseAST.js', () => {
     }`;
 
     const parsedQuery = parse(query);
-    const { proto, operationType , frags } = parseAST(parsedQuery);
+    const { proto, operationType } = Quell.parseAST(parsedQuery);
 
     expect(proto).toEqual({
       Canada: {
@@ -296,7 +335,7 @@ describe('parseAST.js', () => {
     }`;
 
     const parsedQuery = parse(query);
-    const { proto, operationType , frags } = parseAST(parsedQuery);
+    const { proto, operationType } = Quell.parseAST(parsedQuery);
 
     expect(proto).toEqual({
       countries: {
@@ -346,7 +385,8 @@ describe('parseAST.js', () => {
       }
     }`;
     const parsedQuery = parse(query);
-    const { proto, operationType , frags } = parseAST(parsedQuery);
+
+    const { proto, operationType } = Quell.parseAST(parsedQuery);
     expect(proto).toEqual({
       country: {
         __type: 'country',
@@ -376,7 +416,7 @@ describe('parseAST.js', () => {
     }`;
 
     const parsedQuery = parse(query);
-    const { proto, operationType , frags } = parseAST(parsedQuery);
+    const { proto, operationType , frags } = Quell.parseAST(parsedQuery);
 
     expect(proto).toEqual({
       Canada: {
@@ -397,49 +437,4 @@ describe('parseAST.js', () => {
     });
     expect(operationType).toBe('query');
   });
-
-  test('should create proto for a nested query with fragments', () => {
-    const query = `query { 
-      Canada: country {
-        id
-        name
-        cities {
-          ...CityInfo
-        }
-      }
-    }
-    fragment CityInfo on cities {
-      name,
-      population
-    }`;
-
-    const parsedQuery = parse(query);
-    const { proto, operationType , frags } = parseAST(parsedQuery);
-
-    expect(proto).toEqual({
-      Canada: {
-        __id: null,
-        __type: 'country',
-        __args: null,
-        __alias: 'Canada',
-        id: true,
-        name: true,
-        cities: {
-          CityInfo: true,
-          __alias: null,
-          __args: null,
-          __id: null,
-          __type: 'cities'
-        }
-      }
-    });
-    expect(frags).toEqual({
-      CityInfo: {
-        name: true,
-        population: true
-      }
-    });
-    expect(operationType).toBe('query');
-  });
 });
-

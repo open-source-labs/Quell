@@ -46,48 +46,43 @@ function buildFromCache(prototype, prototypeKeys, itemFromCache = {}, firstRun =
       // if typeKey is a rootQuery, then clear the cache and set firstRun to true 
       // cached data must persist 
       // create a property on itemFromCache and set the value to the fetched response from cache
-      const cacheResponse = sessionStorage.getItem(cacheID);
-      // if data for the current typeKey is not found in sessionStorage then we receive null. Need to replace null with empty object
-      itemFromCache[typeKey] = cacheResponse ? JSON.parse(cacheResponse) : {};
+      itemFromCache[typeKey] = JSON.parse(sessionStorage.getItem(cacheID));
     }
     // if itemFromCache is an array (Array.isArray()) 
     if (Array.isArray(itemFromCache[typeKey])) {
       // iterate over countries
-      for (let i = 0; i < itemFromCache[typeKey].length; i++) {
-        const currTypeKey = itemFromCache[typeKey][i];
-        const cacheResponse = sessionStorage.getItem(currTypeKey);
-        if (cacheResponse) {
-          const interimCache = JSON.parse(cacheResponse);
-          // loop through prototype at typeKey
-          for (const property in prototype[typeKey]) {
-            let tempObj = {};
+      itemFromCache[typeKey].forEach((currTypeKey, i) => {
+        const cacheID = generateCacheID(prototype);
+        const interimCache = JSON.parse(sessionStorage.getItem(currTypeKey));
 
-            // if interimCache has the property
-            if (
-              interimCache.hasOwnProperty(property)
-              && !property.includes('__')
-            ) {
-              // place on tempObj, set into array
-              tempObj[property] = interimCache[property]
-              itemFromCache[typeKey][i] = tempObj;
-            } else if (!property.includes('__') && typeof interimCache[property] !== 'object') {
-              // if interimCache does not have property, set to false on prototype so it is fetched
-              prototype[typeKey][property] = false;
-            }
+        // console.log('currTypeKey', currTypeKey);
+        // console.log('prototype in forEach: ', prototype)
+        // console.log('[typeKey]: ', typeKey)
+        // console.log('interimCache: ', interimCache);
+
+        // loop through prototype at typeKey
+        for (const property in prototype[typeKey]) {
+          let tempObj = {};
+
+          // if interimCache has the property
+          if (
+            interimCache.hasOwnProperty(property)
+            && !property.includes('__')
+          ) {
+            // place on tempObj, set into array
+            tempObj[property] = interimCache[property]
+            itemFromCache[typeKey][i] = tempObj;
+          } else if (!property.includes('__')) {
+            // if interimCache does not have property, set to false on prototype so it is fetched
+            prototype[typeKey][property] = false;
           }
+
         }
-        else {
-          // console.log(`nothing in the cache for property ${typeKey}`);
-          for (const property in prototype[typeKey]) {
-            // if interimCache has the property
-            if (!property.includes('__') && typeof prototype[typeKey][property] !== 'object') {
-              // if interimCache does not have property, set to false on prototype so it is fetched
-              prototype[typeKey][property] = false;
-            } 
-          }
-        }
-      }
+      })
+      // reasign itemFromCache[typeKey] to false
+      // itemFromCache[typeKey] = false;
     }
+      // recurse through buildFromCache using typeKey, prototype
     // if itemFromCache is empty, then check the cache for data, else, persist itemFromCache
     // if this iteration is a nested query (i.e. if typeKey is a field in the query)
     else if (firstRun === false) {
@@ -105,8 +100,8 @@ function buildFromCache(prototype, prototypeKeys, itemFromCache = {}, firstRun =
         !typeKey.includes('__') && // do not iterate through __args or __alias
         typeof prototype[typeKey] === 'object') {
           const cacheID = generateCacheID(prototype);
-          const cacheResponse = sessionStorage.getItem(cacheID)
-          itemFromCache[typeKey] = JSON.parse(cacheResponse);
+          // console.log('cacheID not first Run', cacheID, 'typeKey', typeKey);
+          itemFromCache[typeKey] = JSON.parse(sessionStorage.getItem(cacheID));
           // repeat function inside of the nested query
         buildFromCache(prototype[typeKey], prototypeKeys, itemFromCache[typeKey], false);
       } 
@@ -120,7 +115,6 @@ function buildFromCache(prototype, prototypeKeys, itemFromCache = {}, firstRun =
 
         if (
           // if field is not found in cache then toggle to false
-          itemFromCache[typeKey] &&
           !itemFromCache[typeKey].hasOwnProperty(field) && 
           !field.includes("__") && // ignore __alias and __args
           typeof prototype[typeKey][field] !== 'object') {
@@ -130,16 +124,11 @@ function buildFromCache(prototype, prototypeKeys, itemFromCache = {}, firstRun =
         if ( 
           // if field contains a nested query, then recurse the function and iterate through the nested query
           !field.includes('__') && 
-          typeof prototype[typeKey][field] === 'object' &&
-          itemFromCache[typeKey]) {
+          typeof prototype[typeKey][field] === 'object') {
             // console.log("PRE-RECURSE prototype[typeKey][field]: ", prototype[typeKey][field]);
             // console.log("PRE-RECURSE itemFromCache: ", itemFromCache);
           
           buildFromCache(prototype[typeKey][field], prototypeKeys, itemFromCache[typeKey][field], false);
-          }
-        else if (!itemFromCache[typeKey] && !field.includes('__') && typeof prototype[typeKey][field] !== 'object') {
-            // then toggle to false
-            prototype[typeKey][field] = false;
           } 
       }  
     }
