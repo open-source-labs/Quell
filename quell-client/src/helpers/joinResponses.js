@@ -6,9 +6,9 @@
 
 // TO-DO: this could maybe be optimized by separating out some of the logic into a helper function we recurse upon
 function joinResponses(cacheResponse, serverResponse, queryProto, fromArray = false) {
-  console.log('inputs to join response, cache Response is ', cacheResponse);
-  console.log('server response is ', serverResponse);
-  console.log('prorotype is ', queryProto);
+  // console.log('inputs to join response, cache Response is ', cacheResponse);
+  // console.log('server response is ', serverResponse);
+  // console.log('prorotype is ', queryProto);
   // initialize a "merged response" to be returned
   let mergedResponse = {};
 
@@ -49,7 +49,7 @@ function joinResponses(cacheResponse, serverResponse, queryProto, fromArray = fa
         for (let i = 0; i < checkResponse[key].length; i++) {
 
           // for each index of array, combine cache and server response objects
-          console.log('key before joinresponses is', key);
+          // console.log('key before joinresponses is', key);
           const joinedResponse = joinResponses(
             { [key]: cacheResponse[key][i] },
             { [key]: serverResponse[key][i] },

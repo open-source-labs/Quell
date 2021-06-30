@@ -115,7 +115,7 @@ function normalizeForCache(responseData, map = {}, protoField, subID, fieldsMap 
           normalizeForCache({ [dataType]: el }, map,  { [dataType]: currProto});
         }
       }
-      console.log('result name is ', cacheKey, ' and ref list is ', refList);
+      // console.log('result name is ', cacheKey, ' and ref list is ', refList);
       sessionStorage.setItem(cacheKey, JSON.stringify(refList));
     }
     else if (typeof currField === 'object') {
@@ -150,7 +150,7 @@ function normalizeForCache(responseData, map = {}, protoField, subID, fieldsMap 
         }
       }
       // store "current object" on cache in JSON format
-      console.log('writing to cache ID', cacheID, 'store', fieldStore);
+      // console.log('writing to cache ID', cacheID, 'store', fieldStore);
       sessionStorage.setItem(cacheID, JSON.stringify(fieldStore));
     }
   }
