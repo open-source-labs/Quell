@@ -88,7 +88,6 @@
     "file-loader": "^6.1.0",
     "html-webpack-plugin": "^4.4.1",
     "jest": "^26.4.2",
-    "node-sass": "^4.14.1",
     "nodemon": "^2.0.4",
     "sass": "^1.26.10",
     "sass-loader": "^10.0.1",
