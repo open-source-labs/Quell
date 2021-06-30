@@ -98,7 +98,7 @@ async function Quellify(endPoint, query, map, fieldsMap, userOptions) {
       console.log('respnose from the server is ', parsedData);
       // Normalize returned data into cache
       console.log('prototype before normalize for cache is ', prototype)
-      normalizeForCache(parsedData.data, map, prototype, fieldsMap);
+      normalizeForCache(parsedData.data, map, prototype);
       console.log('after normizing for cache, the parsed data are ', parsedData);
 
       // Return response as a promise
@@ -148,7 +148,7 @@ async function Quellify(endPoint, query, map, fieldsMap, userOptions) {
         )
       }
       // cache the response
-      normalizeForCache(mergedResponse.data, map, prototype, fieldsMap);
+      normalizeForCache(mergedResponse.data, map, prototype);
       console.log('after normalzizing for cache, the merged response is', mergedResponse);
     } else {
       // If everything needed was already in cache, only assign cached response to variable

@@ -144,7 +144,7 @@ class QuellCache {
             // TO-DO: update this.cache to use prototype instead of protoArgs
             // TO-DO check if await is needed here
             // console.log('before normazliing for cache, merged response', mergedResponse);
-            const successfulCache = await this.normalizeForCache(mergedResponse.data, this.queryMap, prototype, this.fieldsMap);
+            const successfulCache = await this.normalizeForCache(mergedResponse.data, this.queryMap, prototype);
             console.log('after normazliing for cache, merged response', mergedResponse);
             // const successfullyCached = await this.cache(
               //   mergedResponse,
