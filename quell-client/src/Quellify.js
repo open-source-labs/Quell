@@ -12,11 +12,8 @@ const updateProtoWithFragment = require('./helpers/updateProtoWithFragments');
 // https://graphql.org/learn/introspection/
 // Fields Map:  Fields to Object Type map (possibly combine with this.map from server-side)
 
-// TO-DO: error handling from graphQL? currently gets lost in formatting
-// TO-DO: expand defaultOptions feature
-
 // NOTE: 
-// options feature is currently EXPERIMENTAL
+// options feature is currently EXPERIMENTAL and the intention is to give Quell users the ability to customize cache update policies or to define custom IDs to use as keys when caching data
 // keys beginning with __ are set aside for future development
 // defaultOptions provides default configurations so users only have to supply options they want control over
 const defaultOptions = {
@@ -32,28 +29,49 @@ const defaultOptions = {
   },
 };
 
-// MAIN CONTROLLER
+/**
+ * Quellify replaces the need for front-end developers who are using GraphQL to communicate with their servers to write fetch requests. Quell provides caching functionality that a normal fetch request would not provide. Quell syntax is similar to fetch requests and it includes the following:
+ *    - accepts a user's endpoint and query string as inputs,
+ *    - checks sessionStorage and constructs a response based on the requested information,
+ *    - reformulates a query for any data not in the cache,
+ *    - passes the reformulated query to the server to resolve,
+ *    - joins the cached and server responses,
+ *    - decomposes the server response and caches any additional data, and
+ *    - returns the joined response to the user.
+ *  @param {string} endPoint - The address to where requests are sent and processed. E.g. '/graphql'  
+ *  @param {string} query - The graphQL query that is requested from the client
+ *  @param {object} map - JavaScript object with a key-value pair for every valid root query - type defined in the user's GraphQL schema  
+ *  @param {object} userOptions - JavaScript object with customizable properties (note: this feature is still in development, please see defaultOptions for an example)
+ *  @param {object} fieldsMap - JavaScript object with ..... (nothing?)
+ */
+
 async function Quellify(endPoint, query, map, userOptions, fieldsMap) {
   // merge defaultOptions with userOptions
   // defaultOptions will supply any necessary options that the user hasn't specified
   const options = { ...defaultOptions, ...userOptions };
-  // console.log('endpoint at the beginning of quell is ', endPoint);
 
   // iterate over map to create all lowercase map for consistent caching
   for (const props in map) {
     const value = map[props].toLowerCase();
     const key = props.toLowerCase();
-    delete map[props];
+    delete map[props]; // avoid duplicate properties
     map[key] = value;
   }
 
-
-  // Create AST of query
+  // Create AST based on the input query using the parse method available in the graphQL library (further reading: https://en.wikipedia.org/wiki/Abstract_syntax_tree)
   const AST = parse(query);
 
-  // console.log('after parsing the query, AST is ', AST);
+  /**
+   * parseAST creates a proto object that contains a key for every root query in the user's request and every root query key contains keys for every field requested on that root query and assigns it the value of "true". The proto object also carries the following details for every root query 
+   *    __args - arguments the user passed into the query (null if no arguments were given)
+   *    __alias - alias the user included in the query (null if no arguments were given)
+   *    __type - the type of root query as defined in the GraphQL schema, which could also be found in the map object passed into Quellify
+   *    __id - 
+   * parAST also creates an operationType that will evaluate to 'unQuellable' if the request is out-of-scope for caching (please see usage notes in the Readme.md for more details) and 
+   *  @param {object} AST - The address to where requests are sent and processed. E.g. '/graphql'  
+   *  @param {object} options - The graphQL query that is requested from the client
+   */
 
-  // Create object of "true" values from AST tree (w/ some eventually updated to "false" via buildItem())
   const { proto, operationType, frags } = parseAST(AST, options);
 
   console.log('after parsing the AST, the proto is ', proto, ' and the frags are', frags, 'and the oepration type is ', operationType);
