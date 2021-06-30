@@ -27,7 +27,7 @@ const defaultOptions = {
   // custom field that defines the uniqueID used for caching
   __userDefinedID: null,
   // default fetchHeaders, user can overwrite
-  __fetchHeaders: {
+  headers: {
     'Content-Type': 'application/json',
   },
 };
@@ -52,9 +52,7 @@ async function Quellify(endPoint, query, map, fieldsMap, userOptions) {
   if (operationType === 'unQuellable') {
     const fetchOptions = {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers: options.headers,
       body: JSON.stringify({ query: query }),
     };
 
@@ -79,6 +77,7 @@ async function Quellify(endPoint, query, map, fieldsMap, userOptions) {
     for (const key in cacheResponse.data) {
       // if the current element does have more than 1 key on it, then set cacheHas Datat tot true and break
       if (Object.keys(cacheResponse.data[key]).length > 0) {
+        console.log(cacheHasData);
         cacheHasData = true;
         // break;
       }
@@ -86,9 +85,7 @@ async function Quellify(endPoint, query, map, fieldsMap, userOptions) {
     if (!cacheHasData) {
       const fetchOptions = {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: options.headers,
         body: JSON.stringify({ query: query }),
       };
       console.log('query is ', query,  ' and the end point', endPoint);
@@ -119,15 +116,13 @@ async function Quellify(endPoint, query, map, fieldsMap, userOptions) {
       console.log('based on query object, the new Query is ', newQuery);
       const fetchOptions = {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: options.headers,
         body: JSON.stringify({ query: newQuery }),
       };
       // Execute fetch request with new query
       const serverResponse = await fetch(endPoint, fetchOptions);
       const parsedData = await serverResponse.json();
-      console.log('after generating a new query, the server response is ', serverResponse);
+      // console.log('after generating a new query, the server response is ', serverResponse);
 
       if (parsedData.hasOwnProperty('error')) {
         return next('graphql library error', parsedData.error);
@@ -153,12 +148,12 @@ async function Quellify(endPoint, query, map, fieldsMap, userOptions) {
       }
       // cache the response
       normalizeForCache(mergedResponse.data, map, prototype);
-      console.log('after normalzizing for cache, the merged response is', mergedResponse);
+      // console.log('after normalzizing for cache, the merged response is', mergedResponse);
     } else {
       // If everything needed was already in cache, only assign cached response to variable
       mergedResponse = cacheResponse;
     }
-    console.log('after merging the cache and server responses,the merged data are ', mergedResponse);
+    // console.log('after merging the cache and server responses,the merged data are ', mergedResponse);
 
     // TO-DO: legacy code, commented out for now, I believe it is deprecated but don't want to get rid of it until we have done further testing
     // commented out because I don't think it matters at all

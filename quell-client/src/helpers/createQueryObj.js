@@ -4,7 +4,7 @@
  */
 
 function createQueryObj(map) {
-  console.log('prototype within createQuery Obj is ', map);
+  // console.log('prototype within createQuery Obj is ', map);
   const output = {};
   // iterate over every key in map
   // send fields object to reducer to filter out trues
@@ -52,8 +52,10 @@ function createQueryObj(map) {
       }
     }
 
+    const numFields = Object.keys(fields).length;
+
     // if the filter has any values to pass, return filter & propsFilter, otherwise return empty object
-    return Object.keys(filter).length > 1
+    return Object.keys(filter).length > 1 && numFields > 5
       ? { ...filter, ...propsFilter }
       : {};
   }

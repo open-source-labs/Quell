@@ -73,14 +73,14 @@ function normalizeForCache(responseData, map = {}, protoField, subID, fieldsMap 
   // if we are recursing, we want to add a subid before caching
 
   // iterate over keys in our response data object 
-  console.log('inputs to normalize for cache are responseData', responseData);
-  console.log(' and prototype is', protoField);
+  // console.log('inputs to normalize for cache are responseData', responseData);
+  // console.log(' and prototype is', protoField);
   for (const resultName in responseData) {
     // currentField we are iterating over & corresponding Prototype
     const currField = responseData[resultName];
     const currProto = protoField[resultName];
-    console.log('current field in response is ', currField); 
-    console.log('current proto is ', currProto);
+    // console.log('current field in response is ', currField); 
+    // console.log('current proto is ', currProto);
     // check if the value stored at that key is array 
     if (Array.isArray(currField)) {
       // RIGHT NOW: countries: [{}, {}]
@@ -115,7 +115,7 @@ function normalizeForCache(responseData, map = {}, protoField, subID, fieldsMap 
           normalizeForCache({ [dataType]: el }, map,  { [dataType]: currProto});
         }
       }
-      console.log('result name is ', resultName, ' and ref list is ', refList);
+      console.log('result name is ', cacheKey, ' and ref list is ', refList);
       sessionStorage.setItem(cacheKey, JSON.stringify(refList));
     }
     else if (typeof currField === 'object') {
@@ -150,6 +150,7 @@ function normalizeForCache(responseData, map = {}, protoField, subID, fieldsMap 
         }
       }
       // store "current object" on cache in JSON format
+      console.log('writing to cache ID', cacheID, 'store', fieldStore);
       sessionStorage.setItem(cacheID, JSON.stringify(fieldStore));
     }
   }
@@ -161,11 +162,11 @@ function normalizeForCache(responseData, map = {}, protoField, subID, fieldsMap 
 async function writeToCache(key, item) {
   if (!key.includes('uncacheable')) {
     const cacheItem = await sessionStorage.getItem(key);
-
+    const parsedItem = JSON.parse(cacheItem);
     // if item is an array, set to just stash the item, otherwise merge objects
     const fullItem = Array.isArray(item)
       ? item
-      : { ...cacheItem, ...item };
+      : { ...parsedItem, ...item };
 
     // Store the data entry
     // TO-DO: instead of overwriting item with new setItem call,

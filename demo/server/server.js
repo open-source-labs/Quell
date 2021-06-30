@@ -14,7 +14,7 @@ const PORT = process.env.PORT || 3000;
 // Instantiate cache GraphQL middleware
 const redisPort =
   process.env.NODE_ENV === "production" ? process.env.REDIS_URL : 6379;
-const quellCache = new QuellCache(schema, redisPort, 600);
+const quellCache = new QuellCache(schema, redisPort, 1200);
 
 // middleware that adds quellCache to request/response object?
 

@@ -46,6 +46,7 @@ function buildFromCache(prototype, prototypeKeys, itemFromCache = {}, firstRun =
       // if typeKey is a rootQuery, then clear the cache and set firstRun to true 
       // cached data must persist 
       // create a property on itemFromCache and set the value to the fetched response from cache
+      console.log('getting from cache', cacheID);
       const cacheResponse = sessionStorage.getItem(cacheID);
       // if data for the current typeKey is not found in sessionStorage then we receive null. Need to replace null with empty object
       itemFromCache[typeKey] = cacheResponse ? JSON.parse(cacheResponse) : {};
@@ -57,6 +58,7 @@ function buildFromCache(prototype, prototypeKeys, itemFromCache = {}, firstRun =
       // iterate over countries
       for (let i = 0; i < itemFromCache[typeKey].length; i++) {
         const currTypeKey = itemFromCache[typeKey][i];
+        console.log('getting from cache', currTypeKey);
         const cacheResponse = sessionStorage.getItem(currTypeKey);
         let tempObj = {};
         if (cacheResponse) {
@@ -110,7 +112,8 @@ function buildFromCache(prototype, prototypeKeys, itemFromCache = {}, firstRun =
         (itemFromCache === null || itemFromCache.hasOwnProperty(typeKey)) && 
         !typeKey.includes('__') && // do not iterate through __args or __alias
         typeof prototype[typeKey] === 'object') {
-          const cacheID = generateCacheID(prototype);
+        const cacheID = generateCacheID(prototype);
+        console.log('getting from cache', cacheID);
           const cacheResponse = sessionStorage.getItem(cacheID)
           itemFromCache[typeKey] = JSON.parse(cacheResponse);
           // repeat function inside of the nested query
