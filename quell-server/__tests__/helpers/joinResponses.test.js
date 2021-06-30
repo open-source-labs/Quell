@@ -11,7 +11,6 @@ describe('tests for joinResponses on the server side', () => {
   afterAll((done) => {
     Quell.redisCache.flushall();
     Quell.redisCache.quit(() => {
-      console.log('closing redis server');
       done();
     });
   });
@@ -186,7 +185,8 @@ describe('tests for joinResponses on the server side', () => {
     });
   });
 
-  test('inputs a list retrieved from cache and a list retrieved from server and outputs combined List response', () => {
+  
+  xtest('inputs a list retrieved from cache and a list retrieved from server and outputs combined List response', () => {
     const cacheResponse = {
       data: {
         albums: [

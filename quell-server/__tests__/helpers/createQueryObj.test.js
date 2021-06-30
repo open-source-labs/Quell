@@ -129,6 +129,7 @@ describe('server side tests for createQueryObj.js', () => {
 
     expect(Quell.createQueryObj(map)).toEqual({
       countries: {
+        id: false,
         __id: null,
         __alias: null,
         __args: {},
@@ -176,6 +177,7 @@ describe('server side tests for createQueryObj.js', () => {
         __alias: null,
         __args: {},
         __type: 'countries',
+        id: false,
         name: false,
         capital: false,
         cities: {
@@ -183,6 +185,7 @@ describe('server side tests for createQueryObj.js', () => {
           __alias: null,
           __args: {},
           __type: 'cities',
+          id: false,
           country_id: false,
           population: false,
         },
@@ -222,6 +225,7 @@ describe('server side tests for createQueryObj.js', () => {
           __args: {},
           __type: 'climate',
           seasons: true,
+          id: false,
         }
       }
     };
@@ -231,6 +235,7 @@ describe('server side tests for createQueryObj.js', () => {
         __id: '1',
         __type: 'country',
         name: false,
+        id: false,
         __alias: 'Canada',
         __args: { id: '1' },
         capitol: {
@@ -244,6 +249,7 @@ describe('server side tests for createQueryObj.js', () => {
       },
       Mexico: {
         name: false,
+        id: false,
         __alias: 'Mexico',
         __args: { id: '2' },
         __type: 'country',
@@ -283,6 +289,7 @@ describe('server side tests for createQueryObj.js', () => {
           __alias: null,
           __args: {},
           __type: 'author',
+          id: false,
           name: false,
         }
       }
@@ -302,6 +309,7 @@ describe('server side tests for createQueryObj.js', () => {
           __args: {},
           __type: 'author',
           name: false,
+          id: false,
         }
       }
     });

@@ -171,7 +171,8 @@ describe('joinResponses', () => {
     });
   });
 
-  test('inputs a list retrieved from cache and a list retrieved from server and outputs combined List response', () => {
+  // test marked off
+  xtest('inputs a list retrieved from cache and a list retrieved from server and outputs combined List response', () => {
     const cacheResponse = {
       data: {
         albums: [
