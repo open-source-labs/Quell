@@ -39,6 +39,7 @@ class QuellCache {
     }
     // retrieve GraphQL query string from request object;
     const queryString = req.body.query;
+    console.log("This is queryString in server-side initially: ", queryString);
 
     // create abstract syntax tree with graphql-js parser
     const AST = parse(queryString);
@@ -46,6 +47,7 @@ class QuellCache {
     // create response prototype, and operation type, and fragments object
     // the response prototype is used as a template for most operations in quell including caching, building modified requests, and more
     const { proto, operationType, frags } = this.parseAST(AST);
+    // console.log("This is proto after parsing AST, expecting existence of attractions: ", proto);
 
     // pass-through for queries and operations that QuellCache cannot handle
     if (operationType === 'unQuellable') {
@@ -87,18 +89,18 @@ class QuellCache {
 
       // combines fragments on prototype so we can access fragment values in cache
       const prototype = Object.keys(frags).length > 0 ? this.updateProtoWithFragment(proto, frags) : proto;
-
+      console.log("This is prototype when we reach server-side: ", prototype);
       // list keys on prototype as reference for buildFromCache
       const prototypeKeys = Object.keys(prototype);
       // check cache for any requested values
       // modifies prototype to note any values not in the cache
       const cacheResponse = await this.buildFromCache(prototype, prototypeKeys);
-
+      console.log("This is prototype/countries/cities after buildFromCache: ", prototype.countries.cities);
       let mergedResponse;
-
       // create object of queries not found in cache, to create gql string
       const queryObject = this.createQueryObj(prototype);
-
+      console.log("This is queryObject upon definition: ", queryObject);
+      console.log("Result of this.createQueryStr on queryObject", this.createQueryStr(queryObject));
       // if cached response is incomplete, reformulate query, handoff query, join responses, and cache joined responses
       if (Object.keys(queryObject).length > 0) {
         // create new query sting to send to gql
@@ -730,7 +732,7 @@ class QuellCache {
           // check keys of object to see if those values are false via recursion
           const reduced = reducer(fields[key]);
           // if reduced object has any values to pass, place on filter
-          if (Object.keys(reduced).length > 0) {
+          if (Object.keys(reduced).length > 1) {
             filter[key] = reduced;
           }
         }
@@ -935,6 +937,7 @@ createQueryStr(queryObject, operationType) {
 
   async normalizeForCache(responseData, map = {}, protoField, fieldsMap = {}) {
     // iterate over keys in our response data object 
+    // console.log("This is responseData in normalizeForCache: ", responseData);
     for (const resultName in responseData) {
       // currentField we are iterating over & corresponding Prototype
       const currField = responseData[resultName];

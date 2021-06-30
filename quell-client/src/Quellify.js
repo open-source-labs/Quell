@@ -73,7 +73,6 @@ async function Quellify(endPoint, query, map, userOptions, fieldsMap) {
    */
 
   const { proto, operationType, frags } = parseAST(AST, options);
-
   console.log('after parsing the AST, the proto is ', proto, ' and the frags are', frags, 'and the oepration type is ', operationType);
 
   // pass-through for queries and operations that QuellCache cannot handle
@@ -99,6 +98,7 @@ async function Quellify(endPoint, query, map, userOptions, fieldsMap) {
     const prototypeKeys = Object.keys(prototype);
     const cacheResponse = buildFromCache(prototype, prototypeKeys);
     console.log('after building from cache, the cache response is ', cacheResponse);
+    console.log("In Quellify, this is prototype after buildFromCache: ", prototype);
     // initialize a cacheHasData to false
     let cacheHasData = false;
     // If no data in cache, the response array will be empty:

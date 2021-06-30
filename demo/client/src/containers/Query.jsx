@@ -175,9 +175,9 @@ const Query = (props) => {
         <div className="queryLine">
         {tab}{cb}
         </div>
-          <div className="queryLine">{cb}</div>
-        </div>
+        <div className="queryLine">{space}{space}{cb}</div>
         <div className="queryLine">{cb}</div>
+        </div>
       </>
     );
   }

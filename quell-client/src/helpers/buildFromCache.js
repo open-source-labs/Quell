@@ -38,6 +38,8 @@ function buildFromCache(prototype, prototypeKeys, itemFromCache = {}, firstRun =
 
   // 
   for (let typeKey in prototype) {
+    console.log("Currently iterating over typeKey...:", typeKey);
+    console.log("...and the prototype is: ", prototype);
     // check if typeKey is a rootQuery (i.e. if it includes '--') or if its a field nested in a query
     // end goal: delete typeKey.includes('--') and check if protoObj.includes(typeKey)
     if (prototypeKeys.includes(typeKey)) {
@@ -80,6 +82,7 @@ function buildFromCache(prototype, prototypeKeys, itemFromCache = {}, firstRun =
             else if (!property.includes('__') && typeof prototype[typeKey][property] !== 'object') {
               // if interimCache does not have property, set to false on prototype so it is fetched
               prototype[typeKey][property] = false;
+              console.log("Trigger 1 to false, typeKey: ", typeKey);
             }
           }
           itemFromCache[typeKey][i] = tempObj;
@@ -91,6 +94,7 @@ function buildFromCache(prototype, prototypeKeys, itemFromCache = {}, firstRun =
             if (!property.includes('__') && typeof prototype[typeKey][property] !== 'object') {
               // if interimCache does not have property, set to false on prototype so it is fetched
               prototype[typeKey][property] = false;
+              console.log("Trigger 2 to false, typeKey: ", typeKey);
             } 
           }
         }
@@ -99,6 +103,7 @@ function buildFromCache(prototype, prototypeKeys, itemFromCache = {}, firstRun =
     // if itemFromCache is empty, then check the cache for data, else, persist itemFromCache
     // if this iteration is a nested query (i.e. if typeKey is a field in the query)
     else if (firstRun === false) {
+      console.log("firstRun is false");
       console.log('iFC', itemFromCache);
 
       // if this field is NOT in the cache, then set this field's value to false
@@ -106,6 +111,7 @@ function buildFromCache(prototype, prototypeKeys, itemFromCache = {}, firstRun =
         (itemFromCache === null || !itemFromCache.hasOwnProperty(typeKey)) && 
         typeof prototype[typeKey] !== 'object' && !typeKey.includes('__')) {
           prototype[typeKey] = false; 
+          console.log("Trigger 3 to false, typeKey: ", typeKey);
       } 
       // if this field is a nested query, then recurse the buildFromCache function and iterate through the nested query
       if (
@@ -134,6 +140,7 @@ function buildFromCache(prototype, prototypeKeys, itemFromCache = {}, firstRun =
           !field.includes("__") && // ignore __alias and __args
           typeof prototype[typeKey][field] !== 'object') {
             prototype[typeKey][field] = false; 
+            console.log("Trigger 4 to false, typeKey: ", typeKey);
         }
         
         if ( 
@@ -148,6 +155,7 @@ function buildFromCache(prototype, prototypeKeys, itemFromCache = {}, firstRun =
         else if (!itemFromCache[typeKey] && !field.includes('__') && typeof prototype[typeKey][field] !== 'object') {
             // then toggle to false
             prototype[typeKey][field] = false;
+            console.log("Trigger 5 to false, typeKey: ", typeKey);
           } 
       }  
     }
