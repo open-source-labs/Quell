@@ -2,16 +2,12 @@ language: node_js
 node_js:
   - "stable"
 before install:
-  - cd demo
+  - cd quell-client
 install:
   - npm install
 before_script:
   - echo running script
 script:
-  - npm run test
-  - cd ../quell-client
-  - npm install
-  - echo running client test scripts
   - npm run test
 after_success:
   - echo run success
