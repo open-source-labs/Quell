@@ -48,7 +48,7 @@ function buildFromCache(prototype, prototypeKeys, itemFromCache = {}, firstRun =
       // create a property on itemFromCache and set the value to the fetched response from cache
       const cacheResponse = sessionStorage.getItem(cacheID);
       // if data for the current typeKey is not found in sessionStorage then we receive null. Need to replace null with empty object
-      const tempCache = cacheResponse ? JSON.parse(cacheResponse) : {};
+      itemFromCache[typeKey] = cacheResponse ? JSON.parse(cacheResponse) : {};
       // console.log('tempCache at typeKey is ', itemFromCache[typeKey]);
       // need to check cacheResponse to see if each field was requested in proto
     }
