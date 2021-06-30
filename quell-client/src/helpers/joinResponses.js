@@ -6,6 +6,9 @@
 
 // TO-DO: this could maybe be optimized by separating out some of the logic into a helper function we recurse upon
 function joinResponses(cacheResponse, serverResponse, queryProto, fromArray = false) {
+  console.log('inputs to join response, cache Response is ', cacheResponse);
+  console.log('server response is ', serverResponse);
+  console.log('prorotype is ', queryProto);
   // initialize a "merged response" to be returned
   let mergedResponse = {};
 
@@ -14,27 +17,39 @@ function joinResponses(cacheResponse, serverResponse, queryProto, fromArray = fa
 
   // first loop for different queries on response
   for (const key in queryProto) {
-
+    // TO DO
+    // if cacheResponse is empty, then short cut this loop and return serverResponse (also vice versa)
     // TO-DO: caching for arrays is likely imperfect, needs more edge-case testing
+    // the keys are not present in the cacheResponse ro serverResponse, then do not take them into consideration when filling mergedResponse
+    // if (!cacheResponse.hasOwnProperty(key)) {
+    //   mergedResponse[key] = serverResponse[key];
+    // }
+    // else if (!serverResponse.hasOwnProperty(key)) {
+    //   mergedResponse[key] = cacheResponse[key];
+    // }
     // for each key, check whether data stored at that key is an array or an object
-    if (Array.isArray(cacheResponse[key])) {
+    const checkResponse = cacheResponse.hasOwnProperty(key) ? cacheResponse : serverResponse;
+
+    if (Array.isArray(checkResponse[key])) {
       // merging data stored as array
 
       // remove reserved properties from queryProto so we can compare # of properties on prototype to # of properties on responses
       const filterKeys = Object.keys(queryProto[key]).filter(propKey => !propKey.includes('__'));
 
       // if # of keys is the same between prototype & cached response, then the objects on the array represent different things
-      if (filterKeys.length === Object.keys(cacheResponse[key][0]).length) {
-        //if the objects are "different", each object represents unique instance, we can concat
-        mergedResponse[key] = [...cacheResponse[key], ...serverResponse[key]];
-      } else {
+      // if (filterKeys.length === Object.keys(checkResponse[key][0]).length) {
+      //   //if the objects are "different", each object represents unique instance, we can concat
+      //   mergedResponse[key] = [...cacheResponse[key], ...serverResponse[key]];
+      // } 
+      if (cacheResponse.hasOwnProperty(key) && serverResponse.hasOwnProperty(key)) {
         // if # of keys is not the same, cache was missing data for each object, need to merge cache objects with server objects
         
         // iterate over an array
         const mergedArray = [];
-        for (let i = 0; i < cacheResponse[key].length; i++) {
+        for (let i = 0; i < checkResponse[key].length; i++) {
 
           // for each index of array, combine cache and server response objects
+          console.log('key before joinresponses is', key);
           const joinedResponse = joinResponses(
             { [key]: cacheResponse[key][i] },
             { [key]: serverResponse[key][i] },
@@ -47,6 +62,12 @@ function joinResponses(cacheResponse, serverResponse, queryProto, fromArray = fa
         }
         // set merged array to mergedResponse at key
         mergedResponse[key] = mergedArray;
+      }
+      else if (cacheResponse.hasOwnProperty(key)) {
+        mergedResponse[key] = cacheResponse[key];
+      }
+      else {
+        mergedResponse[key] = serverResponse[key];
       }
     }
     else {

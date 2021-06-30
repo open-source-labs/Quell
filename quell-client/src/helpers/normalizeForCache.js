@@ -69,7 +69,9 @@
 // TO-DO: handle async/await
 // TO-DO: have cache MERGE data before adding to cache to not overwrite data
 
-function normalizeForCache(responseData, map = {}, protoField, fieldsMap = {}) {
+function normalizeForCache(responseData, map = {}, protoField, subID, fieldsMap = {}) {
+  // if we are recursing, we want to add a subid before caching
+
   // iterate over keys in our response data object 
   console.log('inputs to normalize for cache are responseData', responseData);
   console.log(' and prototype is', protoField);
@@ -83,13 +85,14 @@ function normalizeForCache(responseData, map = {}, protoField, fieldsMap = {}) {
     if (Array.isArray(currField)) {
       // RIGHT NOW: countries: [{}, {}]
       // GOAL: countries: ["Country--1", "Country--2"]
-
+      const cacheKey = subID ? subID + '--' + resultName : resultName
       // create empty array to store refs
       // ie countries: ["country--1", "country--2"]
       const refList = [];
 
       // iterate over countries array
-      currField.forEach(el => {
+      for (let i = 0; i < currField.length; i++) {
+        const el = currField[i];
         // el1 = {id: 1, name: Andorra}, el2 =  {id: 2, name: Bolivia}
         // for each object
         // "resultName" is key on "map" for our Data Type
@@ -111,9 +114,9 @@ function normalizeForCache(responseData, map = {}, protoField, fieldsMap = {}) {
         if (typeof el === 'object') {
           normalizeForCache({ [dataType]: el }, map,  { [dataType]: currProto});
         }
-      })
+      }
       console.log('result name is ', resultName, ' and ref list is ', refList);
-      sessionStorage.setItem(resultName, JSON.stringify(refList));
+      sessionStorage.setItem(cacheKey, JSON.stringify(refList));
     }
     else if (typeof currField === 'object') {
       // need to get non-Alias ID for cache
@@ -143,7 +146,7 @@ function normalizeForCache(responseData, map = {}, protoField, fieldsMap = {}) {
         // if object, recurse normalizeForCache assign in that object
         // must also pass in protoFields object to pair arguments, aliases with response
         if (typeof currField[key] === 'object') {
-          normalizeForCache({ [key]: currField[key] }, map, { [key]: protoField[resultName][key]});
+          normalizeForCache({ [key]: currField[key] }, map, { [key]: protoField[resultName][key]}, cacheID);
         }
       }
       // store "current object" on cache in JSON format
