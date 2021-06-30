@@ -102,7 +102,7 @@ async function Quellify(endPoint, query, map, fieldsMap, userOptions) {
       console.log('after normizing for cache, the parsed data are ', parsedData);
 
       // Return response as a promise
-      return new Promise((resolve, reject) => resolve(parsedData));
+      return new Promise((resolve, reject) => resolve({ data: parsedData }));
     };
 
     // If found data in cache:
@@ -128,6 +128,10 @@ async function Quellify(endPoint, query, map, fieldsMap, userOptions) {
       const serverResponse = await fetch(endPoint, fetchOptions);
       const parsedData = await serverResponse.json();
       console.log('after generating a new query, the server response is ', serverResponse);
+
+      if (parsedData.hasOwnProperty('error')) {
+        return next('graphql library error', parsedData.error);
+      }
 
       // NOTE: trying this commented out, 
       // // TO-DO: queryName restricts our cache to just the first query

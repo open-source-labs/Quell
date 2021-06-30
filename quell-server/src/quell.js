@@ -115,12 +115,17 @@ class QuellCache {
 
       // create query object to check if we have to get something from database
       const queryObject = this.createQueryObj(prototype);
+      console.log('queryObj before fetch', queryObject);
       // if cached response is incomplete, reformulate query, handoff query, join responses, and cache joined responses
       if (Object.keys(queryObject).length > 0) {
         // create new query sting
         const newQueryString = this.createQueryStr(queryObject);
+        console.log('queryString to gql', newQueryString);
         graphql(this.schema, newQueryString)
-          .then(async (databaseResponse) => {
+          .then(async (databaseResponseRaw) => {
+            console.log('raw response', databaseResponseRaw);
+            const databaseResponse = JSON.parse(JSON.stringify(databaseResponseRaw));
+            console.log('parsed response', databaseResponse);
             // databaseResponse = queryResponse.data;
             // join uncached and cached responses, prototype is used as a "template" for final mergedResponse
             // if the cacheresponse does not contain any of the data requested by the client 
@@ -145,7 +150,7 @@ class QuellCache {
             // TO-DO check if await is needed here
             // console.log('before normazliing for cache, merged response', mergedResponse);
             const successfulCache = await this.normalizeForCache(mergedResponse.data, this.queryMap, prototype);
-            console.log('after normazliing for cache, merged response', mergedResponse);
+            console.log('after normalizing for cache, merged response', mergedResponse);
             // const successfullyCached = await this.cache(
               //   mergedResponse,
               //   prototype
@@ -1038,103 +1043,109 @@ createQueryStr(queryObject, operationType) {
  */
 
 // TO-DO: this could maybe be optimized by separating out some of the logic into a helper function we recurse upon
-joinResponses(cacheResponse, serverResponse, queryProto, fromArray = false) {
-  // initialize a "merged response" to be returned
-  let mergedResponse = {};
-
-  // loop through fields object keys, the "source of truth" for structure
-  // store combined responses in mergedResponse
-
-  // first loop for different queries on response
-  for (const key in queryProto) {
-
-    // TO-DO: caching for arrays is likely imperfect, needs more edge-case testing
-    // for each key, check whether data stored at that key is an array or an object
-    const checkResponse = cacheResponse.hasOwnProperty(key) ? cacheResponse : serverResponse;
-
-    if (Array.isArray(checkResponse[key])) {
-      // merging data stored as array
-      // remove reserved properties from queryProto so we can compare # of properties on prototype to # of properties on responses
-      const filterKeys = Object.keys(queryProto[key]).filter(propKey => !propKey.includes('__'));
+  joinResponses(cacheResponse, serverResponse, queryProto, fromArray = false) {
+    console.log('cache response', cacheResponse);
+    console.log('server', serverResponse);
+    console.log('proto', queryProto);
+    // initialize a "merged response" to be returned
+    let mergedResponse = {};
+  
+    // loop through fields object keys, the "source of truth" for structure
+    // store combined responses in mergedResponse
+  
+    // first loop for different queries on response
+    for (const key in queryProto) {
+  
+      // TO-DO: caching for arrays is likely imperfect, needs more edge-case testing
+      // for each key, check whether data stored at that key is an array or an object
+      const checkResponse = serverResponse.hasOwnProperty(key) ? serverResponse : cacheResponse;
       console.log('checkresponse inside of join responses on the server', checkResponse);
-      // if # of keys is the same between prototype & cached response, then the objects on the array represent different things
-      if (cacheResponse.hasOwnProperty(key) && serverResponse.hasOwnProperty(key)) {
-        // if # of keys is not the same, cache was missing data for each object, need to merge cache objects with server objects
-        
-        // iterate over an array
-        const mergedArray = [];
-        for (let i = 0; i < cacheResponse[key].length; i++) {
-
-          // for each index of array, combine cache and server response objects
-          const joinedResponse = this.joinResponses(
-            { [key]: cacheResponse[key][i] },
-            { [key]: serverResponse[key][i] },
-            { [key]: queryProto[key] },
-            true
-          );
-
-          // place joinedResponse on our array of all merged objects
-          mergedArray.push(joinedResponse);
+  
+      if (Array.isArray(checkResponse[key])) {
+        console.log('is array');
+        // merging data stored as array
+        // remove reserved properties from queryProto so we can compare # of properties on prototype to # of properties on responses
+        // const filterKeys = Object.keys(queryProto[key]).filter(propKey => !propKey.includes('__'));
+        // if # of keys is the same between prototype & cached response, then the objects on the array represent different things
+        if (cacheResponse.hasOwnProperty(key) && serverResponse.hasOwnProperty(key)) {
+          // if # of keys is not the same, cache was missing data for each object, need to merge cache objects with server objects
+          console.log('has both cache and server response');
+          // iterate over an array
+          const mergedArray = [];
+          for (let i = 0; i < cacheResponse[key].length; i++) {
+  
+            // for each index of array, combine cache and server response objects
+            const joinedResponse = this.joinResponses(
+              { [key]: cacheResponse[key][i] },
+              { [key]: serverResponse[key][i] },
+              { [key]: queryProto[key] },
+              true
+            );
+  
+            // place joinedResponse on our array of all merged objects
+            mergedArray.push(joinedResponse);
+          }
+          // set merged array to mergedResponse at key
+          mergedResponse[key] = mergedArray;
         }
-        // set merged array to mergedResponse at key
-        mergedResponse[key] = mergedArray;
-      }
-      else if (cacheResponse.hasOwnProperty(key)) {
-        mergedResponse[key] = cacheResponse[key];
+        else if (cacheResponse.hasOwnProperty(key)) {
+          console.log('only cache');
+          mergedResponse[key] = cacheResponse[key];
+        }
+        else {
+          console.log('only server');
+          mergedResponse[key] = serverResponse[key];
+        }
       }
       else {
-        mergedResponse[key] = serverResponse[key];
-      }
-    }
-    else {
-      // if not an array, it is a regular object data structure
-
-      // object spread
-      if (!fromArray) {
-        // if object doesn't come from an array, we must assign on the object at the given key
-        // results in { key: values }
-        mergedResponse[key] = { ...cacheResponse[key], ...serverResponse[key] };
-      } else {
-        // if the object comes from an array, we do not want to assign to a key as per GQL spec
-        // results in [{fields}, {fields}, {fields}]
-        mergedResponse = { ...cacheResponse[key], ...serverResponse[key] }
-      }
-      
-      // loop through fields on queryProto
-      for (const fieldName in queryProto[key]) {
-
-        // check for nested objects
-        if (typeof queryProto[key][fieldName] === 'object' && !fieldName.includes('__')) {
-          // recurse joinResponses on that object to create deep copy on mergedResponse
-          // TO-DO: before recursing, if the cacheResponse and serverResponse contain keys that are not the same, then 
-          let mergedRecursion = {};
-          // console.log('key is ', key, ' and field name is ', fieldName);
-          if (cacheResponse.hasOwnProperty(key) && serverResponse.hasOwnProperty(key)) {
-             mergedRecursion = this.joinResponses(
-              { [fieldName]: cacheResponse[key][fieldName] },
-              { [fieldName]: serverResponse[key][fieldName] }, 
-              { [fieldName]: queryProto[key][fieldName] }
-            );
-          }
-          else if (cacheResponse.hasOwnProperty(key)) {
-            mergedRecursion[fieldName] = cacheResponse[key][fieldName];
-          }
-          else {
-            mergedRecursion[fieldName] = serverResponse[key][fieldName];
-          }
+        // if not an array, it is a regular object data structure
   
-          // place on merged response
-          mergedResponse[key] = { ...mergedResponse[key], ...mergedRecursion };
-
-          // // delete shallow copy of cacheResponse's nested object from mergedResponse
-          // if (fieldName !== fieldStrip.key) delete mergedResponse[stripped.key][fieldName]
+        // object spread
+        if (!fromArray) {
+          // if object doesn't come from an array, we must assign on the object at the given key
+          // results in { key: values }
+          mergedResponse[key] = { ...cacheResponse[key], ...serverResponse[key] };
+        } else {
+          // if the object comes from an array, we do not want to assign to a key as per GQL spec
+          // results in [{fields}, {fields}, {fields}]
+          mergedResponse = { ...cacheResponse[key], ...serverResponse[key] }
+        }
+        
+        // loop through fields on queryProto
+        for (const fieldName in queryProto[key]) {
+  
+          // check for nested objects
+          if (typeof queryProto[key][fieldName] === 'object' && !fieldName.includes('__')) {
+            // recurse joinResponses on that object to create deep copy on mergedResponse
+            // TO-DO: before recursing, if the cacheResponse and serverResponse contain keys that are not the same, then 
+            let mergedRecursion = {};
+            // console.log('key is ', key, ' and field name is ', fieldName);
+            if (cacheResponse.hasOwnProperty(key) && serverResponse.hasOwnProperty(key)) {
+               mergedRecursion = this.joinResponses(
+                { [fieldName]: cacheResponse[key][fieldName] },
+                { [fieldName]: serverResponse[key][fieldName] }, 
+                { [fieldName]: queryProto[key][fieldName] }
+              );
+            }
+            else if (cacheResponse.hasOwnProperty(key)) {
+              mergedRecursion[fieldName] = cacheResponse[key][fieldName];
+            }
+            else {
+              mergedRecursion[fieldName] = serverResponse[key][fieldName];
+            }
+    
+            // place on merged response
+            mergedResponse[key] = { ...mergedResponse[key], ...mergedRecursion };
+  
+            // // delete shallow copy of cacheResponse's nested object from mergedResponse
+            // if (fieldName !== fieldStrip.key) delete mergedResponse[stripped.key][fieldName]
+          }
         }
       }
     }
+    // return result should be { data: { country { ...cacheValues, ...serverValues } }
+    return mergedResponse;
   }
-  // return result should be { data: { country { ...cacheValues, ...serverValues } }
-  return mergedResponse;
-}
 
 
   async joinArrays(cachedData, uncachedData) {
@@ -1235,7 +1246,7 @@ joinResponses(cacheResponse, serverResponse, queryProto, fromArray = false) {
   writeToCache(key, item) {
     if (!key.includes('uncacheable')) {
       this.redisCache.set(key, JSON.stringify(item));
-      console.log('current keys inthe redis cache are ', this.redisCache.get(key));
+      console.log('current redisCache keys ', this.redisCache.get(key));
       this.redisCache.EXPIRE(key, this.cacheExpiration);
     }
   }

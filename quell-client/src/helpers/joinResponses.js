@@ -34,7 +34,7 @@ function joinResponses(cacheResponse, serverResponse, queryProto, fromArray = fa
       // merging data stored as array
 
       // remove reserved properties from queryProto so we can compare # of properties on prototype to # of properties on responses
-      const filterKeys = Object.keys(queryProto[key]).filter(propKey => !propKey.includes('__'));
+      // const filterKeys = Object.keys(queryProto[key]).filter(propKey => !propKey.includes('__'));
 
       // if # of keys is the same between prototype & cached response, then the objects on the array represent different things
       // if (filterKeys.length === Object.keys(checkResponse[key][0]).length) {
