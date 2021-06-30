@@ -5,7 +5,7 @@ import DemoButton from '../components/DemoButton';
 import QueryResults from '../components/QueryResults';
 import Metrics from '../components/Metrics';
 import Graph from '../components/Graph';
-import { CreateQueryStr } from '../helper-functions/HelperFunctions.js';
+import { CreateQueryStr, updateProtoWithFragment } from '../helper-functions/HelperFunctions.js';
 import Header from '../images/headers/QUELL-headers-demo w lines.svg';
 import Quell from '@quell/client';
 import DropDown from '../images/buttons/dropdown-button.svg';
@@ -20,12 +20,14 @@ const Demo = () => {
   const [queryResponse, setQueryResponse] = useState({});
   const [fetchTime, setFetchTime] = useState('0.00 ms');
   const [fetchTimeIntegers, setFetchTimeIntegers] = useState([0, 0]);
-  const [cacheStatus, setCacheStatus] = useState('');
-  const [output, setOutput] = useState({});
+  const [cacheStatus, setCacheStatus] = useState(''); //can we delete? 
+  const [cacheAddStatus, setCacheAddStatus] = useState('No');
+  const [cacheClearStatus, setCacheClearStatus] = useState('No');
+  const [uncachedTime, setUncachedTime] = useState('0.00 ms');
+  let [output, setOutput] = useState({});
   const [resetComponent, setResetComponent] = useState(false);
   const [queryDropdown, toggleDropdown] = useState(false);
   const [theQuery, setTheQuery] = useState("blank"); 
-  // const [theQuery, setQuery] = useState(''); // set the kind of query you want
 
   const formatTimer = (time) => {
     return time.toFixed(2) + ' ms';
@@ -60,14 +62,6 @@ const Demo = () => {
   // ================================================ //
 
   /* 
-    All changes to the query go through outputFunction
-    It needs to be formatted essentially for when you run query, so this is a "behind the scenes" function
-    See ResultsHelper function in HelperFunctions.js
-    It makes a change to the state in the parent component, Demo
-  */
-  
-
-  /* 
     - Array of queries to choose from
   */
     const dropdownList = [
@@ -76,10 +70,9 @@ const Demo = () => {
     'Alias',
     'Multiple Queries',
     'Nested Query',
-    'Fragments'
+    'Fragment'
   ];
 
- 
     const selectQuery = (selection) => {
       // setTheQuery(selection);
       if (selection === 'Simple Query') {
@@ -88,16 +81,20 @@ const Demo = () => {
       if (selection === 'Simple Query With Argument') {
         displaySimpleQueryWithArg(); 
       }
+      if (selection === 'Alias') {
+        displaySimpleQueryWithArgAndAlias(); 
+      }
       if (selection === 'Multiple Queries') {
         displayMultipleQueries(); 
       } 
       if (selection === 'Nested Query') {
         displayNestedQuery(); 
       }
-  
+      if (selection === 'Fragment') {
+        displayFragment(); 
+      }
       // Close dropdown
       toggleDropdown(false);
-     
     };
 
      // Creates dropdown menu from the above array
@@ -106,9 +103,15 @@ const Demo = () => {
       <DropdownItem func={selectQuery} item={item} key={'QueryDropdown' + i} />
     );
   });
-
-    const displaySimpleQuery = () => {
+ 
+  // ============================================================== //
+  // ===== Functionality to change output based on Query Type ===== //
+  // ============================================================== //
+    
+  const displaySimpleQuery = () => {
       setTheQuery("simple query");
+      const uncached = '0.00 ms';
+      setUncachedTime(uncached);
       output = setOutput({
         countries: {
           __id: null,
@@ -123,12 +126,30 @@ const Demo = () => {
   
     const displaySimpleQueryWithArg = () => {
       setTheQuery("simple query with argument");
+      const uncached = '0.00 ms';
+      setUncachedTime(uncached);
       output = setOutput({
-        country: {
+        book: {
           __id: '1',
-          __type: 'country',
+          __type: 'Book',
           __alias: null,
           __args: { id: '1' },
+          id: false,
+          name: false,
+        }
+      });
+    }
+
+    const displaySimpleQueryWithArgAndAlias = () => {
+      setTheQuery("simple query with argument and alias");
+      const uncached = '0.00 ms';
+      setUncachedTime(uncached);
+      output = setOutput({
+        Aruba: {
+          __id: '5',
+          __type: 'country',
+          __args: {id: '5'},
+          __alias: "Aruba",
           id: false,
           name: false,
         }
@@ -137,50 +158,77 @@ const Demo = () => {
   
     const displayMultipleQueries = () => {
       setTheQuery("multiple queries");
+      const uncached = '0.00 ms';
+      setUncachedTime(uncached);
       output = setOutput({
-        country: {
+        Andorra: {
           __id: '1',
           __type: 'country',
-          __args: { id: '1' },
-          __alias: null,
-          id: false,
-          name: false,
-          cities: {
-            __id: null,
-            __type: 'cities',
-            __args: {},
-            __alias: null,
-            id: false,
-            name: false,
-          },
-        },
-        book: {
-          __id: '2',
-          __type: 'book',
-          __args: { id: '2' },
-          __alias: null,
+          __args: {id: '1'},
+          __alias: "Andorra",
           id: false,
           name: false,
         },
-      })
-  }
+        Aruba: {
+          __id: '5',
+          __type: 'country',
+          __args: {id: '5'},
+          __alias: "Aruba",
+          id: false,
+          name: false,
+        }
+      });
+    }
   
     const displayNestedQuery = () => {
+      const uncached = '0.00 ms';
+      setUncachedTime(uncached);
       setTheQuery("nested query");
       output = setOutput({
         
       });
     }
 
+    const displayFragment = () => {
+      const uncached = '0.00 ms';
+      setUncachedTime(uncached);
+      setTheQuery("fragment");
+      output = setOutput({
+        Bolivia: {
+          __id: '2',
+          __args: {id: '2'},
+          __alias: 'Bolivia',
+          __type: 'country',
+          id: false,
+          theFields: true,
+        },
+      });
+    }
+
   // ============================================================== //
   // === Function that makes the fetch request to run the query === //
   // ============================================================== //
-
+  
   const handleRunQueryClick = () => {
+    if (theQuery === 'blank') {
+      setTheQuery('error');
+    }
     // Run ResultsParser on output to get the query
-    let parsedResult = CreateQueryStr(output);
-    console.log(output)
-    console.log(parsedResult)
+    let parsedResult; 
+    
+    if (theQuery === 'fragment') {
+      const fragment = {
+        theFields: {
+          id: true,
+          name: true,
+          capital: true,
+        },
+      };
+      let protoFrag = updateProtoWithFragment(output, fragment);
+      parsedResult = CreateQueryStr(protoFrag);
+    } else {
+      parsedResult = CreateQueryStr(output);
+    }
 
     // start the timer (eventually displayed in Metrics)
     let startTime, endTime;
@@ -195,28 +243,33 @@ const Demo = () => {
         country: 'Country',
         citiesByCountry: 'City',
         cities: 'City',
+        bookShelves: 'BookShelf',
+        bookShelf: 'BookShelf',
         book: 'Book',
-        books: 'Book',
-        // book: 'Book'
-        //potentially book too? 
       },
       {}
     )
       .then((res) => {
         endTime = performance.now(); // stop the timer
         const rawTime = endTime - startTime; // calculate how long it took
-
+        if (uncachedTime === '0.00 ms') {
+          const uncached = (endTime - startTime).toFixed(2) + ' ms';
+          setUncachedTime(uncached);
+        } 
         // Set Query Response state
         setQueryResponse(res.data);
-        console.log(res.data)
         // Set Timer State
         const fTime = formatTimer(rawTime);
         setFetchTime(fTime);
+        
+        setCacheAddStatus('Yes');
+        setCacheClearStatus('No');
 
         // Set Line Graph
         const newTime = Number(rawTime.toFixed(3));
         setFetchTimeIntegers([...fetchTimeIntegers, newTime]);
       })
+
       .catch((err) => console.log(err));
   };
 
@@ -228,6 +281,14 @@ const Demo = () => {
     // Clear sessionStorage
     sessionStorage.clear();
     // Time cleared
+    const uncached = '0.00 ms';
+    setUncachedTime(uncached);
+    setOutput({});
+    setTheQuery('blank');
+
+    setCacheClearStatus('Yes'); 
+    setCacheAddStatus('No');
+
     let date = new Date();
     setCacheStatus(date.toLocaleTimeString());
   };
@@ -245,13 +306,19 @@ const Demo = () => {
     // Query default
     setResetComponent(!resetComponent);
     // Reset output
-    setOutput({ countries: ['id'] });
+    setOutput({});
+    setTheQuery('blank');
     // Zero-out results
     setQueryResponse({});
     // Zero-out cache/FetchTime
     setFetchTime('0.00 ms');
+    // Zero-out uncached/FetchTime
+    const uncached = '0.00 ms';
+    setUncachedTime(uncached);
     // Clear sessionStorage
     sessionStorage.clear();
+    setCacheClearStatus('Yes'); 
+    setCacheAddStatus('No');
     // Clear server cache:
     fetch('/clearCache').then((res) => console.log(res));
     // Time cleared
@@ -333,7 +400,6 @@ const Demo = () => {
     >
        <div className="plus-minus-icons dropdown-icon">
        <img src={DropDown}/>
-        {/* <h3>SELECT YOUR QUERY</h3> */}
         <img src={DropDownHover} className="hover-button" />
        </div>
       {/* Query Dropdown Menu */}
@@ -347,7 +413,7 @@ const Demo = () => {
         </div>
         {/* The key prop makes it so that when component changes, it completely reloads -- useful when clicking "Reset All" */}
         <Query theQuery={theQuery} />
-        <Metrics fetchTime={fetchTime} cacheStatus={cacheStatus} />
+        <Metrics fetchTime={fetchTime} cacheStatus={cacheStatus} cacheAddStatus={cacheAddStatus} cacheClearStatus={cacheClearStatus} uncachedTime={uncachedTime}/>
         <QueryResults queryResponse={queryResponse} />
         <Graph fetchTimeIntegers={fetchTimeIntegers} />
       </div>

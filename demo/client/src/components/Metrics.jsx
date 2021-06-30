@@ -5,7 +5,7 @@ import React from 'react';
 */
 
 const Metrics = (props) => {
-  const { fetchTime, cacheStatus } = props;
+  const { fetchTime, cacheStatus, cacheAddStatus, cacheClearStatus, uncachedTime} = props;
 
   return (
     <>
@@ -17,7 +17,9 @@ const Metrics = (props) => {
             <div className="metric-label">Cache/Fetch Time</div>
           </div>
         </div>
-        <div className="cache-cleared-div">Cache Cleared: {cacheStatus}</div>
+        <div className="cache-cleared-div">Added To Cache (Y/N): {cacheAddStatus}</div>
+        <div className="cache-cleared-div">Cache Cleared (Y/N): {cacheClearStatus}</div>
+        <div className="cache-cleared-div">Uncached Runtime: {uncachedTime}</div>
       </div>
     </>
   );
