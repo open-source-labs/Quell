@@ -9,7 +9,7 @@
 
 Quell is an easy-to-use, lightweight JavaScript library providing a client- and server-side caching solution for GraphQL.
 
-Accelerated by [OS Labs](https://github.com/oslabs-beta/) and developed by [Andrei Cabrera](https://github.com/Andreicabrerao), [Dasha Kondratenko](https://github.com/dasha-k), [Derek Sirola](https://github.com/dsirola1), [Xiao Yu Omeara](https://github.com/xyomeara), [Nick Kruckenberg](https://github.com/kruckenberg), [Mike Lauri](https://github.com/MichaelLauri), [Rob Nobile](https://github.com/RobNobile) and [Justin Jaeger](https://github.com/justinjaeger).
+Accelerated by [OS Labs](https://github.com/oslabs-beta/) and developed by [Robleh Farah](https://github.com/farahrobleh), [Angela Franco](https://github.com/ajfranco18), [Ken Litton](https://github.com/kenlitton), [Thomas Reeder](https://github.com/nomtomnom), [Andrei Cabrera](https://github.com/Andreicabrerao), [Dasha Kondratenko](https://github.com/dasha-k), [Derek Sirola](https://github.com/dsirola1), [Xiao Yu Omeara](https://github.com/xyomeara), [Nick Kruckenberg](https://github.com/kruckenberg), [Mike Lauri](https://github.com/MichaelLauri), [Rob Nobile](https://github.com/RobNobile) and [Justin Jaeger](https://github.com/justinjaeger).
 
 ## Features
 
@@ -21,7 +21,7 @@ Accelerated by [OS Labs](https://github.com/oslabs-beta/) and developed by [Andr
 
 ## Installation
 
-Quell is divided up into two npm packages:
+Quell is divided into two npm packages:
 
 - Download @quell/client from npm in your terminal with `npm i @quell/client`
 - Download @quell/server from npm in your terminal with `npm i @quell/server`
@@ -41,7 +41,7 @@ If not already installed on your server, install Redis.
 
 ### Usage Notes
 
-- Currently, Quell can only cache query-type requests without aliases, fragments, variables, or directives. Quell will still process these other requests, but will not cache the responses.
+- Currently, Quell can only cache query-type requests without variables or directives. Quell will still process these other requests, but will not cache the responses.
 
 ## Documentation
 

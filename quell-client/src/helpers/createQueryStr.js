@@ -1,8 +1,8 @@
 /**
  createQueryStr converts the query object into a formal GQL query string.
+  *  @param {object} queryObject - JavaScript object with missing fields from the cache (false)
  */
 
-// inputting a comment here to test git commits
 function createQueryStr(queryObject, operationType) {
   if (Object.keys(queryObject).length === 0) return ''
   const openCurly = '{';
