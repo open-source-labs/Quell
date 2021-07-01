@@ -87,18 +87,14 @@ class QuellCache {
 
       // combines fragments on prototype so we can access fragment values in cache
       const prototype = Object.keys(frags).length > 0 ? this.updateProtoWithFragment(proto, frags) : proto;
-
       // list keys on prototype as reference for buildFromCache
       const prototypeKeys = Object.keys(prototype);
       // check cache for any requested values
       // modifies prototype to note any values not in the cache
       const cacheResponse = await this.buildFromCache(prototype, prototypeKeys);
-
       let mergedResponse;
-
       // create object of queries not found in cache, to create gql string
       const queryObject = this.createQueryObj(prototype);
-
       // if cached response is incomplete, reformulate query, handoff query, join responses, and cache joined responses
       if (Object.keys(queryObject).length > 0) {
         // create new query sting to send to gql
@@ -428,8 +424,6 @@ class QuellCache {
    */
   getFromRedis(key) {
     const lowerKey = key.toLowerCase();
-    // console.log('key to get from redis is ', key);
-    // console.log('typeof key is ', typeof key);
     return new Promise((resolve, reject) => {
       this.redisCache.get(lowerKey, (error, result) =>
         error ? reject(error) : resolve(result)
@@ -580,11 +574,9 @@ class QuellCache {
   async buildFromCache(prototype, prototypeKeys, itemFromCache = {}, firstRun = true, subID = false) {
 
     for (let typeKey in prototype) {
-
       // if current key is a root query, check cache and set any results to itemFromCache
       if (prototypeKeys.includes(typeKey)) {
         const cacheID = subID ? subID : this.generateCacheID(prototype[typeKey]);
-        const isExist = await this.checkFromRedis(cacheID);
         const cacheResponse = await this.getFromRedis(cacheID);
         itemFromCache[typeKey] = cacheResponse ? JSON.parse(cacheResponse) : {};
       }
@@ -630,7 +622,7 @@ class QuellCache {
       // recurse through buildFromCache using typeKey, prototype
       // if itemFromCache is empty, then check the cache for data, else, persist itemFromCache
       // if this iteration is a nested query (i.e. if typeKey is a field in the query)
-      else if (firstRun === false) {  
+      else if (firstRun === false) {
         // if this field is NOT in the cache, then set this field's value to false
         if (
           (itemFromCache === null || !itemFromCache.hasOwnProperty(typeKey)) && 
@@ -639,13 +631,13 @@ class QuellCache {
         } 
         // if this field is a nested query, then recurse the buildFromCache function and iterate through the nested query
         if (
-          (itemFromCache === null || itemFromCache.hasOwnProperty(typeKey)) && 
+          // (itemFromCache === null || itemFromCache.hasOwnProperty(typeKey)) && 
           !typeKey.includes('__') &&
           typeof prototype[typeKey] === 'object') {
-            const cacheID = this.generateCacheID(prototype);
-            const cacheResponse = this.getFromRedis(currTypeKey);
-            itemFromCache[typeKey] = JSON.parse(cacheResponse);
-            this.buildFromCache(prototype[typeKey], prototypeKeys, itemFromCache[typeKey], false);
+            const cacheID = await this.generateCacheID(prototype);
+            const cacheResponse = await this.getFromRedis(cacheID);
+            if (cacheResponse) itemFromCache[typeKey] = JSON.parse(cacheResponse);
+            await this.buildFromCache(prototype[typeKey], prototypeKeys, itemFromCache[typeKey] || {}, false);
         } 
       }
       // if not an array and not a recursive call, handle normally
@@ -663,9 +655,8 @@ class QuellCache {
           // if field contains a nested query, then recurse the function and iterate through the nested query
           if ( 
             !field.includes('__') && 
-            typeof prototype[typeKey][field] === 'object' &&
-            itemFromCache[typeKey]) {
-            this.buildFromCache(prototype[typeKey][field], prototypeKeys, itemFromCache[typeKey][field], false);
+            typeof prototype[typeKey][field] === 'object') {
+              await this.buildFromCache(prototype[typeKey][field], prototypeKeys, itemFromCache[typeKey][field] || {}, false);
           }
           // if there are no data in itemFromCache, toggle to false
           else if (!itemFromCache[typeKey] && !field.includes('__') && typeof prototype[typeKey][field] !== 'object') {
@@ -730,7 +721,7 @@ class QuellCache {
           // check keys of object to see if those values are false via recursion
           const reduced = reducer(fields[key]);
           // if reduced object has any values to pass, place on filter
-          if (Object.keys(reduced).length > 0) {
+          if (Object.keys(reduced).length > 1) {
             filter[key] = reduced;
           }
         }
@@ -891,7 +882,6 @@ createQueryStr(queryObject, operationType) {
             // recurse joinResponses on that object to create deep copy on mergedResponse
             // TO-DO: before recursing, if the cacheResponse and serverResponse contain keys that are not the same, then 
             let mergedRecursion = {};
-            // console.log('key is ', key, ' and field name is ', fieldName);
             if (cacheResponse.hasOwnProperty(key) && serverResponse.hasOwnProperty(key)) {
                mergedRecursion = this.joinResponses(
                 { [fieldName]: cacheResponse[key][fieldName] },
@@ -939,13 +929,9 @@ createQueryStr(queryObject, operationType) {
       // currentField we are iterating over & corresponding Prototype
       const currField = responseData[resultName];
       const currProto = protoField[resultName];
-      // console.log('prototype in the normalize for cache on the server', protoField);
-      // console.log('currField is ', currField);
       // check if the value stored at that key is array 
       if (Array.isArray(currField)) {
-        // console.log('iterating over keys on the ', currField);
-        // RIGHT NOW: countries: [{}, {}]
-        // GOAL: countries: ["Country--1", "Country--2"]
+        // when a plural key is saved to the cache, it should look like -> countries: ["Country--1", "Country--2"]
   
         // create empty array to store refs
         // ie countries: ["country--1", "country--2"]

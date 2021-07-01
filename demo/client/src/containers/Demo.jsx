@@ -189,7 +189,30 @@ const Demo = () => {
       setUncachedTime(uncached);
       setTheQuery("nested query");
       output = setOutput({
-        
+        countries: {
+          id: true,
+          name: true,
+          __type: 'countries',
+          __alias: null,
+          __args: {},
+          __id: null,
+          cities: {
+            id: true,
+            name: true,
+            __type: 'cities',
+            __alias: null,
+            __args: {},
+            __id: null,
+            attractions: {
+              id: true,
+              name: true,
+              __type: 'attractions',
+              __alias: null,
+              __args: {},
+              __id: null
+            }
+          }
+        }
       });
     }
 

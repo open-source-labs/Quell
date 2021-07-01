@@ -140,9 +140,43 @@ const Query = (props) => {
   if (theQuery === "nested query") {
     return (
       <>
-        <div className="query-div">
+        <div className="query-div" id="smaller-text">
           <div className="queryLine">{ob}</div>
-          <div className="queryLine">{cb}</div>
+          <div className="queryLine">
+          {space}{space}{'countries'} {ob}
+        </div>
+        <div className="queryLine">
+          {tab}{"id"} 
+        </div>
+        <div className="queryLine">
+          {tab}{"name"} 
+        </div>
+        <div className="queryLine">
+        {tab}{'cities'} {ob}
+        </div>
+        <div className="queryLine">
+        {tab}{tab}{"id"} 
+        </div>
+        <div className="queryLine">
+        {tab}{tab}{"name"} 
+        </div>
+        <div className="queryLine">
+        {tab}{tab}{'attractions'} {ob}
+        </div>
+        <div className="queryLine">
+        {tab}{tab}{tab}{"id"} 
+        </div>
+        <div className="queryLine">
+        {tab}{tab}{tab}{"name"} 
+        </div>
+        <div className="queryLine">
+        {tab}{tab}{cb}
+        </div>
+        <div className="queryLine">
+        {tab}{cb}
+        </div>
+        <div className="queryLine">{space}{space}{cb}</div>
+        <div className="queryLine">{cb}</div>
         </div>
       </>
     );
@@ -181,7 +215,6 @@ const Query = (props) => {
       </>
     );
     } 
-
 };
 
 

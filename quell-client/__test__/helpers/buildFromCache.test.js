@@ -176,6 +176,65 @@ describe('buildFromCache.test.js', () => {
     expect(responseFromCache).toEqual(expectedResponseFromCache);
   });
 
-  // TO-DO
-  xtest('Handles deeply nested queries', () => { });
+  test('Handles deeply nested queries with no cache', () => {
+    const testProto = {
+      continents: {
+        id: true,
+        name: true,
+        __type: 'continents',
+        __alias: null,
+        __args: {},
+        __id: null,
+        cities: {
+          id: true,
+          name: true,
+          __type: 'cities',
+          __alias: null,
+          __args: {},
+          __id: null,
+          attractions: {
+            id: true,
+            name: true,
+            __type: 'attractions',
+            __alias: null,
+            __args: {},
+            __id: null
+          }
+        }
+      }
+    }
+    const endProto = {
+      continents: {
+        id: false,
+        name: false,
+        __type: 'continents',
+        __alias: null,
+        __args: {},
+        __id: null,
+        cities: {
+          id: false,
+          name: false,
+          __type: 'cities',
+          __alias: null,
+          __args: {},
+          __id: null,
+          attractions: {
+            id: false,
+            name: false,
+            __type: 'attractions',
+            __alias: null,
+            __args: {},
+            __id: null
+          }
+        }
+      }
+    }
+    const expectedResponseFromCache = {
+      data: { continents: {} }
+    };
+    const prototypeKeys = Object.keys(testProto); 
+    const responseFromCache = buildFromCache(testProto, prototypeKeys);
+    expect(testProto).toEqual(endProto);
+    expect(responseFromCache).toEqual(expectedResponseFromCache);
+  });
 });
