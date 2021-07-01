@@ -1,19 +1,19 @@
 {
   "name": "@quell/server",
-  "version": "1.1.1",
+  "version": "2.1.2",
   "description": "Quell is an open-source NPM package providing a light-weight caching layer implementation for GraphQL responses on both the client- and server-side. Use Quell to prevent redundant client-side API requests and to minimize costly server-side response latency.",
   "main": "src/quell.js",
   "scripts": {
-    "test": "jest --detectOpenHandles"
+    "test": "jest"
   },
   "author": "Quell",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/oslabs-beta/Quell/tree/master/quell-server"
+    "url": "https://github.com/open-source-labs/Quell/tree/master/quell-server"
   },
   "bugs": {
-    "url": "https://github.com/oslabs-beta/Quell/issues"
+    "url": "https://github.com/open-source-labs/Quell/issues"
   },
   "keywords": [
     "graphQL",
@@ -78,9 +78,10 @@
   ],
   "homepage": "http://quellql.io",
   "dependencies": {
-    "dotenv": "^10.0.0",
     "graphql": "^15.3.0",
-    "jest": "^27.0.5",
     "redis": "^3.0.2"
+  },
+  "devDependencies": {
+    "jest": "^27.0.5"
   }
 }
