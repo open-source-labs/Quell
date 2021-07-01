@@ -1,166 +1,101 @@
 /**
- normalizeForCache traverses server response data and creates objects out of responses for cache. Furthermore, it identifies fields that are 'object types' then replaces those array elements with references (helper), creates separate normalized objectes out of replaced elements, and saves all to cache (helper) with unique identifiers (helper)
+ normalizeForCache traverses server response data and creates objects out of responses for cache. 
+ * Iterates & recurses over response object & preps data to be sent to cache
+ * and sends data to cache
+ * necessary for cache consistency
+ @param {object} responseData - the data from the graphQL response object
+ @param {object} map - a map of graphQL fields to their corresponding graphQL Types
+ @param {object} protoField - the prototype object, or a section of the prototype object, for accessing arguments, aliases, etc.
+ * fieldsMap: potentially deprecated?
  */
+function normalizeForCache(responseData, map = {}, protoField, subID, fieldsMap = {}) {
+  // if we are recursing, we want to add a subid before caching
 
-function normalizeForCache(response, map, fieldsMap, QuellStore) {
+  // iterate over keys in our response data object 
+  for (const resultName in responseData) {
+    // currentField we are iterating over & corresponding Prototype
+    const currField = responseData[resultName];
+    const currProto = protoField[resultName];
+    // check if the value stored at that key is array 
+    if (Array.isArray(currField)) {
 
-  if (QuellStore.arguments && !QuellStore.alias) {
-    // If query has arguments && QuellStore.alias is null
+      const cacheKey = subID ? subID + '--' + resultName : resultName
+      // create empty array to store refs
+      const refList = [];
 
-    // Name of query for ID generation (e.g. "countries")
-    const queryName = Object.keys(response)[0];
-    // Object type for ID generation ===> "City"
-    const collectionName = map[queryName];
-    // Array of objects on the response (cloned version)
-    const collection = JSON.parse(JSON.stringify(response[queryName]));
+      // iterate over countries array
+      for (let i = 0; i < currField.length; i++) {
+        const el = currField[i];
+        // for each object
+        // "resultName" is key on "map" for our Data Type
+        const dataType = map[resultName];
 
-    if (Array.isArray(collection)) {
-      // if collection from response is an array / etc: query all cities with argument country_id
-      let userDefinedIdArg;
-      for (let fieldName in QuellStore.arguments) {
-        for (let arg of QuellStore.arguments[fieldName]) {
-          if (Object.keys(arg)[0].includes('id')) {
-            userDefinedIdArg = arg;
+        // grab ID from object we are iterating over
+        let fieldID = dataType;
+
+        for (const key in el) {
+          // if key is an ID, append to fieldID for caching
+          if (key === 'id' || key === '_id' || key === 'ID' || key === 'Id') {
+            fieldID += `--${el[key]}`;
+            // push fieldID onto refList
           }
         }
-      }
-      const referencesToCache = [];
-      for (const item of collection) {
-        const itemKeys = Object.keys(item);
 
-        for (const key of itemKeys) {
-          if (Array.isArray(item[key])) {
-            item[key] = replaceItemsWithReferences(key, item[key], fieldsMap);
-          }
-        }
-        // Write individual objects to cache (e.g. separate object for each single city)
-        writeToCache(generateId(collectionName, item), item);
-        referencesToCache.push(generateId(collectionName, item));
-      }
-      // Write the array of references to cache (e.g. 'citiesByCountry-1': ['City-1', 'City-2', 'City-3'...])
-      writeToCache(generateId(queryName, userDefinedIdArg), referencesToCache);
-    } else {
-      // if collection from response is an object / etc: query a country with argument id
-      const itemKeys = Object.keys(collection);
-
-      for (const key of itemKeys) {
-        if (Array.isArray(collection[key])) {
-          collection[key] = replaceItemsWithReferences(
-            key,
-            collection[key],
-            fieldsMap
-          );
+        refList.push(fieldID);
+        // if object, recurse to add all nested values of el to cache as individual entries
+        if (typeof el === 'object') {
+          normalizeForCache({ [dataType]: el }, map,  { [dataType]: currProto});
         }
       }
-      // Write individual objects to cache (e.g. separate object for each single city)
-      writeToCache(generateId(collectionName, collection), collection);
+      sessionStorage.setItem(cacheKey, JSON.stringify(refList));
     }
-  } else if (QuellStore.arguments && QuellStore.alias) {
-    /**
-     * Can fully cache aliaes by different id,
-     * and can build response from cache with previous query with exact aliases
-     * (comment out aliaes functionality now)
-     */
-    // // if collection from response is an object && QuellStore.alias is not null
-    // // Name of alias from response object (e.g. "country1" & "country1")
-    // for (let alias of Object.keys(response)) {
-    //   // Name of query for ID generation (e.g. "country")
-    //   const queryName = Object.keys(QuellStore.alias)[0];
-    //   // Object type for ID generation ===> "Country"
-    //   const collectionName = map[queryName];
-    //   // Array of objects on the response (cloned version)
-    //   const collection = JSON.parse(JSON.stringify(response[alias]));
-    //   if (Array.isArray(collection)) {
-    //     // if collection from response is an array / etc: query all cities with argument country_id
-    //     for (const item of collection) {
-    //       const itemKeys = Object.keys(item);
-    //       for (const key of itemKeys) {
-    //         if (Array.isArray(item[key])) {
-    //           item[key] = replaceItemsWithReferences(key, item[key], fieldsMap);
-    //         }
-    //       }
-    //       // Write individual objects to cache (e.g. separate object for each single city)
-    //       writeToCache(generateId(collectionName, item), item);
-    //     }
-    //   } else {
-    //     // if collection from response is an object / etc: query a country with argument id
-    //     const itemKeys = Object.keys(collection);
-    //     for (const key of itemKeys) {
-    //       if (Array.isArray(collection[key])) {
-    //         collection[key] = replaceItemsWithReferences(
-    //           key,
-    //           collection[key],
-    //           fieldsMap
-    //         );
-    //       }
-    //     }
-    //     // Write individual objects to cache (e.g. separate object for each single city)
-    //     writeToCache(generateId(collectionName, collection), collection);
-    //   }
-    // }
-  } else {
-    // if collection is query to get all / etc: query all countries
+    else if (typeof currField === 'object') {
+      // need to get non-Alias ID for cache
+      // temporary store for field properties
+      const fieldStore = {};
+      
+      // if object has id, generate fieldID 
+      let cacheID = map.hasOwnProperty(currProto.__type)
+        ? map[currProto.__type]
+        : currProto.__type;
+      
+      // if prototype has ID, append it to cacheID
+      cacheID += currProto.__id
+        ? `--${currProto.__id}`
+        : '';
 
-    // Name of query for ID generation (e.g. "countries")
-    const queryName = Object.keys(response)[0];
-    // Object type for ID generation ===> "City"
-    const collectionName = map[queryName];
-    // Array of objects on the response (cloned version)
-    const collection = JSON.parse(JSON.stringify(response[queryName]));
+      // iterate over keys in object
+      for (const key in currField) {
+        // if prototype has no ID, check field keys for ID (mostly for arrays)
+        if (!currProto.__id && (key === 'id' || key === '_id' || key === 'ID' || key === 'Id')) {
+          cacheID += `--${currField[key]}`;
+        }
+        fieldStore[key] = currField[key];
 
-    const referencesToCache = [];
-    // Check for nested array (to replace objects with another array of references)
-    for (const item of collection) {
-      const itemKeys = Object.keys(item);
-
-      for (const key of itemKeys) {
-        if (Array.isArray(item[key])) {
-          item[key] = replaceItemsWithReferences(key, item[key], fieldsMap);
+        // if object, recurse normalizeForCache assign in that object
+        // must also pass in protoFields object to pair arguments, aliases with response
+        if (typeof currField[key] === 'object') {
+          normalizeForCache({ [key]: currField[key] }, map, { [key]: protoField[resultName][key]}, cacheID);
         }
       }
-      // Write individual objects to cache (e.g. separate object for each single city)
-      writeToCache(generateId(collectionName, item), item);
-      referencesToCache.push(generateId(collectionName, item));
-    }
-
-    // Write the array of references to cache (e.g. 'Country': ['Country-1', 'Country-2', 'Country-3'...])
-    writeToCache(collectionName, referencesToCache);
-  }
-}
-
-// ============= HELPER FUNCTIONS ============= //
-
-// Replaces object field types with an array of references to normalized items (elements)
-function replaceItemsWithReferences(field, array, fieldsMap) {
-  const arrayOfReferences = [];
-  const collectionName = fieldsMap[field];
-
-  for (const item of array) {
-    writeToCache(generateId(collectionName, item), item);
-    arrayOfReferences.push(generateId(collectionName, item));
-  }
-
-  return arrayOfReferences;
-}
-
-// Creates unique ID (key) for cached item
-function generateId(collection, item) {
-  let userDefinedId;
-  for (let key in item) {
-    if (key.includes('id') && key !== 'id' && key !== '_id') {
-      userDefinedId = item[key];
+      // store "current object" on cache in JSON format
+      sessionStorage.setItem(cacheID, JSON.stringify(fieldStore));
     }
   }
-
-  const identifier = item.id || item._id || userDefinedId || 'uncacheable';
-  return collection + '-' + identifier.toString();
 }
 
 // Saves item/s to cache and omits any 'uncacheable' items
-function writeToCache(key, item) {
+async function writeToCache(key, item) {
   if (!key.includes('uncacheable')) {
+    const cacheItem = await sessionStorage.getItem(key);
+    const parsedItem = JSON.parse(cacheItem);
+    // if item is an array, set to just stash the item, otherwise merge objects
+    const fullItem = Array.isArray(item)
+      ? item
+      : { ...parsedItem, ...item };
+
     // Store the data entry
-    sessionStorage.setItem(key, JSON.stringify(item));
+    sessionStorage.setItem(key, JSON.stringify(fullItem));
 
     // Start the time out to remove this data entry for cache expiration after saved in session storage for 10 minutes (600 seconds)
     let seconds = 600;

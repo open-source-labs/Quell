@@ -1,6 +1,20 @@
-const joinResponses = require('../../src/helpers/joinResponses');
+const QuellCache = require('../../src/quell');
+const schema = require('../../test-config/testSchema');
 
-describe('joinResponses', () => {
+const redisPort = 6379;
+const timeout = 100;
+
+
+describe('tests for joinResponses on the server side', () => {
+  const Quell = new QuellCache(schema, redisPort, timeout);
+
+  afterAll((done) => {
+    Quell.redisCache.flushall();
+    Quell.redisCache.quit(() => {
+      done();
+    });
+  });
+  
   const protoObj = {
     artists: {
       __id: null,
@@ -101,7 +115,7 @@ describe('joinResponses', () => {
       },
     };
 
-    expect(joinResponses(cacheResponse.data, serverResponse.data, proto)).toEqual({
+    expect(Quell.joinResponses(cacheResponse.data, serverResponse.data, proto)).toEqual({
         artist: {
           id: '1',
           name: 'John Coltrane',
@@ -157,7 +171,7 @@ describe('joinResponses', () => {
       }
     };
   
-    expect(joinResponses(cacheResponse.data, serverResponse.data, prototype)).toEqual({
+    expect(Quell.joinResponses(cacheResponse.data, serverResponse.data, prototype)).toEqual({
       artist: {
         id: '1',
         name: 'John Coltrane',
@@ -171,7 +185,7 @@ describe('joinResponses', () => {
     });
   });
 
-  // test marked off
+  
   xtest('inputs a list retrieved from cache and a list retrieved from server and outputs combined List response', () => {
     const cacheResponse = {
       data: {
@@ -214,7 +228,7 @@ describe('joinResponses', () => {
       }
     };
 
-    expect(joinResponses(cacheResponse.data, serverResponse.data, prototype)).toEqual({
+    expect(Quell.joinResponses(cacheResponse.data, serverResponse.data, prototype)).toEqual({
       albums: [
         { album_id: '1', id: '101', name: 'Blue Train', release_year: 1957 },
         { album_id: '2', id: '201', name: 'Giant Steps', release_year: 1965 },
@@ -260,7 +274,7 @@ describe('joinResponses', () => {
       }
     };
 
-    expect(joinResponses(cacheResponse.data, serverResponse.data, prototype)).toEqual({
+    expect(Quell.joinResponses(cacheResponse.data, serverResponse.data, prototype)).toEqual({
       albums: [
         { album_id: '1', id: '101', name: 'Blue Train', release_year: 1957 },
         { album_id: '2', id: '201', name: 'Giant Steps', release_year: 1965 },
@@ -333,7 +347,7 @@ describe('joinResponses', () => {
       }
     };
   
-    expect(joinResponses(cacheResponse.data, serverResponse.data, prototype)).toEqual({
+    expect(Quell.joinResponses(cacheResponse.data, serverResponse.data, prototype)).toEqual({
       artist: {
         id: '1',
         name: 'Belle & Sebastian',
@@ -358,6 +372,94 @@ describe('joinResponses', () => {
       },
     });
   });
+
+  test('queries when the server and the response contain different piece of data relevant to the client request', () => {
+    const cacheResponse = {
+      data: {
+        artist: {
+          id: '1',
+          instrument: 'saxophone',
+          name: 'John Coltrane',
+          album: {
+            id:'2',
+            name: 'Ring Around the Rose-y',
+            yearOfRelease: '1800'
+          },
+        },
+      },
+    };
+
+    const serverResponse = {
+      data: {
+        author: {
+          id: '10',
+          name: 'Jeane Steinbeck',
+          book: {
+            name: 'Crepes of Wrath',
+            year: '1945'
+          },
+        },
+      },
+    };
+
+    const prototype = {
+      artist: {
+        __id: '1',
+        __args: { id: '1' },
+        __alias: null,
+        __type: 'artist',
+        id: true,
+        name: true,
+        instrument: true,
+        album: {
+          __id: '2',
+          __args: { id: '2' },
+          __alias: null,
+          __type: 'album',
+          id: true,
+          name: true,
+          yearOfRelease: true
+        }
+      },
+      author: {
+        __id: '10',
+        __args: { id: '10' },
+        __alias: null,
+        __type: 'author',
+        id: false,
+        name: false,
+        book: {
+          __id: null,
+          __args: { },
+          __alias: null,
+          __type: 'book',
+          name: false,
+          year: false
+        }
+      }
+    };
+  
+    expect(Quell.joinResponses(cacheResponse.data, serverResponse.data, prototype)).toEqual({
+      artist: {
+        id: '1',
+        name: 'John Coltrane',
+        instrument: 'saxophone',
+        album: {
+          id: '2',
+          name: 'Ring Around the Rose-y',
+          yearOfRelease: '1800'
+        }
+      }, 
+      author: {
+        id: '10',
+        name: 'Jeane Steinbeck',
+        book: {
+          name: 'Crepes of Wrath',
+          year: '1945'
+        },
+      }
+    });
+  })
 
   // TO-DO: test for alias compatibility (should be fine- server & bFC both create objects with alias as keys)
 });

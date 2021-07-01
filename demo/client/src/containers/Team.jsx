@@ -9,16 +9,56 @@ import Andrei from '../images/profile_pics/QUELL-headshot w border-Andrei.png';
 import Dasha from '../images/profile_pics/QUELL-headshot w border-Dasha.png';
 import Derek from '../images/profile_pics/QUELL-headshot w border-Derek.png';
 import Xiao from '../images/profile_pics/QUELL-headshot w border-Xiao.png';
+import Robleh from '../images/profile_pics/QUELL-headshot w border-Robleh.png';
+import Thomas from '../images/profile_pics/QUELL-headshot w border-Thomas.png';
+import Angela from '../images/profile_pics/QUELL-headshot w border-Angela.png';
+import Ken from '../images/profile_pics/QUELL-headshot w border-Ken.png';
 
 /* 
   Component to generate each teams section
 */
 
+const robleh = {
+  name: 'Robleh Farah',
+  src: Robleh,
+  bio:
+    'Robleh is a full-stack software engineer specializing in React, Express, and relational databases, with a passion for code dependability, optimization, and test driven development. His devotion to open-source projects, and strong interest in GraphQL, makes him an ideal candidate for Quell. Outside of coding, Robleh enjoys hiking, tea collecting, and volunteering in developing countries abroad.',
+  linkedin: 'https://www.linkedin.com/in/farahrobleh/',
+  github: 'https://github.com/farahrobleh',
+};
+
+const thomas = {
+  name: 'Thomas Reeder',
+  src: Thomas,
+  bio:
+    'Thomas is a full-stack JavaScript engineer specializing in React and Node.js, and always wishes he had more time to write tests. His goal with Quell is maintaining a consistent, modular codebase to make future development simple and enjoyable. In his free time he can be found trying to bake pastries, or singing ABBA songs at karaoke.',
+  linkedin: 'https://www.linkedin.com/in/thomas-reeder/',
+  github: 'https://github.com/nomtomnom',
+};
+
+const angela = {
+  name: 'Angela Franco',
+  src: Angela,
+  bio:
+    'Angela is a full-stack software engineer experienced in React and Express, with a passion for code reliability and testing. She has a particular interest in exploring innovative technologies to build tools that make the world a better place. Outside of coding, Angela is a travel and hospitality enthusiast and a Soccer World Cup fanatic.',
+  linkedin: 'https://www.linkedin.com/in/angela-j-franco/',
+  github: 'https://github.com/ajfranco18',
+};
+
+const ken = {
+  name: 'Ken Litton',
+  src: Ken,
+  bio:
+    'Ken is a full-stack JavaScript software engineer with a passion for test driven development and recursive algorithms. He cares deeply about sharing what he learns through open-source projects and making the world a more open-minded place to live. Outside of coding, Ken is an avid reader of classical fiction, psychological studies, and hip-hop lyrics.',
+  linkedin: 'https://www.linkedin.com/in/ken-litton/',
+  github: 'https://github.com/kenlitton',
+};
+
 const andrei = {
   name: 'Andrei Cabrera',
   src: Andrei,
   bio:
-    'Andrei Cabrera is a full-stack Javascript engineer with a particular interest in user interaction and website performance. specializing in React and Express with a focus in server protocols. He is passionate about open-source projects, refactoring code and testing. Dedicate to his family and friends.',
+    'Andrei Cabrera is a full-stack JavaScript engineer with a particular interest in user interaction and website performance. specializing in React and Express with a focus in server protocols. He is passionate about open-source projects, refactoring code and testing. Dedicate to his family and friends.',
   linkedin: 'https://www.linkedin.com/in/andrei-cabrera-00324b146/',
   github: 'https://github.com/Andreicabrerao',
 };
@@ -36,7 +76,7 @@ const derek = {
   name: 'Derek Sirola',
   src: Derek,
   bio:
-    'Derek is a full-stack Javascript engineer with a particular interest for React, Redux, and Express. His passion for community-developed open-source projects makes him an exceptional candidate for Quell. Outside of coding, Derek is an avid piano player and an enthusiastic hiker.',
+    'Derek is a full-stack JavaScript engineer with a particular interest for React, Redux, and Express. His passion for community-developed open-source projects makes him an exceptional candidate for Quell. Outside of coding, Derek is an avid piano player and an enthusiastic hiker.',
   linkedin: 'https://www.linkedin.com/in/dsirola1/',
   github: 'https://github.com/dsirola1',
 };
@@ -72,7 +112,7 @@ const rob = {
   name: 'Rob Nobile',
   src: Rob,
   bio:
-    'Rob Nobile is a full-stack Javascript engineer specializing in React and Express with a focus in front-end performance optimization and server-side data transfer protocols.  Additional concentrations in tech include auth, testing and SQL.  Prior to Quell, Rob was a Frontend Engineer at EmpowerED Group, Inc. dedicated to the E-learning music space and remains an active contributor.',
+    'Rob Nobile is a full-stack JavaScript engineer specializing in React and Express with a focus in front-end performance optimization and server-side data transfer protocols.  Additional concentrations in tech include auth, testing and SQL.  Prior to Quell, Rob was a Frontend Engineer at EmpowerED Group, Inc. dedicated to the E-learning music space and remains an active contributor.',
   linkedin: 'https://www.linkedin.com/in/robnobile/',
   github: 'https://github.com/RobNobile',
 };
@@ -91,6 +131,34 @@ const Team = () => {
     <>
       <img id="team-quell" src={Header}></img>
       <div id="team">
+        <TeamMember
+          src={robleh.src}
+          bio={robleh.bio}
+          name={robleh.name}
+          linkedin={robleh.linkedin}
+          github={robleh.github}
+        />
+        <TeamMember
+          src={thomas.src}
+          bio={thomas.bio}
+          name={thomas.name}
+          linkedin={thomas.linkedin}
+          github={thomas.github}
+        /> 
+         <TeamMember
+          src={angela.src}
+          bio={angela.bio}
+          name={angela.name}
+          linkedin={angela.linkedin}
+          github={angela.github}
+        />
+        <TeamMember
+          src={ken.src}
+          bio={ken.bio}
+          name={ken.name}
+          linkedin={ken.linkedin}
+          github={ken.github}
+        />
         <TeamMember
           src={andrei.src}
           bio={andrei.bio}

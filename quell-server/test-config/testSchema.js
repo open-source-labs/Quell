@@ -1,5 +1,5 @@
-const db = require('../models/countriesModel');
-const dbBooks = require('../models/booksModel');
+const db = require('./countriesModel');
+const dbBooks = require('./booksModel');
 
 const graphqlNodeModule =
   process.env.NODE_ENV === 'development'
@@ -83,27 +83,6 @@ const CityType = new GraphQLObjectType({
     id: { type: GraphQLID },
     name: { type: GraphQLString },
     population: { type: GraphQLInt },
-    attractions: {
-      type: new GraphQLList(AttractionType),
-      async resolve(parent, args) {
-        
-        const attractionsList = await db.query(
-          `SELECT * FROM attractions WHERE city_id = $1`,
-          [Number(parent.id)]
-        );
-
-        return attractionsList.rows;
-      },
-    },
-  }),
-});
-
-const AttractionType = new GraphQLObjectType({
-  name: 'Attraction',
-  fields: () => ({
-    city_id: { type: GraphQLString },
-    id: { type: GraphQLID },
-    name: { type: GraphQLString },
   }),
 });
 
@@ -177,44 +156,6 @@ const RootQuery = new GraphQLObjectType({
           SELECT * FROM cities`);
 
         return citiesList.rows;
-      },
-    },
-    // GET ALL ATTRACTIONS IN A CITY
-    attractionsByCity: {
-      type: new GraphQLList(AttractionType),
-      args: { city_id: { type: GraphQLID } },
-      async resolve(parent, args) {
-        const attractionsList = await db.query(
-          `
-          SELECT * FROM attractions WHERE city_id = $1`,
-          [Number(args.city_id)]
-        ); // need to dynamically resolve this
-
-        return attractionsList.rows;
-      },
-    },
-    // GET ATTRACTION BY ID
-    attraction: {
-      type: AttractionType,
-      args: { id: { type: GraphQLID } },
-      async resolve(parent, args) {
-        const attraction = await db.query(
-          `
-          SELECT * FROM attractions WHERE id = $1`,
-          [Number(args.id)]
-        );
-
-        return attraction.rows[0];
-      },
-    },
-    // GET ALL ATTRACTIONS
-    attractions: {
-      type: new GraphQLList(AttractionType),
-      async resolve(parent, args) {
-        const attractionsList = await db.query(`
-          SELECT * FROM attractions`);
-
-        return attractionsList.rows;
       },
     },
     // GET ALL BOOKS
@@ -328,38 +269,5 @@ const RootMutation = new GraphQLObjectType({
 module.exports = new GraphQLSchema({
   query: RootQuery,
   mutation: RootMutation,
-  types: [CountryType, CityType, AttractionType, BookType, BookShelfType],
+  types: [CountryType, CityType, BookType, BookShelfType],
 });
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

@@ -2,7 +2,7 @@ language: node_js
 node_js:
   - "stable"
 before install:
-  - cd demo
+  - cd quell-client
 install:
   - npm install
 before_script:

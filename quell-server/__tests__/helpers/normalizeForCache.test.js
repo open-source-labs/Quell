@@ -1,16 +1,24 @@
-const normalizeForCache = require('../../src/helpers/normalizeForCache');
+const QuellCache = require('../../src/quell');
+const schema = require('../../test-config/testSchema');
 
-// normalizeForCache does not return any values, rather writes to the cache
-// way to mock sessionStorage like in buildFromCache tests?
+const redisPort = 6379;
+const timeout = 100;
 
-describe('normalizeForCache.test.js', () => {
-  // inputs: response data object
-  // outputs: none, but values should be on session storage when done 
-  beforeEach(() => {
-    sessionStorage.clear();
-  })
 
-  test('Basic response, with no arrays or nested objects', () => {
+describe('server test for normalizeForCache', () => {
+  const Quell = new QuellCache(schema, redisPort, timeout);
+  // inputs: prototype object (which contains args), collection (defaults to an empty array)
+  // outputs: protoype object with fields that were not found in the cache set to false 
+
+  afterAll((done) => {
+    Quell.redisCache.flushall();
+    Quell.redisCache.quit(() => {
+      console.log('closing redis server');
+      done();
+    });
+  });
+
+  test('Basic response, with no arrays or nested objects', async () => {
     const objBasic = {
       "country": {
         "id": 2,
@@ -30,14 +38,14 @@ describe('normalizeForCache.test.js', () => {
     };
 
     // normalize object & set on cache
-    normalizeForCache(objBasic, {}, protoObj);
+    await Quell.normalizeForCache(objBasic, {}, protoObj);
     // make sure object is on cache
-    expect(sessionStorage.getItem('country--2')).toEqual(
+    await expect(Quell.getFromRedis('country--2')).resolves.toEqual(
       "{\"id\":2,\"name\":\"Bolivia\"}"
     );
   });
 
-  test('nested response should produce individual values for both queries inside of it', () => {
+  test('nested response should produce individual values for both queries inside of it', async () => {
     const nestedObj = {
       "country": {
         "id": 2,
@@ -68,17 +76,17 @@ describe('normalizeForCache.test.js', () => {
       }
     }
     
-    normalizeForCache(nestedObj, 'map', nestedProto);
+    await Quell.normalizeForCache(nestedObj, 'map', nestedProto);
 
-    expect(sessionStorage.getItem('country--2')).toEqual(
+    await expect(Quell.getFromRedis('country--2')).resolves.toEqual(
       "{\"id\":2,\"name\":\"Bolivia\",\"city\":{\"id\":1,\"name\":\"Los Angeles\"}}"
     );
-    expect(sessionStorage.getItem('city--1')).toEqual(
+    await expect(Quell.getFromRedis('city--1')).resolves.toEqual(
       "{\"id\":1,\"name\":\"Los Angeles\"}"
     )
   });
 
-  test('deeply nested response should produce individual values for all queries on response', () => {
+  test('deeply nested response should produce individual values for all queries on response', async () => {
     const deeplyNestedObj = {
       country: {
         id: 1,
@@ -157,9 +165,9 @@ describe('normalizeForCache.test.js', () => {
       }
     };
     
-    normalizeForCache(deeplyNestedObj, 'map', deeplyNestedProto);
+    await Quell.normalizeForCache(deeplyNestedObj, 'map', deeplyNestedProto);
 
-    expect(sessionStorage.getItem('country--1')).toEqual(
+    await expect(Quell.getFromRedis('country--1')).resolves.toEqual(
       JSON.stringify({
         id: 1,
         name: 'USA',
@@ -184,7 +192,7 @@ describe('normalizeForCache.test.js', () => {
         }
       })
     );
-    expect(sessionStorage.getItem('state--2')).toEqual(
+    await expect(Quell.getFromRedis('state--2')).resolves.toEqual(
       JSON.stringify({
         id: 2,
         name: 'California',
@@ -205,7 +213,7 @@ describe('normalizeForCache.test.js', () => {
         }
       })
     );
-    expect(sessionStorage.getItem('county--3')).toEqual(
+    await expect(Quell.getFromRedis('county--3')).resolves.toEqual(
       JSON.stringify({
         id: 3,
         name: 'Los Angeles',
@@ -223,22 +231,22 @@ describe('normalizeForCache.test.js', () => {
         }
       })
     );
-    expect(sessionStorage.getItem('city--4')).toEqual(
+    await expect(Quell.getFromRedis('city--4')).resolves.toEqual(
       JSON.stringify({
         id: 4,
         name: 'Los Angeles',
         mayor: { id: 5, name: 'Shana', hobby: { id: 6, name: 'Bigfoot Hunting' } }
       })
     );
-    expect(sessionStorage.getItem('mayor--5')).toEqual(
+    await expect(Quell.getFromRedis('mayor--5')).resolves.toEqual(
       JSON.stringify({ id: 5, name: 'Shana', hobby: { id: 6, name: 'Bigfoot Hunting' } })
     );
-    expect(sessionStorage.getItem('hobby--6')).toEqual(
+    await expect(Quell.getFromRedis('hobby--6')).resolves.toEqual(
       JSON.stringify({ id: 6, name: 'Bigfoot Hunting' })
     );
   });
 
-  test('individual items on same response object should be cached individually', () => {
+  test('individual items on same response object should be cached individually', async () => {
     const multipleRes = {
       country: {
         id: 3,
@@ -273,16 +281,16 @@ describe('normalizeForCache.test.js', () => {
       }
     }
 
-    normalizeForCache(multipleRes, {}, protoObj);
+    await Quell.normalizeForCache(multipleRes, {}, protoObj);
 
-    expect(sessionStorage.getItem('country--3')).toEqual(
+    await expect(Quell.getFromRedis('country--3')).resolves.toEqual(
       JSON.stringify({
         id: 3,
         name: "Portugal",
         cuisine: "Delicious"
       })
     );
-    expect(sessionStorage.getItem('book--10')).toEqual(
+    await expect(Quell.getFromRedis('book--10')).resolves.toEqual(
       JSON.stringify({
         id: 10,
         title: "Axiom's End",
@@ -291,7 +299,7 @@ describe('normalizeForCache.test.js', () => {
     );
   });
 
-  test('a response array should cache an array of refs along with information on individual elements', () => {
+  test('a response array should cache an array of refs along with information on individual elements', async () => {
     const responseObj = {
       "countries": [
         {
@@ -320,18 +328,18 @@ describe('normalizeForCache.test.js', () => {
       countries: 'country',
     };
 
-    normalizeForCache(responseObj, map, prototype);
+    await Quell.normalizeForCache(responseObj, map, prototype);
 
-    expect(sessionStorage.getItem('countries')).toEqual(
+    await expect(Quell.getFromRedis('countries')).resolves.toEqual(
       JSON.stringify(['country--1', 'country--2'])
     );
-    expect(sessionStorage.getItem('country--1')).toEqual(
+    await expect(Quell.getFromRedis('country--1')).resolves.toEqual(
       JSON.stringify({
         "id": 1,
         "name": "Andorra",
       })
     );
-    expect(sessionStorage.getItem('country--2')).toEqual(
+    await expect(Quell.getFromRedis('country--2')).resolves.toEqual(
       JSON.stringify({
         "id": 2,
         "name": "Bolivia"
@@ -339,7 +347,7 @@ describe('normalizeForCache.test.js', () => {
     );
   });
 
-  test('a response with alias values can go to the cache', () => {
+  test('a response with alias values can go to the cache', async () => {
     const responseObj = {
         USA: {
           id: '1',
@@ -364,9 +372,9 @@ describe('normalizeForCache.test.js', () => {
       countries: 'country',
     };
 
-    normalizeForCache(responseObj, map, prototype);
+    await Quell.normalizeForCache(responseObj, map, prototype);
 
-    expect(sessionStorage.getItem('country--1')).toEqual(
+    await expect(Quell.getFromRedis('country--1')).resolves.toEqual(
       JSON.stringify({
         "id": '1',
         "name": "United States of America",

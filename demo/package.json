@@ -1,6 +1,6 @@
 {
   "name": "demo",
-  "version": "1.1.1",
+  "version": "2.1.2",
   "main": "index.js",
   "scripts": {
     "start": "NODE_ENV=production nodemon server/server.js",
@@ -11,6 +11,22 @@
   },
   "keywords": [],
   "contributors": [
+    {
+      "name": "Thomas Reeder",
+      "url": "https://github.com/nomtomnom"
+    },
+    {
+      "name": "Ken Litton",
+      "url": "https://github.com/kenlitton"
+    },
+    {
+      "name": "Robleh Farah",
+      "url": "https://github.com/farahrobleh"
+    },
+    {
+      "name": "Angela Franco",
+      "url": "https://github.com/ajfranco18"
+    },
     {
       "name": "Andrei Cabrera",
       "url": "https://github.com/Andreicabrerao"
@@ -54,7 +70,7 @@
     "dotenv": "^8.2.0",
     "express": "^4.17.1",
     "graphiql": "^1.4.0",
-    "graphql": "^15.5.0",
+    "graphql": "^15.5.1",
     "pg": "^8.3.3",
     "react": "^16.14.0",
     "react-dom": "^16.14.0",
@@ -72,7 +88,6 @@
     "file-loader": "^6.1.0",
     "html-webpack-plugin": "^4.4.1",
     "jest": "^26.4.2",
-    "node-sass": "^4.14.1",
     "nodemon": "^2.0.4",
     "sass": "^1.26.10",
     "sass-loader": "^10.0.1",
@@ -82,8 +97,5 @@
     "webpack": "^4.44.1",
     "webpack-cli": "^3.3.12",
     "webpack-dev-server": "^3.11.0"
-  },
-  "engines": {
-    "node": "12.18.3"
   }
 }
