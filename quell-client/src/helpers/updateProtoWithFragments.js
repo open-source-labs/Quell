@@ -1,4 +1,9 @@
-
+/**
+ * updateProtoWithFragment takes collected fragments and integrates them onto the prototype where referenced
+ * @param {object} protoObj - prototype before it has been updated with fragments
+ * @param {object} frags - fragments object to update prototype with
+   * RETURNS updated prototype
+ */
 
 function updateProtoWithFragment (protoObj, frags) {
   if (!protoObj) return; 

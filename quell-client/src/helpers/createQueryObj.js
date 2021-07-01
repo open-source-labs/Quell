@@ -1,10 +1,10 @@
 /**
- createQueryObj takes in a map of field(keys) and true/false(values) creating an query object containing the fields (false) missing from cache. 
+ createQueryObj takes in a map of field(keys) and true/false(values) creating a query object containing the fields (false) missing from cache. 
  This will then be converted into a GQL query string in the next step.
+ *  @param {object} map - JavaScript object with a key-value pair for every valid root query - type defined in the user's GraphQL schema  
  */
 
 function createQueryObj(map) {
-  // console.log('prototype within createQuery Obj is ', map);
   const output = {};
   // iterate over every key in map
   // send fields object to reducer to filter out trues
@@ -31,7 +31,6 @@ function createQueryObj(map) {
         filter[key] = false;
       }
       // if key ncludes id, then set the property to true
-      // TO DO add support for unique id
       if (key === 'id' || key === '_id' || key === 'ID' || key === 'Id') {
         filter[key] = false;
       }

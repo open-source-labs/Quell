@@ -78,7 +78,7 @@ const Demo = () => {
   ];
 
     const selectQuery = (selection) => {
-      // setTheQuery(selection);
+      
       if (selection === 'Simple Query') {
         displaySimpleQuery();
       }
@@ -389,8 +389,7 @@ const Demo = () => {
             now only be seeing the effects of Quell server-side caching.
           </li>
           <li>
-            Play around and try adding and removing fields to see Quell's
-            partial query caching hard at work under the hood.
+            Play around and try sending different queries to see Quell's partial query caching hard at work under the hood.
           </li>
         </ul>
       </div>

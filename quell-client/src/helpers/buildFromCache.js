@@ -22,51 +22,32 @@ Side effects
 ----
 */
 
-//wrap all of buildFromCache in outer function
-// all this outer function would do is create an object of prototype keys
-//defines an innerFunc
-//at the end of buildFromCache, we come out to the end of 
-// TO-DO: update all getItems
 function buildFromCache(prototype, prototypeKeys, itemFromCache = {}, firstRun = true, subID) {
   
-  // can we build prototypeKeys within the application?
-  // const prototypeKeys = Object.keys(prototype)
-
-  // update function to include responseFromCache
-  // const buildProtoFunc = buildPrototypeKeys(prototype);
-  // const prototypeKeys = buildProtoFunc();
-
-  // 
   for (let typeKey in prototype) {
     // check if typeKey is a rootQuery (i.e. if it is a type on the prototype object) or if its a field nested in a query
     if (prototypeKeys.includes(typeKey)) {
       const cacheID = subID ? subID : generateCacheID(prototype[typeKey]);
-      //To do - won't always cache, bring map back or persist -- in parsedAST function?
-      // if typeKey is a rootQuery, then clear the cache and set firstRun to true 
-      // cached data must persist 
+
       // create a property on itemFromCache and set the value to the fetched response from cache
       const cacheResponse = sessionStorage.getItem(cacheID);
       // if data for the current typeKey is not found in sessionStorage then we receive null. Need to replace null with empty object
       itemFromCache[typeKey] = cacheResponse ? JSON.parse(cacheResponse) : {};
       // need to check cacheResponse to see if each field was requested in proto
     }
-    // if itemFromCache is an array (Array.isArray()) 
+
     if (Array.isArray(itemFromCache[typeKey])) {
-      // iterate over countries
       for (let i = 0; i < itemFromCache[typeKey].length; i++) {
         const currTypeKey = itemFromCache[typeKey][i];
         const cacheResponse = sessionStorage.getItem(currTypeKey);
         let tempObj = {};
         if (cacheResponse) {
           const interimCache = JSON.parse(cacheResponse);
-          // loop through prototype at typeKey
           for (const property in prototype[typeKey]) {
-            // if interimCache has the property
             if (
               interimCache.hasOwnProperty(property)
               && !property.includes('__')
             ) {
-              // place on tempObj, set into array
               tempObj[property] = interimCache[property]
             } else if (!property.includes('__') && typeof prototype[typeKey][property] == 'object') {
               // if the property in prototpye is a nested object and is not a property with __, then recurse

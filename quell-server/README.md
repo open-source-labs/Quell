@@ -2,9 +2,10 @@
 
 # @quell/server
 
-@quell/server is an easy-to-implement Node.js/Express middleware that satisfies and caches GraphQL queries. Quell's schema-governed, type-level normalization algorithm caches GraphQL query responses as flattened key-value representations of the graph's nodes, making it possible to partially satisfy queries from the server's Redis cache, reformulate the query, and fetch from other APIs or databases only the data not already cached.
+@quell/server is an easy-to-implement Node.js/Express middleware that satisfies and caches GraphQL queries. Quell's schema-governed, type-level normalization algorithm caches GraphQL query responses as flattened key-value representations of the graph's nodes, making it possible to partially satisfy queries from the server's Redis cache, reformulate the query, and then fetch additional data from other APIs or databases.
 
-@quell/server is an open-source NPM package accelerated by [OS Labs](https://github.com/oslabs-beta/) and developed by [Andrei Cabrera](https://github.com/Andreicabrerao), [Dasha Kondratenko](https://github.com/dasha-k), [Derek Sirola](https://github.com/dsirola1), [Xiao Yu Omeara](https://github.com/xyomeara), [Nick Kruckenberg](https://github.com/kruckenberg), [Mike Lauri](https://github.com/MichaelLauri), [Rob Nobile](https://github.com/RobNobile) and [Justin Jaeger](https://github.com/justinjaeger).
+@quell/server is an open-source NPM package accelerated by [OS Labs](https://github.com/oslabs-beta/) and developed by [Robleh Farah](https://github.com/farahrobleh), [Angela Franco](https://github.com/ajfranco18), [Ken Litton](https://github.com/kenlitton), [Thomas Reeder](https://github.com/nomtomnom), [Andrei Cabrera](https://github.com/Andreicabrerao), [Dasha Kondratenko](https://github.com/dasha-k), [Derek Sirola](https://github.com/dsirola1), [Xiao Yu Omeara](https://github.com/xyomeara), [Nick Kruckenberg](https://github.com/kruckenberg), [Mike Lauri](https://github.com/MichaelLauri), [Rob Nobile](https://github.com/RobNobile) and [Justin Jaeger](https://github.com/justinjaeger).
+
 
 ## Installation
 
@@ -79,8 +80,7 @@ That's it! You now have a normalized cache for your GraphQL endpoint.
 ### Usage Notes
 
 - @quell/server reads queries from Express' request object at `request.body.query` and attaches the query response to Express' response object at `response.locals.queryResponse`.
-- @quell/server can only cache items it can uniquely identify. It will first inspect your schema to identify fields with a [GraphQL ID type](https://graphql.org/learn/schema/#scalar-types). If it cannot find any ID-type fields, it will look for fields called `id` of `_id`. If a query lacks all three, it will execute the query without caching the response.
-- Currently, Quell can only cache query-type requests without aliases, fragments, variables, or directives. Quell will still process these other requests, but will not cache the responses.
-- Currently, Quell can only handle mutations that changes single entity and can not handle remove or add operations. Quell will still process these other resquest.
+- @quell/server can only cache items it can uniquely identify. It will will look for fields called `id`, `_id`, `Id`, or `ID`. If a query lacks all four, it will execute the query without caching the response.
+- Currently, Quell can only cache query-type requests without variables or directives. Quell will still process these other requests, but will not cache the responses.
 
 #### For information on @quell/client, please visit the corresponding [README file](https://github.com/oslabs-beta/Quell/tree/master/quell-client).
