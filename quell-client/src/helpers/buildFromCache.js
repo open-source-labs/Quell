@@ -38,21 +38,16 @@ function buildFromCache(prototype, prototypeKeys, itemFromCache = {}, firstRun =
 
   // 
   for (let typeKey in prototype) {
-    console.log("Currently iterating over typeKey...:", typeKey);
-    console.log("...and the prototype is: ", prototype);
-    // check if typeKey is a rootQuery (i.e. if it includes '--') or if its a field nested in a query
-    // end goal: delete typeKey.includes('--') and check if protoObj.includes(typeKey)
+    // check if typeKey is a rootQuery (i.e. if it is a type on the prototype object) or if its a field nested in a query
     if (prototypeKeys.includes(typeKey)) {
       const cacheID = subID ? subID : generateCacheID(prototype[typeKey]);
       //To do - won't always cache, bring map back or persist -- in parsedAST function?
       // if typeKey is a rootQuery, then clear the cache and set firstRun to true 
       // cached data must persist 
       // create a property on itemFromCache and set the value to the fetched response from cache
-      console.log('getting from cache', cacheID);
       const cacheResponse = sessionStorage.getItem(cacheID);
       // if data for the current typeKey is not found in sessionStorage then we receive null. Need to replace null with empty object
       itemFromCache[typeKey] = cacheResponse ? JSON.parse(cacheResponse) : {};
-      console.log('tempCache at typeKey is ', itemFromCache[typeKey]);
       // need to check cacheResponse to see if each field was requested in proto
     }
     // if itemFromCache is an array (Array.isArray()) 
@@ -60,7 +55,6 @@ function buildFromCache(prototype, prototypeKeys, itemFromCache = {}, firstRun =
       // iterate over countries
       for (let i = 0; i < itemFromCache[typeKey].length; i++) {
         const currTypeKey = itemFromCache[typeKey][i];
-        console.log('getting from cache', currTypeKey);
         const cacheResponse = sessionStorage.getItem(currTypeKey);
         let tempObj = {};
         if (cacheResponse) {
@@ -82,19 +76,16 @@ function buildFromCache(prototype, prototypeKeys, itemFromCache = {}, firstRun =
             else if (!property.includes('__') && typeof prototype[typeKey][property] !== 'object') {
               // if interimCache does not have property, set to false on prototype so it is fetched
               prototype[typeKey][property] = false;
-              console.log("Trigger 1 to false, typeKey: ", typeKey);
             }
           }
           itemFromCache[typeKey][i] = tempObj;
         }
         else {
-          console.log(`nothing in the cache for property ${typeKey}`);
           for (const property in prototype[typeKey]) {
             // if interimCache has the property
             if (!property.includes('__') && typeof prototype[typeKey][property] !== 'object') {
               // if interimCache does not have property, set to false on prototype so it is fetched
               prototype[typeKey][property] = false;
-              console.log("Trigger 2 to false, typeKey: ", typeKey);
             } 
           }
         }
@@ -103,34 +94,30 @@ function buildFromCache(prototype, prototypeKeys, itemFromCache = {}, firstRun =
     // if itemFromCache is empty, then check the cache for data, else, persist itemFromCache
     // if this iteration is a nested query (i.e. if typeKey is a field in the query)
     else if (firstRun === false) {
-      console.log("firstRun is false");
-      console.log('iFC', itemFromCache);
 
       // if this field is NOT in the cache, then set this field's value to false
       if (
         (itemFromCache === null || !itemFromCache.hasOwnProperty(typeKey)) && 
         typeof prototype[typeKey] !== 'object' && !typeKey.includes('__')) {
           prototype[typeKey] = false; 
-          console.log("Trigger 3 to false, typeKey: ", typeKey);
       } 
       // if this field is a nested query, then recurse the buildFromCache function and iterate through the nested query
       if (
-        (itemFromCache === null || itemFromCache.hasOwnProperty(typeKey)) && 
+        // change: removed the first 2 rules of logic 
+        // (itemFromCache === null || itemFromCache.hasOwnProperty(typeKey)) && 
         !typeKey.includes('__') && // do not iterate through __args or __alias
         typeof prototype[typeKey] === 'object') {
+          // change: making another call to the cache? WHy?
         const cacheID = generateCacheID(prototype);
-        console.log('getting from cache', cacheID);
           const cacheResponse = sessionStorage.getItem(cacheID)
-          itemFromCache[typeKey] = JSON.parse(cacheResponse);
+          if (cacheResponse) itemFromCache[typeKey] = JSON.parse(cacheResponse);
           // repeat function inside of the nested query
-        buildFromCache(prototype[typeKey], prototypeKeys, itemFromCache[typeKey], false);
+        buildFromCache(prototype[typeKey], prototypeKeys, itemFromCache[typeKey] || {}, false);
       } 
     }
     // if the current element is not a nested query, then iterate through every field on the typeKey
     else {
       for (let field in prototype[typeKey]) {
-        console.log('typeKey', typeKey, 'field: ', field);
-        console.log('itemFromCache: ', itemFromCache)
         // if itemFromCache[typeKey] === false then break
 
         if (
@@ -140,28 +127,24 @@ function buildFromCache(prototype, prototypeKeys, itemFromCache = {}, firstRun =
           !field.includes("__") && // ignore __alias and __args
           typeof prototype[typeKey][field] !== 'object') {
             prototype[typeKey][field] = false; 
-            console.log("Trigger 4 to false, typeKey: ", typeKey);
         }
         
         if ( 
           // if field contains a nested query, then recurse the function and iterate through the nested query
+          // change remove requirement that itemFromCache has own property tpyekey
           !field.includes('__') && 
-          typeof prototype[typeKey][field] === 'object' &&
-          itemFromCache[typeKey]) {
-            console.log("PRE-RECURSE prototype[typeKey][field]: ", prototype[typeKey][field]);
-            console.log("PRE-RECURSE itemFromCache: ", itemFromCache);
-          buildFromCache(prototype[typeKey][field], prototypeKeys, itemFromCache[typeKey][field], false);
+          typeof prototype[typeKey][field] === 'object') {
+            // change: pass and empty object instead of itemFromCache
+          buildFromCache(prototype[typeKey][field], prototypeKeys, itemFromCache[typeKey][field] || {}, false);
           }
         else if (!itemFromCache[typeKey] && !field.includes('__') && typeof prototype[typeKey][field] !== 'object') {
             // then toggle to false
             prototype[typeKey][field] = false;
-            console.log("Trigger 5 to false, typeKey: ", typeKey);
           } 
       }  
     }
   }
   // assign the value of an object with a key of data and a value of itemFromCache and return
-  console.log('returning iFC', { data: itemFromCache });
   return { data: itemFromCache }
 }
 
@@ -173,250 +156,5 @@ function generateCacheID(queryProto) {
 
   return cacheID;
 }
-
-/*
-function toggleProto(proto) {
-  for (const key in proto) {
-    if (Object.keys(proto[key]).length > 0) {
-      toggleProto(proto[key]);
-    } else {
-      proto[key] = false;
-    }
-  }
-}
-*/
-/*
-for (const key in fields) {
-      // is fields[key] string? concat with inner string & empty space
-      if (typeof fields[key] === "boolean") {
-        innerStr += key + ' ';
-      }
-      // is key object? recurse && !key.includes('__')
-      if (typeof fields[key] === 'object' && !key.includes('__')) {
-        // do not grab __args 
-        innerStr += `${key} ${getArgs(
-          fields[key])} ${openCurly} ${stringify(
-            fields[key])}${closeCurly}`;
-        }
-      }
-*/
-
-/** Helper function that loops over a collection of references,
- *  calling another helper function -- buildItem() -- on each. Returns an
- *  array of those collected items.
- */
-
-// create a function called getItem that accepts key as an input 
-// function getItem(key) {
-//   let result = sessionStorage[key]
-//   return result;
-// }
-  // if the object has a property 
-  // if sessionStorage is true, then we can loop through (for in) the sessionStorage object 
-  // iterate through the key, and anything to the right of the - character, needs to be stored
-
-
-//add usable comments to code
-
-
-//refactor and look at old code to see any potential for improvements?
-
-
-
-
-
-
-
-//when we are done recursing and we are done with first query, 
-//reset for new query 
-
-//after run is complete, clear itemFromCache, and flip back to true
-/*
-    // if no arguments are passed in 
-    // loop through properties in 
-      // let itemFromCache = JSON.parse(sessionStorage.getItem(prop))
-    if (prototype[typeKey]["__args"] !== {}) {
-      for (let fieldKey in prototype[typeKey]["__args"]) {
-        //if this argument isn't in the cache (sessionStorage)
-          
-        //   //return prototype
-        // return prototype;
-        }
-        else (itemFromCache === {}) {
-          // toggle this field to false
-          // and let Thomas/Angela know that it needs to be fetched from the DB
-        }
-        // store user defined ids such as authorid or bookId
-        // catches differences between id, ID, Id
-        let userDefinedId;
-        if ((fieldKey.includes('id') || fieldKey.includes('ID') || fieldKey.includes('Id')) && (fieldKey !== 'id' && fieldKey !== '_id')) {
-          userDefinedId = prototype[typeKey]["__args"][fieldKey];
-        }
-        // for (let arg of protoArgs[fieldName]) {
-        //   for (let key in arg) {
-        let identifier;
-        if (fieldKey === 'id' || fieldKey === '_id') {
-          identifier = prototype[typeKey]["__args"][fieldKey];
-          // if (itemFromCache) {
-          //     collection.push(itemFromCache);
-          // }
-          
-          // for (let item of collection) {
-          //   response.push(buildItem(prototype[typeKey], item, map));
-          // }
-          console.log('itemFromCache', itemFromCache);
-        }
-      }
-    }
-    else {
-      
-    }
-  }
-
-    }
-  }
-
-
-        // collection = 1.Object typ e field passed into buildArray() when called from buildItem() or 2.Obtained item from cache or 3.Empty array
-        // query = 'Country-2'
-        // itemFromCache = {id: "2"}
-
-        //{id: "2"};
-        // to do: nested queries -- how to recurse 
-            // [{ id: '2', capital: 'Sucre', cities: ['City-5', 'City-6', 'City-7', 'City-8', 'City-9', 'City-10']] or null
-        
-
-              //             
-//           }
-
-//           if (userDefinedId) {
-//             // collection = 1.Object typ e field passed into buildArray() when called from buildItem() or 2.Obtained item from cache or 3.Empty array
-//             const itemFromCache = JSON.parse(
-//               sessionStorage.getItem(`${query}-${userDefinedId}`)
-//             );
-//             console.log('itemFromCache', `${query}-${userDefinedId}`);
-
-//             // [{ id: '2', capital: 'Sucre', cities: ['City-5', 'City-6', 'City-7', 'City-8', 'City-9', 'City-10']] or null
-
-//             collection = collection || [];
-
-//             if (itemFromCache) {
-//               collection = Array.isArray(itemFromCache)
-//                 ? itemFromCache
-//                 : [itemFromCache];
-//             }
-
-//             for (let item of collection) {
-//               response.push(
-//                 buildItem(
-//                   prototype[query],
-//                   JSON.parse(sessionStorage.getItem(item)),
-//                   map
-//                 )
-//               ); // 1st pass: builItem = prototype all true; sessionStorage = obj for each country
-//             }
-//           }
-//         }
-//       }
-//     } 
-//     // else if (QuellStore && QuellStore.arguments && QuellStore.alias) {
-//       /**
-//        * Can fully cache aliaes by different id,
-//        * and can build response from cache with previous query with exact aliases
-//        * (comment out aliaes functionality now)
-//        */
-//       // for (let fieldName in QuellStore.arguments) {
-//       //   collection = collection || [];
-//       //   for (let i = 0; i < QuellStore.arguments[fieldName].length; i++) {
-//       //     const arg = QuellStore.arguments[fieldName][i];
-//       //     let identifier;
-//       //     if (arg.hasOwnProperty('id') || arg.hasOwnProperty('_id')) {
-//       //       identifier = arg.id || arg._id;
-//       //     }
-//       //     // collection = 1.Object typ e field passed into buildArray() when called from buildItem() or 2.Obtained item from cache or 3.Empty array
-//       //     const itemFromCache = JSON.parse(
-//       //       sessionStorage.getItem(`${map[query]}-${identifier}`)
-//       //     );
-//       //     // [{ id: '2', capital: 'Sucre', cities: ['City-5', 'City-6', 'City-7', 'City-8', 'City-9', 'City-10']] or null
-//       //     if (itemFromCache) {
-//       //       collection = [itemFromCache];
-//       //     }
-//       //     for (let item of collection) {
-//       //       response.push({
-//       //         [QuellStore.alias[fieldName][i]]: buildItem(
-//       //           prototype[query],
-//       //           item,
-//       //           map
-//       //         ),
-//       //       });
-//       //     }
-//       //   }
-//       // }
-//     // } 
-//     // else {
-//       // if the query has no arguments
-
-//       // collection = 1.Object type field passed into buildArray() when called from buildItem() or
-//       //2.Obtained item from cache or 3.Empty array
-//       collection =
-//         collection || JSON.parse(sessionStorage.getItem(map[query])) || [];
-//       //  ["Country-1", "Country-2", "Country-3", "Country-4", "Country-5"] or [];
-//       // each of these items in the array is the item below
-
-//       for (let item of collection) {
-//         response.push(
-//           buildItem(
-//             prototype[query],
-//             JSON.parse(sessionStorage.getItem(item)),
-//             map
-//           )
-//         ); // 1st pass: builItem = prototype all true; sessionStorage = obj for each country
-//       }
-//     // }
-//   }
-//   return response;
-// }
-
-/** Helper function that iterates through keys -- defined on passed-in
- *  prototype object, which is always a fragment of this.proto, assigning
- *  to tempObj the data at matching keys in passed-in item. If a key on
- *  the prototype has an object as its value, buildArray is
- *   recursively called.
- *
- *  If item does not have a key corresponding to prototype, that field
- *  is toggled to false on prototype object. Data for that field will
- *  need to be queried.
- *
- */
-
-// function buildItem(prototype, item, map) {
-
-//   let tempObj = {}; // gets all the in-cache data
-//   // Traverse fields in prototype (or nested field object type)
-//   for (let key in prototype) {
-//     // if key points to an object (an object type field, e.g. "cities" in a "country")
-//     if (typeof prototype[key] === 'object') {
-//       let prototypeAtKey = { [key]: prototype[key] };
-
-//       if (item[key] !== undefined) {
-//         // if in cache
-//         tempObj[key] = buildFromCache(prototypeAtKey, map, item[key]);
-//       } else {
-//         // if not in cache
-//         toggleProto(prototypeAtKey);
-//       }
-//     } else {
-//       // if field is scalar
-//       if (item[key] !== undefined) {
-//         // if in cache
-//         tempObj[key] = item[key];
-//       } else {
-//         // if not in cache
-//         prototype[key] = false;
-//       }
-//     }
-//   }
-//   return tempObj;
-// }
 
 module.exports = buildFromCache;
