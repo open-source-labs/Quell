@@ -5,7 +5,7 @@
   "scripts": {
     "start": "NODE_ENV=production nodemon server/server.js",
     "build": "NODE_ENV=production webpack",
-    "dev": "concurrently \"webpack-dev-server --open --hot\" \"NODE_ENV=development nodemon -w ../quell-server/src/quell.js server/server.js\"",
+    "dev": "PG_URI=postgres://ciazdabk:b-BiZoFsMIhJS5xNzVlGPo3hhzdRYmvd@lallah.db.elephantsql.com:5432/ciazdabk PG_URI_BOOKS=postgres://tpmlqjma:dlo4fdwmapq7AjzeXeTsgjZD3CGFKRjJ@ziggy.db.elephantsql.com:5432/tpmlqjma concurrently \"webpack-dev-server --open --hot\" \"NODE_ENV=development nodemon -w ../quell-server/src/quell.js server/server.js\"",
     "client": "webpack-dev-server --open --hot",
     "test": "jest"
   },
