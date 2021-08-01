@@ -12,11 +12,11 @@
         "--inspect-brk",
         "${workspaceRoot}/demo/node_modules/.bin/jest",
         "${fileBasenameNoExtension}",
-        "--runInBand"
+        "--runInBand",
+        "--detectOpenHandles"
       ],
       "console": "integratedTerminal",
       "internalConsoleOptions": "neverOpen"
-      // "port": 9229
     },
     {
       "name": "Quell Demo Server",

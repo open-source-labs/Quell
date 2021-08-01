@@ -4,13 +4,10 @@ const redis = require('redis');
 const server = 'http://localhost:3000';
 
 describe('Server Cache Invalidation Tests', () => {
-  const redisClient = redis.createClient(6379);
-  const books = {
-    id: '14',
-    name: 'whatever',
-    author: 'whoever',
-    shelf_id: '1',
-  };
+  const redisClient = redis.createClient({
+    host: 'localhost',
+    port: 6379,
+  });
 
   // add mutation adds to redis server cache
   // ---> add to database, get id from response, and check if e.g. book--${id} in server cache, and args == book--${id}.value
@@ -25,8 +22,10 @@ describe('Server Cache Invalidation Tests', () => {
 
   // create a mutation that deletes everything from books table
 
+  // clear redis cache and quit client in between tests
+  // not quitting client after tests leads to jest timeouts
   afterAll((done) => {
-    redisClient.flushall();
+    // redisClient.flushall();
     redisClient.quit(() => {
       console.log('closing redis server');
       done();
@@ -47,38 +46,39 @@ describe('Server Cache Invalidation Tests', () => {
         .expect(200)
         .then((response) => {
           let responseJson = JSON.parse(response.text);
-          //   await expect(responseJson).resolves.toHaveProperty('data');
+          // await expect(responseJson).resolves.toHaveProperty('data');
           expect(responseJson.data).toHaveProperty('addBook');
           expect(responseJson.data.addBook).toHaveProperty('id');
 
+          // id obtained from database
           let responseId = responseJson.data.addBook.id;
-          //   expect(responseId).to
 
-          //   console.log('DB RESPONSE ID : ', responseId);
-          redisClient.get(`book--${48}`, (err, reply) => {
-            // if (err) throw err;
+          // get key value associated with key `book--${responseId}`
+          redisClient.get(`book--${responseId}`, (err, reply) => {
+            // expect no errors to have happened
             expect(err).toBeFalsy();
-            let redisKeyValue = JSON.parse(reply);
-            catchErrors(done, (err, res) => {
-              throw 'Catched by catchErrors so that our tests properly fail!';
-              done();
-            });
 
-            expect(redisKeyValue).resolves.not.toEqual(null);
-            console.log('REDIS ERR:  ', err);
-            console.log('REDIS KEY VALUE : ', redisKeyValue);
-            console.log('DB RESPONSE ID: ', responseId);
+            let redisKeyValue = JSON.parse(reply);
+
+            // redis key value should exist
+            expect(redisKeyValue).toBeTruthy();
 
             // check if newly added redis key value, has properties we added as args in our mutation
             expect(redisKeyValue).toHaveProperty('name');
+            expect(redisKeyValue).toHaveProperty('author');
+            expect(redisKeyValue).toHaveProperty('shelf_id');
 
+            // check if cache entry in redis has data we just added
             expect(redisKeyValue.name).toEqual('Why We Sleep');
             expect(redisKeyValue.author).toEqual('Matthew Walker');
             expect(redisKeyValue.shelf_id).toEqual('1');
+
+            done();
           });
         })
         .catch((err) => {
-          console.log(`ERRORRRR: ${err}`);
+          // something went wrong with sending graphql mutation
+          done(err);
         })
     );
   });
