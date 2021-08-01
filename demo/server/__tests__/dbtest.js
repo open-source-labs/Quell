@@ -16,10 +16,6 @@ describe('Server Cache Invalidation Tests', () => {
     shelf_id: '1',
   };
 
-  // add mutation adds to database
-  // update mutation updates database
-  // delete mutation deletes entry from database
-
   // add mutation adds to redis server cache
   // ---> add to database, get id from response, and check if e.g. book--${id} in server cache, and args == book--${id}.value
 
@@ -31,7 +27,38 @@ describe('Server Cache Invalidation Tests', () => {
   // ---> delete database entry, get id from response
   // ---> make sure book--${id} does not exist in server cache
 
-  it('add book ', async () => {
+  // create a mutation that deletes everything from books table
+
+  it('Check if add mutation, adds cache entry to redis server cache', () => {
+    return (
+      request(server)
+        .post('/graphql')
+        .set('Accept', 'application/json')
+        .send({
+          query: `
+        mutation {addBook(name: "Why We Sleep", author: "Matthew Walker", shelf_id: "1") {name author shelf_id}}
+        `,
+        })
+        // expect status 200, (ensure mutation was successful)
+        .expect(200)
+        .then((response) => {
+          let responseId = JSON.parse(response.text).data.addBook.id;
+          redisClient.get(`book--${responseId}`, (err, reply) => {
+            if (err) throw err;
+            let redisKeyValue = JSON.parse(reply);
+
+            // check if newly added redis key value, has properties we added as args in our mutation
+            expect(redisKeyValue).toHaveProperty('name', 'author', 'shelf_id');
+
+            expect(redisKeyValue.name).toEqual('Why We Sleep');
+            expect(redisKeyValue.author).toEqual('Matthew Walker');
+            expect(redisKeyValue.shelf_id).toEqual('1');
+          });
+        })
+    );
+  });
+
+  it.skip('add book ', async () => {
     return request(server)
       .post('/graphql')
       .set('Accept', 'application/json')
@@ -47,7 +74,7 @@ describe('Server Cache Invalidation Tests', () => {
       });
   });
 
-  it('test redis', async () => {
+  it.skip('test redis', async () => {
     redisClient.get('country--1', (err, reply) => {
       if (err) throw err;
 
@@ -58,7 +85,7 @@ describe('Server Cache Invalidation Tests', () => {
     // });
   });
 
-  it('clears cache', async () => {
+  it.skip('clears cache', async () => {
     return request(server)
       .get('/clearCache')
       .expect(200)
