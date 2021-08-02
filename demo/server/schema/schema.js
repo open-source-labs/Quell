@@ -270,6 +270,7 @@ const RootMutation = new GraphQLObjectType({
     addBook: {
       type: BookType,
       args: {
+        id: { type: GraphQLID },
         name: { type: new GraphQLNonNull(GraphQLString) },
         author: { type: GraphQLString },
         shelf_id: { type: new GraphQLNonNull(GraphQLString) },
