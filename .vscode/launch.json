@@ -5,6 +5,20 @@
   "version": "0.2.0",
   "configurations": [
     {
+      "name": "Debug Quell Jest Test",
+      "type": "pwa-node",
+      "request": "launch",
+      "runtimeArgs": [
+        "--inspect-brk",
+        "${workspaceRoot}/demo/node_modules/.bin/jest",
+        "${fileBasenameNoExtension}",
+        "--runInBand",
+        "--detectOpenHandles"
+      ],
+      "console": "integratedTerminal",
+      "internalConsoleOptions": "neverOpen"
+    },
+    {
       "name": "Quell Demo Server",
       "port": 3000,
       "request": "attach",
