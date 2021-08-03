@@ -43,6 +43,10 @@ describe('Server Cache Invalidation Tests', () => {
 
   // clear redis cache and quit client in between tests
   // not quitting client after tests leads to jest timeouts
+  beforeAll(() => {
+    redisClient.flushall();
+  });
+
   afterAll((done) => {
     // redisClient.flushall();
     redisClient.quit(() => {
@@ -75,7 +79,7 @@ describe('Server Cache Invalidation Tests', () => {
           let responseId = responseJson.data.addBook.id;
 
           // get key value associated with key `book--${responseId}`
-          redisClient.get(`book--${responseId}`, (err, reply) => {
+          redisClient.get(`book--*`, (err, reply) => {
             // expect no errors to have happened
             expect(err).toBeFalsy();
 
