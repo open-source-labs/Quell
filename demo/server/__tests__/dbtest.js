@@ -1,7 +1,7 @@
 const request = require('supertest');
 const redis = require('redis');
 
-const server = 'http://localhost:3000';
+const server = 'http://localhost:4000';
 
 const redisClient = redis.createClient({
   host: '127.0.0.1',
@@ -10,11 +10,21 @@ const redisClient = redis.createClient({
 
 describe('Server Cache Invalidation Tests', () => {
   const books = {
-    id: '14',
-    name: 'whatever',
-    author: 'whoever',
+    name: 'Jinhee',
+    author: 'Choi',
     shelf_id: '1',
   };
+
+  const changedBooks = {
+    id: '18',
+    name: 'Jinhee',
+    author: 'Choi',
+    // shelf_id: '1',
+  };
+
+  // add mutation adds to database
+  // update mutation updates database
+  // delete mutation deletes entry from database
 
   // add mutation adds to redis server cache
   // ---> add to database, get id from response, and check if e.g. book--${id} in server cache, and args == book--${id}.value
@@ -22,6 +32,34 @@ describe('Server Cache Invalidation Tests', () => {
   // update mutation updates entry in server cache
   // ---> update database entry, get id from response,
   // ---> check if e.g. book--${id} in server cache, and args == book--${id}.value
+
+  it.skip('update book ', async() => {
+    return request(server)
+      .post('/graphql')
+      .set('Accept', 'application/json')
+      .send({
+        query: `
+          mutation {changeBook(id: "14", author: "Frenzel") {id name author}}
+        `,
+      })
+      .then((response) => {
+        expect(JSON.parse(response.text)).toEqual(changedBooks);
+      });
+  });
+
+  it.skip('delete book ', async() => {
+    return request(server)
+      .delete('/graphql')
+      .set('Accept', 'application/json')
+      .send({
+        query: `
+          mutation {deleteBook(id: "27", name: "Jinhee") {id name author}}
+        `,
+      })
+      .then((response) => {
+        expect(JSON.parse(response.text)).toEqual({});
+      });
+  });
 
   // delete mutation deletes entry in redis server cache
   // ---> delete database entry, get id from response
@@ -65,7 +103,7 @@ describe('Server Cache Invalidation Tests', () => {
       .send({
         // query: `{addBook(name: "whatever", author: "whoever", shelf_id: "1"){id name author}}`,
         query: `
-        mutation {addBook(name: "Jinhee", author: "Choi", shelf_id: "1") {name author shelf_id}}
+        mutation {addBook(name: "Jinhee", author: "Choi", shelf_id: "1") {id name author shelf_id}}
         `,
         // query: `{books{id name author}}`,
       })

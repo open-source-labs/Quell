@@ -1,13 +1,32 @@
 const request = require('supertest');
 const redis = require('redis');
 
-const server = 'http://localhost:3000';
+const server = 'http://localhost:4000';
 
 describe('Server Cache Invalidation Tests', () => {
   const redisClient = redis.createClient({
     host: 'localhost',
     port: 6379,
   });
+
+  const books = {
+    name: 'Jinhee',
+    author: 'Choi',
+    shelf_id: '1',
+  };
+
+  const changedBooks = {
+    id: '30',
+    name: 'Jinhee',
+    author: 'Choi',
+    // shelf_id: '1',
+  };
+
+  const deletedBook = {
+    name: 'Jinhee',
+    author: 'Choi',
+    shelf_id: '1',
+  };
 
   // add mutation adds to redis server cache
   // ---> add to database, get id from response, and check if e.g. book--${id} in server cache, and args == book--${id}.value
@@ -36,15 +55,17 @@ describe('Server Cache Invalidation Tests', () => {
     });
   });
 
-  test('Check if add mutation, adds cache entry to redis server cache', (done) => {
+  test.skip('Check if add mutation, adds cache entry to redis server cache', (done) => {
     return (
       request(server)
         .post('/graphql')
         .set('Accept', 'application/json')
         .send({
           query: `
-        mutation {addBook(name: "Why We Sleep", author: "Matthew Walker", shelf_id: "1") {id name author shelf_id}}
+          mutation {addBook(name: "Why We Sleep", author: "Matthew Walker", shelf_id: "1") {id name author shelf_id}}
         `,
+        //mutation {addBook${books} {id name author shelf_id}}
+        //mutation {addBook(name: "Why We Sleep", author: "Matthew Walker", shelf_id: "1") {id name author shelf_id}}
         })
         // expect status 200, (ensure mutation was successful)
         .expect(200)
@@ -102,6 +123,146 @@ describe('Server Cache Invalidation Tests', () => {
         expect(JSON.parse(response.text)).toEqual(books);
       });
   });
+
+  test.skip('Check if update mutation, update cache entry from redis server cache', (done) => {
+    return (
+      request(server)
+        .post('/graphql')
+        .set('Accept', 'application/json')
+        .send({
+          query: `
+        mutation {changeBook(id: "251", author: "Choi") {id name author shelf_id}}
+        `,
+        })
+        // expect status 200, (ensure mutation was successful)
+        .expect(200)
+        .then((response) => {
+          let responseJson = JSON.parse(response.text);
+          // await expect(responseJson).resolves.toHaveProperty('data');
+          expect(responseJson.data).toHaveProperty('changeBook');
+          expect(responseJson.data.changeBook).toHaveProperty('id');
+
+          // id obtained from database
+          let responseId = responseJson.data.changeBook.id;
+
+          // get key value associated with key `book--${responseId}`
+          redisClient.get(`book--${responseId}`, (err, reply) => {
+            // expect no errors to have happened
+            expect(err).toBeFalsy();
+
+            let redisKeyValue = JSON.parse(reply);
+
+            // redis key value should exist
+            expect(redisKeyValue).toBeTruthy();
+
+            // check if newly added redis key value, has properties we added as args in our mutation
+            expect(redisKeyValue).toHaveProperty('name');
+            expect(redisKeyValue).toHaveProperty('author');
+            expect(redisKeyValue).toHaveProperty('shelf_id');
+
+            // check if cache entry in redis has data we just added
+            expect(redisKeyValue.name).toEqual('Jinhee');
+            expect(redisKeyValue.author).toEqual('Choi');
+            expect(redisKeyValue.shelf_id).toEqual('1');
+
+            done();
+          });
+        })
+        .catch((err) => {
+          // something went wrong with sending graphql mutation
+          done(err);
+        })
+    );
+  });
+
+  it.skip('update book ', async() => {
+    return request(server)
+      .post('/graphql')
+      .set('Accept', 'application/json')
+      .send({
+        query: `
+          mutation {changeBook(id: "30", author: "Choi") {id name author}}
+        `,
+      })
+      .then((response) => {
+        console.log(JSON.parse(response.text).data);
+        expect(JSON.parse(response.text).data.changeBook).toEqual(changedBooks);
+      });
+  });
+  
+  // add add mutation
+  test('Check if delete mutation, delete cache entry from redis server cache', (done) => {
+    return (
+      request(server)
+        .post('/graphql')
+        .set('Accept', 'application/json')
+        .send({
+          query: `
+        mutation {deleteBook(name: "Jinhee", author: "Choi") {id name author shelf_id}}
+        `,
+        })
+        // expect status 200, (ensure mutation was successful)
+        .expect(200)
+        .then((response) => {
+          // let responseJson = JSON.parse(response.text);
+          // console.log(`response data: `, responseJson.data);
+          // await expect(responseJson).resolves.toHaveProperty('data');
+          // expect(responseJson.data).toHaveProperty('deleteBook');
+          // expect(responseJson.data.deleteBook).toHaveProperty('id');
+
+          // id obtained from database
+          // let responseId = responseJson.data.deleteBook.id;
+
+          
+          // get key value associated with key `book--${responseId}`
+          redisClient.send_command(`KEYS`, [`book--*`], (err, reply) => {
+            // expect no errors to have happened
+            console.log(`reply: `, reply);
+            //expect(reply).toBeFalsy()`
+
+            let redisKeyValue = JSON.parse(JSON.stringify(reply));
+            console.log(`rediskeyvalue: `, redisKeyValue);
+            // redis key value should exist
+            expect(redisKeyValue.length).toEqual(0);
+
+            // check if newly added redis key value, has properties we added as args in our mutation
+            /*
+            expect(redisKeyValue).toHaveProperty('name');
+            expect(redisKeyValue).toHaveProperty('author');
+            expect(redisKeyValue).toHaveProperty('shelf_id');
+
+            // check if cache entry in redis has data we just added
+            expect(redisKeyValue.name).toEqual('Jinhee');
+            expect(redisKeyValue.author).toEqual('Choi');
+            expect(redisKeyValue.shelf_id).toEqual('1');
+            */
+            done();
+          });
+        })
+        .catch((err) => {
+          // something went wrong with sending graphql mutation
+          done(err);
+        })
+    );
+  });
+
+  it.skip('delete book ', async() => {
+    return request(server)
+      .delete('/graphql')
+      .set('Accept', 'application/json')
+      .send({
+        query: `
+          mutation {deleteBook(name: "Jinhee", author: "Choi") {name author shelf_id}}
+        `,
+      })
+      .then((response) => {
+        expect(JSON.parse(response.text).data.deleteBook).toEqual(deletedBook);
+      });
+  });  
+
+
+
+
 
   it.skip('test redis', async () => {
     redisClient.get('country--1', (err, reply) => {
@@ -173,3 +334,8 @@ describe('Server Cache Invalidation Tests', () => {
       });
   });
 });
+
+
+
+
+// SET book--251 "{\"id\":\"251\",\"name\":\"Jinhee\",\"author\":\"Choi\",\"shelf_id\":\"1\"}"

@@ -300,7 +300,7 @@ const RootMutation = new GraphQLObjectType({
         return updatedBook.rows[0];
       },
     },
-    // delete book by id
+    // delete book by name and author
     deleteBook: {
       type: BookType,
       args: {

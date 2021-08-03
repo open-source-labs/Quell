@@ -17,6 +17,7 @@ class QuellCache {
     this.clearCache = this.clearCache.bind(this);
     this.buildFromCache = this.buildFromCache.bind(this);
     this.generateCacheID = this.generateCacheID.bind(this);
+    this.deleteCacheById = this.deleteCacheById.bind(this);
   }
 
   /**
@@ -78,25 +79,49 @@ class QuellCache {
 
       if (mutationQueryObject) {
         // if user passes in id as args, no need to get id from database
-        let id = mutationQueryObject.__id;
-        if (!id) {
-          graphql(this.schema, queryString)
-            .then((mutationResult) => {
-              // if redis needs to be updated, write to cache and send result back, we don't need to wait untill writeToCache is finished
+
+        // add/update/delete mutation
+        // let id = mutationQueryObject.__id;
+        // if (!id) {
+        graphql(this.schema, queryString)
+          .then((mutationResult) => {
+            // add and update mutation
+            // if redis needs to be updated, write to cache and send result back, we don't need to wait untill writeToCache is finished
+            res.locals.queryResponse = mutationResult;
+
+            // check if we need to update more entries in the server cache
+            if (mutationQueryObject.__id) {
               let redisKey = `${mutationType}--${mutationResult.data[mutationName].id}`;
               let redisValue = mutationResult.data[mutationName];
               this.writeToCache(redisKey, redisValue);
 
-              res.locals.queryResponse = mutationResult;
-              next();
-            })
-            .catch((error) => {
-              return next('graphql library error: ', error);
-            });
-        }
-        let redisValue = await this.getFromRedis(`mutationType--${27}`);
-        if (!redisValue) {
-        }
+              // delete mutation
+              if (mutationName.substring(0, 3) === 'del') {
+                this.redisCache.get('books', (error, result) => {
+                  if (result) {
+                    let redisKeyList = JSON.parse(result);
+                  }
+                });
+
+                /*
+                  checkFromRedis(key) {
+                    return new Promise((resolve, reject) => {
+                      this.redisCache.exists(key, (error, result) =>
+                        error ? reject(error) : resolve(result)
+                      );
+                    });
+                  }
+                  */
+                this.deleteCacheById(redisKey);
+              }
+            } else {
+              // this.redisCache.send_command()
+            }
+            next();
+          })
+          .catch((error) => {
+            return next('graphql library error: ', error);
+          });
       }
     } else {
       // if QUERY
@@ -994,6 +1019,19 @@ class QuellCache {
       this.redisCache.set(lowerKey, JSON.stringify(item));
       this.redisCache.EXPIRE(lowerKey, this.cacheExpiration);
     }
+  }
+
+  /**
+   * deleteCacheById removes key-value from the cache unless the key indicates that the item is not available. // Note: writeToCache will JSON.stringify the input item
+   * @param {String} key - unique id under which the cached data is stored that needs to be removed
+   */
+
+  deleteCacheById(key) {
+    return new Promise((resolve, reject) => {
+      this.redisCache.del(key, (error, result) => {
+        error ? reject(error) : resolve(result);
+      });
+    });
   }
 
   /**
