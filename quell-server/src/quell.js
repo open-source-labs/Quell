@@ -79,29 +79,28 @@ class QuellCache {
         }
       }
 
-      if (mutationQueryObject) {
-        graphql(this.schema, queryString)
-          .then((databaseResponseRaw) => {
-            // if redis needs to be updated, write to cache and send result back, we don't need to wait untill writeToCache is finished
-            res.locals.queryResponse = databaseResponseRaw;
+      graphql(this.schema, queryString)
+        .then((databaseResponse) => {
+          // if redis needs to be updated, write to cache and send result back, we don't need to wait untill writeToCache is finished
+          res.locals.queryResponse = databaseResponse;
 
-            // let redisKey = `${mutationType}--${databaseResponseRaw.data[mutationName].id}`;
-            let redisValue = databaseResponseRaw.data[mutationName];
+          let dbResponseId = databaseResponse.data[mutationName]?.id;
+          let redisValue = databaseResponse.data[mutationName];
 
+          if (dbResponseId && mutationQueryObject) {
             this.updateCacheByMutation(
-              databaseResponseRaw.data[mutationName].id,
+              dbResponseId,
               redisValue,
               mutationName,
               mutationType,
               mutationQueryObject
             );
-
-            next();
-          })
-          .catch((error) => {
-            return next('graphql library error: ', error);
-          });
-      }
+          }
+          next();
+        })
+        .catch((error) => {
+          return next('graphql library error: ', error);
+        });
     } else {
       // if QUERY
 
@@ -1008,6 +1007,7 @@ class QuellCache {
     mutationQueryObject
   ) {
     let fieldsListKey;
+    if (!item) item = {};
 
     for (let queryKey in this.queryMap) {
       let queryKeyType = this.queryMap[queryKey];
@@ -1017,6 +1017,90 @@ class QuellCache {
         break;
       }
     }
+
+    const removeFromFieldKeysList = async (fieldKeysToRemove) => {
+      if (fieldsListKey) {
+        let cachedFieldKeysListRaw = await this.getFromRedis(fieldsListKey);
+        let cachedFieldKeysList = JSON.parse(cachedFieldKeysListRaw);
+
+        await fieldKeysToRemove.forEach((fieldKey) => {
+          // index position of field key to remove from list of field keys
+          let removalFieldKeyIdx = cachedFieldKeysList.indexOf(fieldKey);
+
+          if (removalFieldKeyIdx !== -1)
+            cachedFieldKeysList.splice(removalFieldKeyIdx, 1);
+        });
+
+        this.writeToCache(fieldsListKey, cachedFieldKeysList);
+      }
+    };
+
+    const deleteApprFieldKeys = async () => {
+      if (fieldsListKey) {
+        let cachedFieldKeysListRaw = await this.getFromRedis(fieldsListKey);
+        let cachedFieldKeysList = JSON.parse(cachedFieldKeysListRaw);
+
+        let fieldKeysToRemove = new Set();
+        for (let i = 0; i < cachedFieldKeysList.length; i++) {
+          let fieldKey = cachedFieldKeysList[i];
+          let fieldKeyValueRaw = await this.getFromRedis(
+            fieldKey.toLowerCase()
+          );
+          let fieldKeyValue = JSON.parse(fieldKeyValueRaw);
+
+          let remove = true;
+          console.log(mutationQueryObject);
+          for (let arg in mutationQueryObject.__args) {
+            if (fieldKeyValue.hasOwnProperty(arg)) {
+              let argValue = mutationQueryObject.__args[arg];
+              if (fieldKeyValue[arg] !== argValue) {
+                remove = false;
+                break;
+              }
+            } else {
+              remove = false;
+              break;
+            }
+          }
+
+          if (remove === true) {
+            fieldKeysToRemove.add(fieldKey);
+            this.deleteCacheById(fieldKey.toLowerCase());
+          }
+        }
+        removeFromFieldKeysList(fieldKeysToRemove);
+      }
+    };
+
+    const updateApprFieldKeys = () => {
+      //  determine what properties in redis cache key value to update
+      // an array of objects, where each object has a single key value pairs
+      // the key of which (denotes the key in value of a redis cache entry)
+      let updateVals = [];
+      for (let arg in mutationQueryObject.__args) {
+        if (item.hasOwnProperty(arg)) {
+          if (item[arg] !== mutationQueryObject.__args[arg]) {
+            updateVal = {};
+            updateVal[arg] = item[arg];
+            updateVals.push(updateVal);
+          }
+        }
+      }
+      // mutation is update mutation
+      cachedFieldKeysList.forEach(async (fieldKey) => {
+        let fieldKeyValueRaw = await this.getFromRedis(fieldKey.toLowerCase());
+
+        let fieldKeyValue = JSON.parse(fieldKeyValueRaw);
+
+        updateVals.forEach((updateVal) => {
+          let { prop, propVal } = updateVal;
+          fieldKeyValue[prop] = propVal;
+        });
+        this.writeToCache(fieldKey.toLowerCase(), fieldKeyValue);
+      });
+    };
+
+    const deleteFieldKeys = () => {};
 
     let hypotheticalRedisKey = `${mutationType.toLowerCase()}--${id}`;
     let redisKey = await this.getFromRedis(hypotheticalRedisKey);
@@ -1032,31 +1116,11 @@ class QuellCache {
           this.deleteCacheById(
             `${mutationType.toLowerCase()}--${mutationQueryObject.__id}`
           );
-          if (fieldsListKey) {
-            let cachedFieldKeysListRaw = await this.getFromRedis(fieldsListKey);
-            let cachedFieldKeysList = JSON.parse(cachedFieldKeysListRaw);
-            let removeFieldKeyIdx;
-
-            for (let i = 0; i < cachedFieldKeysList.length; i += 1) {
-              let cachedFieldKey = cachedFieldKeysList[i];
-              if (
-                cachedFieldKey ===
-                `${mutationType}--${mutationQueryObject.__id}`
-              ) {
-                removeFieldKeyIdx = i;
-                break;
-              }
-            }
-
-            if (removeFieldKeyIdx !== undefined)
-              cachedFieldKeysList.splice(removeFieldKeyIdx, 1);
-
-            this.writeToCache(fieldsListKey, cachedFieldKeysList);
-          }
+          removeFromFieldKeysList([`${mutationType}--${id}`]);
         } else {
           // update mutation for single id
           this.writeToCache(
-            `${mutationType.toLowerCase()}--${mutationQueryObject.__id}}`,
+            `${mutationType.toLowerCase()}--${mutationQueryObject.__id}`,
             item
           );
         }
@@ -1068,55 +1132,13 @@ class QuellCache {
         let cachedFieldKeysListRaw = await this.getFromRedis(fieldsListKey);
         let cachedFieldKeysList = JSON.parse(cachedFieldKeysListRaw);
 
-        let updatedFieldKeysList = [];
+        let removalFieldKeysList = [];
 
         if (mutationName.substr(0, 3) === 'del') {
           // mutation is delete mutation
-          let removedFieldKeys = new Set();
-          for (let i = 0; i < cachedFieldKeysList.length; i++) {
-            let fieldKey = cachedFieldKeysList[i];
-            let fieldKeyValueRaw = await this.getFromRedis(
-              fieldKey.toLowerCase()
-            );
-            let fieldKeyValue = JSON.parse(fieldKeyValueRaw);
-
-            let remove = true;
-            console.log(mutationQueryObject);
-            for (let arg in mutationQueryObject.__args) {
-              if (fieldKeyValue.hasOwnProperty(arg)) {
-                let argValue = mutationQueryObject.__args[arg];
-                if (fieldKeyValue[arg] !== argValue) {
-                  remove = false;
-                  break;
-                }
-              } else {
-                remove = false;
-                break;
-              }
-            }
-
-            if (remove === true) {
-              removedFieldKeys.add(fieldKey);
-              this.deleteCacheById(fieldKey.toLowerCase());
-            }
-          }
-
-          cachedFieldKeysList.forEach((fieldKey) => {
-            if (!removedFieldKeys.has(fieldKey)) {
-              updatedFieldKeysList.push(fieldKey);
-            }
-          });
-
-          this.writeToCache(fieldsListKey, updatedFieldKeysList);
+          deleteApprFieldKeys();
         } else {
-          // mutation is update mutation
-          cachedFieldKeysList.forEach(async (fieldKey) => {
-            let fieldKeyValue = await this.getFromRedis(fieldKey.toLowerCase());
-            for (key in item) {
-              fieldKeyValue[key] = item[key];
-            }
-            this.writeToCache(fieldKey, fieldKeyValue);
-          });
+          updateApprFieldKeys();
         }
       }
     } else {

@@ -285,7 +285,7 @@ const RootMutation = new GraphQLObjectType({
         return newBook.rows[0];
       },
     },
-    changeBookByAuthor: {
+    changeBooksByAuthor: {
       type: BookType,
       args: {
         author: { type: new GraphQLNonNull(GraphQLString) },
@@ -293,7 +293,7 @@ const RootMutation = new GraphQLObjectType({
       },
       async resolve(parent, args) {
         const updatedBook = await dbBooks.query(
-          `UPDATE books SET name=$2 WHERE author=$1`,
+          `UPDATE books SET name=$2 WHERE author=$1 RETURNING *`,
           [args.author, args.name]
         );
         return updatedBook.rows[0];
@@ -309,7 +309,7 @@ const RootMutation = new GraphQLObjectType({
       },
       async resolve(parent, args) {
         const updatedBook = await dbBooks.query(
-          `UPDATE books SET name=$2 author = $3 WHERE id = $1 RETURNING *`,
+          `UPDATE books SET name = $2 , author = $3 WHERE id = $1 RETURNING *`,
           [args.id, args.name, args.author]
         );
         return updatedBook.rows[0];
@@ -319,8 +319,8 @@ const RootMutation = new GraphQLObjectType({
     deleteBooksByName: {
       type: BookType,
       args: {
-        name: { type: GraphQLString },
-        author: { type: GraphQLString },
+        name: { type: new GraphQLNonNull(GraphQLString) },
+        author: { type: new GraphQLNonNull(GraphQLString) },
       },
       async resolve(parent, args) {
         const deletedBook = await dbBooks.query(
