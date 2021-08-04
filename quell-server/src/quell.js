@@ -4,7 +4,8 @@ const { visit, BREAK } = require('graphql/language/visitor');
 const { graphql } = require('graphql');
 
 class QuellCache {
-  constructor(schema, redisPort, cacheExpiration = 1000) {
+  // default expiry time 1000
+  constructor(schema, redisPort, cacheExpiration = 1000000000000) {
     this.schema = schema;
     this.queryMap = this.getQueryMap(schema);
     this.mutationMap = this.getMutationMap(schema);
@@ -17,6 +18,7 @@ class QuellCache {
     this.clearCache = this.clearCache.bind(this);
     this.buildFromCache = this.buildFromCache.bind(this);
     this.generateCacheID = this.generateCacheID.bind(this);
+    this.updateCacheByMutation = this.updateCacheByMutation.bind(this);
     this.deleteCacheById = this.deleteCacheById.bind(this);
   }
 
@@ -71,52 +73,29 @@ class QuellCache {
       for (let mutation in this.mutationMap) {
         if (proto.hasOwnProperty(mutation)) {
           mutationName = mutation;
-          mutationType = this.mutationMap[mutation].toLowerCase();
+          mutationType = this.mutationMap[mutation];
           mutationQueryObject = proto[mutation];
           break;
         }
       }
 
       if (mutationQueryObject) {
-        // if user passes in id as args, no need to get id from database
-
-        // add/update/delete mutation
-        // let id = mutationQueryObject.__id;
-        // if (!id) {
         graphql(this.schema, queryString)
-          .then((mutationResult) => {
-            // add and update mutation
+          .then((databaseResponseRaw) => {
             // if redis needs to be updated, write to cache and send result back, we don't need to wait untill writeToCache is finished
-            res.locals.queryResponse = mutationResult;
+            res.locals.queryResponse = databaseResponseRaw;
 
-            // check if we need to update more entries in the server cache
-            if (mutationQueryObject.__id) {
-              let redisKey = `${mutationType}--${mutationResult.data[mutationName].id}`;
-              let redisValue = mutationResult.data[mutationName];
-              this.writeToCache(redisKey, redisValue);
+            // let redisKey = `${mutationType}--${databaseResponseRaw.data[mutationName].id}`;
+            let redisValue = databaseResponseRaw.data[mutationName];
 
-              // delete mutation
-              if (mutationName.substring(0, 3) === 'del') {
-                this.redisCache.get('books', (error, result) => {
-                  if (result) {
-                    let redisKeyList = JSON.parse(result);
-                  }
-                });
+            this.updateCacheByMutation(
+              databaseResponseRaw.data[mutationName].id,
+              redisValue,
+              mutationName,
+              mutationType,
+              mutationQueryObject
+            );
 
-                /*
-                  checkFromRedis(key) {
-                    return new Promise((resolve, reject) => {
-                      this.redisCache.exists(key, (error, result) =>
-                        error ? reject(error) : resolve(result)
-                      );
-                    });
-                  }
-                  */
-                this.deleteCacheById(redisKey);
-              }
-            } else {
-              // this.redisCache.send_command()
-            }
             next();
           })
           .catch((error) => {
@@ -1018,6 +997,139 @@ class QuellCache {
     if (!key.includes('uncacheable')) {
       this.redisCache.set(lowerKey, JSON.stringify(item));
       this.redisCache.EXPIRE(lowerKey, this.cacheExpiration);
+    }
+  }
+
+  async updateCacheByMutation(
+    id,
+    item,
+    mutationName,
+    mutationType,
+    mutationQueryObject
+  ) {
+    let fieldsListKey;
+
+    for (let queryKey in this.queryMap) {
+      let queryKeyType = this.queryMap[queryKey];
+
+      if (JSON.stringify(queryKeyType) === JSON.stringify([mutationType])) {
+        fieldsListKey = queryKey;
+        break;
+      }
+    }
+
+    let hypotheticalRedisKey = `${mutationType.toLowerCase()}--${id}`;
+    let redisKey = await this.getFromRedis(hypotheticalRedisKey);
+
+    if (redisKey) {
+      // key was found in redis server cache so mutation is either update or delete mutation
+
+      // if user specifies id as an arg in mutation, then we only need to update/delete a single cache entry by id
+      if (mutationQueryObject.__id) {
+        if (mutationName.substr(0, 3) === 'del') {
+          // if the first 3 letters of the mutationName are 'del' then mutation is a delete mutation
+          // users have to prefix their delete mutations with 'del' so that quell can distinguish between delete/update mutations
+          this.deleteCacheById(
+            `${mutationType.toLowerCase()}--${mutationQueryObject.__id}`
+          );
+          if (fieldsListKey) {
+            let cachedFieldKeysListRaw = await this.getFromRedis(fieldsListKey);
+            let cachedFieldKeysList = JSON.parse(cachedFieldKeysListRaw);
+            let removeFieldKeyIdx;
+
+            for (let i = 0; i < cachedFieldKeysList.length; i += 1) {
+              let cachedFieldKey = cachedFieldKeysList[i];
+              if (
+                cachedFieldKey ===
+                `${mutationType}--${mutationQueryObject.__id}`
+              ) {
+                removeFieldKeyIdx = i;
+                break;
+              }
+            }
+
+            if (removeFieldKeyIdx !== undefined)
+              cachedFieldKeysList.splice(removeFieldKeyIdx, 1);
+
+            this.writeToCache(fieldsListKey, cachedFieldKeysList);
+          }
+        } else {
+          // update mutation for single id
+          this.writeToCache(
+            `${mutationType.toLowerCase()}--${mutationQueryObject.__id}}`,
+            item
+          );
+        }
+      } else {
+        // user didn't specify id so we need to iterate through all key value pairs and determine which key values match item
+        // might have edge case here if there are no queries that have type GraphQLList
+        if (!fieldsListKey) throw 'error: schema must have a GraphQLList';
+
+        let cachedFieldKeysListRaw = await this.getFromRedis(fieldsListKey);
+        let cachedFieldKeysList = JSON.parse(cachedFieldKeysListRaw);
+
+        let updatedFieldKeysList = [];
+
+        if (mutationName.substr(0, 3) === 'del') {
+          // mutation is delete mutation
+          let removedFieldKeys = new Set();
+          for (let i = 0; i < cachedFieldKeysList.length; i++) {
+            let fieldKey = cachedFieldKeysList[i];
+            let fieldKeyValueRaw = await this.getFromRedis(
+              fieldKey.toLowerCase()
+            );
+            let fieldKeyValue = JSON.parse(fieldKeyValueRaw);
+
+            let remove = true;
+            console.log(mutationQueryObject);
+            for (let arg in mutationQueryObject.__args) {
+              if (fieldKeyValue.hasOwnProperty(arg)) {
+                let argValue = mutationQueryObject.__args[arg];
+                if (fieldKeyValue[arg] !== argValue) {
+                  remove = false;
+                  break;
+                }
+              } else {
+                remove = false;
+                break;
+              }
+            }
+
+            if (remove === true) {
+              removedFieldKeys.add(fieldKey);
+              this.deleteCacheById(fieldKey.toLowerCase());
+            }
+          }
+
+          cachedFieldKeysList.forEach((fieldKey) => {
+            if (!removedFieldKeys.has(fieldKey)) {
+              updatedFieldKeysList.push(fieldKey);
+            }
+          });
+
+          this.writeToCache(fieldsListKey, updatedFieldKeysList);
+        } else {
+          // mutation is update mutation
+          cachedFieldKeysList.forEach(async (fieldKey) => {
+            let fieldKeyValue = await this.getFromRedis(fieldKey.toLowerCase());
+            for (key in item) {
+              fieldKeyValue[key] = item[key];
+            }
+            this.writeToCache(fieldKey, fieldKeyValue);
+          });
+        }
+      }
+    } else {
+      // key was not found in redis server cache so mutation is an add mutation
+      this.writeToCache(hypotheticalRedisKey, item);
+      if (fieldsListKey) {
+        let cachedItemRaw = await this.getFromRedis(fieldsListKey);
+        let cachedItem = JSON.parse(cachedItemRaw);
+        // merge cachedItem with item
+        if (cachedItem) cachedItem.push(`${mutationType}--${id}`);
+        else cachedItem = [`${mutationType}--${id}`];
+        this.writeToCache(fieldsListKey, cachedItem);
+      }
     }
   }
 

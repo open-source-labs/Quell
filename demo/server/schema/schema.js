@@ -285,23 +285,38 @@ const RootMutation = new GraphQLObjectType({
         return newBook.rows[0];
       },
     },
+    changeBookByAuthor: {
+      type: BookType,
+      args: {
+        author: { type: new GraphQLNonNull(GraphQLString) },
+        name: { type: new GraphQLNonNull(GraphQLString) },
+      },
+      async resolve(parent, args) {
+        const updatedBook = await dbBooks.query(
+          `UPDATE books SET name=$2 WHERE author=$1`,
+          [args.author, args.name]
+        );
+        return updatedBook.rows[0];
+      },
+    },
     // change book
-    changeBook: {
+    changeBookById: {
       type: BookType,
       args: {
         id: { type: GraphQLID },
+        name: { type: GraphQLString },
         author: { type: GraphQLString },
       },
       async resolve(parent, args) {
         const updatedBook = await dbBooks.query(
-          `UPDATE books SET author = $2 WHERE id = $1 RETURNING *`,
-          [args.id, args.author]
+          `UPDATE books SET name=$2 author = $3 WHERE id = $1 RETURNING *`,
+          [args.id, args.name, args.author]
         );
         return updatedBook.rows[0];
       },
     },
     // delete book by name and author
-    deleteBook: {
+    deleteBooksByName: {
       type: BookType,
       args: {
         name: { type: GraphQLString },
@@ -311,6 +326,17 @@ const RootMutation = new GraphQLObjectType({
         const deletedBook = await dbBooks.query(
           `DELETE FROM books WHERE name = $1 AND author = $2 RETURNING *`,
           [args.name, args.author]
+        );
+        return deletedBook.rows[0];
+      },
+    },
+    deleteBookById: {
+      type: BookType,
+      args: { id: { type: GraphQLID } },
+      async resolve(parent, args) {
+        const deletedBook = await dbBooks.query(
+          `DELETE FROM books WHERE id = $1 RETURNING *`,
+          [args.id]
         );
         return deletedBook.rows[0];
       },

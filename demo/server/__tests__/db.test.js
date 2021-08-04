@@ -1,7 +1,7 @@
 const request = require('supertest');
 const redis = require('redis');
 
-const server = 'http://localhost:4000';
+const server = 'http://localhost:3000';
 
 describe('Server Cache Invalidation Tests', () => {
   const redisClient = redis.createClient({

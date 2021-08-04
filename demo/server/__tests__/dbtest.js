@@ -1,7 +1,7 @@
 const request = require('supertest');
 const redis = require('redis');
 
-const server = 'http://localhost:4000';
+const server = 'http://localhost:3000';
 
 const redisClient = redis.createClient({
   host: '127.0.0.1',
