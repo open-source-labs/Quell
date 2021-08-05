@@ -8,18 +8,23 @@
  @param {object} protoField - the prototype object, or a section of the prototype object, for accessing arguments, aliases, etc.
  * fieldsMap: potentially deprecated?
  */
-function normalizeForCache(responseData, map = {}, protoField, subID, fieldsMap = {}) {
+function normalizeForCache(
+  responseData,
+  map = {},
+  protoField,
+  subID,
+  fieldsMap = {}
+) {
   // if we are recursing, we want to add a subid before caching
 
-  // iterate over keys in our response data object 
+  // iterate over keys in our response data object
   for (const resultName in responseData) {
     // currentField we are iterating over & corresponding Prototype
     const currField = responseData[resultName];
     const currProto = protoField[resultName];
-    // check if the value stored at that key is array 
+    // check if the value stored at that key is array
     if (Array.isArray(currField)) {
-
-      const cacheKey = subID ? subID + '--' + resultName : resultName
+      const cacheKey = subID ? subID + '--' + resultName : resultName;
       // create empty array to store refs
       const refList = [];
 
@@ -44,30 +49,30 @@ function normalizeForCache(responseData, map = {}, protoField, subID, fieldsMap 
         refList.push(fieldID);
         // if object, recurse to add all nested values of el to cache as individual entries
         if (typeof el === 'object') {
-          normalizeForCache({ [dataType]: el }, map,  { [dataType]: currProto});
+          normalizeForCache({ [dataType]: el }, map, { [dataType]: currProto });
         }
       }
       sessionStorage.setItem(cacheKey, JSON.stringify(refList));
-    }
-    else if (typeof currField === 'object') {
+    } else if (typeof currField === 'object') {
       // need to get non-Alias ID for cache
       // temporary store for field properties
       const fieldStore = {};
-      
-      // if object has id, generate fieldID 
+
+      // if object has id, generate fieldID
       let cacheID = map.hasOwnProperty(currProto.__type)
         ? map[currProto.__type]
         : currProto.__type;
-      
+
       // if prototype has ID, append it to cacheID
-      cacheID += currProto.__id
-        ? `--${currProto.__id}`
-        : '';
+      cacheID += currProto.__id ? `--${currProto.__id}` : '';
 
       // iterate over keys in object
       for (const key in currField) {
         // if prototype has no ID, check field keys for ID (mostly for arrays)
-        if (!currProto.__id && (key === 'id' || key === '_id' || key === 'ID' || key === 'Id')) {
+        if (
+          !currProto.__id &&
+          (key === 'id' || key === '_id' || key === 'ID' || key === 'Id')
+        ) {
           cacheID += `--${currField[key]}`;
         }
         fieldStore[key] = currField[key];
@@ -75,7 +80,12 @@ function normalizeForCache(responseData, map = {}, protoField, subID, fieldsMap 
         // if object, recurse normalizeForCache assign in that object
         // must also pass in protoFields object to pair arguments, aliases with response
         if (typeof currField[key] === 'object') {
-          normalizeForCache({ [key]: currField[key] }, map, { [key]: protoField[resultName][key]}, cacheID);
+          normalizeForCache(
+            { [key]: currField[key] },
+            map,
+            { [key]: protoField[resultName][key] },
+            cacheID
+          );
         }
       }
       // store "current object" on cache in JSON format
@@ -90,9 +100,7 @@ async function writeToCache(key, item) {
     const cacheItem = await sessionStorage.getItem(key);
     const parsedItem = JSON.parse(cacheItem);
     // if item is an array, set to just stash the item, otherwise merge objects
-    const fullItem = Array.isArray(item)
-      ? item
-      : { ...parsedItem, ...item };
+    const fullItem = Array.isArray(item) ? item : { ...parsedItem, ...item };
 
     // Store the data entry
     sessionStorage.setItem(key, JSON.stringify(fullItem));

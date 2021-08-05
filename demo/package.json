@@ -8,7 +8,7 @@
     "dev": "PG_URI=postgres://ciazdabk:b-BiZoFsMIhJS5xNzVlGPo3hhzdRYmvd@lallah.db.elephantsql.com:5432/ciazdabk PG_URI_BOOKS=postgres://tpmlqjma:dlo4fdwmapq7AjzeXeTsgjZD3CGFKRjJ@ziggy.db.elephantsql.com:5432/tpmlqjma concurrently \"npm run dev:pg_uri\" \"npm run dev:server\"",
     "client": "webpack-dev-server --open --hot",
     "test-server": "PG_URI=postgres://aluyeqyw:CITZQvnJk5AbL38kO8szRpxn4Gaeaptz@chunee.db.elephantsql.com/aluyeqyw  PG_URI_BOOKS=postgres://wowqwivk:reMc4QE-eurM8-xH5x0dYBZhgBHDH6-O@chunee.db.elephantsql.com/wowqwivk concurrently \"webpack-dev-server --open --hot\" \"NODE_ENV=development nodemon -w ../quell-server/src/quell.js server/server.js\"",
-    "test": "jest --verbose --detectOpenHandles"
+    "test": "jest --verbose --runInBand --detectOpenHandles"
   },
   "keywords": [],
   "contributors": [
