@@ -4,8 +4,8 @@ const { visit, BREAK } = require('graphql/language/visitor');
 const { graphql } = require('graphql');
 
 class QuellCache {
-  // default expiry time 1000
-  constructor(schema, redisPort, cacheExpiration = 1000000000000) {
+  // default expiry time is 14 days in milliseconds
+  constructor(schema, redisPort, cacheExpiration = 1209600000) {
     this.schema = schema;
     this.queryMap = this.getQueryMap(schema);
     this.mutationMap = this.getMutationMap(schema);
@@ -13,6 +13,7 @@ class QuellCache {
     this.idMap = this.getIdMap();
     this.redisPort = redisPort;
     this.cacheExpiration = cacheExpiration;
+    this.redisReadBatchSize = 10;
     this.redisCache = redis.createClient(redisPort);
     this.query = this.query.bind(this);
     this.clearCache = this.clearCache.bind(this);
@@ -453,6 +454,14 @@ class QuellCache {
     });
   }
 
+  execRedisRunQueue(redisRunQueue) {
+    return new Promise((resolve, reject) => {
+      redisRunQueue.exec((error, result) =>
+        error ? reject(error) : resolve(result)
+      );
+    });
+  }
+
   /**
    * getFromRedis reads from Redis cache and returns a promise.
    * @param {String} key - the key for Redis lookup
@@ -625,58 +634,68 @@ class QuellCache {
 
       // if itemFromCache at the current key is an array, iterate through and gather data
       if (Array.isArray(itemFromCache[typeKey])) {
-        for (let i = 0; i < itemFromCache[typeKey].length; i++) {
+        let redisRunQueue = this.redisCache.multi();
+        let cachedTypeKeyArrLength = itemFromCache[typeKey].length;
+        for (let i = 0; i < cachedTypeKeyArrLength; i++) {
           const currTypeKey = itemFromCache[typeKey][i];
-          const cacheResponse = await this.getFromRedis(currTypeKey);
 
-          let tempObj = {};
+          if (i !== 0 && i % this.redisReadBatchSize === 0) {
+            this.execRedisRunQueue(redisRunQueue);
+            redisRunQueue = this.redisCache.multi();
+          }
 
-          if (cacheResponse) {
-            const interimCache = JSON.parse(cacheResponse);
-            for (const property in prototype[typeKey]) {
-              // if property exists, set on tempObj
-              if (
-                interimCache.hasOwnProperty(property) &&
-                !property.includes('__')
-              ) {
-                tempObj[property] = interimCache[property];
+          redisRunQueue.get(currTypeKey.toLowerCase(), (err, cacheResponse) => {
+            let tempObj = {};
+
+            if (cacheResponse) {
+              const interimCache = JSON.parse(cacheResponse);
+              for (const property in prototype[typeKey]) {
+                // if property exists, set on tempObj
+                if (
+                  interimCache.hasOwnProperty(property) &&
+                  !property.includes('__')
+                ) {
+                  tempObj[property] = interimCache[property];
+                }
+                // if prototype is nested at this field, recurse
+                else if (
+                  !property.includes('__') &&
+                  typeof prototype[typeKey][property] === 'object'
+                ) {
+                  const tempData = this.buildFromCache(
+                    prototype[typeKey][property],
+                    prototypeKeys,
+                    {},
+                    false,
+                    `${currTypeKey}--${property}`
+                  );
+                  tempObj[property] = tempData.data;
+                }
+                // if cache does not have property, set to false on prototype so that it is sent to graphQL
+                else if (
+                  !property.includes('__') &&
+                  typeof prototype[typeKey][property] !== 'object'
+                ) {
+                  prototype[typeKey][property] = false;
+                }
               }
-              // if prototype is nested at this field, recurse
-              else if (
-                !property.includes('__') &&
-                typeof prototype[typeKey][property] === 'object'
-              ) {
-                const tempData = this.buildFromCache(
-                  prototype[typeKey][property],
-                  prototypeKeys,
-                  {},
-                  false,
-                  `${currTypeKey}--${property}`
-                );
-                tempObj[property] = tempData.data;
-              }
-              // if cache does not have property, set to false on prototype so that it is sent to graphQL
-              else if (
-                !property.includes('__') &&
-                typeof prototype[typeKey][property] !== 'object'
-              ) {
-                prototype[typeKey][property] = false;
+              itemFromCache[typeKey][i] = tempObj;
+            }
+            // if there is nothing in the cache for this key, then toggle all fields to false so it is fetched later
+            else {
+              for (const property in prototype[typeKey]) {
+                if (
+                  !property.includes('__') &&
+                  typeof prototype[typeKey][property] !== 'object'
+                ) {
+                  prototype[typeKey][property] = false;
+                }
               }
             }
-            itemFromCache[typeKey][i] = tempObj;
-          }
-          // if there is nothing in the cache for this key, then toggle all fields to false so it is fetched later
-          else {
-            for (const property in prototype[typeKey]) {
-              if (
-                !property.includes('__') &&
-                typeof prototype[typeKey][property] !== 'object'
-              ) {
-                prototype[typeKey][property] = false;
-              }
-            }
-          }
+          });
         }
+        // execute any remnants in redis run queue
+        await this.execRedisRunQueue(redisRunQueue);
       }
       // recurse through buildFromCache using typeKey, prototype
       // if itemFromCache is empty, then check the cache for data, else, persist itemFromCache
