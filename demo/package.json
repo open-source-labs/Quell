@@ -1,6 +1,6 @@
 {
   "name": "demo",
-  "version": "2.1.2",
+  "version": "3.0.0",
   "main": "index.js",
   "scripts": {
     "start": "NODE_ENV=production node server/server.js",
@@ -11,6 +11,22 @@
   },
   "keywords": [],
   "contributors": [
+    {
+      "name": "Jinhee Choi",
+      "url": "https://github.com/jcroadmovie"
+    },
+    {
+      "name": "Nayan Parmar",
+      "url": "https://github.com/nparmar1"
+    },
+    {
+      "name": "Tashrif Sanil",
+      "url": "https://github.com/tashrifsanil"
+    },
+    {
+      "name": "Tim Frenzel",
+      "url": "(https://github.com/TimFrenzel"
+    },
     {
       "name": "Thomas Reeder",
       "url": "https://github.com/nomtomnom"

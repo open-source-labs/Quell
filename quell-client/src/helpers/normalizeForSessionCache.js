@@ -1,5 +1,5 @@
-/**
- normalizeForCache traverses server response data and creates objects out of responses for cache. 
+/** 
+ normalizeForSessionCache traverses server response data and creates objects out of responses for cache. 
  * Iterates & recurses over response object & preps data to be sent to cache
  * and sends data to cache
  * necessary for cache consistency
@@ -8,6 +8,7 @@
  @param {object} protoField - the prototype object, or a section of the prototype object, for accessing arguments, aliases, etc.
  * fieldsMap: potentially deprecated?
  */
+
 function normalizeForCache(
   responseData,
   map = {},
@@ -16,12 +17,16 @@ function normalizeForCache(
   fieldsMap = {}
 ) {
   // if we are recursing, we want to add a subid before caching
-
   // iterate over keys in our response data object
   for (const resultName in responseData) {
     // currentField we are iterating over & corresponding Prototype
     const currField = responseData[resultName];
     const currProto = protoField[resultName];
+
+    for(const property in map){
+      if(currProto.__type.includes(map[property])) currProto.__type = map[property];
+    }
+
     // check if the value stored at that key is array
     if (Array.isArray(currField)) {
       const cacheKey = subID ? subID + '--' + resultName : resultName;
@@ -53,6 +58,7 @@ function normalizeForCache(
         }
       }
       sessionStorage.setItem(cacheKey, JSON.stringify(refList));
+
     } else if (typeof currField === 'object') {
       // need to get non-Alias ID for cache
       // temporary store for field properties
@@ -62,10 +68,9 @@ function normalizeForCache(
       let cacheID = map.hasOwnProperty(currProto.__type)
         ? map[currProto.__type]
         : currProto.__type;
-
       // if prototype has ID, append it to cacheID
       cacheID += currProto.__id ? `--${currProto.__id}` : '';
-
+      
       // iterate over keys in object
       for (const key in currField) {
         // if prototype has no ID, check field keys for ID (mostly for arrays)
