@@ -13,11 +13,53 @@ import Robleh from '../images/profile_pics/QUELL-headshot w border-Robleh.png';
 import Thomas from '../images/profile_pics/QUELL-headshot w border-Thomas.png';
 import Angela from '../images/profile_pics/QUELL-headshot w border-Angela.png';
 import Ken from '../images/profile_pics/QUELL-headshot w border-Ken.png';
+import Jinhee from '../images/profile_pics/QUELL-headshot w border-Jinhee.png'; 
+import Nayan from '../images/profile_pics/QUELL-headshot w border-Nayan.png'; 
+import Tash from '../images/profile_pics/QUELL-headshot w border-Tash.png'; 
+import Tim from '../images/profile_pics/QUELL-headshot w border-Tim.png'; 
+
 
 /* 
   Component to generate each teams section
 */
 
+const jinhee = {
+  name: 'Jinhee Choi',
+  src: Jinhee,
+  bio:
+    'Jinhee is a full-stack software engineer specializing in React, Node.js, Express, relational databases, non-relational databases, graphQL, with a passion for cache invalidation and implementing performant client-side caching storage. Jinhee enjoys visiting local attraction places with his wife and follows New York Yankees.',
+  linkedin: 'https://www.linkedin.com/in/jinheekchoi/',
+  github: 'https://github.com/jcroadmovie',
+};
+
+const nayan = {
+  name: 'Nayan Parmar',
+  src: Nayan,
+  bio:
+    'Nayan is a full-stack software engineer specializing in React, Express, relational database, testing framework, with a passion for achieving code stability and consistency through test-driven development. He has strong interests in testing framework and codebase modularization to improve codebase readability. In his free time, Nayan goes to basketball stadium or football stadium to watch local franchise teams\' sports game.',
+  linkedin: 'https://www.linkedin.com/in/nparmar1/',
+  github: 'https://github.com/nparmar1',
+};
+
+const tash = {
+  name: 'Tashrif Sanil',
+  src: Tash,
+  bio:
+    'Tash is a back-end software engineer specializing in Node.js, Express, relational databases, Redis, graphQL, with a passion for performance improvement, code optimization, and cache invalidation. He is committed to implementing extensive cache invalidation for Quell to boost performance, server-traffic, and data request/response process in order to serve more clients. In his free time, he likes to visit local food restaurants with diverse cuisine.',
+  linkedin: 'https://www.linkedin.com/in/tashrif-sanil-5a499415b/',
+  github: 'https://github.com/tashrifsanil',
+};
+
+const tim = {
+  name: 'Tim Frenzel',
+  src: Tim,
+  bio:
+    'Tim is a database engineer specializing in relational databases, non-relational databases, Redis with a passion for data analysis. His goal with Quell is to improve database request/response processes to improve performance. Outside of engineering time, Tim enjoys photoshopping memes related to computer science, visiting different cities, and enjoys casino in Las Vegas.',
+  linkedin: 'https://www.linkedin.com/in/tim-frenzel-mba-cfa-frm-61a35499/',
+  github: 'https://github.com/TimFrenzel',
+};
+
+// old team
 const robleh = {
   name: 'Robleh Farah',
   src: Robleh,
@@ -131,6 +173,34 @@ const Team = () => {
     <>
       <img id="team-quell" src={Header}></img>
       <div id="team">
+      <TeamMember
+          src={jinhee.src}
+          bio={jinhee.bio}
+          name={jinhee.name}
+          linkedin={jinhee.linkedin}
+          github={jinhee.github}
+        />
+                <TeamMember
+          src={nayan.src}
+          bio={nayan.bio}
+          name={nayan.name}
+          linkedin={nayan.linkedin}
+          github={nayan.github}
+        />
+                <TeamMember
+          src={tash.src}
+          bio={tash.bio}
+          name={tash.name}
+          linkedin={tash.linkedin}
+          github={tash.github}
+        />
+                <TeamMember
+          src={tim.src}
+          bio={tim.bio}
+          name={tim.name}
+          linkedin={tim.linkedin}
+          github={tim.github}
+        />
         <TeamMember
           src={robleh.src}
           bio={robleh.bio}
