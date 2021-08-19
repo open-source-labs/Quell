@@ -1,5 +1,11 @@
+const { lokiClientCache } = require("./normalizeForLokiCache");
+
 /* 
-buildFromCache - iterates through the output of parseAST (which is an object) and checks the cache for each field in a query. If a field is NOT found in cache then that field will be toggled to false so that the next function knows to create a query string for that field so that it can be fetched from the server. If a field is found in the cache, then that data is saved in a __object and 
+buildFromCache - iterates through the output of parseAST (which is an object) and 
+checks the cache for each field in a query. If a field is NOT found in cache 
+then that field will be toggled to false so that the next function knows to create a query string 
+for that field so that it can be fetched from the server. If a field is found in the cache, 
+then that data is saved in a __object and 
 
 Inputs
   @prototype - object representation of a user's query after passing through parseAST
@@ -21,32 +27,43 @@ Side effects
   @prototype - object representation of the input query with each field updated, whether it was found in cache (true) or not (false)
 ----
 */
-function buildFromCache(
-  prototype,
-  prototypeKeys,
-  itemFromCache = {},
-  firstRun = true,
-  subID
-) {
+function buildFromCache(prototype, prototypeKeys, itemFromCache = {}, firstRun = true, subID) {
+
   for (let typeKey in prototype) {
+
     // check if typeKey is a rootQuery (i.e. if it is a type on the prototype object) or if its a field nested in a query
     if (prototypeKeys.includes(typeKey)) {
       const cacheID = subID ? subID : generateCacheID(prototype[typeKey]);
+      
+      // code for storing cacheID in sessionStorage - old client cache storage
+      // const cacheResponse = sessionStorage.getItem(cacheID);
+
+      // check if cacheID exists in the lokiJS - meaning the data was already cached - and set it to cacheResponse
+      // create a property on itemFromCache and set the value to the fetched response from cache
+      // const cacheResponse = lokiClientCache.find(cacheID);
+      const cacheResponse = Object.assign({}, lokiClientCache.find(cacheID));
+
+      // documentation for sesisonStorage: if data for the current typeKey is not found in sessionStorage 
+      //then we receive null. Need to replace null with empty object
+      // itemFromCache[typeKey] = cacheResponse ? JSON.parse(cacheResponse) : {};
 
       // create a property on itemFromCache and set the value to the fetched response from cache
-      const cacheResponse = sessionStorage.getItem(cacheID);
-      // if data for the current typeKey is not found in sessionStorage then we receive null. Need to replace null with empty object
-      itemFromCache[typeKey] = cacheResponse ? JSON.parse(cacheResponse) : {};
+      // documentation for lokiClientCache: if data for the current typeKey is not found in sessionStorage 
+      //then we receive null. Need to replace null with empty object
+      itemFromCache[typeKey] = cacheResponse ? cacheResponse : {};
       // need to check cacheResponse to see if each field was requested in proto
     }
 
     if (Array.isArray(itemFromCache[typeKey])) {
       for (let i = 0; i < itemFromCache[typeKey].length; i++) {
         const currTypeKey = itemFromCache[typeKey][i];
-        const cacheResponse = sessionStorage.getItem(currTypeKey);
+        const cacheResponse = lokiClientCache.find(currTypeKey.queryType);
+        // old code for sessionStorage
+        // const cacheResponse = sessionStorage.getItem(currTypeKey); (code for sessionStorage)
         let tempObj = {};
         if (cacheResponse) {
-          const interimCache = JSON.parse(cacheResponse);
+          const interimCache = cacheResponse;
+          // const interimCache = JSON.parse(cacheResponse); (code for sessionStorage)
           for (const property in prototype[typeKey]) {
             if (
               interimCache.hasOwnProperty(property) &&
@@ -109,8 +126,10 @@ function buildFromCache(
       ) {
         // change: making another call to the cache? WHy?
         const cacheID = generateCacheID(prototype);
-        const cacheResponse = sessionStorage.getItem(cacheID);
-        if (cacheResponse) itemFromCache[typeKey] = JSON.parse(cacheResponse);
+        // const cacheResponse = sessionStorage.getItem(cacheID); // code for sessionstorage
+        const cacheResponse = lokiClientCache.find(cacheID);
+        // if (cacheResponse) itemFromCache[typeKey] = JSON.parse(cacheResponse); (code for sessionstorage)
+        if (cacheResponse) itemFromCache[typeKey] = cacheResponse; //code for lokiClientCache
         // repeat function inside of the nested query
         buildFromCache(
           prototype[typeKey],
@@ -173,4 +192,4 @@ function generateCacheID(queryProto) {
   return cacheID;
 }
 
-module.exports = buildFromCache;
+module.exports = { buildFromCache, generateCacheID };

@@ -34,7 +34,7 @@ const BookShelfType = new GraphQLObjectType({
       async resolve(parent, args) {
         const booksList = await dbBooks.query(
           `
-          SELECT * FROM books WHERE shelf_id = $1`,
+          SELECT * FROM books WHERE shelf_id=$1`,
           [Number(parent.id)]
         );
 
@@ -64,7 +64,7 @@ const CountryType = new GraphQLObjectType({
       type: new GraphQLList(CityType),
       async resolve(parent, args) {
         const citiesList = await db.query(
-          `SELECT * FROM cities WHERE country_id = $1`,
+          `SELECT * FROM cities WHERE country_id=$1`,
           [Number(parent.id)]
         );
 
@@ -85,7 +85,7 @@ const CityType = new GraphQLObjectType({
       type: new GraphQLList(AttractionType),
       async resolve(parent, args) {
         const attractionsList = await db.query(
-          `SELECT * FROM attractions WHERE city_id = $1`,
+          `SELECT * FROM attractions WHERE city_id=$1`,
           [Number(parent.id)]
         );
 
@@ -120,7 +120,7 @@ const RootQuery = new GraphQLObjectType({
       async resolve(parent, args) {
         const country = await db.query(
           `
-          SELECT * FROM countries WHERE id = $1`,
+          SELECT * FROM countries WHERE country_id=$1`,
           [Number(args.id)]
         );
 
@@ -145,7 +145,7 @@ const RootQuery = new GraphQLObjectType({
       async resolve(parent, args) {
         const citiesList = await db.query(
           `
-          SELECT * FROM cities WHERE country_id = $1`,
+          SELECT * FROM cities WHERE country_id=$1`,
           [Number(args.country_id)]
         ); // need to dynamically resolve this
 
@@ -159,7 +159,7 @@ const RootQuery = new GraphQLObjectType({
       async resolve(parent, args) {
         const city = await db.query(
           `
-          SELECT * FROM cities WHERE id = $1`,
+          SELECT * FROM cities WHERE id=$1`,
           [Number(args.id)]
         );
 
@@ -183,7 +183,7 @@ const RootQuery = new GraphQLObjectType({
       async resolve(parent, args) {
         const attractionsList = await db.query(
           `
-          SELECT * FROM attractions WHERE city_id = $1`,
+          SELECT * FROM attractions WHERE city_id=$1`,
           [Number(args.city_id)]
         ); // need to dynamically resolve this
 
@@ -197,7 +197,7 @@ const RootQuery = new GraphQLObjectType({
       async resolve(parent, args) {
         const attraction = await db.query(
           `
-          SELECT * FROM attractions WHERE id = $1`,
+          SELECT * FROM attractions WHERE id=$1`,
           [Number(args.id)]
         );
 
@@ -227,7 +227,7 @@ const RootQuery = new GraphQLObjectType({
       type: BookType,
       args: { id: { type: GraphQLID } },
       async resolve(parent, args) {
-        const book = await dbBooks.query(`SELECT * FROM books WHERE id = $1`, [
+        const book = await dbBooks.query(`SELECT * FROM books WHERE id=$1`, [
           Number(args.id),
         ]);
         return book.rows[0];
@@ -249,7 +249,7 @@ const RootQuery = new GraphQLObjectType({
       args: { id: { type: GraphQLID } },
       async resolve(parent, args) {
         const bookShelf = await dbBooks.query(
-          `SELECT * FROM bookShelves WHERE id = $1`,
+          `SELECT * FROM bookShelves WHERE id=$1`,
           [Number(args.id)]
         );
 
@@ -285,6 +285,7 @@ const RootMutation = new GraphQLObjectType({
         return newBook.rows[0];
       },
     },
+    // update book name using author data
     changeBooksByAuthor: {
       type: BookType,
       args: {
@@ -299,44 +300,45 @@ const RootMutation = new GraphQLObjectType({
         return updatedBook.rows[0];
       },
     },
-    // change book
-    changeBookById: {
-      type: BookType,
-      args: {
-        id: { type: GraphQLID },
-        name: { type: GraphQLString },
-        author: { type: GraphQLString },
-      },
-      async resolve(parent, args) {
-        const updatedBook = await dbBooks.query(
-          `UPDATE books SET name = $2 , author = $3 WHERE id = $1 RETURNING *`,
-          [args.id, args.name, args.author]
-        );
-        return updatedBook.rows[0];
-      },
-    },
-    // delete book by name and author
-    deleteBooksByName: {
+    // update book author using name data
+    changeBooksByName: {
       type: BookType,
       args: {
         name: { type: new GraphQLNonNull(GraphQLString) },
         author: { type: new GraphQLNonNull(GraphQLString) },
       },
       async resolve(parent, args) {
-        const deletedBook = await dbBooks.query(
-          `DELETE FROM books WHERE name = $1 AND author = $2 RETURNING *`,
+        const updatedBook = await dbBooks.query(
+          `UPDATE books SET author=$2 WHERE name=$1 RETURNING *`,
           [args.name, args.author]
+        );
+        return updatedBook.rows[0];
+      },
+    },
+    // delete book by name
+    deleteBooksByName: {
+      type: BookType,
+      args: {
+        name: { type: new GraphQLNonNull(GraphQLString) },
+      },
+      async resolve(parent, args) {
+        const deletedBook = await dbBooks.query(
+          `DELETE FROM books WHERE name=$1 RETURNING *`,
+          [args.name]
         );
         return deletedBook.rows[0];
       },
     },
-    deleteBookById: {
+    // delete book by author
+    deleteBooksByAuthor: {
       type: BookType,
-      args: { id: { type: GraphQLID } },
+      args: { 
+        author: { type: new GraphQLNonNull(GraphQLID) },
+      },
       async resolve(parent, args) {
         const deletedBook = await dbBooks.query(
-          `DELETE FROM books WHERE id = $1 RETURNING *`,
-          [args.id]
+          `DELETE FROM books WHERE author=$1 RETURNING *`,
+          [args.author]
         );
         return deletedBook.rows[0];
       },

@@ -14,7 +14,7 @@ const Info = () => {
       <div className='info-text'>
         <h4>
           Quell is an open source, lightweight JavaScript library providing a client- and server-side caching
-          solution for GraphQL.
+          solution and cache invalidation for GraphQL.
         </h4>
         <br></br>
         <div className='dots-container'>
@@ -23,7 +23,7 @@ const Info = () => {
 
         <p>
           Quell's schema-governed, type-level normalization algorithm
-          deconstructs GraphQL query responses into individual graph nodes to be
+          deconstructs GraphQL query and mutation responses into individual graph nodes to be
           cached separately as constant-time-readable key-value pairs, with
           references to connected nodes.
         </p>
@@ -33,15 +33,15 @@ const Info = () => {
 
         <p>
           Subsequent GraphQL requests are then checked against the cached data
-          store, allowing Quell to only request the data it needs by dynamically
-          reformulating a new query for what's missing.
+          store in client-side cache storage first, allowing Quell to only request the data 
+          it needs by dynamically reformulating a new query for what's missing.
         </p>
 
         <div className='quell-puzzle-container'>
           <img id='quell-puzzle' src={Puzzle}></img>
         </div>
         <p>
-          Query responses are then merged with the data present in the cache and
+          Query responses are then merged with the data present in the client cache storage and
           a full response is returned seamlessly.
         </p>
         <div className='quell-airmail-container'>

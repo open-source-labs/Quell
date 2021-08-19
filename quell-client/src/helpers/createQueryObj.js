@@ -12,9 +12,7 @@ function createQueryObj(map) {
   for (let key in map) {
     const reduced = reducer(map[key]);
     // greater than args & alias
-    if (Object.keys(reduced).length > 0) {
-      output[key] = reduced;
-    }
+    if (Object.keys(reduced).length > 0) output[key] = reduced;
   }
 
   // filter fields object to contain only values needed from server
@@ -25,30 +23,22 @@ function createQueryObj(map) {
     const propsFilter = {};
 
     for (let key in fields) {
-      // if value is false, place directly on filter
-      if (fields[key] === false) {
-        // add key & value to filter
-        filter[key] = false;
-      }
+      // if value is false, place directly on filter by adding key & value to filter
+      if (fields[key] === false) filter[key] = false;
+
       // if key ncludes id, then set the property to true
-      if (key === 'id' || key === '_id' || key === 'ID' || key === 'Id') {
-        filter[key] = false;
-      }
+      if (key === 'id' || key === '_id' || key === 'ID' || key === 'Id') filter[key] = false;
       
       // if value is an object, recurse to determine nested values
       if (typeof fields[key] === 'object' && !key.includes('__')) {
         // check keys of object to see if those values are false via recursion
         const reduced = reducer(fields[key]);
         // if reduced object has any values to pass, place on filter
-        if (Object.keys(reduced).length > 1) {
-          filter[key] = reduced;
-        }
+        if (Object.keys(reduced).length > 1) filter[key] = reduced;
       }
 
       // if reserved property such as args or alias, place on propsFilter
-      if (key.includes('__')) {
-        propsFilter[key] = fields[key];
-      }
+      if (key.includes('__')) propsFilter[key] = fields[key];
     }
 
     const numFields = Object.keys(fields).length;

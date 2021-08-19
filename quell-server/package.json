@@ -1,7 +1,7 @@
 {
   "name": "@quell/server",
-  "version": "2.1.2",
-  "description": "Quell is an open-source NPM package providing a light-weight caching layer implementation for GraphQL responses on both the client- and server-side. Use Quell to prevent redundant client-side API requests and to minimize costly server-side response latency.",
+  "version": "3.0.0",
+  "description": "Quell is an open-source NPM package providing a light-weight caching layer implementation and cache invalidation for GraphQL responses on both the client- and server-side. Use Quell to prevent redundant client-side API requests and to minimize costly server-side response latency.",
   "main": "src/quell.js",
   "scripts": {
     "test": "jest"
@@ -16,17 +16,35 @@
     "url": "https://github.com/open-source-labs/Quell/issues"
   },
   "keywords": [
+    "cache-invalidation",
+    "LokiJS",
     "graphQL",
     "cache",
     "caching",
     "redis",
+    "batching",
     "client-side",
     "server-side",
     "apollo",
-    "sessionstorage",
     "quell"
   ],
   "contributors": [
+    {
+      "name": "Jinhee Choi",
+      "url": "https://github.com/jcroadmovie"
+    },
+    {
+      "name": "Nayan Parmar",
+      "url": "https://github.com/nparmar1"
+    },
+    {
+      "name": "Tashrif Sanil",
+      "url": "https://github.com/tashrifsanil"
+    },
+    {
+      "name": "Tim Frenzel",
+      "url": "(https://github.com/TimFrenzel"
+    },
     {
       "name": "Thomas Reeder",
       "url": "https://github.com/nomtomnom"
