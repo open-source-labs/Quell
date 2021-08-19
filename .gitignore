@@ -1,4 +1,6 @@
 node_modules
 .env
 demo/dump.rdb
-dump.rdb
+dump.rdbquell-client/yarn.lock
+quell-server/yarn.lock
+demo/yarn.lock
