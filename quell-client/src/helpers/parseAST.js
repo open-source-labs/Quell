@@ -58,7 +58,8 @@ const parseAST = (AST, options = defaultOptions) => {
     OperationDefinition(node) {
       targetObj = proto;
       operationType = node.operation;
-      if (node.operation === 'subscription' || node.operation === 'mutation') {
+      if (node.operation === 'subscription') {
+      // if (node.operation === 'subscription' || node.operation === 'mutation') {
         operationType = 'unQuellable';
         return BREAK;
       }

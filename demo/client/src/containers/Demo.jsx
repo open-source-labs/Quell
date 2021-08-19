@@ -5,12 +5,14 @@ import DemoButton from '../components/DemoButton';
 import QueryResults from '../components/QueryResults';
 import Metrics from '../components/Metrics';
 import Graph from '../components/Graph';
-import { CreateQueryStr, updateProtoWithFragment } from '../helper-functions/HelperFunctions.js';
+import { CreateQueryStr, CreateMutationStr, updateProtoWithFragment } from '../helper-functions/HelperFunctions.js';
 import Header from '../images/headers/QUELL-headers-demo w lines.svg';
 import DropDown from '../images/buttons/dropdown-button.svg';
 import DropDownHover from '../images/buttons/dropdown-button-hover.svg';
 import QuellModule from '@quell/client';
 import QuellDev from '../../../../quell-client/src/Quellify';
+import { lokiClientCache } from "../../../../quell-client/src/helpers/normalizeForLokiCache";
+ 
 const Quell =
   process.env.NODE_ENV === "development"
     ? QuellDev
@@ -60,7 +62,6 @@ const Demo = () => {
     };
   }, []);
 
-
   // ================================================= //
   // ======= Functionality for changing query ======= //
   // ================================================ //
@@ -68,38 +69,58 @@ const Demo = () => {
   /* 
     - Array of queries to choose from
   */
-    const dropdownList = [
-    'Simple Query',
+  const dropdownList = [
+    'Simple Query For Books',
+    'Simple Query For Cities',
+    'Simple Query For Attractions',
+    'Simple query For Countries',
     'Simple Query With Argument',
     'Alias',
     'Multiple Queries',
-    'Nested Query',
-    'Fragment'
+    'Fragment',
+    'Add Mutation',
+    'Update Mutation',
+    'Delete Mutation'
   ];
 
-    const selectQuery = (selection) => {
+  const selectQuery = (selection) => {
       
-      if (selection === 'Simple Query') {
-        displaySimpleQuery();
-      }
-      if (selection === 'Simple Query With Argument') {
-        displaySimpleQueryWithArg(); 
-      }
-      if (selection === 'Alias') {
-        displaySimpleQueryWithArgAndAlias(); 
-      }
-      if (selection === 'Multiple Queries') {
-        displayMultipleQueries(); 
-      } 
-      if (selection === 'Nested Query') {
-        displayNestedQuery(); 
-      }
-      if (selection === 'Fragment') {
-        displayFragment(); 
-      }
+    if (selection === 'Simple Query For Books') {
+      displaySimpleQueryForBooks();
+    }
+    if (selection === 'Simple Query For Cities') {
+      displaySimpleQueryForCities();
+    }
+    if (selection === 'Simple Query For Attractions') {
+      displaySimpleQueryForAttractions();
+    }
+    if (selection === 'Simple Query For Countries') {
+      displaySimpleQueryForCountries();
+    }
+    if (selection === 'Simple Query With Argument') {
+      displaySimpleQueryWithArg(); 
+    }
+    if (selection === 'Alias') {
+      displaySimpleQueryWithArgAndAlias(); 
+    }
+    if (selection === 'Multiple Queries') {
+      displayMultipleQueries(); 
+    } 
+    if (selection === 'Fragment') {
+      displayFragment(); 
+    }
+    if (selection === 'Add Mutation') {
+      displayAddMutation();
+    }
+    if (selection === 'Update Mutation') {
+      displayUpdateMutation();
+    }
+    if (selection === 'Delete Mutation') {
+      displayDeleteMutation();
+    }
       // Close dropdown
-      toggleDropdown(false);
-    };
+    toggleDropdown(false);
+  };
 
      // Creates dropdown menu from the above array
   const dropdownMenu = dropdownList.map((item, i) => {
@@ -112,125 +133,232 @@ const Demo = () => {
   // ===== Functionality to change output based on Query Type ===== //
   // ============================================================== //
     
-  const displaySimpleQuery = () => {
-      setTheQuery("simple query");
-      const uncached = '0.00 ms';
-      setUncachedTime(uncached);
-      output = setOutput({
-        countries: {
-          __id: null,
-          __alias: null,
-          __args: {},
-          __type: 'countries',
-          id: false,
-          name: false,
-        }
-      });
-    }
-  
-    const displaySimpleQueryWithArg = () => {
-      setTheQuery("simple query with argument");
-      const uncached = '0.00 ms';
-      setUncachedTime(uncached);
-      output = setOutput({
-        book: {
-          __id: '1',
-          __type: 'Book',
-          __alias: null,
-          __args: { id: '1' },
-          id: false,
-          name: false,
-        }
-      });
-    }
 
-    const displaySimpleQueryWithArgAndAlias = () => {
-      setTheQuery("simple query with argument and alias");
-      const uncached = '0.00 ms';
-      setUncachedTime(uncached);
-      output = setOutput({
-        Aruba: {
-          __id: '5',
-          __type: 'country',
-          __args: {id: '5'},
-          __alias: "Aruba",
-          id: false,
-          name: false,
-        }
-      });
-    }
-  
-    const displayMultipleQueries = () => {
-      setTheQuery("multiple queries");
-      const uncached = '0.00 ms';
-      setUncachedTime(uncached);
-      output = setOutput({
-        Andorra: {
-          __id: '1',
-          __type: 'country',
-          __args: {id: '1'},
-          __alias: "Andorra",
-          id: false,
-          name: false,
-        },
-        Aruba: {
-          __id: '5',
-          __type: 'country',
-          __args: {id: '5'},
-          __alias: "Aruba",
-          id: false,
-          name: false,
-        }
-      });
-    }
-  
-    const displayNestedQuery = () => {
-      const uncached = '0.00 ms';
-      setUncachedTime(uncached);
-      setTheQuery("nested query");
-      output = setOutput({
-        countries: {
-          id: true,
-          name: true,
-          __type: 'countries',
-          __alias: null,
-          __args: {},
-          __id: null,
-          cities: {
-            id: true,
-            name: true,
-            __type: 'cities',
-            __alias: null,
-            __args: {},
-            __id: null,
-            attractions: {
-              id: true,
-              name: true,
-              __type: 'attractions',
-              __alias: null,
-              __args: {},
-              __id: null
-            }
-          }
-        }
-      });
-    }
+  const displaySimpleQueryForBooks = () => {
+    setTheQuery("simple query for books");
+    const uncached = '0.00 ms';
+    setUncachedTime(uncached);
+    output = setOutput({
+      books: {
+        __id: null,
+        __alias: null,
+        __args: {},
+        __type: 'books',
+        id: false,
+        name: false,
+        author: false,
+        shelf_id: false
+      }
+    });
+  }
 
-    const displayFragment = () => {
-      const uncached = '0.00 ms';
-      setUncachedTime(uncached);
-      setTheQuery("fragment");
-      output = setOutput({
-        Bolivia: {
-          __id: '2',
-          __args: {id: '2'},
-          __alias: 'Bolivia',
-          __type: 'country',
-          id: false,
-          theFields: true,
+  const displaySimpleQueryForCities = () => {
+    setTheQuery("simple query for cities");
+    const uncached = '0.00 ms';
+    setUncachedTime(uncached);
+    output = setOutput({
+      cities: {
+        __id: null,
+        __alias: null,
+        __args: {},
+        __type: 'cities',
+        id: false,
+        name: false,
+        population: false,
+        country_id: false
+      }
+    });
+  }
+
+  const displaySimpleQueryForAttractions = () => {
+    setTheQuery("simple query for attractions");
+    const uncached = '0.00 ms';
+    setUncachedTime(uncached);
+    output = setOutput({
+      attractions: {
+        __id: null,
+        __alias: null,
+        __args: {},
+        __type: 'attractions',
+        id: false,
+        name: false,
+        city_id: false
+      }
+    });
+  }
+
+  const displaySimpleQueryForCountries = () => {
+    setTheQuery("simple query for countries");
+    const uncached = '0.00 ms';
+    setUncachedTime(uncached);
+    output = setOutput({
+      countries: {
+        __id: null,
+        __alias: null,
+        __args: {},
+        __type: 'countries',
+        id: false,
+        name: false,
+      }
+    });
+  }
+
+  //book;
+  const displaySimpleQueryWithArg = () => {
+    setTheQuery("simple query with argument");
+    const uncached = '0.00 ms';
+    setUncachedTime(uncached);
+    output = setOutput({
+      book: {
+        __id: null,
+        __type: 'book',
+        __alias: null,
+        __args: { id: '5' },
+        id: false,
+        name: false,
+        author: false,
+      }
+    });
+  }
+  // attractions;
+  const displaySimpleQueryWithArgAndAlias = () => {
+    setTheQuery("simple query with argument and alias");
+    const uncached = '0.00 ms';
+    setUncachedTime(uncached);
+    output = setOutput({
+      SevenMileBeach: {
+        __id: null,
+        __type: 'attraction',
+        __args: {id: '29'},
+        __alias: "Seven Mile Beach",
+        id: false,
+        name: false,
+        city_id: false
+      }
+    });
+  }
+  // cities;
+  const displayMultipleQueries = () => {
+    setTheQuery("multiple queries");
+    const uncached = '0.00 ms';
+    setUncachedTime(uncached);
+    output = setOutput({
+      Metsaven: {
+        __id: '15',
+        __type: 'city',
+        __args: {id: '15'},
+        __alias: "Metsaven",
+        id: false,
+        name: false,
+        population: false
+      },
+      Capitona: {
+        __id: '9',
+        __type: 'city',
+        __args: {id: '9'},
+        __alias: "Capitona",
+        id: false,
+        name: false,
+        population: false
+      }
+    });
+  }
+
+  // cities;
+  const displayFragment = () => {
+    const uncached = '0.00 ms';
+    setUncachedTime(uncached);
+    setTheQuery("fragment");
+    output = setOutput({
+      Seoul: {
+        __id: '24',
+        __args: {id: '24'},
+        __alias: 'Seoul',
+        __type: 'city',
+        id: false,
+        theFields: true,
+      },
+      Uiwang: {
+        __id: '25',
+        __args: {id: '25'},
+        __alias: 'Uiwang',
+        __type: 'city',
+        id: false,
+        theFields: true,
+      },
+      Incheon: {
+        __id: '26',
+        __args: {id: '26'},
+        __alias: 'Incheon',
+        __type: 'city',
+        id: false,
+        theFields: true,
+      },
+    });
+  }
+
+  const displayAddMutation = () => {
+    setTheQuery("add mutation");
+    const uncached = '0.00 ms';
+    setUncachedTime(uncached);
+    output = setOutput({
+      addBook: {
+        __id: null,
+        __type: "book",
+        __alias: null,
+        __args: {
+          name: "Jinhee is cooler than Tim",
+          author: "Jinhee Choi",
+          shelf_id: "1",
         },
-      });
-    }
+        id: true,
+        name: true,
+        author: true,
+        shelf_id: true,
+      }
+    });
+  }
+  
+  const displayUpdateMutation = () => {
+    setTheQuery("update mutation");
+    const uncached = '0.00 ms';
+    setUncachedTime(uncached);
+    output = setOutput({
+      changeBooksByAuthor: {
+        __id: null,
+        __type: "changebooksbyauthor",
+        __alias: null,
+        __args: {
+          author: "Jinhee Choi",
+          name: "No, Tim is cooler than Jinhee",
+        },
+        id: true,
+        name: true,
+        author: true,
+        shelf_id: true,
+      }
+    });
+  }
+
+  const displayDeleteMutation = () => {
+    setTheQuery("delete mutation");
+    const uncached = '0.00 ms';
+    setUncachedTime(uncached);
+    output = setOutput({
+      deleteBooksByName: {
+        __id: null,
+        __type: "deletebooksbyname",
+        __alias: null,
+        __args: {
+          name: "No, Tim is cooler than Jinhee",
+        },
+        id: true,
+        name: true,
+        author: true,
+        shelf_id: true,
+      }
+    });
+  }
 
   // ============================================================== //
   // === Function that makes the fetch request to run the query === //
@@ -242,13 +370,24 @@ const Demo = () => {
     }
     // Run ResultsParser on output to get the query
     let parsedResult; 
-    
-    if (theQuery === 'fragment') {
+    if (theQuery === 'add mutation') {
+      parsedResult = CreateMutationStr(output);
+    }
+
+    else if (theQuery === 'update mutation' ) {
+      parsedResult = CreateMutationStr(output);
+    }
+
+    else if (theQuery === 'delete mutation' ) {
+      parsedResult = CreateMutationStr(output);
+    }
+
+    else if (theQuery === 'fragment') {
       const fragment = {
         theFields: {
-          id: true,
           name: true,
-          capital: true,
+          population: true,
+          country_id: true,
         },
       };
       let protoFrag = updateProtoWithFragment(output, fragment);
@@ -261,19 +400,57 @@ const Demo = () => {
     let startTime, endTime;
     startTime = performance.now();
 
+    const mutationMap = {
+      addBook: "Book",
+      changeBooksByAuthor: "Book",
+      changeBooksByName: "Book",
+      deleteBooksByName: "Book",
+      deleteBookByAuthor: "Book",
+      addBookShelf: "BookShelf",
+    };
+
+    const map = {
+      Countries: 'Country',
+      Country: 'Country',
+      citiesByCountry: 'City',
+      cities: 'City',
+      bookShelves: 'BookShelf',
+      bookShelf: 'BookShelf',
+      book: 'Book',
+      books: 'Book',
+      attraction: 'attractions',
+      attractions: 'attractions',
+      Attraction: 'attractions',
+      Attractions: 'attractions'
+    };
+
+    const queryTypeMap = {
+      Countries: 'countries',
+      Country: 'countries',
+      city: 'cities',
+      City: 'cities',
+      citiesByCountry: 'cities',
+      cities: 'cities',
+      Cities: 'cities',
+      bookShelves: 'BookShelves',
+      bookShelf: 'BookShelves',
+      book: 'books',
+      books: 'books',
+      Book: 'books',
+      Books: 'books', 
+      attraction: 'attractions',
+      attractions: 'attractions',
+      Attraction: 'attractions',
+      Attractions: 'attractions'
+    };
+
     // Make the fetch request
     Quell(
       '/graphql', // our route
       parsedResult, // our input
-      {
-        Countries: 'Country',
-        Country: 'Country',
-        citiesByCountry: 'City',
-        cities: 'City',
-        bookShelves: 'BookShelf',
-        bookShelf: 'BookShelf',
-        book: 'Book',
-      },
+      mutationMap, //map used for mutation caching
+      map, //map used for query from database/server-cache
+      queryTypeMap, //map used for query from client-cache
       {}
     )
       .then((res) => {
@@ -305,8 +482,11 @@ const Demo = () => {
   // ============================================================== //
 
   const handleClearClientCache = () => {
-    // Clear sessionStorage
-    sessionStorage.clear();
+    // Clear sessionStorage - old storage for client cache
+    // sessionStorage.clear();
+    //lokiJS is the new storage for client cache storage
+    lokiClientCache.clear();
+    console.log(lokiClientCache.data);
     // Time cleared
     const uncached = '0.00 ms';
     setUncachedTime(uncached);
@@ -343,7 +523,9 @@ const Demo = () => {
     const uncached = '0.00 ms';
     setUncachedTime(uncached);
     // Clear sessionStorage
-    sessionStorage.clear();
+    // sessionStorage.clear();
+    lokiClientCache.clear();
+    console.log(lokiClientCache.data);
     setCacheClearStatus('Yes'); 
     setCacheAddStatus('No');
     // Clear server cache:
@@ -363,10 +545,10 @@ const Demo = () => {
         <p className="demo-inst">It's time to take Quell for a spin!</p>
         <br></br>
         <p className="demo-inst">
-          Below is a sample GraphQL query that you can manipulate using the
-          drop-down, plus, and minus buttons. Click <em>Run Query</em> to
+          Below is a sample GraphQL query and mutation that you can manipulate using the
+          drop-down, plus, and minus buttons. Click <em>Run Query/mutation</em> to
           initiate the request/response cycle. To clear the client-side cache,
-          click <em>Clear Session Cache</em> or alternatively clear the
+          click <em>Clear Client Cache</em> or alternatively clear the
           server-side cache by clicking <em>Clear Server Cache</em>.{' '}
           <em>Reset All</em> will take you back to square one.
         </p>
@@ -385,7 +567,7 @@ const Demo = () => {
             time.
           </li>
           <li>
-            Try clearing the Session Cache and run the same query again. You'll
+            Try clearing the Client Cache and run the same query again. You'll
             now only be seeing the effects of Quell server-side caching.
           </li>
           <li>
@@ -397,12 +579,12 @@ const Demo = () => {
       <div className="dashboard-grid">
         <div className="button-grid">
           <DemoButton
-            text={'Run Query'}
+            text={'Run Query/Mutation'}
             func={handleRunQueryClick}
             classname={'button-query button-query-primary'}
           />
           <DemoButton
-            text={'Clear Session Cache'}
+            text={'Clear Client Cache'}
             func={handleClearClientCache}
             classname={'button-query button-query-secondary'}
           />

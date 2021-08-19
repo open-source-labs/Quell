@@ -4,12 +4,8 @@
  */
 
 function createQueryStr(queryObject, operationType) {
-  if (Object.keys(queryObject).length === 0) return ''
-  const openCurly = '{';
-  const closeCurly = '}';
-  const openParen = '(';
-  const closeParen = ')';
-
+  if (Object.keys(queryObject).length === 0) return '';
+  const openCurly = '{', closeCurly = '}', openParen = '(', closeParen = ')';
   let mainStr = '';
 
   // iterate over every key in queryObject
@@ -26,14 +22,11 @@ function createQueryStr(queryObject, operationType) {
     // iterate over KEYS in OBJECT
     for (const key in fields) {
       // is fields[key] string? concat with inner string & empty space
-      if (typeof fields[key] === "boolean") {
-        innerStr += key + ' ';
-      }
+      if (typeof fields[key] === "boolean") innerStr += key + ' ';
+
       // is key object? && !key.includes('__'), recurse stringify
       if (typeof fields[key] === 'object' && !key.includes('__')) {
-        innerStr += `${key}${getAliasType(fields[key])}${getArgs(
-          fields[key])} ${openCurly} ${stringify(
-            fields[key])}${closeCurly} `;
+        innerStr += `${key}${getAliasType(fields[key])}${getArgs(fields[key])} ${openCurly} ${stringify(fields[key])}${closeCurly} `;
       }
     }
 
@@ -62,6 +55,7 @@ function createQueryStr(queryObject, operationType) {
 
   // create final query string
   const queryStr = openCurly + mainStr + ' ' + closeCurly;
+
   // if operation type supplied, place in front of queryString, otherwise just pass queryStr
   return operationType ? operationType + ' ' + queryStr : queryStr;
 };
