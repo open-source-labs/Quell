@@ -21,13 +21,9 @@ Side effects
   @prototype - object representation of the input query with each field updated, whether it was found in cache (true) or not (false)
 ----
 */
-function buildFromCache(
-  prototype,
-  prototypeKeys,
-  itemFromCache = {},
-  firstRun = true,
-  subID
-) {
+
+function buildFromCache(prototype, prototypeKeys, itemFromCache = {}, firstRun = true, subID) {
+  
   for (let typeKey in prototype) {
     // check if typeKey is a rootQuery (i.e. if it is a type on the prototype object) or if its a field nested in a query
     if (prototypeKeys.includes(typeKey)) {
@@ -49,42 +45,29 @@ function buildFromCache(
           const interimCache = JSON.parse(cacheResponse);
           for (const property in prototype[typeKey]) {
             if (
-              interimCache.hasOwnProperty(property) &&
-              !property.includes('__')
+              interimCache.hasOwnProperty(property)
+              && !property.includes('__')
             ) {
-              tempObj[property] = interimCache[property];
-            } else if (
-              !property.includes('__') &&
-              typeof prototype[typeKey][property] == 'object'
-            ) {
+              tempObj[property] = interimCache[property]
+            } else if (!property.includes('__') && typeof prototype[typeKey][property] == 'object') {
               // if the property in prototpye is a nested object and is not a property with __, then recurse
-              const tempData = buildFromCache(
-                prototype[typeKey][property],
-                prototypeKeys,
-                {},
-                false,
-                `${currTypeKey}--${property}`
-              );
+              const tempData = buildFromCache(prototype[typeKey][property], prototypeKeys, {}, false, `${currTypeKey}--${property}`);
               tempObj[property] = tempData.data;
-            } else if (
-              !property.includes('__') &&
-              typeof prototype[typeKey][property] !== 'object'
-            ) {
+            }
+            else if (!property.includes('__') && typeof prototype[typeKey][property] !== 'object') {
               // if interimCache does not have property, set to false on prototype so it is fetched
               prototype[typeKey][property] = false;
             }
           }
           itemFromCache[typeKey][i] = tempObj;
-        } else {
+        }
+        else {
           for (const property in prototype[typeKey]) {
             // if interimCache has the property
-            if (
-              !property.includes('__') &&
-              typeof prototype[typeKey][property] !== 'object'
-            ) {
+            if (!property.includes('__') && typeof prototype[typeKey][property] !== 'object') {
               // if interimCache does not have property, set to false on prototype so it is fetched
               prototype[typeKey][property] = false;
-            }
+            } 
           }
         }
       }
@@ -92,33 +75,26 @@ function buildFromCache(
     // if itemFromCache is empty, then check the cache for data, else, persist itemFromCache
     // if this iteration is a nested query (i.e. if typeKey is a field in the query)
     else if (firstRun === false) {
+
       // if this field is NOT in the cache, then set this field's value to false
       if (
-        (itemFromCache === null || !itemFromCache.hasOwnProperty(typeKey)) &&
-        typeof prototype[typeKey] !== 'object' &&
-        !typeKey.includes('__')
-      ) {
-        prototype[typeKey] = false;
-      }
+        (itemFromCache === null || !itemFromCache.hasOwnProperty(typeKey)) && 
+        typeof prototype[typeKey] !== 'object' && !typeKey.includes('__')) {
+          prototype[typeKey] = false; 
+      } 
       // if this field is a nested query, then recurse the buildFromCache function and iterate through the nested query
       if (
-        // change: removed the first 2 rules of logic
-        // (itemFromCache === null || itemFromCache.hasOwnProperty(typeKey)) &&
+        // change: removed the first 2 rules of logic 
+        // (itemFromCache === null || itemFromCache.hasOwnProperty(typeKey)) && 
         !typeKey.includes('__') && // do not iterate through __args or __alias
-        typeof prototype[typeKey] === 'object'
-      ) {
-        // change: making another call to the cache? WHy?
+        typeof prototype[typeKey] === 'object') {
+          // change: making another call to the cache? WHy?
         const cacheID = generateCacheID(prototype);
-        const cacheResponse = sessionStorage.getItem(cacheID);
-        if (cacheResponse) itemFromCache[typeKey] = JSON.parse(cacheResponse);
-        // repeat function inside of the nested query
-        buildFromCache(
-          prototype[typeKey],
-          prototypeKeys,
-          itemFromCache[typeKey] || {},
-          false
-        );
-      }
+          const cacheResponse = sessionStorage.getItem(cacheID)
+          if (cacheResponse) itemFromCache[typeKey] = JSON.parse(cacheResponse);
+          // repeat function inside of the nested query
+        buildFromCache(prototype[typeKey], prototypeKeys, itemFromCache[typeKey] || {}, false);
+      } 
     }
     // if the current element is not a nested query, then iterate through every field on the typeKey
     else {
@@ -128,47 +104,36 @@ function buildFromCache(
         if (
           // if field is not found in cache then toggle to false
           itemFromCache[typeKey] &&
-          !itemFromCache[typeKey].hasOwnProperty(field) &&
-          !field.includes('__') && // ignore __alias and __args
-          typeof prototype[typeKey][field] !== 'object'
-        ) {
-          prototype[typeKey][field] = false;
+          !itemFromCache[typeKey].hasOwnProperty(field) && 
+          !field.includes("__") && // ignore __alias and __args
+          typeof prototype[typeKey][field] !== 'object') {
+            prototype[typeKey][field] = false; 
         }
-
-        if (
+        
+        if ( 
           // if field contains a nested query, then recurse the function and iterate through the nested query
           // change remove requirement that itemFromCache has own property tpyekey
-          !field.includes('__') &&
-          typeof prototype[typeKey][field] === 'object'
-        ) {
-          // change: pass and empty object instead of itemFromCache
-          buildFromCache(
-            prototype[typeKey][field],
-            prototypeKeys,
-            itemFromCache[typeKey][field] || {},
-            false
-          );
-        } else if (
-          !itemFromCache[typeKey] &&
-          !field.includes('__') &&
-          typeof prototype[typeKey][field] !== 'object'
-        ) {
-          // then toggle to false
-          prototype[typeKey][field] = false;
-        }
-      }
+          !field.includes('__') && 
+          typeof prototype[typeKey][field] === 'object') {
+            // change: pass and empty object instead of itemFromCache
+          buildFromCache(prototype[typeKey][field], prototypeKeys, itemFromCache[typeKey][field] || {}, false);
+          }
+        else if (!itemFromCache[typeKey] && !field.includes('__') && typeof prototype[typeKey][field] !== 'object') {
+            // then toggle to false
+            prototype[typeKey][field] = false;
+          } 
+      }  
     }
   }
   // assign the value of an object with a key of data and a value of itemFromCache and return
-  return { data: itemFromCache };
+  return { data: itemFromCache }
 }
 
 // helper function to take in queryProto and generate a cacheID from it
 function generateCacheID(queryProto) {
+
   // if ID field exists, set cache ID to 'fieldType--ID', otherwise just use fieldType
-  const cacheID = queryProto.__id
-    ? `${queryProto.__type}--${queryProto.__id}`
-    : queryProto.__type;
+  const cacheID = queryProto.__id ? `${queryProto.__type}--${queryProto.__id}` : queryProto.__type;
 
   return cacheID;
 }
