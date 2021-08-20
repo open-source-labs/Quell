@@ -36,7 +36,7 @@ const nayan = {
   name: 'Nayan Parmar',
   src: Nayan,
   bio:
-    'Nayan is a full-stack software engineer specializing in React, Express, relational database, testing framework, with a passion for achieving code stability and consistency through test-driven development. He has strong interests in testing framework and codebase modularization to improve codebase readability. In his free time, Nayan goes to basketball stadium or football stadium to watch local franchise teams\' sports game.',
+    'Nayan is a full-stack software engineer specializing in React, Express, relational database, with a passion for contributing to open-source code. He has strong interest in performance optimization and front-end tech. In his free time, Nayan enjoys watching a variety of movies, and always try to find interesting books to read.',
   linkedin: 'https://www.linkedin.com/in/nparmar1/',
   github: 'https://github.com/nparmar1',
 };
@@ -45,7 +45,7 @@ const tash = {
   name: 'Tashrif Sanil',
   src: Tash,
   bio:
-    'Tash is a back-end software engineer specializing in Node.js, Express, relational databases, Redis, graphQL, with a passion for performance improvement, code optimization, and cache invalidation. He is committed to implementing extensive cache invalidation for Quell to boost performance, server-traffic, and data request/response process in order to serve more clients. In his free time, he likes to visit local food restaurants with diverse cuisine.',
+    'Tash is a full-stack software engineer specializing in Node.js, C++, Redis, GraphQL, with a passion for performance optimization. His goal with Quell is to improve server side cache retrieval response time and cache invalidation. In his free time, he likes to practice latte art.',
   linkedin: 'https://www.linkedin.com/in/tashrif-sanil-5a499415b/',
   github: 'https://github.com/tashrifsanil',
 };
@@ -54,7 +54,7 @@ const tim = {
   name: 'Tim Frenzel',
   src: Tim,
   bio:
-    'Tim is a database engineer specializing in relational databases, non-relational databases, Redis with a passion for data analysis. His goal with Quell is to improve database request/response processes to improve performance. Outside of engineering time, Tim enjoys photoshopping memes related to computer science, visiting different cities, and enjoys casino in Las Vegas.',
+    'Tim is a passionate database and system engineer with a strong desire to learn and work on scalable and non-linear systems that ultimately allow him to take deeper dives into data analytics. Hence, he focused primarily on performance questions like caching strategies, batching, and in-memory databases. Outside of engineering time, Tim is working on his meme mastery, travels across the globe, and develops investment algos.',
   linkedin: 'https://www.linkedin.com/in/tim-frenzel-mba-cfa-frm-61a35499/',
   github: 'https://github.com/TimFrenzel',
 };
