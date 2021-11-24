@@ -1,0 +1,18 @@
+html {
+  size: 12px;
+  background-color: #222;
+}
+.main_body {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+}
+
+button {
+  margin: 3px;
+  border-radius: 10px;
+  height: 25px;
+  width: auto;
+  color: white;
+  background-color: #151515;
+}

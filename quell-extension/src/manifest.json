@@ -1,0 +1,22 @@
+{
+  "name": "Quell",
+  "version": "0.0.1",
+  "description": "Quell extension tab",
+  "devtools_page": "devtools.html",
+  "background": {
+      "scripts": [
+          "background.js"
+      ]
+  },
+  "content_scripts": [
+  {
+    "css": ["styles.css"]
+  }
+  ],
+  "permissions": [
+      "tabs", 
+      "http://*/*",
+      "https://*/*"
+  ],
+  "manifest_version": 2
+}
