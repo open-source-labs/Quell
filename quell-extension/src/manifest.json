@@ -1,22 +1,9 @@
 {
-  "name": "Quell",
+  "manifest_version": 3,
+  "name": "Quell devtools extension",
   "version": "0.0.1",
-  "description": "Quell extension tab",
-  "devtools_page": "devtools.html",
   "background": {
-      "scripts": [
-          "background.js"
-      ]
+    "service_worker": "background.bundle.js"
   },
-  "content_scripts": [
-  {
-    "css": ["styles.css"]
-  }
-  ],
-  "permissions": [
-      "tabs", 
-      "http://*/*",
-      "https://*/*"
-  ],
-  "manifest_version": 2
+  "devtools_page": "devtools.html"
 }
