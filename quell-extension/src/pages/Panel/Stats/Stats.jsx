@@ -5,6 +5,6 @@ const Stats = (props) => {
   return (
     <div>Stats.jsx</div>
   );
-}
+};
 
 export default Stats;
