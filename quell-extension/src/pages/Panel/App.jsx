@@ -12,8 +12,8 @@ const App = () =>  {
 
   return (
     <div className="panel">
-      <button id="client-side" onClick={() => setOrigin(!dataOrigin)}>Client</button>
-      <button id="server-side" onClick={() => setOrigin(!dataOrigin)}>Server</button>
+      <button id="client-side" onClick={() => setOrigin(true)}>Client</button>
+      <button id="server-side" onClick={() => setOrigin(false)}>Server</button>
       <div className="main_container">
         <div className="query_input segmented_wrapper">
           {dataOrigin ? <Client /> : <Server />}
