@@ -40,7 +40,6 @@ module.exports = {
     ]
   },
   plugins: [
-    new MiniCssExtractPlugin,
     new CopyWebpackPlugin({
       patterns: [
         {
