@@ -1,13 +1,15 @@
 const path = require('path');
-const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 const CopyWebpackPlugin = require('copy-webpack-plugin');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 
 module.exports = {
   entry: {    
-    background: './src/pages/Background/index.js',
-    devtools: './src/pages/Devtools/index.js',
-    panel: '/src/pages/Panel/index.jsx',
+    background: './src/pages/Background/index.tsx',
+    devtools: './src/pages/Devtools/index.tsx',
+    panel: '/src/pages/Panel/index.tsx',
+  },
+  resolve: {
+    extensions: ['.tsx', '.ts', '.jsx', '.js', '.css', '.scss'],
   },
   output: {
     path: path.join(__dirname, '/dist'),
@@ -15,7 +17,7 @@ module.exports = {
     clean: true,
   },
   devServer: {
-    port: 3000,
+    port: 3030,
     static: {
       directory: path.join(__dirname, 'src', 'pages', 'Panel'),
     }
@@ -23,16 +25,17 @@ module.exports = {
   module: {
     rules: [
       {
-        test: /\.(js|jsx)$/,
+        test: /\.(js|ts)x?$/,
         exclude: /node_modules/,
         use: {
           loader: 'babel-loader',
         }
       },
       {
-        test: /\.scss$/,
+        test: /\.(css|scss)$/,
         use: [
           'style-loader',
+          'css-modules-typescript-loader',
           'css-loader',
           'sass-loader',
         ]
