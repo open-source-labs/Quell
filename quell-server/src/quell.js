@@ -18,6 +18,7 @@ class QuellCache {
     this.query = this.query.bind(this);
     this.clearCache = this.clearCache.bind(this);
     this.buildFromCache = this.buildFromCache.bind(this);
+    this.memStats = this.memStats.bind(this);
     this.generateCacheID = this.generateCacheID.bind(this);
     this.updateCacheByMutation = this.updateCacheByMutation.bind(this);
     this.deleteCacheById = this.deleteCacheById.bind(this);
@@ -205,7 +206,6 @@ class QuellCache {
      * https://graphql.org/graphql-js/language/#visit
      */
     visit(AST, {
-      //enter is the function called upon arrival to the node
       enter(node) {
         //cannot cache directives, return as unquellable
         if (node.directives) {
@@ -215,14 +215,9 @@ class QuellCache {
           }
         }
       },
-      //alternatively to enter and leave functions, visitor can provide functions named the same as the kinds of AST nodes
-
-      //in this case, operationDefinition is a method triggered immediately to determine the type of operation being requested
       OperationDefinition(node) {
-        
         targetObj = proto;
         //cannot cache subscriptions or mutations, return as unquellable
-        
         operationType = node.operation;
         if (node.operation === 'subscription') {
           operationType = 'unQuellable';
@@ -230,11 +225,6 @@ class QuellCache {
         }
       },
       // set-up for fragment definition traversal
-      /*
-      Fragments are a concept frequently used to split complicated application data requirements into smaller chunks, especially when you need to combine lots of UI components with different fragments into one initial data fetch
-       */
-      //this is a named visitor that will trigger upon entering and leaving any node
-
       FragmentDefinition: {
         enter(node) {
           // update stack for path tracking
@@ -485,7 +475,61 @@ class QuellCache {
       );
     });
   }
+   /**
+   * memStats sends a command to the Redis cache 
+   * the returned string needs to be parsed with the following fields withdrawn:
+   *  1) "peak.allocated in bytes 1245584
+      2) "total.allocated" in bytes 1155392
+      3) "startup.allocated" in bytes 1011840
+      4) "keys.count" 90
+      5) "keys.bytes-per-key" 1595
+      6)"dataset.bytes" 65984
+      7) "dataset.percentage" "45.965225219726562 out of net memory usage
+      8) "peak.percentage" "92.759056091308594" out of total
+   *  command = '*2\r\n$6\r\nMEMORY\r\n$5\r\nSTATS\r\n';
+   */
+  memStats(req, res, next){
 
+    const getStatsFromRedis = async () => {
+      const data = await this.redisCache.info();
+      const output = {};
+      const dataLines = data.split('\r\n');
+      //total allocated memory 
+      output.totalAllocMem = dataLines.find(line => line.match(/used_memory_human/)).split(':')[1];
+      //peak memory consumed 
+      output.peakMem = dataLines.find(line => line.match(/used_memory_peak_human/)).split(':')[1];
+      // % of peak out of total
+      output.peakMemPerc = dataLines.find(line => line.match(/used_memory_peak_perc/)).split(':')[1];
+      //initial amount of memory consumed at startup 
+      output.startupMem = dataLines.find(line => line.match(/used_memory_startup/)).split(':')[1];
+      //size of dataset 
+      output.datasetMem = dataLines.find(line => line.match(/used_memory_dataset/)).split(':')[1]; 
+      //percent of data out of net mem usage
+      output.datasetMemPerc = dataLines.find(line => line.match(/used_memory_dataset_perc/)).split(':')[1]; 
+      //total system memory 
+      output.totalSysMem = dataLines.find(line => line.match(/total_system_memory_human/)).split(':')[1]; 
+      //total number of keys being tracked
+      output.trackedKeys = dataLines.find(line => line.match(/tracking_total_keys/)).split(':')[1]; 
+      //total number of items being tracked(sum of clients number for each key)
+      output.trackedItems = dataLines.find(line => line.match(/tracking_total_items/)).split(':')[1]; 
+      //total number of read events processed
+      output.readsProcessed = dataLines.find(line => line.match(/total_reads_processed/)).split(':')[1]; 
+      //total number of write events processed
+      output.writesProcessed = dataLines.find(line => line.match(/total_writes_processed/)).split(':')[1]; 
+      //total number of connections accepted by server
+      output.totalConnects = dataLines.find(line => line.match(/total_connections_received/)).split(':')[1]; 
+      //total number of bytes read from network
+      output.netInputBytes = dataLines.find(line => line.match(/total_net_input_bytes/)).split(':')[1];
+      //total number of bytes written to network
+      output.netOutputBytes = dataLines.find(line => line.match(/total_net_output_bytes/)).split(':')[1];
+
+      res.locals.output = output;
+      console.log(output)
+    }
+    getStatsFromRedis();
+
+    next();
+  }
   /**
    *  getMutationMap generates a map of mutation to GraphQL object types. This mapping is used
    *  to identify references to cached data when mutation occurs.
