@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
+import Button from '@mui/material/Button';
 
 const Server = (props) => {
   return (
-    <button>submit</button>
+    <Button>Submit Query</Button>
   );
 };
 

@@ -3,7 +3,7 @@ const CopyWebpackPlugin = require('copy-webpack-plugin');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 
 module.exports = {
-  entry: {    
+  entry: {
     background: './src/pages/Background/index.tsx',
     devtools: './src/pages/Devtools/index.tsx',
     panel: '/src/pages/Panel/index.tsx',
@@ -20,16 +20,31 @@ module.exports = {
     port: 3030,
     static: {
       directory: path.join(__dirname, 'src', 'pages', 'Panel'),
-    }
+    },
+    proxy: {
+      '/graphql': {
+        target: 'http://localhost:3000',
+        secure: false,
+      },
+      '/clearCache': {
+        target: 'http://localhost:3000',
+        secure: false,
+      },
+    },
   },
   module: {
     rules: [
+      {
+        test: /\.js$/,
+        enforce: 'pre',
+        use: ['source-map-loader'],
+      },
       {
         test: /\.(js|ts)x?$/,
         exclude: /node_modules/,
         use: {
           loader: 'babel-loader',
-        }
+        },
       },
       {
         test: /\.(css|scss)$/,
@@ -38,9 +53,15 @@ module.exports = {
           'css-modules-typescript-loader',
           'css-loader',
           'sass-loader',
-        ]
+        ],
+      },
+      {
+        test: /\.(jpg|png)$/,
+        use: {
+          loader: 'url-loader',
+        }
       }
-    ]
+    ],
   },
   plugins: [
     new CopyWebpackPlugin({
@@ -60,6 +81,11 @@ module.exports = {
             );
           },
         },
+        {
+          from: 'src/pages/Panel/assets',
+          to: path.join(__dirname, './dist/assets'),
+          force: true
+        }
       ],
     }),
     new HtmlWebpackPlugin({

@@ -1,3 +1,4 @@
+// Leave this alone - simply to create a tab in Chrome DevTools
 
 chrome.devtools.panels.create(
   'Quell', //input dev tool name
