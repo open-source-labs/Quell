@@ -205,6 +205,7 @@ class QuellCache {
      * https://graphql.org/graphql-js/language/#visit
      */
     visit(AST, {
+      //enter is the function called upon arrival to the node
       enter(node) {
         //cannot cache directives, return as unquellable
         if (node.directives) {
@@ -214,9 +215,14 @@ class QuellCache {
           }
         }
       },
+      //alternatively to enter and leave functions, visitor can provide functions named the same as the kinds of AST nodes
+
+      //in this case, operationDefinition is a method triggered immediately to determine the type of operation being requested
       OperationDefinition(node) {
+        
         targetObj = proto;
         //cannot cache subscriptions or mutations, return as unquellable
+        
         operationType = node.operation;
         if (node.operation === 'subscription') {
           operationType = 'unQuellable';
@@ -224,6 +230,11 @@ class QuellCache {
         }
       },
       // set-up for fragment definition traversal
+      /*
+      Fragments are a concept frequently used to split complicated application data requirements into smaller chunks, especially when you need to combine lots of UI components with different fragments into one initial data fetch
+       */
+      //this is a named visitor that will trigger upon entering and leaving any node
+
       FragmentDefinition: {
         enter(node) {
           // update stack for path tracking

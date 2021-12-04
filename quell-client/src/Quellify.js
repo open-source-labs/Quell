@@ -105,7 +105,7 @@ async function Quellify(
 
     //if the mutationQuery is not coming from demo, mutation Query can be created using the code below
     //let mutationQuery = createMutationStr(proto);
-    // create mutation object using mutationMap and proto cretaed from parseAST;
+    // create mutation object using mutationMap and proto created from parseAST;
     isMutation = true;
     let mutationObject;
     for (let mutation in mutationMap) {
