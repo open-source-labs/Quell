@@ -1,0 +1,57 @@
+@import url('https://fonts.googleapis.com/css?family=Roboto:300,400,500,700&display=swap');
+
+.main_container {
+  display: grid;
+  grid-template-columns: 25% 45% 30%;
+  grid-gap: 0px;
+  margin-top: 5px;
+}
+
+.segmented_wrapper {
+  align-content: center;
+  width: 99%;
+  height: 400px;
+  border: 1px solid rgb(104, 107, 112);
+  padding: 3px;
+}
+
+.inputBox {
+  display: grid;
+  width: 100%;
+  min-height: 200px;
+  border: 1px solid rgb(104, 107, 112);
+  }
+
+.button_grid {
+  display: grid;
+  justify-content: center;
+  align-content: center;
+  padding: 0.5rem;
+  grid-gap: 0.5rem;
+  grid-template-columns: 50% 50%; 
+}
+
+#editor {
+  border: 1px solid rgb(104, 107, 112);
+}
+
+
+.query_input .CodeMirror {
+  max-height: 175px;
+  width: calc(100% - 3px);
+  border: 1px solid rgb(104, 107, 112);
+}
+
+.query_output .CodeMirror {
+  height: 370px;
+  max-height: 370px;
+  width: calc(100% - 3px);
+  border: 1px solid rgb(104, 107, 112);
+}
+
+#settings_form {
+  display: grid;
+  justify-content: center;
+  align-content: center;
+  grid-template-columns: 50% 50%;
+}
