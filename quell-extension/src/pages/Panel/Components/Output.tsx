@@ -19,7 +19,10 @@ const Output = ({results}) => {
   return(
     <CodeMirror
       value={output}
+<<<<<<< HEAD
+=======
       height='auto'
+>>>>>>> origin/dev
       options={{
         theme: 'material-darker',
         lineNumbers: false,

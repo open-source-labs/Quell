@@ -39,9 +39,14 @@
     "css-loader": "^5.0.1",
     "css-modules-typescript-loader": "^4.0.1",
     "file-loader": "^6.2.0",
+    "fs": "^0.0.1-security",
     "graphql": "^16.0.1",
     "html-webpack-plugin": "^5.5.0",
     "react-codemirror2": "^6.0.1",
+<<<<<<< HEAD
+    "react-table": "^7.7.0",
+=======
+>>>>>>> origin/dev
     "react-trend": "^1.2.5",
     "sass": "^1.32.6",
     "sass-loader": "^10.1.1",
