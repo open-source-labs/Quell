@@ -1,6 +1,6 @@
 const express = require('express');
-const path = require('path');
 const schema = require('./schema/schema');
+const path = require('path');
 const graphqlNodeModule =
   process.env.NODE_ENV === 'development'
     ? '../../quell-server/src/quell'

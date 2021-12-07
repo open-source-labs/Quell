@@ -1,5 +1,12 @@
 @import url('https://fonts.googleapis.com/css?family=Roboto:300,400,500,700&display=swap');
 
+<<<<<<< HEAD
+=======
+h6 {
+  font-weight: 300;
+}
+
+>>>>>>> origin/dev
 .panel {
   font-size: small;
   display: flex;
@@ -21,7 +28,10 @@
   // border: 1px solid rgb(104, 107, 112);
   padding: 5px;
   overflow-y: scroll;
+<<<<<<< HEAD
   color: white;
+=======
+>>>>>>> origin/dev
 
   &::-webkit-scrollbar {
     display: none;
@@ -44,6 +54,7 @@
   grid-template-columns: 50% 50%; 
 }
 
+<<<<<<< HEAD
 .CodeMirror {
   border: 1px solid rgb(85, 84, 84);
 }
@@ -51,11 +62,49 @@
 .query_input .CodeMirror {
   height: 285px;
   min-width: 400px;
+=======
+#navbar {
+  height: 25px;
+  align-self: flex-start;
+  display: flex;
+  flex-direction: row;
+  margin-bottom: 3px;
+  margin-left: 40px;
+}
+
+#logo {
+  // padding-left: 30px;
+  padding-right: 40px;
+  justify-self: flex-start;
+  padding-top: 10px;
+}
+
+#logo-img {
+  height: 35px;
+}
+
+#editor {
+  border: 1px solid rgb(104, 107, 112);
+}
+
+.CodeMirror {
+  border: 1px solid rgb(85, 84, 84);
+}
+
+.query_input .CodeMirror {
+  height: 300px;
+>>>>>>> origin/dev
   width: calc(100% - 0px);
 }
 
 .query_output .CodeMirror {
+<<<<<<< HEAD
   height: 370px;
+=======
+  height: 335px;
+  // max-height: 370px;
+  width: calc(100% - 0px);
+>>>>>>> origin/dev
 }
 
 #settings_form {
@@ -63,7 +112,10 @@
   justify-content: center;
   align-content: center;
   grid-template-columns: 50% 50%;
+<<<<<<< HEAD
   color: white;
+=======
+>>>>>>> origin/dev
 }
 
 #metrics-container {
@@ -74,6 +126,7 @@
   justify-content: space-between;
 }
 
+<<<<<<< HEAD
 
 /** overhaul **/
 #navbar {
@@ -307,3 +360,8 @@ tr:hover {
   display:grid;
   grid-template-columns: 50% 50%;
 }
+=======
+#speed-graph {
+  min-height: 200px;
+}
+>>>>>>> origin/dev
