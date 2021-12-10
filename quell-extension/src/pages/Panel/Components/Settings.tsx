@@ -58,15 +58,6 @@ const Settings = ({
             <div className="settingInputsDesc">HTTP address of Redis DB for server-side Quell caching</div>
             {inputArea('Clear Cache Router', setClearCacheRoute, clearCacheRoute)}
             <div className="settingInputsDesc">Endpoint for clearing server-side cache</div>
-            <div id="client_Address">
-              Client Address
-              <br/>
-              <input 
-                className="settingInputs"
-                onChange={(e) => setClientAddress(e.target.value)}
-                value="http://localhost:8080/"
-              />            
-            </div>
           </form>
       </div>
 

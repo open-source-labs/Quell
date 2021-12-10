@@ -158,30 +158,6 @@ const RequestDetails = ({ clickedRowData } = props) => {
   );
 };
 
-const GenNetworkReqTable = ({
-  clientRequests,
-  setClickedRowData,
-  setActiveRow,
-  activeRow
-} = props) => {
-  const queryArr:string[] = ['Query type'];
-  const urlArr:string[] = ['URL'];
-  const statusArr:string[] = ['Status'];
-  const sizeArr:string[] = ['Size (kB)'];
-  const timeArr:string[] = ['Time (ms)'];
-  
-  for(let key in clientRequests) {
-     queryArr.push(Object.keys(JSON.parse(clientRequests[key].request.postData.text)).toString());
-     urlArr.push(clientRequests[key].request.url);
-     statusArr.push(clientRequests[key].response.status);
-     sizeArr.push((clientRequests[key].response.content.size/1000).toFixed(2));
-     timeArr.push(clientRequests[key].time.toFixed(2));
-  }
-
-
-
-}
-
 const NetworkRequestTable = ({
   clientRequests,
   setClickedRowData,

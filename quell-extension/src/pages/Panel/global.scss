@@ -1,10 +1,14 @@
-@import url('https://fonts.googleapis.com/css?family=Roboto:300,400,500,700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100;0,300;1,100;1,300&display=swap');
 
 /******* Global CSS for extension *******/
 html {
   background-color: #222;
-  font-family: Roboto;
+  font-family: 'Roboto', sans-serif;
   color: #ddd;
+}
+ 
+p { 
+  font-size: 0.8rem;
 }
 
 // gives border to codemirror editors
@@ -117,7 +121,6 @@ input:hover {
 }
 
 /******* CSS for NetworkTab *******/
-
 .networkTab {
   padding-left: 10px
 }
@@ -129,20 +132,112 @@ input:hover {
 }
 
 table {
-  margin-left:10px;
-  border: 1px solid #999;
+  font-size: 0.8rem;
   padding: -10px;
-  min-height: 300px;
+}
+
+#network-request-table {
+  border: 1px solid #999;
+  margin-left: 10px;
+  height: 250px;
 }
 
 th {
-  border: 1px solid #999;
-  background-color: #989898;
-  max-height: 1rem;
+  background-color: #444;
+}
+
+td {
+  height: 10px;
+  padding: 3px 0 3px;
 }
 
 tr:hover {
   background-color: #444;
+}
+
+#dataTable_container {
+  display: flex;
+  flex-direction: column;
+}
+
+.headersBox {
+  height: 221px;
+  overflow: scroll;
+  margin: 0 10px 0 10px;
+  font: 0.8rem;
+}
+
+#queryExtras {
+  border: 1px solid #999;
+  padding: 2px;
+  width: 99%;
+}
+
+.networkNavBar {
+  height:25px;
+  background-color: #999;
+  display: flex;
+  justify-content: space-evenly;
+}
+
+.networkNavButton {
+  background-color: #222;
+  color: #999;
+  font-weight: bold;
+  width: 33.333%;
+  border: none;
+}
+
+.networkTitle {
+  font-size: 1.5rem;
+  font-weight: bolder;
+  border-width: 0 2px;
+  border-color: white;
+}
+
+.statsColumns {
+  display: grid;
+  grid-template-columns: 25% 25% 25% 25%;
+}
+
+.network_editor .CodeMirror {
+  height: 210px;
+  width: calc(100% - 2px);
+}
+
+
+
+/******* CSS for cache data page *******/
+// evenly splits grid in each sub-table for value pairs
+.subStats {
+  display:grid;
+  grid-template-columns: 66.666% 33.333%;
+  font-size: 0.8rem;
+}
+
+/******* For the entire extension *******/
+// padding for the sticky header
+.extensionTabs {
+  margin-top: 20px;
+}
+
+.Cache_Server {
+  display: grid;  
+  grid-template-columns: 500px 500px;
+  grid-gap: 10px;
+}
+
+// aligns selectable table to server cache table
+.cacheTables {
+  margin-top: -24px;
+}
+
+.cacheNavButton {
+  border: none;
+  width: 33.333%;
+  background-color: #222;
+  color: #ccc;
+  font-size: 1.2rem;
 }
 
 /******* CSS for SplitPane Resizer *******/
@@ -196,94 +291,4 @@ tr:hover {
 }
 .Resizer.disabled:hover {
   border-color: transparent;
-}
-
-/******* CSS for Network Page *******/
-
-#dataTable_container {
-  display: flex;
-  flex-direction: column;
-}
-
-.headersBox {
-  height: 269px;
-  overflow: scroll;
-  margin: 0 10px 0 10px;
-}
-
-#queryExtras {
-  border: 1px solid #999;
-  padding: 2px;
-  width: 99%;
-}
-
-.networkNavBar {
-  height:25px;
-  background-color: #999;
-  display: flex;
-  justify-content: space-evenly;
-}
-
-.networkNavButton {
-  background-color: #222;
-  color: #999;
-  font-weight: bold;
-  width: 33.333%;
-  border: none;
-}
-
-.networkTitle {
-  font-size: 1.5rem;
-  font-weight: bolder;
-  border-width: 0 2px;
-  border-color: white;
-}
-
-.statsColumns {
-  display: grid;
-  grid-template-columns: 25% 25% 25% 25%;
-}
-
-.network_editor .CodeMirror {
-  height: 266px;
-  width: 100%;
-}
-
-/******* CSS for cache data page *******/
-// general table column splitting - establishs 4 evenly title tabs
-.tableColumns{
-  display:grid;
-  grid-template-columns: 25% 25% 25% 25%;
-}
-
-// formatting for title bar
-.titleElements {
-  display: flex;
-  border: 1px solid #999;
-  font-size: 1.25rem;
-  font-weight: bolder;
-  padding: 3px 10px 3px 10px;
-}
-
-// establishing sub-tables under each title
-.table {
-  display: grid;
-  grid-template-columns: 25% 25% 25% 25%;
-}
-
-// evenly splits grid in each sub-table for value pairs
-.subStats {
-  display:grid;
-  grid-template-columns: 50% 50%;
-}
-
-/******* For the entire extension *******/
-// padding for the sticky header
-.extensionTabs {
-  margin-top: 20px;
-}
-
-.cacheStatTab {
-  display: grid;
-  grid-template-columns: 35% 35%;
 }
