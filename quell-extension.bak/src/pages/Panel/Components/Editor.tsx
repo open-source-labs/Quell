@@ -50,7 +50,6 @@ const Editor = (props) => {
       <CodeMirror
         value={defaultText}
         options={{ 
-          height: '285px',
           theme: 'material-darker',
           lineNumbers: true,
           mode: 'graphql',
@@ -69,9 +68,9 @@ const Editor = (props) => {
           props.setQueryString(value);
         }}
       />
-      <div style={{display:'flex', justifyContent: 'space-between',}}>
-        <button className="editorButtons" onClick={handleClickSubmit}>Submit Query</button>
-        <button className="editorButtons" onClick={handleClearCache}>Clear Cache</button>
+      <div style={{display: 'flex', justifyContent: 'space-between'}}>
+        <Button onClick={handleClickSubmit}>Submit Query</Button>
+        <Button onClick={handleClearCache}>Clear Cache</Button>
       </div>
     </React.Fragment>
   );
