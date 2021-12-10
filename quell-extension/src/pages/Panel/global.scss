@@ -1,85 +1,32 @@
 @import url('https://fonts.googleapis.com/css?family=Roboto:300,400,500,700&display=swap');
 
-.panel {
-  font-size: small;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
+/******* Global CSS for extension *******/
+html {
+  background-color: #222;
+  font-family: Roboto;
+  color: #ddd;
 }
 
-.main_container {
-  display: grid;
-  grid-template-columns: 25% 50% 25%;
-  grid-gap: 0px;
-  margin-top: 5px;
-}
-
-.segmented_wrapper {
-  align-content: center;
-  width: 100%;
-  height: 370px;
-  // border: 1px solid rgb(104, 107, 112);
-  padding: 5px;
-  overflow-y: scroll;
-  color: white;
-
-  &::-webkit-scrollbar {
-    display: none;
-  }
-}
-
-.inputBox {
-  display: grid;
-  width: 100%;
-  min-height: 200px;
-  // border: 1px solid rgb(104, 107, 112);
-  }
-
-.button_grid {
-  display: grid;
-  justify-content: center;
-  align-content: center;
-  padding: 0.5rem;
-  grid-gap: 0.5rem;
-  grid-template-columns: 50% 50%; 
-}
-
+// gives border to codemirror editors
 .CodeMirror {
   border: 1px solid rgb(85, 84, 84);
 }
 
-.query_input .CodeMirror {
-  height: 285px;
-  min-width: 400px;
-  width: calc(100% - 0px);
+button:hover {
+  background-color: #444;
 }
 
-.query_output .CodeMirror {
-  height: 370px;
+/******* CSS for Nav Bar *******/
+#logo-img {
+  padding-left:10px;
+  height: 10px;
+  width: auto;
 }
 
-#settings_form {
-  display: grid;
-  justify-content: center;
-  align-content: center;
-  grid-template-columns: 50% 50%;
-  color: white;
-}
-
-#metrics-container {
-  height: 335px;
-  width: 75vw;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-}
-
-
-/** overhaul **/
 #navbar {
   background-color: #222222;
   border-width: 0 0 2px;
-  border-color:rgb(104, 107, 112);
+  border-color:rgb(110, 110, 110);
   position: fixed;
   width: 100%;
   top: 0;
@@ -88,40 +35,41 @@
 
 .navbutton {
   background-color: #222222;
-  color: #999999;
+  color: #ccc;
   border: none;
   font-weight: bold;
   margin-left: 10px;
-
 }
 
-button:hover {
-  background-color: #444;
-}
-
-#logo-img {
-  padding-left:10px;
-  height: 10px;
-  width: auto;
-}
-
+/******* CSS for Query Tab *******/
+// splits editor area from Metrics
 .queryTab {
   display: grid;
   grid-template-columns: 75% 25%;
   grid-gap: 20px;
 }
 
-#metrics-container {
-  max-height: 100px;
+// limits height & width of the input editor
+.query_input_editor .CodeMirror {
+  height: 250px;
+  min-width: 400px;
 }
 
+// limits height of output editor to keep elements in line with input editor
+.query_output_editor .CodeMirror {
+  height: 272px;
+}
+
+// css for 'Submit Query' and 'Clear Cache'
 .editorButtons {
   background-color: #222222;
   border: none;
   color:#999;
-  padding: 3px 15px 3px 15px;
+  width: 50%;
+  padding: 3px 0 3px 0;
 }
 
+/******* CSS for Settigns Tab *******/
 .settingsTab {
   width:100%;
   display: grid;
@@ -129,11 +77,12 @@ button:hover {
   grid-gap:5px;
 }
 
+// sets up underline and input boxes for settings
 input {
   background-color: #2b2a2a;
   padding-left: 3px;
   color: #999;
-  width: 100%;
+  width: 98%;
   outline: 0;
   border-width: 0 0 2px;
   border-color: #999;
@@ -149,9 +98,10 @@ input:hover {
 }
 
 .configSettings {
+  font-size: 0.8rem;
   align-content: center;
   width: 100%;
-  height: 300px;
+  height: 200px;
   // border: 1px solid rgb(104, 107, 112);
   padding: 5px;
   overflow-y: scroll;
@@ -161,6 +111,12 @@ input:hover {
     display: none;
   }
 }
+
+.schema_editor .CodeMirror {
+  height: 210px;
+}
+
+/******* CSS for NetworkTab *******/
 
 .networkTab {
   padding-left: 10px
@@ -224,7 +180,7 @@ tr:hover {
 
 .Resizer.vertical {
   width: 11px;
-  height: 300px;
+  height: 272px;
   margin: 0 -5px;
   border-left: 5px solid rgba(255, 255, 255, 0);
   border-right: 5px solid rgba(255, 255, 255, 0);
@@ -268,16 +224,12 @@ tr:hover {
   justify-content: space-evenly;
 }
 
-.networkNavbutton {
-  background-color: #999;
-  color: white;
+.networkNavButton {
+  background-color: #222;
+  color: #999;
   font-weight: bold;
   width: 33.333%;
   border: none;
-}
-
-.networkNavbutton:hover {
-  background-color: #777;
 }
 
 .networkTitle {
@@ -287,11 +239,14 @@ tr:hover {
   border-color: white;
 }
 
-
 .statsColumns {
   display: grid;
   grid-template-columns: 25% 25% 25% 25%;
-  
+}
+
+.network_editor .CodeMirror {
+  height: 266px;
+  width: 100%;
 }
 
 /******* CSS for cache data page *******/
@@ -326,4 +281,9 @@ tr:hover {
 // padding for the sticky header
 .extensionTabs {
   margin-top: 20px;
+}
+
+.cacheStatTab {
+  display: grid;
+  grid-template-columns: 35% 35%;
 }
