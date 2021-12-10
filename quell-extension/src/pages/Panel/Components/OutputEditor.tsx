@@ -1,12 +1,12 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Controlled as CodeMirror } from 'react-codemirror2';
 import 'codemirror/lib/codemirror.css';
 import 'codemirror/theme/material-darker.css';
 import 'codemirror/theme/xq-light.css';
 import beautify from 'json-beautify';
 
-const Output = ({results}) => {
-  const [output, setOutput] = useState('')
+const OutputEditor = ({results}) => {
+  const [output, setOutput] = useState<string>('')
 
   useEffect(() => {
     if (Object.keys(results).length > 0) {
@@ -18,6 +18,7 @@ const Output = ({results}) => {
 
   return(
     <CodeMirror
+      className='query_output_editor'
       value={output}
       options={{
         theme: 'material-darker',
@@ -32,4 +33,4 @@ const Output = ({results}) => {
   );
 };
 
-export default Output;
+export default OutputEditor;

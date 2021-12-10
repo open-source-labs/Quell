@@ -9,12 +9,10 @@ import 'codemirror/addon/hint/show-hint';
 import 'codemirror-graphql/lint';
 import 'codemirror-graphql/hint';
 import 'codemirror-graphql/mode';
-import { validateSchema } from 'webpack';
-import Button from '@mui/material/Button';
 
-const Editor = (props) => {
-  const [defaultText, setText] = useState('# Enter GraphQL query here\n');
-  const [queryTimes, setQueryTimes] = useState([0]);
+const InputEditor = (props) => {
+  const [defaultText, setText] = useState<string>('# Enter GraphQL query here\n');
+  const [queryTimes, setQueryTimes] = useState<number[]>([0]);
 
   const handleClickSubmit = () => {
     let startT = performance.now();
@@ -48,9 +46,9 @@ const Editor = (props) => {
   return (
     <React.Fragment>
       <CodeMirror
+        className='query_input_editor'
         value={defaultText}
         options={{ 
-          height: '285px',
           theme: 'material-darker',
           lineNumbers: true,
           mode: 'graphql',
@@ -69,7 +67,7 @@ const Editor = (props) => {
           props.setQueryString(value);
         }}
       />
-      <div style={{display:'flex', justifyContent: 'space-between',}}>
+      <div style={{border: '1px solid #555', borderTop:'0px', display:'flex', justifyContent: 'space-between',}}>
         <button className="editorButtons" onClick={handleClickSubmit}>Submit Query</button>
         <button className="editorButtons" onClick={handleClearCache}>Clear Cache</button>
       </div>
@@ -77,4 +75,4 @@ const Editor = (props) => {
   );
 };
 
-export default Editor;
+export default InputEditor;

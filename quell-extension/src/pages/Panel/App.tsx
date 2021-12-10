@@ -1,16 +1,9 @@
-import React, { useState, useEffect, useRef } from 'react';
-import * as fs from 'fs';
-// Components for extension
-import Client from './Input/Client';
-import Output from './Components/Output';
-import CacheTable from './Components/CacheTable';
-import Metrics from './Components/Metrics';
-import Management from './Management/Management';
-import Editor from './Components/Editor';
-import Network from './Components/Network';
-import styles from './App.scss';
+import { useState, useEffect } from 'react';
+import PrimaryNavBar from './Components/PrimaryNavBar';
+import QueryTab from './Components/QueryTab';
+import CacheTab from './Components/CacheTab';
+import NetworkTab from './Components/NetworkTab';
 import Logo from './assets/Quell_full_size.png';
-import SplitPane from 'react-split-pane';
 
 // GraphQL
 import { getIntrospectionQuery, buildClientSchema } from 'graphql';
@@ -35,39 +28,25 @@ const App = () => {
     'http://localhost:6379'
   );
   const [clearCacheRoute, setClearCacheRoute] = useState<string>('/clearCache');
-  const [queryResponseTime, setQueryResponseTime] = useState<number[]>([]);
-  const [clientRequests, addClientRequests] = useState([]);
   // changes tab - defaults to query
-  const [tabName, setActiveTab] = useState<string>('query');
+  const [activeTab, setActiveTab] = useState<string>('query');
 
   // COMMENT OUT IF WORKING FROM DEV SERVER
-  useEffect(() => {
-    chrome.devtools.network.onRequestFinished.addListener(request => {
-      if (
-        request.request.url === `${clientAddress}${graphQLRoute.toLowerCase()}`
-      ) {
-        request.getContent(body => {
-          const responseData = JSON.parse(body);
-          request.responseData = responseData;
-          addClientRequests((prev) => prev.concat([request]));
-        })
-      }
-    });
-  }, []);
+  // useEffect(() => {
+  //   chrome.devtools.network.onRequestFinished.addListener(request => {
+  //     if (
+  //       request.request.url === `${clientAddress}${graphQLRoute.toLowerCase()}`
+  //     ) {
+  //       request.getContent(body => {
+  //         const responseData = JSON.parse(body);
+  //         request.responseData = responseData;
+  //         addClientRequests((prev) => prev.concat([request]));
+  //       })
+  //     }
+  //   });
+  // }, []);
 
-  const handleTabChange = (clickedTab: string) => {
-    setActiveTab(clickedTab);
-    console.log('clicked', clickedTab);
-  };
-
-  // grabbing the time to query results and rounding to two digits
-  const logNewTime = (recordedTime: number) => {
-    setQueryResponseTime(
-      queryResponseTime.concat(Number(recordedTime.toFixed(2)))
-    );
-  };
-
-  //
+   //
   useEffect(() => {
     const introspectionQuery = getIntrospectionQuery();
     const address = `${serverAddress}${graphQLRoute}`;
@@ -93,112 +72,58 @@ const App = () => {
 
   return (
     <div className="devtools">
-      <div id="navbar">
-        <img id="logo-img" src={Logo} alt="quell logo" />
 
-        <button
-          id="queryButton"
-          className="navbutton"
-          style={tabName === 'query' ? { backgroundColor: '#333' } : {}}
-          onClick={() => handleTabChange('query')}
-        >
-          Query
-        </button>
-
-        <button
-          id="networkButton"
-          className="navbutton"
-          style={tabName === 'network' ? { backgroundColor: '#333' } : {}}
-          onClick={() => handleTabChange('network')}
-        >
-          Network
-        </button>
-
-        <button
-          id="cacheButton"
-          className="navbutton"
-          style={tabName === 'cache' ? { backgroundColor: '#333' } : {}}
-          onClick={() => handleTabChange('cache')}
-        >
-          Cache
-        </button>
-
-        <button
-          id="settingsButton"
-          className="navbutton"
-          style={tabName === 'settings' ? { backgroundColor: '#333' } : {}}
-          onClick={() => handleTabChange('settings')}
-        >
-          Settings
-        </button>
-      </div>
+      <PrimaryNavBar 
+        activeTab={ activeTab }
+        setActiveTab={ setActiveTab }
+        Logo = { Logo }
+      />
 
       <div className='extensionTabs'>
-        {tabName === 'query' && 
-          <div className="queryTab">
-            <div id='queryLeft'>
-              <SplitPane style={{maxWidth:'75%'}} split="vertical" minSize={300} defaultSize={400}>
-                  <div className='queryInput resizable'>
-                    <Editor
-                      clientAddress={clientAddress}
-                      serverAddress={serverAddress}
-                      graphQLRoute={graphQLRoute}
-                      queryString={queryString}
-                      setQueryString={setQueryString}
-                      setResults={setResults}
-                      schema={schema}
-                      logNewTime={logNewTime}
-                      clearCacheRoute={clearCacheRoute}
-                    />
-                  </div>
-                
-                  <div className='queryResult resizable'>
-                    <Output results={results} />
-                  </div> 
-              </SplitPane>
-            </div>
-            <div id='metricsOutput' style={{maxHeight:'100px'}}>
-              <Metrics
-                fetchTime={queryResponseTime[queryResponseTime.length - 1]}
-                cacheStatus={'Yes'}
-                cacheClearStatus={'No'}
-                fetchTimeInt={queryResponseTime}
-              />
-            </div>
-          </div>
+        {activeTab === 'query' && 
+          < QueryTab
+            clientAddress={ clientAddress }
+            serverAddress={ serverAddress }
+            graphQLRoute={ graphQLRoute }
+            queryString={ queryString }
+            setQueryString={ setQueryString }
+            setResults={ setResults }
+            schema={ schema }
+            clearCacheRoute={ clearCacheRoute }
+            results={ results }
+          />
         }
           
-        {tabName === 'network' && 
-          <div className="networkTab">
-            <Network
-              graphQLRoute={graphQLRoute}
-              clientAddress={clientAddress}
-              clientRequests={clientRequests}
-            />
-          </div>
+        {activeTab === 'network' && 
+          <NetworkTab
+            graphQLRoute={ graphQLRoute }
+            clientAddress={ clientAddress }
+            // clientRequests={clientRequests}
+            clientRequests={ data }
+          />
         }
 
-        {tabName === 'cache' && 
+        {activeTab === 'cache' && 
           <div className="cacheTab">
-            <CacheTable />
+            <CacheTab />
           </div>
         }
 
-        {tabName === 'settings' &&  
+        {activeTab === 'settings' &&  
           <div className="settingsTab">
             <Settings 
-              graphQLRoute={graphQLRoute}
-              setGraphQLRoute={setGraphQLRoute}
-              clientAddress={clientAddress}
-              setClientAddress={setClientAddress}
-              serverAddress={serverAddress}
-              setServerAddress={setServerAddress}
-              redisAddress={redisAddress}
-              setRedisAddress={setRedisAddress}
-              schema={schema}
-              setSchema={setSchema}
-              clearCacheRoute={clearCacheRoute}
-              setClearCacheRoute={setClearCacheRoute}
+              graphQLRoute={ graphQLRoute }
+              setGraphQLRoute={ setGraphQLRoute }
+              clientAddress={ clientAddress }
+              setClientAddress={ setClientAddress }
+              serverAddress={ serverAddress }
+              setServerAddress={ setServerAddress }
+              redisAddress={ redisAddress }
+              setRedisAddress={ setRedisAddress }
+              schema={ schema }
+              setSchema={ setSchema }
+              clearCacheRoute={ clearCacheRoute }
+              setClearCacheRoute={ setClearCacheRoute }
             />
           </div>
         }

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo, cloneElement } from 'react';
-import { useRowState, useTable } from 'react-table';
+import { useTable } from 'react-table';
 import Metrics from './Metrics';
 import SplitPane from 'react-split-pane';
 import { Controlled as CodeMirror } from 'react-codemirror2';
@@ -13,18 +13,26 @@ import 'codemirror-graphql/lint';
 import 'codemirror-graphql/hint';
 import 'codemirror-graphql/mode';
 import beautify from 'json-beautify';
+import NavButton from './NavButton';
 
-const Network = ({ graphQLRoute, clientAddress, clientRequests } = props) => {
+const NetworkTab = ({ graphQLRoute, clientAddress, clientRequests } = props) => {
   const [clickedRowData, setClickedRowData] = useState({});
   const [activeRow, setActiveRow] = useState<number>(-1);
 
   useEffect(() => {
-    console.log('CRs: ', clientRequests);
+    console.log('request.postData.text: ', clientRequests[0].request.postData.text);
+    console.log('titles: ', typeof Object.keys(JSON.parse(clientRequests[0].request.postData.text)).toString());
+    console.log('titles: ', Object.keys(JSON.parse(clientRequests[0].request.postData.text)).toString());
+    console.log('URL: ', clientRequests[0].request.url);
+    console.log('status:', clientRequests[0].response.status);
+    console.log('size: ', (clientRequests[0].response.content.size / 1000).toFixed(2));
+    console.log("time: ", clientRequests[0].time.toFixed(2));
+
     console.log('Clicked Row Data: ', clickedRowData);
   }, [clientRequests, clickedRowData]);
 
   return (
-    <React.Fragment>
+    <div className='networkTab'>
       <div style={{ fontSize: '1.25rem', fontWeight: 'bolder' }}>
         Client Quell Requests
       </div>
@@ -40,6 +48,7 @@ const Network = ({ graphQLRoute, clientAddress, clientRequests } = props) => {
         >
           <div id="network-request-table">
             <NetworkRequestTable
+              className='networkTable'
               clientRequests={clientRequests}
               setClickedRowData={setClickedRowData}
               setActiveRow={setActiveRow}
@@ -53,7 +62,7 @@ const Network = ({ graphQLRoute, clientAddress, clientRequests } = props) => {
           ) : (
             <div
               id="network-request-metrics"
-              style={{ marginTop: '-9px', marginLeft: '20px' }}
+              style={{ marginTop: '-6px', marginLeft: '20px' }}
             >
               <Metrics
                 fetchTime={
@@ -71,7 +80,7 @@ const Network = ({ graphQLRoute, clientAddress, clientRequests } = props) => {
           )}
         </SplitPane>
       </div>
-    </React.Fragment>
+    </div>
   );
 };
 
@@ -81,32 +90,35 @@ const RequestDetails = ({ clickedRowData } = props) => {
     backgroundColor: '#444',
     color: '#bbb',
   };
+
   return (
     <div id="queryExtras">
       <div className="networkNavBar">
-        <button
-          className="networkNavbutton"
-          style={activeTab === 'request' ? activeStyle : {}}
-          onClick={() => setActiveTab('request')}
-        >
-          Request Headers
-        </button>
 
-        <button
-          className="networkNavbutton"
-          style={activeTab === 'response' ? activeStyle : {}}
-          onClick={() => setActiveTab('response')}
-        >
-          Response Headers
-        </button>
+        < NavButton 
+          text={'request'} 
+          activeTab={activeTab} 
+          setActiveTab={setActiveTab}
+          altText={'Request Headers'}
+          altClass={'networkNavButton'}
+        />
 
-        <button
-          className="networkNavbutton"
-          style={activeTab === 'table' ? activeStyle : {}}
-          onClick={() => setActiveTab('data')}
-        >
-          Response Data
-        </button>
+        < NavButton 
+          text={'response'} 
+          activeTab={activeTab} 
+          setActiveTab={setActiveTab}
+          altText={'Response Headers'}
+          altClass={'networkNavButton'}
+        />
+
+        < NavButton 
+          text={'data'} 
+          activeTab={activeTab} 
+          setActiveTab={setActiveTab}
+          altText={'Response Table'}
+          altClass={'networkNavButton'}
+        />
+
       </div>
       <div className="headersBox">
         {activeTab === 'request' && (
@@ -131,9 +143,8 @@ const RequestDetails = ({ clickedRowData } = props) => {
         )}
         {activeTab === 'data' && (
           <>
-            <div className="networkTitle">Response Data</div>
-            {/* {responseData} */}
             <CodeMirror
+              className='network_editor'
               value={beautify(clickedRowData.responseData, null, 2, 80)}
               options={{
                 theme: 'material-darker',
@@ -146,6 +157,30 @@ const RequestDetails = ({ clickedRowData } = props) => {
     </div>
   );
 };
+
+const GenNetworkReqTable = ({
+  clientRequests,
+  setClickedRowData,
+  setActiveRow,
+  activeRow
+} = props) => {
+  const queryArr:string[] = ['Query type'];
+  const urlArr:string[] = ['URL'];
+  const statusArr:string[] = ['Status'];
+  const sizeArr:string[] = ['Size (kB)'];
+  const timeArr:string[] = ['Time (ms)'];
+  
+  for(let key in clientRequests) {
+     queryArr.push(Object.keys(JSON.parse(clientRequests[key].request.postData.text)).toString());
+     urlArr.push(clientRequests[key].request.url);
+     statusArr.push(clientRequests[key].response.status);
+     sizeArr.push((clientRequests[key].response.content.size/1000).toFixed(2));
+     timeArr.push(clientRequests[key].time.toFixed(2));
+  }
+
+
+
+}
 
 const NetworkRequestTable = ({
   clientRequests,
@@ -249,4 +284,4 @@ const NetworkRequestTable = ({
   );
 };
 
-export default Network;
+export default NetworkTab;
