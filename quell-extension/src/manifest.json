@@ -1,9 +1,0 @@
-{
-  "manifest_version": 3,
-  "name": "Quell devtools extension",
-  "version": "0.0.1",
-  "background": {
-    "service_worker": "background.bundle.js"
-  },
-  "devtools_page": "devtools.html"
-}
