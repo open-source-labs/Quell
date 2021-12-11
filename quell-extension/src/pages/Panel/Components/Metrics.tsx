@@ -20,7 +20,7 @@ const Metrics = (props) => {
         <h3>Speed Graph:</h3>
         <Trend
           height = {105}
-          width={190}
+          width={200}
           className="trend"
           data={fetchTimeInt}
           gradient={['#1feaea','#ffd200', '#f72047']}
