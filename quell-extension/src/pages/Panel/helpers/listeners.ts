@@ -1,5 +1,3 @@
-import { CardHeaderPropsWithComponent } from "@material-ui/core"
-
 export const handleRequestFinished = (
   callback: (e: chrome.devtools.network.Request) => void
 ) => {

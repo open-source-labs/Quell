@@ -15,7 +15,7 @@ export const parseGqlQuery = (
     const queryString = getQueryString(request);
     const parsedQuery = gql`
       ${queryString}
-    `
+    `;
     return parsedQuery;
   } catch (err) {
     console.log('Request does not contain a valid GraphQL query');
@@ -25,10 +25,11 @@ export const parseGqlQuery = (
 
 export const getOperationNames = (
   request: chrome.devtools.network.Request
-): string => {
+): any => {
+  const operationNames = new Set();
   const parsedQuery = parseGqlQuery(request);
-  const operationNames = parsedQuery.definitions
-    .filter(definition => definition.kind === 'OperationDefinition')
-    .map(operationType => operationType.operation)
-  return operationNames.join(', ');
+  parsedQuery.definitions
+    .filter((definition) => definition.kind === 'OperationDefinition')
+    .forEach((op) => operationNames.add(op.operation));
+  return [...operationNames].join(', ')
 };

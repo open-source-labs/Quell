@@ -106,7 +106,7 @@ const RequestDetails = ({ clickedRowData } = props) => {
           text={'data'} 
           activeTab={activeTab} 
           setActiveTab={setActiveTab}
-          altText={'Response Table'}
+          altText={'Response Data'}
           altClass={'networkNavButton'}
         />
 
@@ -114,7 +114,7 @@ const RequestDetails = ({ clickedRowData } = props) => {
       <div className="headersBox" style={activeTab === 'data' ? {height:'0px'}:{}}>
         {activeTab === 'request' && (
           <>
-            <div className="networkTitle">Request Headers</div>
+            {/* <div className="networkTitle">Request Headers</div> */}
             {clickedRowData.request.headers.map((header, index) => (
               <p key={`req-header-${index}`}>
                 <b>{header.name}</b>: {header.value}
@@ -124,7 +124,7 @@ const RequestDetails = ({ clickedRowData } = props) => {
         )}
         {activeTab === 'response' && (
           <>
-            <div className="networkTitle">Response Headers</div>
+            {/* <div className="networkTitle">Response Headers</div> */}
             {clickedRowData.response.headers.map((header, index) => (
               <p key={`res-header-${index}`}>
                 <b>{header.name}</b>: {header.value}
