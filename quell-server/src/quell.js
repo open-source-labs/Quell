@@ -505,21 +505,51 @@ class QuellCache {
             {
               name: 'Redis version',
               value: dataLines.find(line => line.match(/redis_version/)).split(':')[1]
+            }, 
+            //redis build id
+            {
+              name: 'Redis build id',
+              value: dataLines.find(line => line.match(/redis_build_id/)).split(':')[1]
             },
             //redis mode
             {
               name: 'Redis mode',
               value: dataLines.find(line => line.match(/redis_mode/)).split(':')[1]
             },
+             //os hosting redis system
+             {
+              name: 'Host operating system',
+              value: dataLines.find(line => line.match(/os/)).split(':')[1]
+            },
             //TCP/IP listen port
             {
               name: 'TCP/IP port',
               value: dataLines.find(line => line.match(/tcp_port/)).split(':')[1]
             },
+             //server time 
+            {
+              name: 'System time',
+              value: dataLines.find(line => line.match(/server_time_in_usec/)).split(':')[1]
+            },
+             //num of seconds since Redis server start
+            {
+              name: 'Server uptime (seconds)',
+              value: dataLines.find(line => line.match(/uptime_in_seconds/)).split(':')[1]
+            },
             //num of days since Redis server start
             {
               name: 'Server uptime (days)',
               value: dataLines.find(line => line.match(/uptime_in_days/)).split(':')[1]
+            },
+            //path to server's executable
+            {
+              name: 'Path to executable',
+              value: dataLines.find(line => line.match(/executable/)).split(':')[1]
+            },
+             //num of days since Redis server start
+            {
+              name: 'Path to configuration file',
+              value: dataLines.find(line => line.match(/config_file/)).split(':')[1]
             }
           ],
           //CLIENT 
@@ -543,6 +573,11 @@ class QuellCache {
             {
               name: 'Tracked clients',
               value: dataLines.find(line => line.match(/tracking_clients/)).split(':')[1]
+            },
+            //blocked clients
+            {
+              name: 'Blocked clients',
+              value: dataLines.find(line => line.match(/blocked_clients/)).split(':')[1]
             }
           ],
           //MEMORY 
