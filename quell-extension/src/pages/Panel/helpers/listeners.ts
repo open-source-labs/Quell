@@ -1,6 +1,6 @@
 import { CardHeaderPropsWithComponent } from "@material-ui/core"
 
-export const onRequestFinished = (
+export const handleRequestFinished = (
   callback: (e: chrome.devtools.network.Request) => void
 ) => {
   chrome.devtools.network.onRequestFinished.addListener(callback)
@@ -9,7 +9,7 @@ export const onRequestFinished = (
   }
 }
 
-export const onNavigate = (callback: (e: chrome.devtools.network.Request) => void) => {
+export const handleNavigate = (callback: (e: chrome.devtools.network.Request) => void) => {
   chrome.devtools.network.onNavigated.addListener(callback)
   return () => {
     chrome.devtools.network.onNavigated.removeListener(callback)

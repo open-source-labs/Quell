@@ -5,7 +5,7 @@ import CacheTab from './Components/CacheTab';
 import NetworkTab from './Components/NetworkTab';
 import Logo from './assets/Quell_full_size.png';
 import isGQLQuery from './helpers/isGQLQuery';
-import { onNavigate, onRequestFinished } from './helpers/listeners';
+import { handleNavigate, handleRequestFinished } from './helpers/listeners';
 
 // GraphQL
 import { getIntrospectionQuery, buildClientSchema } from 'graphql';
@@ -46,8 +46,8 @@ const App = () => {
 
   // COMMENT OUT IF WORKING FROM DEV SERVER
   useEffect(() => {
-    onRequestFinished(gqlListener);
-    onNavigate(gqlListener);
+    handleRequestFinished(gqlListener);
+    handleNavigate(gqlListener);
   }, []);
 
   //
