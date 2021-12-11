@@ -19,7 +19,7 @@ const CacheTab = () => {
     for (let key in redisStats[title]){
       output.push(
         <div className='subStats' style={{maxWidth:'500px'}}>
-          <div key={`${title}.name`} style={{border:'1px solid #555', padding:'3px 12px 3px 10px'}}>{redisStats[title][key].name}</div>
+          <div key={`${title}.name`} style={{fontWeight:'500', fontSize:'0.85rem', color:'#eee', border:'1px solid #555', padding:'3px 12px 3px 10px'}}>{redisStats[title][key].name}</div>
           <div key={`${title}.value`} style={{border:'1px solid #555', padding:'3px 12px 3px 10px'}}>{redisStats[title][key].value}</div>
         </div>
       )
@@ -32,7 +32,7 @@ const CacheTab = () => {
   return (
     <div className="cacheStatTab">
       {/* title */}
-      <span style={{fontWeight:'bold', fontSize: '2rem'}}>Cache Server</span>
+      <span style={{fontWeight:'bold'}}>Cache Server</span>
 
       <div className="Cache_Server">
         <div className='serverTable'>

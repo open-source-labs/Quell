@@ -28,8 +28,11 @@ const QueryTab = ({
 
   return (
     <div className="queryTab">
+      <div style={{ fontWeight: 'bolder' }}>
+        Query Quell Server
+      </div>
       <div id='queryLeft'>
-        <SplitPane style={{ maxWidth: '75%' }} split="vertical" minSize={300} defaultSize={400}>
+        <SplitPane style={{ maxWidth: '75%', maxHeight: '300px'}} split="vertical" minSize={300} defaultSize={400}>
           <div className='queryInput resizable'>
             <InputEditor
               clientAddress={clientAddress}

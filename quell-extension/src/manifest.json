@@ -5,13 +5,6 @@
   "version": "0.0.1",
   "homepage_url": "https://quellql.io",
   "author": "Chang Cai, Robert Howton, Joshua Jordan",
-  "content_script": [
-    {
-      "matches": [
-      "<all_urls>"
-      ]
-    }
-  ],
   "action": {
     "default_icon": {
       "16": "./assets/icon16.png",
@@ -20,10 +13,10 @@
     },
     "default_title": "Quell Developer Tools"
   },
+  "devtools_page": "devtools.html",
   "background": {
     "service_worker": "background.bundle.js"
   },
-  "devtools_page": "devtools.html",
   "icons": {
     "16": "./assets/icon16.png",
     "48": "./assets/icon48.png",
