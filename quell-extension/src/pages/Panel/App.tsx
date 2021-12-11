@@ -83,7 +83,7 @@ const App = () => {
         {activeTab === 'query' && 
           <>
             <div className='title_bar'>
-              Query GraphQL Server
+              Query Quell Server
             </div>
             < QueryTab
               clientAddress={ clientAddress }
