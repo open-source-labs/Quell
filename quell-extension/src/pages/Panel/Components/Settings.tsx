@@ -44,7 +44,7 @@ const Settings = ({
     <React.Fragment>
       <div className="settingsInput" 
         style={{paddingLeft:"10px"}}>
-          <div>Basic Configuration</div>
+          <div className="title_bar">Basic Configuration</div>
           <form className="configSettings">
             {inputArea('GraphQL Route', setGraphQLRoute, graphQLRoute)}
             <div className="settingInputsDesc">Endpoint where GraphQL schema will be retrieved and queries sent</div>            
@@ -61,7 +61,7 @@ const Settings = ({
 
       <div className="retrievedSchema"
         style={{}}>
-        <div>Retrieved GraphQL Schema</div>
+        <div className="title_bar">Retrieved GraphQL Schema</div>
         <CodeMirror
           className="schema_editor"
           value={editorText}

@@ -82,7 +82,7 @@ const App = () => {
       <div className='extensionTabs'>
         {activeTab === 'query' && 
           <>
-            <div style={{ fontWeight: 'bolder' }}>
+            <div className='title_bar'>
               Query GraphQL Server
             </div>
             < QueryTab
