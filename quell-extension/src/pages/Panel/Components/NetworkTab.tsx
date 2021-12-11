@@ -15,6 +15,7 @@ import 'codemirror-graphql/mode';
 import beautify from 'json-beautify';
 import NavButton from './NavButton';
 import { getResponseStatus } from '../helpers/getResponseStatus';
+import { getOperationNames } from '../helpers/parseQuery';
 
 const NetworkTab = ({ graphQLRoute, clientAddress, clientRequests } = props) => {
   const [clickedRowData, setClickedRowData] = useState({});
@@ -171,8 +172,9 @@ const NetworkRequestTable = ({
       {
         // maybe instead of query type, use `graphql-tag` to display name of queried table/document
         id: 'query-type',
-        Header: 'Query Type',
-        accessor: (row) => Object.keys(JSON.parse(row.request.postData.text)),
+        Header: 'Operation Type(s)',
+        // accessor: (row) => Object.keys(JSON.parse(row.request.postData.text)),
+        accessor: row => getOperationNames(row)
       },
       {
         id: 'url',
