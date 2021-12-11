@@ -28,7 +28,7 @@ const QueryTab = ({
 
   return (
     <div className="queryTab">
-      <div style={{ fontWeight: 'bolder' }}>
+      <div className='title_bar'>
         Query Quell Server
       </div>
       <div id='queryLeft'>
