@@ -3,6 +3,7 @@ import InputEditor from './InputEditor';
 import OutputEditor from './OutputEditor';
 import Metrics from './Metrics';
 import SplitPane from 'react-split-pane';
+import beautify from 'json-beautify';
 
 const QueryTab = ({ 
   clientAddress,
