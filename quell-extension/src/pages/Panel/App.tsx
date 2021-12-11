@@ -85,17 +85,19 @@ const App = () => {
       <div className="extensionTabs">
         {activeTab === 'query' && (
           <>
-            <div className="title_bar">Query GraphQL Server</div>
-            <QueryTab
-              clientAddress={clientAddress}
-              serverAddress={serverAddress}
-              graphQLRoute={graphQLRoute}
-              queryString={queryString}
-              setQueryString={setQueryString}
-              setResults={setResults}
-              schema={schema}
-              clearCacheRoute={clearCacheRoute}
-              results={results}
+            <div className='title_bar'>
+              Query Quell Server
+            </div>
+            < QueryTab
+              clientAddress={ clientAddress }
+              serverAddress={ serverAddress }
+              graphQLRoute={ graphQLRoute }
+              queryString={ queryString }
+              setQueryString={ setQueryString }
+              setResults={ setResults }
+              schema={ schema }
+              clearCacheRoute={ clearCacheRoute }
+              results={ results }
             />
           </>
         )}
