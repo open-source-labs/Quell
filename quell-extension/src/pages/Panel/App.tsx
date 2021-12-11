@@ -34,17 +34,17 @@ const App = () => {
   const [clientRequests, setClientRequests] = useState([]);
 
   // COMMENT OUT IF WORKING FROM DEV SERVER
-  useEffect(() => {
-    chrome.devtools.network.onRequestFinished.addListener(request => {
-      if (isGQLQuery(request)) {
-        request.getContent(body => {
-          const responseData = JSON.parse(body);
-          request.responseData = responseData;
-          setClientRequests((prev) => prev.concat([request]));
-        })
-      }
-    });
-  }, []);
+  // useEffect(() => {
+  //   chrome.devtools.network.onRequestFinished.addListener(request => {
+  //     if (isGQLQuery(request)) {
+  //       request.getContent(body => {
+  //         const responseData = JSON.parse(body);
+  //         request.responseData = responseData;
+  //         setClientRequests((prev) => prev.concat([request]));
+  //       })
+  //     }
+  //   });
+  // }, []);
 
    //
   useEffect(() => {
