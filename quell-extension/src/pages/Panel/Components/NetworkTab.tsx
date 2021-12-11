@@ -14,6 +14,8 @@ import 'codemirror-graphql/hint';
 import 'codemirror-graphql/mode';
 import beautify from 'json-beautify';
 import NavButton from './NavButton';
+import { getResponseStatus } from '../helpers/getResponseStatus';
+import { getOperationNames } from '../helpers/parseQuery';
 
 const NetworkTab = ({ graphQLRoute, clientAddress, clientRequests } = props) => {
   const [clickedRowData, setClickedRowData] = useState({});
@@ -59,7 +61,7 @@ const NetworkTab = ({ graphQLRoute, clientAddress, clientRequests } = props) => 
                 fetchTimeInt={
                   clientRequests.length > 0
                     ? clientRequests.map((request) => request.time)
-                    : 0
+                    : [0]
                 }
               />
             </div>
@@ -101,7 +103,7 @@ const RequestDetails = ({ clickedRowData } = props) => {
           text={'data'} 
           activeTab={activeTab} 
           setActiveTab={setActiveTab}
-          altText={'Response Table'}
+          altText={'Response Data'}
           altClass={'networkNavButton'}
         />
 
@@ -109,7 +111,7 @@ const RequestDetails = ({ clickedRowData } = props) => {
       <div className="headersBox" style={activeTab === 'data' ? {height:'0px'}:{}}>
         {activeTab === 'request' && (
           <>
-            <div className="networkTitle">Request Headers</div>
+            {/* <div className="networkTitle">Request Headers</div> */}
             {clickedRowData.request.headers.map((header, index) => (
               <p key={`req-header-${index}`}>
                 <b>{header.name}</b>: {header.value}
@@ -119,7 +121,7 @@ const RequestDetails = ({ clickedRowData } = props) => {
         )}
         {activeTab === 'response' && (
           <>
-            <div className="networkTitle">Response Headers</div>
+            {/* <div className="networkTitle">Response Headers</div> */}
             {clickedRowData.response.headers.map((header, index) => (
               <p key={`res-header-${index}`}>
                 <b>{header.name}</b>: {header.value}
@@ -156,20 +158,20 @@ const NetworkRequestTable = ({
     // const { request.headers, response.headers } = cell.row.original;
     setClickedRowData(cell.row.original);
   };
-  let count = 1;
 
   const columns = useMemo(
     () => [
       {
         id: 'number',
         Header: '#',
-        accessor: (row) => count++
+        accessor: (row, index) => index + 1,
       },
       {
         // maybe instead of query type, use `graphql-tag` to display name of queried table/document
         id: 'query-type',
-        Header: 'Query Type',
-        accessor: (row) => Object.keys(JSON.parse(row.request.postData.text)),
+        Header: 'Operation Type(s)',
+        // accessor: (row) => Object.keys(JSON.parse(row.request.postData.text)),
+        accessor: row => getOperationNames(row)
       },
       {
         id: 'url',
@@ -179,7 +181,7 @@ const NetworkRequestTable = ({
       {
         id: 'status',
         Header: 'Status',
-        accessor: (row) => row.response.status,
+        accessor: (row) => getResponseStatus(row),
       },
       {
         id: 'size',
@@ -195,16 +197,16 @@ const NetworkRequestTable = ({
     []
   );
 
-  const data = useMemo(() => [...clientRequests], []);
+  // React Table suggests memoizing table data as best practice, to reduce computation
+  // in populating table, but this prevents live updating on new client requests
+  // const data = useMemo(() => [...clientRequests], []);
+  const data = clientRequests;
 
   const { getTableProps, getTableBodyProps, headerGroups, rows, prepareRow } =
     useTable({ columns, data });
 
   return (
     <>
-      {/* <div>
-     {clientRequests.map((req, index) => <NetworkRequest key={index} req={req} index={index} />)}
-   </div> */}
       <div id="dataTable_container">
         <table {...getTableProps()}>
           <thead>

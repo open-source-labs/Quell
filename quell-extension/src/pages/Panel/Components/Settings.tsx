@@ -47,8 +47,8 @@ const Settings = ({
           <form className="configSettings">
             {inputArea('GraphQL Route', setGraphQLRoute, graphQLRoute)}
             <div className="settingInputsDesc">Endpoint where GraphQL schema will be retrieved and queries sent</div>            
-            {inputArea('Client Address', setClientAddress, clientAddress)}
-            <div className="settingInputsDesc">HTTP address of client from which Quell makes GraphQL queries</div>
+            {/* {inputArea('Client Address', setClientAddress, clientAddress)}
+            <div className="settingInputsDesc">HTTP address of client from which Quell makes GraphQL queries</div> */}
             {inputArea('Server Address', setServerAddress, serverAddress)}
             <div className="settingInputsDesc">HTTP address of server from which Quell makes GraphQL queries</div>
             {inputArea('Redis DB Address', setRedisAddress, redisAddress)}
