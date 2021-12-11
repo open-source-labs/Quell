@@ -14,6 +14,7 @@ import 'codemirror-graphql/hint';
 import 'codemirror-graphql/mode';
 import beautify from 'json-beautify';
 import NavButton from './NavButton';
+import { getResponseStatus } from '../helpers/getResponseStatus';
 
 const NetworkTab = ({ graphQLRoute, clientAddress, clientRequests } = props) => {
   const [clickedRowData, setClickedRowData] = useState({});
@@ -181,7 +182,7 @@ const NetworkRequestTable = ({
       {
         id: 'status',
         Header: 'Status',
-        accessor: (row) => row.response.status,
+        accessor: (row) => getResponseStatus(row),
       },
       {
         id: 'size',

@@ -3,7 +3,6 @@ import InputEditor from './InputEditor';
 import OutputEditor from './OutputEditor';
 import Metrics from './Metrics';
 import SplitPane from 'react-split-pane';
-import beautify from 'json-beautify';
 
 const QueryTab = ({ 
   clientAddress,
@@ -29,6 +28,9 @@ const QueryTab = ({
 
   return (
     <div className="queryTab">
+      <div className='title_bar'>
+        Query Quell Server
+      </div>
       <div id='queryLeft'>
         <SplitPane style={{ maxWidth: '75%', maxHeight: '300px'}} split="vertical" minSize={300} defaultSize={400}>
           <div className='queryInput resizable'>
