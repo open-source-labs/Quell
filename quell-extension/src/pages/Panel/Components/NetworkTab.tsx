@@ -62,7 +62,7 @@ const NetworkTab = ({ graphQLRoute, clientAddress, clientRequests } = props) => 
                 fetchTimeInt={
                   clientRequests.length > 0
                     ? clientRequests.map((request) => request.time)
-                    : 0
+                    : [0]
                 }
               />
             </div>
@@ -159,14 +159,13 @@ const NetworkRequestTable = ({
     // const { request.headers, response.headers } = cell.row.original;
     setClickedRowData(cell.row.original);
   };
-  let count = 1;
 
   const columns = useMemo(
     () => [
       {
         id: 'number',
         Header: '#',
-        accessor: (row) => count++
+        accessor: (row, index) => index + 1,
       },
       {
         // maybe instead of query type, use `graphql-tag` to display name of queried table/document
