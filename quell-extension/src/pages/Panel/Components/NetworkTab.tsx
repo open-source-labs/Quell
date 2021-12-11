@@ -25,7 +25,7 @@ const NetworkTab = ({ graphQLRoute, clientAddress, clientRequests } = props) => 
 
   return (
     <div className='networkTab'>
-      <div style={{ fontWeight: 'bolder' }}>
+      <div className='title_bar'>
         Client Quell Requests
       </div>
       <div id="network-page-container">

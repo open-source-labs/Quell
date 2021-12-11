@@ -11,6 +11,11 @@ p {
   font-size: 0.8rem;
 }
 
+.title_bar {
+  font-size: 1.5rem;
+  font-weight: bold;
+}
+
 // gives border to codemirror editors
 .CodeMirror {
   border: 1px solid rgb(85, 84, 84);
@@ -182,7 +187,7 @@ tr:hover {
 
 .Cache_Server {
   display: grid;  
-  grid-template-columns: 500px 500px;
+  grid-template-columns: 50% 50%;
   grid-gap: 10px;
 }
 
