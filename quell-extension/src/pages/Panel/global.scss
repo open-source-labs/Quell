@@ -28,7 +28,7 @@ p {
 }
 
 button:hover {
-  background-color: orange;
+  background-color: #444;
 }
 
 /******* CSS for Nav Bar *******/
@@ -46,15 +46,15 @@ button:hover {
   width: 100%;
   top: 0;
   z-index: 5;
+}
 
-  .navbutton {
-    background-color: #222222;
-    color: #ccc;
-    border: none;
-    font-weight: bold;
-    margin-left: 10px;
-    font-size: 0.8rem;
-  }
+.navbutton {
+  background-color: #222222;
+  color: #ccc;
+  border: none;
+  font-weight: bold;
+  margin-left: 10px;
+  font-size: 0.8rem;
 }
 
 /******* CSS for Query Tab *******/
@@ -84,15 +84,15 @@ button:hover {
     height: calc(100vh - 53px);
     min-height: 200px;
   }
+}
 
-  // css for 'Submit Query' and 'Clear Cache'
-  .editorButtons {
-    background-color: #222222;
-    border: none;
-    color:#999;
-    width: 50%;
-    padding: 3px 0 3px 0;
-  }
+// css for 'Submit Query' and 'Clear Cache'
+.editorButtons {
+  background-color: #222222;
+  border: none;
+  color:#999;
+  width: 50%;
+  padding: 3px 0 3px 0;
 }
 
 /******* CSS for NetworkTab *******/
@@ -196,13 +196,13 @@ tr:hover {
 .Cache_Server {
   display: grid;  
   grid-template-columns: 50% 50%;
-  grid-gap: 10px;
+  grid-gap: 1px;
 }
 
 // aligns selectable table to server cache table
 .cacheTables {
-  margin-top: -19px;
-  margin-right: 10px;
+  margin-top: -17px;
+  margin-right: 5px;
 }
 
 .cacheNavButton {

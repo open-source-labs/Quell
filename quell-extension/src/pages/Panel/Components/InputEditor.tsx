@@ -11,7 +11,7 @@ import 'codemirror-graphql/hint';
 import 'codemirror-graphql/mode';
 
 const InputEditor = (props) => {
-  const [defaultText, setText] = useState<string>('# Enter GraphQL query here\nquery{\npeople\n{\nname }}}');
+  const [defaultText, setText] = useState<string>('# Enter GraphQL query here\n');
   const [queryTimes, setQueryTimes] = useState<number[]>([0]);
 
   const handleClickSubmit = () => {
