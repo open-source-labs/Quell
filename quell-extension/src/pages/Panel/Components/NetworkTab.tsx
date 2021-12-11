@@ -20,28 +20,17 @@ const NetworkTab = ({ graphQLRoute, clientAddress, clientRequests } = props) => 
   const [activeRow, setActiveRow] = useState<number>(-1);
 
   useEffect(() => {
-    console.log('request.postData.text: ', clientRequests[0].request.postData.text);
-    console.log('titles: ', typeof Object.keys(JSON.parse(clientRequests[0].request.postData.text)).toString());
-    console.log('titles: ', Object.keys(JSON.parse(clientRequests[0].request.postData.text)).toString());
-    console.log('URL: ', clientRequests[0].request.url);
-    console.log('status:', clientRequests[0].response.status);
-    console.log('size: ', (clientRequests[0].response.content.size / 1000).toFixed(2));
-    console.log("time: ", clientRequests[0].time.toFixed(2));
-
     console.log('Clicked Row Data: ', clickedRowData);
   }, [clientRequests, clickedRowData]);
 
   return (
     <div className='networkTab'>
-      <div style={{ fontSize: '1.25rem', fontWeight: 'bolder' }}>
+      <div style={{ fontWeight: 'bolder' }}>
         Client Quell Requests
-      </div>
-      <div style={{ fontSize: '.75rem' }}>
-        Total Client Requests: {clientRequests.length}
       </div>
       <div id="network-page-container">
         <SplitPane
-          style={{ maxWidth: '100%' }}
+          style={{ maxWidth: '100%', maxHeight: '300px'}}
           split="vertical"
           minSize={450}
           defaultSize={800}
@@ -120,7 +109,7 @@ const RequestDetails = ({ clickedRowData } = props) => {
         />
 
       </div>
-      <div className="headersBox">
+      <div className="headersBox" style={activeTab === 'data' ? {height:'0px'}:{}}>
         {activeTab === 'request' && (
           <>
             <div className="networkTitle">Request Headers</div>
@@ -141,19 +130,21 @@ const RequestDetails = ({ clickedRowData } = props) => {
             ))}
           </>
         )}
-        {activeTab === 'data' && (
-          <>
-            <CodeMirror
-              className='network_editor'
-              value={beautify(clickedRowData.responseData, null, 2, 80)}
-              options={{
-                theme: 'material-darker',
-                mode: 'json',
-              }}
-            />
-          </>
-        )}
       </div>
+      {activeTab === 'data' && (
+        <>
+          <CodeMirror
+            className='network_editor'
+            value={beautify(clickedRowData.responseData, null, 2, 80)}
+            options={{
+              theme: 'material-darker',
+              mode: 'json',
+              scrollbarStyle: 'null',
+            }}
+          />
+        </>
+      )}
+      
     </div>
   );
 };
@@ -168,9 +159,15 @@ const NetworkRequestTable = ({
     // const { request.headers, response.headers } = cell.row.original;
     setClickedRowData(cell.row.original);
   };
+  let count = 1;
 
   const columns = useMemo(
     () => [
+      {
+        id: 'number',
+        Header: '#',
+        accessor: (row) => count++
+      },
       {
         // maybe instead of query type, use `graphql-tag` to display name of queried table/document
         id: 'query-type',

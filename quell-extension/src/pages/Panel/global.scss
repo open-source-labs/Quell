@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100;0,300;1,100;1,300&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@100;300;500&display=swap');
 
 /******* Global CSS for extension *******/
 html {
@@ -43,6 +43,7 @@ button:hover {
   border: none;
   font-weight: bold;
   margin-left: 10px;
+  font-size: 0.8rem;
 }
 
 /******* CSS for Query Tab *******/
@@ -73,56 +74,9 @@ button:hover {
   padding: 3px 0 3px 0;
 }
 
-/******* CSS for Settigns Tab *******/
-.settingsTab {
-  width:100%;
-  display: grid;
-  grid-template-columns: 50% 50%;
-  grid-gap:5px;
-}
-
-// sets up underline and input boxes for settings
-input {
-  background-color: #2b2a2a;
-  padding-left: 3px;
-  color: #999;
-  width: 98%;
-  outline: 0;
-  border-width: 0 0 2px;
-  border-color: #999;
-}
-
-input:hover {
-  background-color: #505050;
-}
-
-.settingInputsDesc {
-  font-size: .75rem;
-  color: #888;
-}
-
-.configSettings {
-  font-size: 0.8rem;
-  align-content: center;
-  width: 100%;
-  height: 200px;
-  // border: 1px solid rgb(104, 107, 112);
-  padding: 5px;
-  overflow-y: scroll;
-  color: white;
-
-  &::-webkit-scrollbar {
-    display: none;
-  }
-}
-
-.schema_editor .CodeMirror {
-  height: 210px;
-}
-
 /******* CSS for NetworkTab *******/
 .networkTab {
-  padding-left: 10px
+
 }
 
 #network-page-container {
@@ -137,7 +91,7 @@ table {
 }
 
 #network-request-table {
-  border: 1px solid #999;
+  border: 1px solid #444;
   margin-left: 10px;
   height: 250px;
 }
@@ -171,10 +125,14 @@ tr:hover {
   border: 1px solid #999;
   padding: 2px;
   width: 99%;
+  height: 246px;
+  overflow-x: hidden;
+  body::-webkit-scrollbar {
+    display: none;
+  }
 }
 
 .networkNavBar {
-  height:25px;
   background-color: #999;
   display: flex;
   justify-content: space-evenly;
@@ -186,6 +144,7 @@ tr:hover {
   font-weight: bold;
   width: 33.333%;
   border: none;
+  font-size: 0.8rem;
 }
 
 .networkTitle {
@@ -201,10 +160,10 @@ tr:hover {
 }
 
 .network_editor .CodeMirror {
-  height: 210px;
+  height: 221px;
   width: calc(100% - 2px);
+  border: none;
 }
-
 
 
 /******* CSS for cache data page *******/
@@ -229,7 +188,7 @@ tr:hover {
 
 // aligns selectable table to server cache table
 .cacheTables {
-  margin-top: -24px;
+  margin-top: -19px;
 }
 
 .cacheNavButton {
@@ -237,7 +196,7 @@ tr:hover {
   width: 33.333%;
   background-color: #222;
   color: #ccc;
-  font-size: 1.2rem;
+  font-weight: bold;
 }
 
 /******* CSS for SplitPane Resizer *******/
@@ -291,4 +250,55 @@ tr:hover {
 }
 .Resizer.disabled:hover {
   border-color: transparent;
+}
+
+/******* CSS for Settigns Tab *******/
+.settingsTab {
+  width:100%;
+  display: grid;
+  grid-template-columns: 50% 50%;
+  grid-gap:5px;
+}
+
+// sets up underline and input boxes for settings
+input {
+  background-color: #2b2a2a;
+  padding-left: 3px;
+  color: #999;
+  width: 98%;
+  outline: 0;
+  border-width: 0 0 2px;
+  border-color: #999;
+}
+
+input:hover {
+  background-color: #505050;
+}
+
+.configSettings {
+  border: 1px solid #666;
+}
+
+.settingInputsDesc {
+  font-size: .75rem;
+  color: #888;
+}
+
+.configSettings {
+  font-size: 0.8rem;
+  align-content: center;
+  width: 100%;
+  height: 200px;
+  // border: 1px solid rgb(104, 107, 112);
+  padding: 5px;
+  overflow-y: scroll;
+  color: white;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+.schema_editor .CodeMirror {
+  height: 210px;
 }

@@ -1,1 +1,0 @@
-chrome.devtools.network.onRequestFinished.addListener((function(e){"localhost:8080/graphql"===e.request.url&&e.getContent((function(o){var n=JSON.parse(o);e.responseData=n,console.log(e)}))}));
