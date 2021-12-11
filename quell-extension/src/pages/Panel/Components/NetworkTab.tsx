@@ -201,16 +201,16 @@ const NetworkRequestTable = ({
     []
   );
 
-  const data = useMemo(() => [...clientRequests], []);
+  // React Table suggests memoizing table data as best practice, to reduce computation
+  // in populating table, but this prevents live updating on new client requests
+  // const data = useMemo(() => [...clientRequests], []);
+  const data = clientRequests;
 
   const { getTableProps, getTableBodyProps, headerGroups, rows, prepareRow } =
     useTable({ columns, data });
 
   return (
     <>
-      {/* <div>
-     {clientRequests.map((req, index) => <NetworkRequest key={index} req={req} index={index} />)}
-   </div> */}
       <div id="dataTable_container">
         <table {...getTableProps()}>
           <thead>
