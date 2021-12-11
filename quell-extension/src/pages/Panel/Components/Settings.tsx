@@ -9,7 +9,6 @@ import 'codemirror/addon/hint/show-hint';
 import 'codemirror-graphql/lint';
 import 'codemirror-graphql/hint';
 import 'codemirror-graphql/mode';
-import { TextField, Typography } from '@mui/material';
 import beautify from 'json-beautify';
  
 const Settings = ({
@@ -22,7 +21,6 @@ const Settings = ({
   redisAddress,
   setRedisAddress,
   schema,
-  setSchema,
   clearCacheRoute,
   setClearCacheRoute
 } = props) => {
@@ -46,7 +44,7 @@ const Settings = ({
     <React.Fragment>
       <div className="settingsInput" 
         style={{paddingLeft:"10px"}}>
-          <h3>Basic Configuration</h3>
+          <div>Basic Configuration</div>
           <form className="configSettings">
             {inputArea('GraphQL Route', setGraphQLRoute, graphQLRoute)}
             <div className="settingInputsDesc">Endpoint where GraphQL schema will be retrieved and queries sent</div>            
@@ -63,7 +61,7 @@ const Settings = ({
 
       <div className="retrievedSchema"
         style={{}}>
-        <h3>Retrieved GraphQL Schema</h3>
+        <div>Retrieved GraphQL Schema</div>
         <CodeMirror
           className="schema_editor"
           value={editorText}
