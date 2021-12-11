@@ -5,6 +5,7 @@ html {
   background-color: #222;
   font-family: 'Roboto', sans-serif;
   color: #ddd;
+  overflow-y: hidden;
 }
  
 p { 
@@ -16,13 +17,18 @@ p {
   font-weight: bold;
 }
 
+.devtools {
+  overflow-y: none;
+}
+
 // gives border to codemirror editors
 .CodeMirror {
   border: 1px solid rgb(85, 84, 84);
+  font-size: 0.9rem;
 }
 
 button:hover {
-  background-color: #444;
+  background-color: orange;
 }
 
 /******* CSS for Nav Bar *******/
@@ -40,74 +46,76 @@ button:hover {
   width: 100%;
   top: 0;
   z-index: 5;
-}
 
-.navbutton {
-  background-color: #222222;
-  color: #ccc;
-  border: none;
-  font-weight: bold;
-  margin-left: 10px;
-  font-size: 0.8rem;
+  .navbutton {
+    background-color: #222222;
+    color: #ccc;
+    border: none;
+    font-weight: bold;
+    margin-left: 10px;
+    font-size: 0.8rem;
+  }
 }
 
 /******* CSS for Query Tab *******/
 // splits editor area from Metrics
+
 .queryTab {
+  margin-left: 10px;
   display: grid;
-  grid-template-columns: 75% 25%;
+  grid-template-columns: calc(100% - 250px) 250px;
   grid-gap: 20px;
-}
+  min-height: 175px;
+  overflow-y: none;
 
-// limits height & width of the input editor
-.query_input_editor .CodeMirror {
-  height: 250px;
-  min-width: 400px;
-}
+  .SplitPane {
+    max-width: calc(100% - 250px);
+  }
 
-// limits height of output editor to keep elements in line with input editor
-.query_output_editor .CodeMirror {
-  height: 272px;
-}
+  // limits height & width of the input editor
+  .query_input_editor .CodeMirror {
+    height: calc(100vh - 75px);
+    min-width: 400px;
+    min-height: 200px;
+  }
 
-// css for 'Submit Query' and 'Clear Cache'
-.editorButtons {
-  background-color: #222222;
-  border: none;
-  color:#999;
-  width: 50%;
-  padding: 3px 0 3px 0;
+  // limits height of output editor to keep elements in line with input editor
+  .query_output_editor .CodeMirror {
+    height: calc(100vh - 53px);
+    min-height: 200px;
+  }
+
+  // css for 'Submit Query' and 'Clear Cache'
+  .editorButtons {
+    background-color: #222222;
+    border: none;
+    color:#999;
+    width: 50%;
+    padding: 3px 0 3px 0;
+  }
 }
 
 /******* CSS for NetworkTab *******/
-.networkTab {
-
-}
-
-#network-page-container {
-  display: grid;
-  grid-template-columns: 50% 50%;
-  grid-gap: 5px
-}
 
 table {
   font-size: 0.8rem;
   padding: -10px;
+  
+  th {
+    background-color: #444;
+  }
+  
+  td {
+    height: 10px;
+    padding: 3px 0 3px;
+  }
 }
 
 #network-request-table {
   border: 1px solid #444;
   margin-left: 10px;
-  height: 250px;
-}
-
-th {
-  background-color: #444;
-}
-
-td {
-  height: 10px;
-  padding: 3px 0 3px;
+  height: calc(100vh - 53px);
+  overflow-y: auto;
 }
 
 tr:hover {
@@ -127,10 +135,10 @@ tr:hover {
 }
 
 #queryExtras {
-  border: 1px solid #999;
+  border: 1px solid #444;
   padding: 2px;
   width: 99%;
-  height: 246px;
+  height: calc(100vh - 57px);
   overflow-x: hidden;
   body::-webkit-scrollbar {
     display: none;
@@ -175,7 +183,7 @@ tr:hover {
 // evenly splits grid in each sub-table for value pairs
 .subStats {
   display:grid;
-  grid-template-columns: 66.666% 33.333%;
+  grid-template-columns: 50% 50%;
   font-size: 0.8rem;
 }
 
@@ -194,6 +202,7 @@ tr:hover {
 // aligns selectable table to server cache table
 .cacheTables {
   margin-top: -19px;
+  margin-right: 10px;
 }
 
 .cacheNavButton {
@@ -202,6 +211,12 @@ tr:hover {
   background-color: #222;
   color: #ccc;
   font-weight: bold;
+}
+
+.dynamicCacheTable {
+  max-height: calc(100vh - 54px);
+  overflow-y: auto;
+  border-bottom: 1px solid #444;
 }
 
 /******* CSS for SplitPane Resizer *******/
@@ -239,7 +254,7 @@ tr:hover {
 
 .Resizer.vertical {
   width: 11px;
-  height: 272px;
+  height: calc(100vh - 51px);
   margin: 0 -5px;
   border-left: 5px solid rgba(255, 255, 255, 0);
   border-right: 5px solid rgba(255, 255, 255, 0);
@@ -257,7 +272,7 @@ tr:hover {
   border-color: transparent;
 }
 
-/******* CSS for Settigns Tab *******/
+/******* CSS for Settings Tab *******/
 .settingsTab {
   width:100%;
   display: grid;
@@ -281,7 +296,8 @@ input:hover {
 }
 
 .configSettings {
-  border: 1px solid #666;
+  border: 1px solid #555;
+  color: #aaa;
 }
 
 .settingInputsDesc {
@@ -292,8 +308,8 @@ input:hover {
 .configSettings {
   font-size: 0.8rem;
   align-content: center;
-  width: 100%;
-  height: 200px;
+  width: calc(100% - 8px);
+  height: calc(100vh - 64px);
   // border: 1px solid rgb(104, 107, 112);
   padding: 5px;
   overflow-y: scroll;
@@ -305,5 +321,6 @@ input:hover {
 }
 
 .schema_editor .CodeMirror {
-  height: 210px;
+  padding-left: 5px;
+  height: calc(100vh - 54px);
 }

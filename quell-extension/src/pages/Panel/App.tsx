@@ -1,9 +1,11 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import PrimaryNavBar from './Components/PrimaryNavBar';
 import QueryTab from './Components/QueryTab';
 import CacheTab from './Components/CacheTab';
 import NetworkTab from './Components/NetworkTab';
 import Logo from './assets/Quell_full_size.png';
+import { WindowWidth } from './Components/WindowWidth';
+import { WindowHeight } from './Components/WindowHeight';
 
 // GraphQL
 import { getIntrospectionQuery, buildClientSchema } from 'graphql';
@@ -46,7 +48,6 @@ const App = () => {
   //   });
   // }, []);
 
-   //
   useEffect(() => {
     const introspectionQuery = getIntrospectionQuery();
     const address = `${serverAddress}${graphQLRoute}`;

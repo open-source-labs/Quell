@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, cloneElement } from 'react';
+import React, { useState, useEffect, useMemo} from 'react';
 import { useTable } from 'react-table';
 import Metrics from './Metrics';
 import SplitPane from 'react-split-pane';
@@ -19,10 +19,6 @@ const NetworkTab = ({ graphQLRoute, clientAddress, clientRequests } = props) => 
   const [clickedRowData, setClickedRowData] = useState({});
   const [activeRow, setActiveRow] = useState<number>(-1);
 
-  useEffect(() => {
-    console.log('Clicked Row Data: ', clickedRowData);
-  }, [clientRequests, clickedRowData]);
-
   return (
     <div className='networkTab'>
       <div className='title_bar'>
@@ -30,10 +26,11 @@ const NetworkTab = ({ graphQLRoute, clientAddress, clientRequests } = props) => 
       </div>
       <div id="network-page-container">
         <SplitPane
-          style={{ maxWidth: '100%', maxHeight: '300px'}}
+          style={{ maxWidth: '100%' }}
           split="vertical"
           minSize={450}
-          defaultSize={800}
+          maxSize={-300}
+          defaultSize={activeRow === -1 ? window.innerWidth-250 : window.innerWidth/2}
         >
           <div id="network-request-table">
             <NetworkRequestTable
@@ -51,7 +48,7 @@ const NetworkTab = ({ graphQLRoute, clientAddress, clientRequests } = props) => 
           ) : (
             <div
               id="network-request-metrics"
-              style={{ marginTop: '-6px', marginLeft: '20px' }}
+              style={{ marginTop: '-2px', marginLeft: '20px' }}
             >
               <Metrics
                 fetchTime={
