@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import PrimaryNavBar from './Components/PrimaryNavBar';
 import QueryTab from './Components/QueryTab';
 import CacheTab from './Components/CacheTab';

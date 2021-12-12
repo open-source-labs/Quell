@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import Trend from 'react-trend';
 
 const Metrics = (props) => {
-  const { 
+  const {
     fetchTime, // time to fetch request
     fetchTimeInt, // array of time values at each point in fetching and caching
    } = props;
@@ -18,17 +18,17 @@ const Metrics = (props) => {
       </div>
       <div id="speed-graph">
         <h3>Speed Graph:</h3>
-        <Trend
-          height = {105}
-          width={200}
-          className="trend"
-          data={fetchTimeInt}
-          gradient={['#1feaea','#ffd200', '#f72047']}
-          radius={0.9}
-          strokeWidth={2.2}
-          strokeLinecap={'round'}
-        />
-      </div>
+          <Trend
+            height = {Number(`${window.innerHeight}`)>=250 ? Number(`${window.innerHeight}`)-220 : 30}
+            width={190}
+            className="trend"
+            data={fetchTimeInt}
+            gradient={['#1feaea','#ffd200', '#f72047']}
+            radius={0.9}
+            strokeWidth={2.2}
+            strokeLinecap={'round'}
+          />
+        </div>
     </div>
   );
 };
