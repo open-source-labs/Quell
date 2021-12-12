@@ -42,8 +42,7 @@ const Settings = ({
 
   return (
     <React.Fragment>
-      <div className="settingsInput" 
-        style={{paddingLeft:"10px"}}>
+      <div className="settingsInput">
           <div className="title_bar">Basic Configuration</div>
           <form className="configSettings">
             {inputArea('GraphQL Route', setGraphQLRoute, graphQLRoute)}

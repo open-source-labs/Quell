@@ -1,8 +1,9 @@
-import {useState} from 'react';
+import { useState, useEffect } from 'react';
 import InputEditor from './InputEditor';
 import OutputEditor from './OutputEditor';
 import Metrics from './Metrics';
 import SplitPane from 'react-split-pane';
+
 
 const QueryTab = ({ 
   clientAddress,
@@ -29,30 +30,34 @@ const QueryTab = ({
   return (
     <div className="queryTab">
       <div id='queryLeft'>
-        <SplitPane style={{ maxWidth: '75%', maxHeight: '300px'}} split="vertical" minSize={300} defaultSize={400}>
+        <SplitPane 
+        split="vertical" 
+        minSize={ 300 } 
+        maxSize={ -300 }
+        defaultSize={ 400 }>
           <div className='queryInput resizable'>
             <InputEditor
-              clientAddress={clientAddress}
-              serverAddress={serverAddress}
-              graphQLRoute={graphQLRoute}
-              queryString={queryString}
-              setQueryString={setQueryString}
-              setResults={setResults}
-              logNewTime={logNewTime}
-              schema={schema}
-              clearCacheRoute={clearCacheRoute}
+              clientAddress={ clientAddress }
+              serverAddress={ serverAddress }
+              graphQLRoute={ graphQLRoute }
+              queryString={ queryString }
+              setQueryString={ setQueryString }
+              setResults={ setResults }
+              logNewTime={ logNewTime }
+              schema={ schema }
+              clearCacheRoute={ clearCacheRoute }
             />
           </div>
 
           <div className='queryResult resizable'>
-            <OutputEditor results={results} />
+            <OutputEditor results={ results } />
           </div>
         </SplitPane>
       </div>
-      <div id='metricsOutput' style={{ maxHeight: '100px' }}>
+      <div id='metricsOutput'>
         <Metrics
-          fetchTime={queryResponseTime[queryResponseTime.length - 1]}
-          fetchTimeInt={queryResponseTime}
+          fetchTime={ queryResponseTime[queryResponseTime.length - 1] }
+          fetchTimeInt={ queryResponseTime }
         />
       </div>
     </div>
