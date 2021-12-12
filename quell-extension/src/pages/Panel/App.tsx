@@ -26,8 +26,8 @@ const App = () => {
   const [serverAddress, setServerAddress] = useState<string>(
     'http://localhost:3000'
   );
-  const [redisAddress, setRedisAddress] = useState<string>(
-    'http://localhost:6379'
+  const [redisRoute, setRedisRoute] = useState<string>(
+    '/redis'
   );
   const [clearCacheRoute, setClearCacheRoute] = useState<string>('/clearCache');
   // changes tab - defaults to query
@@ -112,7 +112,10 @@ const App = () => {
 
         {activeTab === 'cache' && (
           <div className="cacheTab">
-            <CacheTab />
+            <CacheTab 
+              serverAddress={serverAddress}
+              redisRoute={redisRoute}
+            />
           </div>
         )}
 
@@ -125,8 +128,8 @@ const App = () => {
               setClientAddress={setClientAddress}
               serverAddress={serverAddress}
               setServerAddress={setServerAddress}
-              redisAddress={redisAddress}
-              setRedisAddress={setRedisAddress}
+              redisAddress={redisRoute}
+              setRedisAddress={setRedisRoute}
               schema={schema}
               setSchema={setSchema}
               clearCacheRoute={clearCacheRoute}

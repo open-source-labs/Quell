@@ -1,21 +1,21 @@
 import { useState, useEffect } from 'react';
 import NavButton from './NavButton';
 
-const CacheTab = () => {
+const CacheTab = ({ serverAddress, redisRoute }) => {
   //use state to store data from redis server
   const [ redisStats, setRedisStats ] = useState([]);
   const [ activeTab, setActiveTab] = useState('client');
 
   useEffect(() => {
     //  send fetch to redis route
-     fetch('http://localhost:3000/redis')
+     fetch(`${serverAddress}${redisRoute}`)
      .then(response => response.json())
      .then(data => setRedisStats(data))
      .catch(error => console.log('error fetching from redis', error));
   },[])
 
   const genTable = (title) => {
-    console.log(redisStats)
+    // console.log(redisStats)
     const output = [];
     for (let key in redisStats[title]){
       output.push(
