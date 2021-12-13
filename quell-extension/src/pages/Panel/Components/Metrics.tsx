@@ -9,7 +9,7 @@ const Metrics = (props) => {
   const avgFetchTime = fetchTimeInt[0] ? (fetchTimeInt.reduce((a:number, b:number) => a+b, 0)/fetchTimeInt.length).toFixed(2) + " ms": " - ms";
 
   return (
-    <div id="metrics-container">
+    <div className="metrics-container">
       <div style={{fontSize:'1.5rem'}}>Metrics:</div>
       <div id="speed-metrics">
         <div>Latest query/mutation time:</div>

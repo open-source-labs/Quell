@@ -17,16 +17,16 @@ import NavButton from './NavButton';
 import { getResponseStatus } from '../helpers/getResponseStatus';
 import { getOperationNames } from '../helpers/parseQuery';
 
-const NetworkTab = ({ graphQLRoute, clientAddress, clientRequests } = props) => {
+const ClientTab = ({ graphQLRoute, clientAddress, clientRequests } = props) => {
   const [clickedRowData, setClickedRowData] = useState({});
   const [activeRow, setActiveRow] = useState<number>(-1);
 
   return (
-    <div className='networkTab'>
+    <div className='clientTab'>
       <div className='title_bar'>
         Client Quell Requests
       </div>
-      <div id="network-page-container">
+      <div id="client-page-container">
         <SplitPane
           style={{ maxWidth: '100%' }}
           split="vertical"
@@ -34,9 +34,9 @@ const NetworkTab = ({ graphQLRoute, clientAddress, clientRequests } = props) => 
           maxSize={-300}
           defaultSize={activeRow === -1 ? (window.innerWidth / 3) * 2 : window.innerWidth / 2}
         >
-          <div id="network-request-table">
+          <div id="client-request-table">
             <NetworkRequestTable
-              className='networkTable'
+              className='clientTable'
               clientRequests={clientRequests}
               setClickedRowData={setClickedRowData}
               setActiveRow={setActiveRow}
@@ -49,7 +49,7 @@ const NetworkTab = ({ graphQLRoute, clientAddress, clientRequests } = props) => 
             />
           ) : (
             <div
-              id="network-request-metrics"
+              id="client-request-metrics"
               style={{ marginTop: '-2px', marginLeft: '20px' }}
             >
               <Metrics
@@ -81,14 +81,14 @@ const RequestDetails = ({ clickedRowData } = props) => {
 
   return (
     <div id="queryExtras">
-      <div className="networkNavBar">
+      <div className="clientNavBar">
 
         < NavButton 
           text={'request'} 
           activeTab={activeTab} 
           setActiveTab={setActiveTab}
           altText={'Request Headers'}
-          altClass={'networkNavButton'}
+          altClass={'clientNavButton'}
         />
 
         < NavButton 
@@ -96,7 +96,7 @@ const RequestDetails = ({ clickedRowData } = props) => {
           activeTab={activeTab} 
           setActiveTab={setActiveTab}
           altText={'Response Headers'}
-          altClass={'networkNavButton'}
+          altClass={'clientNavButton'}
         />
 
         < NavButton 
@@ -104,11 +104,11 @@ const RequestDetails = ({ clickedRowData } = props) => {
           activeTab={activeTab} 
           setActiveTab={setActiveTab}
           altText={'Response Data'}
-          altClass={'networkNavButton'}
+          altClass={'clientNavButton'}
         />
 
       </div>
-      <div className="headersBox" style={activeTab === 'data' ? {height:'0px'}:{}}>
+      <div className="headersTabs" style={activeTab === 'data' ? {height:'0px'}:{}}>
         {activeTab === 'request' && (
           <>
             {/* <div className="networkTitle">Request Headers</div> */}
@@ -133,7 +133,7 @@ const RequestDetails = ({ clickedRowData } = props) => {
       {activeTab === 'data' && (
         <>
           <CodeMirror
-            className='network_editor'
+            className='client_editor'
             value={beautify(clickedRowData.responseData, null, 2, 80)}
             options={{
               theme: 'material-darker',
@@ -255,4 +255,4 @@ const NetworkRequestTable = ({
   );
 };
 
-export default NetworkTab;
+export default ClientTab;

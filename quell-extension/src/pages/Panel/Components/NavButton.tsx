@@ -12,7 +12,7 @@ const NavButton = ({
       className = {altClass || 'navbutton'}  
       style={
         activeTab === text ? 
-          { backgroundColor: '#333', color:"#999"} : 
+          { backgroundColor: '#333', color:"#bbb"} : 
           {}} // highlights when selected
       onClick={() => {
         setActiveTab(text)
