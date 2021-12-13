@@ -6,7 +6,7 @@ const CacheTab = ({ serverAddress, redisRoute, handleClearCache }) => {
   const [redisStats, setRedisStats] = useState([]);
   const [activeTab, setActiveTab] = useState('client');
 
-  const fetchRedisInfo = (): void => {
+  const fetchRedisInfo = () => {
     fetch(`${serverAddress}${redisRoute}`)
       .then((response) => response.json())
       .then((data) => setRedisStats(data))

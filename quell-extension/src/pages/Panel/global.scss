@@ -19,7 +19,7 @@ p {
 .title_bar {
   font-size: 1.5rem;
   font-weight: bold;
-  margin-top: 4vh;
+  margin-top: -1vh;
   margin-bottom: 1vh;
 }
 
@@ -45,14 +45,28 @@ button:hover {
   width: auto;
 }
 
+#navbar_container {
+  display: flex;
+  justify-content: space-between;
+}
+
 #navbar {
   background-color: #222222;
   border-width: 0 0 2px;
   border-color:rgb(110, 110, 110);
-  position: fixed;
+  // position: fixed;
   width: 100%;
   top:5px;
   z-index: 5;
+}
+
+#docs_link {
+  margin-right: 10px;
+  a:link, a:visited, a:hover, a:active {
+    color: #7cd1e9;
+    font-weight: bold;
+    text-decoration: none;
+  }
 }
 
 .navbutton {

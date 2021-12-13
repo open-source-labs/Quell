@@ -75,7 +75,7 @@ const App = () => {
       .then((response) => response.json())
       .then((data) => {
         const schema = buildClientSchema(data.data);
-        setSchema(schema);
+        setSchema(schema || 'No schema retreived');
       })
       .catch((err) => console.log(err));
   }, [clientAddress, serverAddress, graphQLRoute]);
