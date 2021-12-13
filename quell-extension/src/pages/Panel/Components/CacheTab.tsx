@@ -3,13 +3,19 @@ import NavButton from './NavButton';
 
 const CacheTab = ({ serverAddress, redisRoute, handleClearCache }) => {
   //use state to store data from redis server
-  const [redisStats, setRedisStats] = useState([]);
+  const [redisStats, setRedisStats] = useState({});
+  const [redisKeys, setRedisKeys] = useState([]);
+  const [redisValues, setRedisValues] = useState([]);
   const [activeTab, setActiveTab] = useState('server');
 
   const fetchRedisInfo = () => {
     fetch(`${serverAddress}${redisRoute}`)
       .then((response) => response.json())
-      .then((data) => setRedisStats(data))
+      .then((data) => {
+        if (data.redisStats) setRedisStats(data.redisStats);
+        if (data.redisKeys) setRedisKeys(data.redisKeys);
+        if (data.redisValues) setRedisValues(data.redsValues);
+      })
       .catch((error) =>
         console.log('error fetching from redis endpoint: ', error)
       );
@@ -20,7 +26,6 @@ const CacheTab = ({ serverAddress, redisRoute, handleClearCache }) => {
   }, []);
 
   const genTable = (title) => {
-    // console.log(redisStats)
     const output = [];
     for (let key in redisStats[title]) {
       output.push(
