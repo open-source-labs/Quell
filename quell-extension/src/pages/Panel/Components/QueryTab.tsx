@@ -13,8 +13,8 @@ const QueryTab = ({
   setQueryString,
   setResults,
   schema,
-  clearCacheRoute,
-  results
+  results,
+  handleClearCache
   } = props) => {
 
   // storing response times for each query as an array
@@ -45,7 +45,7 @@ const QueryTab = ({
               setResults={ setResults }
               logNewTime={ logNewTime }
               schema={ schema }
-              clearCacheRoute={ clearCacheRoute }
+              handleClearCache={ handleClearCache }
             />
           </div>
 

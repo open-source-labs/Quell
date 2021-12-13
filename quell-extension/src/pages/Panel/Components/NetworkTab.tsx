@@ -32,7 +32,7 @@ const NetworkTab = ({ graphQLRoute, clientAddress, clientRequests } = props) => 
           split="vertical"
           minSize={450}
           maxSize={-300}
-          defaultSize={activeRow === -1 ? window.innerWidth-250 : window.innerWidth/2}
+          defaultSize={activeRow === -1 ? (window.innerWidth / 3) * 2 : window.innerWidth / 2}
         >
           <div id="network-request-table">
             <NetworkRequestTable
@@ -155,7 +155,6 @@ const NetworkRequestTable = ({
   activeRow,
 } = props) => {
   const handleRowClick = (cell) => {
-    // const { request.headers, response.headers } = cell.row.original;
     setClickedRowData(cell.row.original);
   };
 

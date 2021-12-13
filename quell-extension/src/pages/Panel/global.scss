@@ -6,6 +6,10 @@ html {
   font-family: 'Roboto', sans-serif;
   color: #ddd;
   overflow-y: hidden;
+
+  &::-webkit-scrollbar {
+    width: 0px;
+}
 }
  
 p { 
@@ -15,6 +19,8 @@ p {
 .title_bar {
   font-size: 1.5rem;
   font-weight: bold;
+  margin-top: -5vh;
+  margin-bottom: 1vh;
 }
 
 .devtools {
@@ -33,27 +39,44 @@ button:hover {
 
 /******* CSS for Nav Bar *******/
 #logo-img {
-  padding-left:10px;
-  height: 10px;
+  padding-left: 10px;
+  padding-right: 10px;
+  height: 12px;
   width: auto;
+}
+
+#navbar_container {
+  display: flex;
+  justify-content: space-between;
 }
 
 #navbar {
   background-color: #222222;
   border-width: 0 0 2px;
   border-color:rgb(110, 110, 110);
-  position: fixed;
+  // position: fixed;
   width: 100%;
-  top: 0;
+  top:5px;
   z-index: 5;
+}
+
+#docs_link {
+  margin-right: 10px;
+  a:link, a:visited, a:hover, a:active {
+    color: #7cd1e9;
+    font-weight: bold;
+    text-decoration: none;
+  }
 }
 
 .navbutton {
   background-color: #222222;
   color: #ccc;
   border: none;
+  padding: 5px;
+  padding-left: 10px;
+  padding-right: 10px;
   font-weight: bold;
-  margin-left: 10px;
   font-size: 0.8rem;
 }
 
@@ -62,40 +85,69 @@ button:hover {
 
 .queryTab {
   margin-left: 10px;
+  margin-right: 10px;
   display: grid;
-  grid-template-columns: calc(100% - 250px) 250px;
-  grid-gap: 20px;
+  grid-template-columns: calc((100vw / 3) * 2) calc(100vw / 3);
+  // grid-template-columns: 70vw 30vw;
+  // grid-gap: 20px;
   min-height: 175px;
-  overflow-y: none;
+  overflow-y: hidden;
 
   .SplitPane {
-    max-width: calc(100% - 250px);
+    margin-left: 10px;
+    max-width: calc((100vw / 3) * 2);
+    // min-width: 20vw;
+    position: static;
   }
 
   // limits height & width of the input editor
   .query_input_editor .CodeMirror {
-    height: calc(100vh - 75px);
-    min-width: 400px;
+    height: calc(100vh - 90px);
+    // height: 90vh;
+    // min-width: 400px;
     min-height: 200px;
   }
 
   // limits height of output editor to keep elements in line with input editor
   .query_output_editor .CodeMirror {
-    height: calc(100vh - 53px);
+    height: calc(100vh - 90px);
+    // height: 90vh;
     min-height: 200px;
   }
 }
 
 // css for 'Submit Query' and 'Clear Cache'
 .editorButtons {
+  // font-weight: bold;
+  // font-size: 1rem;
   background-color: #222222;
   border: none;
   color:#999;
   width: 50%;
+  margin-top: -25px;
+  z-index: 5;
   padding: 3px 0 3px 0;
 }
 
 /******* CSS for NetworkTab *******/
+
+#network_page_container {
+  margin-left: 10px;
+  margin-right: 10px;
+  display: grid;
+  grid-template-columns: calc((100vw / 3) * 2) calc(100vw / 3);
+  // grid-template-columns: 70vw 30vw;
+  // grid-gap: 20px;
+  min-height: 175px;
+  overflow-y: hidden;
+
+  .SplitPane {
+    margin-left: 10px;
+    // max-width: calc((100vw / 3) * 2);
+    // min-width: 20vw;
+    position: static;
+  }
+}
 
 table {
   font-size: 0.8rem;
@@ -114,7 +166,7 @@ table {
 #network-request-table {
   border: 1px solid #444;
   margin-left: 10px;
-  height: calc(100vh - 53px);
+  height: 80vh;
   overflow-y: auto;
 }
 
@@ -187,16 +239,19 @@ tr:hover {
   font-size: 0.8rem;
 }
 
+
 /******* For the entire extension *******/
 // padding for the sticky header
 .extensionTabs {
-  margin-top: 20px;
+  margin-top: 30px;
+  padding-left: 10px;
+  padding-right: 10px;
 }
 
 .Cache_Server {
   display: grid;  
-  grid-template-columns: 50% 50%;
-  grid-gap: 1px;
+  grid-template-columns: 49.5% 49.5%;
+  grid-gap: 1%;
 }
 
 // aligns selectable table to server cache table
@@ -280,6 +335,14 @@ tr:hover {
   grid-gap:5px;
 }
 
+.settingsInput .title_bar {
+  margin-top: -5vh;
+}
+
+.retrievedSchema .title_bar {
+  margin-top: -5vh;
+}
+
 // sets up underline and input boxes for settings
 input {
   background-color: #2b2a2a;
@@ -296,7 +359,7 @@ input:hover {
 }
 
 .configSettings {
-  border: 1px solid #555;
+  // border: 1px solid #555;
   color: #aaa;
 }
 
@@ -309,7 +372,8 @@ input:hover {
   font-size: 0.8rem;
   align-content: center;
   width: calc(100% - 8px);
-  height: calc(100vh - 64px);
+  // height: calc(100vh - 64px);
+  height: 75vh;
   // border: 1px solid rgb(104, 107, 112);
   padding: 5px;
   overflow-y: scroll;
@@ -322,5 +386,6 @@ input:hover {
 
 .schema_editor .CodeMirror {
   padding-left: 5px;
-  height: calc(100vh - 54px);
+  // height: calc(100vh - 54px);
+  height: 75vh;
 }
