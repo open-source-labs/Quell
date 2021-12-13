@@ -1,3 +1,5 @@
+/* eslint-disable react/prop-types */
+/* eslint-disable react/react-in-jsx-scope */
 import NavButton from "./NavButton";
 
 const PrimaryNavBar = ({ 

@@ -1,3 +1,5 @@
+/* eslint-disable react/jsx-key */
+/* eslint-disable react/prop-types */
 import React, { useState, useEffect, useMemo, cloneElement } from 'react';
 import { useTable } from 'react-table';
 import Metrics from './Metrics';

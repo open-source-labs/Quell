@@ -1,4 +1,5 @@
-import { useState, useEffect } from 'react';
+/* eslint-disable react/react-in-jsx-scope */
+import React, { useState, useEffect } from 'react';
 import NavButton from './NavButton';
 
 const CacheTab = () => {
@@ -16,7 +17,7 @@ const CacheTab = () => {
 
   const genTable = (title) => {
     const output = [];
-    for (let key in redisStats[title]){
+    for (const key in redisStats[title]){
       output.push(
         <div className='subStats' style={{maxWidth:'500px'}}>
           <div key={`${title}.name`} style={{border:'1px solid #555', padding:'3px 12px 3px 10px'}}>{redisStats[title][key].name}</div>
@@ -30,59 +31,61 @@ const CacheTab = () => {
   const activeStyle = {backgroundColor:'#444'};
  
   return (
-    <div className="cacheStatTab">
-      {/* title */}
-      <span style={{fontWeight:'bold', fontSize: '2rem'}}>Cache Server</span>
+    <React.Fragment>
+      <div className="cacheStatTab">
+        {/* title */}
+        <span style={{fontWeight:'bold', fontSize: '2rem'}}>Cache Server</span>
 
-      <div className="Cache_Server">
-        <div className='serverTable'>
-        {genTable('server')}
-        </div>
-
-        <div className='cacheTables'>         
-          < NavButton 
-            text={'client'} 
-            activeTab={activeTab} 
-            setActiveTab={setActiveTab}
-            altClass={'cacheNavButton'}
-          />
-
-          < NavButton 
-            text={'memory'} 
-            activeTab={activeTab} 
-            setActiveTab={setActiveTab}
-            altClass={'cacheNavButton'}
-          />
-
-          < NavButton 
-            text={'stats'} 
-            activeTab={activeTab} 
-            setActiveTab={setActiveTab}
-            altClass={'cacheNavButton'}
-          />
-
-          <div className='dynamicCacheTable'>
-            {activeTab === 'client' && 
-              <div>
-                {genTable('client')}
-              </div>
-            }
-
-            {activeTab === 'memory' && 
-              <div>
-                {genTable('memory')}
-              </div>
-            }
-
-            {activeTab === 'stats' && 
-              <div>
-                {genTable('stats')}
-              </div>
-            }
+        <div className="Cache_Server">
+          <div className='serverTable'>
+          {genTable('server')}
           </div>
-        </div>  
+
+          <div className='cacheTables'>         
+            < NavButton 
+              text={'client'} 
+              activeTab={activeTab} 
+              setActiveTab={setActiveTab}
+              altClass={'cacheNavButton'}
+            />
+
+            < NavButton 
+              text={'memory'} 
+              activeTab={activeTab} 
+              setActiveTab={setActiveTab}
+              altClass={'cacheNavButton'}
+            />
+
+            < NavButton 
+              text={'stats'} 
+              activeTab={activeTab} 
+              setActiveTab={setActiveTab}
+              altClass={'cacheNavButton'}
+            />
+
+            <div className='dynamicCacheTable'>
+              {activeTab === 'client' && 
+                <div>
+                  {genTable('client')}
+                </div>
+              }
+
+              {activeTab === 'memory' && 
+                <div>
+                  {genTable('memory')}
+                </div>
+              }
+
+              {activeTab === 'stats' && 
+                <div>
+                  {genTable('stats')}
+                </div>
+              }
+            </div>
+          </div>  
+        </div>
       </div>
-    </div>
+    </React.Fragment>
   )
 }
 

@@ -1,3 +1,4 @@
+/* eslint-disable react/react-in-jsx-scope */
 import { useState, useEffect } from 'react';
 import { Controlled as CodeMirror } from 'react-codemirror2';
 import 'codemirror/lib/codemirror.css';
@@ -10,11 +11,10 @@ const OutputEditor = ({results}) => {
 
   useEffect(() => {
     if (Object.keys(results).length > 0) {
-      console.log(results);
       setOutput(beautify(results, null, 2, 80));
     }
   }, [results])
-
+  
 
   return(
     <CodeMirror
