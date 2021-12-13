@@ -1,6 +1,4 @@
-/* eslint-disable react/jsx-key */
-/* eslint-disable react/prop-types */
-import React, { useState, useEffect, useMemo, cloneElement } from 'react';
+import React, { useState, useEffect, useMemo} from 'react';
 import { useTable } from 'react-table';
 import Metrics from './Metrics';
 import SplitPane from 'react-split-pane';
@@ -16,41 +14,29 @@ import 'codemirror-graphql/hint';
 import 'codemirror-graphql/mode';
 import beautify from 'json-beautify';
 import NavButton from './NavButton';
+import { getResponseStatus } from '../helpers/getResponseStatus';
+import { getOperationNames } from '../helpers/parseQuery';
 
-const NetworkTab = ({ graphQLRoute, clientAddress, clientRequests } = props) => {
+const ClientTab = ({ graphQLRoute, clientAddress, clientRequests } = props) => {
   const [clickedRowData, setClickedRowData] = useState({});
   const [activeRow, setActiveRow] = useState<number>(-1);
 
-  useEffect(() => {
-    console.log('request.postData.text: ', clientRequests[0].request.postData.text);
-    console.log('titles: ', typeof Object.keys(JSON.parse(clientRequests[0].request.postData.text)).toString());
-    console.log('titles: ', Object.keys(JSON.parse(clientRequests[0].request.postData.text)).toString());
-    console.log('URL: ', clientRequests[0].request.url);
-    console.log('status:', clientRequests[0].response.status);
-    console.log('size: ', (clientRequests[0].response.content.size / 1000).toFixed(2));
-    console.log("time: ", clientRequests[0].time.toFixed(2));
-
-    console.log('Clicked Row Data: ', clickedRowData);
-  }, [clientRequests, clickedRowData]);
-
   return (
-    <div className='networkTab'>
-      <div style={{ fontSize: '1.25rem', fontWeight: 'bolder' }}>
+    <div className='clientTab'>
+      <div className='title_bar'>
         Client Quell Requests
       </div>
-      <div style={{ fontSize: '.75rem' }}>
-        Total Client Requests: {clientRequests.length}
-      </div>
-      <div id="network-page-container">
+      <div id="client-page-container">
         <SplitPane
           style={{ maxWidth: '100%' }}
           split="vertical"
           minSize={450}
-          defaultSize={800}
+          maxSize={-300}
+          defaultSize={activeRow === -1 ? (window.innerWidth / 3) * 2 : window.innerWidth / 2}
         >
-          <div id="network-request-table">
+          <div id="client-request-table">
             <NetworkRequestTable
-              className='networkTable'
+              className='clientTable'
               clientRequests={clientRequests}
               setClickedRowData={setClickedRowData}
               setActiveRow={setActiveRow}
@@ -63,8 +49,8 @@ const NetworkTab = ({ graphQLRoute, clientAddress, clientRequests } = props) => 
             />
           ) : (
             <div
-              id="network-request-metrics"
-              style={{ marginTop: '-6px', marginLeft: '20px' }}
+              id="client-request-metrics"
+              style={{ marginTop: '-2px', marginLeft: '20px' }}
             >
               <Metrics
                 fetchTime={
@@ -75,7 +61,7 @@ const NetworkTab = ({ graphQLRoute, clientAddress, clientRequests } = props) => 
                 fetchTimeInt={
                   clientRequests.length > 0
                     ? clientRequests.map((request) => request.time)
-                    : 0
+                    : [0]
                 }
               />
             </div>
@@ -95,14 +81,14 @@ const RequestDetails = ({ clickedRowData } = props) => {
 
   return (
     <div id="queryExtras">
-      <div className="networkNavBar">
+      <div className="clientNavBar">
 
         < NavButton 
           text={'request'} 
           activeTab={activeTab} 
           setActiveTab={setActiveTab}
           altText={'Request Headers'}
-          altClass={'networkNavButton'}
+          altClass={'clientNavButton'}
         />
 
         < NavButton 
@@ -110,22 +96,22 @@ const RequestDetails = ({ clickedRowData } = props) => {
           activeTab={activeTab} 
           setActiveTab={setActiveTab}
           altText={'Response Headers'}
-          altClass={'networkNavButton'}
+          altClass={'clientNavButton'}
         />
 
         < NavButton 
           text={'data'} 
           activeTab={activeTab} 
           setActiveTab={setActiveTab}
-          altText={'Response Table'}
-          altClass={'networkNavButton'}
+          altText={'Response Data'}
+          altClass={'clientNavButton'}
         />
 
       </div>
-      <div className="headersBox">
+      <div className="headersTabs" style={activeTab === 'data' ? {height:'0px'}:{}}>
         {activeTab === 'request' && (
           <>
-            <div className="networkTitle">Request Headers</div>
+            {/* <div className="networkTitle">Request Headers</div> */}
             {clickedRowData.request.headers.map((header, index) => (
               <p key={`req-header-${index}`}>
                 <b>{header.name}</b>: {header.value}
@@ -135,7 +121,7 @@ const RequestDetails = ({ clickedRowData } = props) => {
         )}
         {activeTab === 'response' && (
           <>
-            <div className="networkTitle">Response Headers</div>
+            {/* <div className="networkTitle">Response Headers</div> */}
             {clickedRowData.response.headers.map((header, index) => (
               <p key={`res-header-${index}`}>
                 <b>{header.name}</b>: {header.value}
@@ -143,19 +129,21 @@ const RequestDetails = ({ clickedRowData } = props) => {
             ))}
           </>
         )}
-        {activeTab === 'data' && (
-          <>
-            <CodeMirror
-              className='network_editor'
-              value={beautify(clickedRowData.responseData, null, 2, 80)}
-              options={{
-                theme: 'material-darker',
-                mode: 'json',
-              }}
-            />
-          </>
-        )}
       </div>
+      {activeTab === 'data' && (
+        <>
+          <CodeMirror
+            className='client_editor'
+            value={beautify(clickedRowData.responseData, null, 2, 80)}
+            options={{
+              theme: 'material-darker',
+              mode: 'json',
+              scrollbarStyle: 'null',
+            }}
+          />
+        </>
+      )}
+      
     </div>
   );
 };
@@ -167,17 +155,22 @@ const NetworkRequestTable = ({
   activeRow,
 } = props) => {
   const handleRowClick = (cell) => {
-    // const { request.headers, response.headers } = cell.row.original;
     setClickedRowData(cell.row.original);
   };
 
   const columns = useMemo(
     () => [
       {
+        id: 'number',
+        Header: '#',
+        accessor: (row, index) => index + 1,
+      },
+      {
         // maybe instead of query type, use `graphql-tag` to display name of queried table/document
         id: 'query-type',
-        Header: 'Query Type',
-        accessor: (row) => Object.keys(JSON.parse(row.request.postData.text)),
+        Header: 'Operation Type(s)',
+        // accessor: (row) => Object.keys(JSON.parse(row.request.postData.text)),
+        accessor: row => getOperationNames(row)
       },
       {
         id: 'url',
@@ -187,7 +180,7 @@ const NetworkRequestTable = ({
       {
         id: 'status',
         Header: 'Status',
-        accessor: (row) => row.response.status,
+        accessor: (row) => getResponseStatus(row),
       },
       {
         id: 'size',
@@ -203,16 +196,16 @@ const NetworkRequestTable = ({
     []
   );
 
-  const data = useMemo(() => [...clientRequests], []);
+  // React Table suggests memoizing table data as best practice, to reduce computation
+  // in populating table, but this prevents live updating on new client requests
+  // const data = useMemo(() => [...clientRequests], []);
+  const data = clientRequests;
 
   const { getTableProps, getTableBodyProps, headerGroups, rows, prepareRow } =
     useTable({ columns, data });
 
   return (
     <>
-      {/* <div>
-     {clientRequests.map((req, index) => <NetworkRequest key={index} req={req} index={index} />)}
-   </div> */}
       <div id="dataTable_container">
         <table {...getTableProps()}>
           <thead>
@@ -262,4 +255,4 @@ const NetworkRequestTable = ({
   );
 };
 
-export default NetworkTab;
+export default ClientTab;

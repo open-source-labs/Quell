@@ -1,10 +1,11 @@
-/* eslint-disable react/react-in-jsx-scope */
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import PrimaryNavBar from './Components/PrimaryNavBar';
-import QueryTab from './Components/QueryTab';
+import ServerTab from './Components/ServerTab';
 import CacheTab from './Components/CacheTab';
-import NetworkTab from './Components/NetworkTab';
-// import Logo from './assets/Quell_full_size.png';
+import ClientTab from './Components/ClientTab';
+import Logo from './assets/Quell_full_size.png';
+import isGQLQuery from './helpers/isGQLQuery';
+import { handleNavigate, handleRequestFinished } from './helpers/listeners';
 
 // GraphQL
 import { getIntrospectionQuery, buildClientSchema } from 'graphql';
@@ -15,6 +16,7 @@ import data from './data/sampleClientRequests';
 
 const App = () => {
   // queried data results
+  const [activeTab, setActiveTab] = useState<string>('cache');
   const [results, setResults] = useState({});
   const [schema, setSchema] = useState({});
   const [queryString, setQueryString] = useState<string>('');
@@ -25,29 +27,36 @@ const App = () => {
   const [serverAddress, setServerAddress] = useState<string>(
     'http://localhost:3000'
   );
-  const [redisAddress, setRedisAddress] = useState<string>(
-    'http://localhost:6379'
+  const [redisRoute, setRedisRoute] = useState<string>(
+    '/redis'
   );
   const [clearCacheRoute, setClearCacheRoute] = useState<string>('/clearCache');
   // changes tab - defaults to query
-  const [activeTab, setActiveTab] = useState<string>('query');
+  const [clientRequests, setClientRequests] = useState(data);
+
+  const handleClearCache = () => {
+    const address=`${props.serverAddress}${props.clearCacheRoute}`
+    fetch(address)
+      .then(data => console.log(data))
+      .catch(err => console.log(err));
+  }
+
+  const gqlListener = (request: chrome.devtools.network.Request): void => {
+    if (isGQLQuery(request)) {
+      request.getContent((body) => {
+        const responseData = JSON.parse(body);
+        request.responseData = responseData;
+        setClientRequests((prev) => prev.concat([request]));
+      });
+    }
+  };
 
   // COMMENT OUT IF WORKING FROM DEV SERVER
   // useEffect(() => {
-  //   chrome.devtools.network.onRequestFinished.addListener(request => {
-  //     if (
-  //       request.request.url === `${clientAddress}${graphQLRoute.toLowerCase()}`
-  //     ) {
-  //       request.getContent(body => {
-  //         const responseData = JSON.parse(body);
-  //         request.responseData = responseData;
-  //         addClientRequests((prev) => prev.concat([request]));
-  //       })
-  //     }
-  //   });
+  //   handleRequestFinished(gqlListener);
+  //   handleNavigate(gqlListener);
   // }, []);
 
-   //
   useEffect(() => {
     const introspectionQuery = getIntrospectionQuery();
     const address = `${serverAddress}${graphQLRoute}`;
@@ -66,70 +75,79 @@ const App = () => {
       .then((response) => response.json())
       .then((data) => {
         const schema = buildClientSchema(data.data);
-        setSchema(schema);
+        setSchema(schema || 'No schema retreived');
       })
       .catch((err) => console.log(err));
   }, [clientAddress, serverAddress, graphQLRoute]);
 
   return (
     <div className="devtools">
+      <PrimaryNavBar
+        activeTab={activeTab}
+        setActiveTab={setActiveTab}
+        Logo={Logo}
+        />
 
-      <PrimaryNavBar 
-        activeTab={ activeTab }
-        setActiveTab={ setActiveTab }
-        // Logo = { Logo }
-      />
+      <div className="extensionTabs">
 
-      <div className='extensionTabs'>
-        {activeTab === 'query' && 
-          < QueryTab
-            clientAddress={ clientAddress }
-            serverAddress={ serverAddress }
-            graphQLRoute={ graphQLRoute }
-            queryString={ queryString }
-            setQueryString={ setQueryString }
-            setResults={ setResults }
-            schema={ schema }
-            clearCacheRoute={ clearCacheRoute }
-            results={ results }
+        {activeTab === 'client' && (
+          <ClientTab
+            graphQLRoute={graphQLRoute}
+            clientAddress={clientAddress}
+            clientRequests={clientRequests}
           />
-        }
-          
-        {activeTab === 'network' && 
-          <NetworkTab
-            graphQLRoute={ graphQLRoute }
-            clientAddress={ clientAddress }
-            // clientRequests={clientRequests}
-            clientRequests={ data }
-          />
-        }
+        )}
 
-        {activeTab === 'cache' && 
-          <div className="cacheTab">
-            <CacheTab />
-          </div>
-        }
-
-        {activeTab === 'settings' &&  
-          <div className="settingsTab">
-            <Settings 
-              graphQLRoute={ graphQLRoute }
-              setGraphQLRoute={ setGraphQLRoute }
+        {activeTab === 'server' && (
+          <>
+            <div className='title_bar'>
+              Query Quell Server
+            </div>
+            < ServerTab
               clientAddress={ clientAddress }
-              setClientAddress={ setClientAddress }
               serverAddress={ serverAddress }
-              setServerAddress={ setServerAddress }
-              redisAddress={ redisAddress }
-              setRedisAddress={ setRedisAddress }
+              graphQLRoute={ graphQLRoute }
+              queryString={ queryString }
+              setQueryString={ setQueryString }
+              setResults={ setResults }
               schema={ schema }
-              setSchema={ setSchema }
               clearCacheRoute={ clearCacheRoute }
-              setClearCacheRoute={ setClearCacheRoute }
+              results={ results }
+              handleClearCache={handleClearCache}
+            />
+          </>
+        )}
+
+
+        {activeTab === 'cache' && (
+          <div className="cacheTab">
+            <CacheTab 
+              serverAddress={serverAddress}
+              redisRoute={redisRoute}
+              handleClearCache={handleClearCache}
             />
           </div>
-        }
-      </div>
+        )}
 
+        {activeTab === 'settings' && (
+          <div className="settingsTab">
+            <Settings
+              graphQLRoute={graphQLRoute}
+              setGraphQLRoute={setGraphQLRoute}
+              clientAddress={clientAddress}
+              setClientAddress={setClientAddress}
+              serverAddress={serverAddress}
+              setServerAddress={setServerAddress}
+              redisRoute={redisRoute}
+              setRedisAddress={setRedisRoute}
+              schema={schema}
+              setSchema={setSchema}
+              clearCacheRoute={clearCacheRoute}
+              setClearCacheRoute={setClearCacheRoute}
+            />
+          </div>
+        )}
+      </div>
     </div>
   );
 };

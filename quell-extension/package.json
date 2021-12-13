@@ -29,6 +29,7 @@
     "json-beautify": "^1.1.1",
     "react": "^17.0.1",
     "react-dom": "^17.0.1",
+    "react-split-pane": "^0.1.92",
     "react-table": "^7.7.0",
     "url-loader": "^4.1.1"
   },
@@ -59,6 +60,7 @@
     "file-loader": "^6.2.0",
     "fs": "^0.0.1-security",
     "graphql": "^16.0.1",
+    "graphql-tag": "^2.12.6",
     "html-webpack-plugin": "^5.5.0",
     "identity-obj-proxy": "^3.0.0",
     "jest": "^27.4.4",

@@ -12,7 +12,9 @@ import 'codemirror-graphql/hint';
 import 'codemirror-graphql/mode';
 
 const InputEditor = (props) => {
-  const [defaultText, setText] = useState<string>('# Enter GraphQL query here\n');
+  const [defaultText, setText] = useState<string>(
+    '# Enter GraphQL query here\n'
+  );
   const [queryTimes, setQueryTimes] = useState<number[]>([0]);
 
   const handleClickSubmit = () => {
@@ -23,33 +25,25 @@ const InputEditor = (props) => {
       method: 'POST',
       headers: {
         Accept: 'application/json',
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-              query: query,
-              operationName: undefined,
-              variables: null
-            })
+        query: query,
+        operationName: undefined,
+        variables: null,
+      }),
     })
-      .then(response => response.json())
-      .then(data => props.setResults(data))
-      .then(() => props.logNewTime(performance.now()-startT))
-      .catch(err => props.setResults(err));
-  }
-
-  const handleClearCache = () => {
-    const address=`${props.serverAddress}${props.clearCacheRoute}`
-    fetch(address)
-      .then(data => console.log(data))
-      .catch(err => console.log(err));
-  }
+      .then((response) => response.json())
+      .then((data) => props.setResults(data))
+      .then(() => props.logNewTime(performance.now() - startT))
+      .catch((err) => props.setResults(err));
+  };
 
   return (
-    <React.Fragment>
+    <div className="query_input_editor">
       <CodeMirror
-        className='query_input_editor'
         value={defaultText}
-        options={{ 
+        options={{
           theme: 'material-darker',
           lineNumbers: true,
           mode: 'graphql',
@@ -68,11 +62,22 @@ const InputEditor = (props) => {
           props.setQueryString(value);
         }}
       />
-      <div style={{border: '1px solid #555', borderTop:'0px', display:'flex', justifyContent: 'space-between',}}>
-        <button className="editorButtons" onClick={handleClickSubmit}>Submit Query</button>
-        <button className="editorButtons" onClick={handleClearCache}>Clear Cache</button>
+      <div
+        style={{
+          border: '1px solid #555',
+          borderTop: '0px',
+          display: 'flex',
+          justifyContent: 'space-between',
+        }}
+      >
+        <button className="editorButtons" onClick={handleClickSubmit}>
+          Submit Query
+        </button>
+        <button className="editorButtons" onClick={props.handleClearCache}>
+          Clear Cache
+        </button>
       </div>
-    </React.Fragment>
+    </div>
   );
 };
 

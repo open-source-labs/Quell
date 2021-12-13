@@ -7,7 +7,7 @@ import 'codemirror/theme/xq-light.css';
 import beautify from 'json-beautify';
 
 const OutputEditor = ({results}) => {
-  const [output, setOutput] = useState<string>('')
+  const [output, setOutput] = useState<string>('# GraphQL query results')
 
   useEffect(() => {
     if (Object.keys(results).length > 0) {

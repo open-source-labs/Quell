@@ -2,91 +2,117 @@
 import React, { useState, useEffect } from 'react';
 import NavButton from './NavButton';
 
-const CacheTab = () => {
+const CacheTab = ({ serverAddress, redisRoute, handleClearCache }) => {
   //use state to store data from redis server
-  const [ redisStats, setRedisStats ] = useState([]);
-  const [ activeTab, setActiveTab] = useState('client');
+  const [redisStats, setRedisStats] = useState([]);
+  const [activeTab, setActiveTab] = useState('server');
+
+  const fetchRedisInfo = () => {
+    fetch(`${serverAddress}${redisRoute}`)
+      .then((response) => response.json())
+      .then((data) => setRedisStats(data))
+      .catch((error) =>
+        console.log('error fetching from redis endpoint: ', error)
+      );
+  };
 
   useEffect(() => {
-    //  send fetch to redis route
-     fetch('http://localhost:3000/redis')
-     .then(response => response.json())
-     .then(data => setRedisStats(data))
-     .catch(error => console.log('error fetching from redis', error));
-  },[])
+    fetchRedisInfo();
+  }, []);
 
   const genTable = (title) => {
+    // console.log(redisStats)
     const output = [];
-    for (const key in redisStats[title]){
+    for (let key in redisStats[title]) {
       output.push(
-        <div className='subStats' style={{maxWidth:'500px'}}>
-          <div key={`${title}.name`} style={{border:'1px solid #555', padding:'3px 12px 3px 10px'}}>{redisStats[title][key].name}</div>
-          <div key={`${title}.value`} style={{border:'1px solid #555', padding:'3px 12px 3px 10px'}}>{redisStats[title][key].value}</div>
+        <div className='subStats' >
+          <div
+            key={`${title}.name`}
+            style={{
+              fontWeight: '500',
+              fontSize: '0.85rem',
+              color: '#eee',
+              border: '1px solid #333',
+              borderWidth: ' 1px 1px ',
+              padding: '3px 12px 3px 10px',
+            }}
+          >
+            {redisStats[title][key].name}
+          </div>
+          <div
+            key={`${title}.value`}
+            style={{ 
+              borderTop: '1px solid #333', 
+              padding: '3px 12px 3px 10px' 
+            }}
+          >
+            {redisStats[title][key].value}
+          </div>
         </div>
-      )
+      );
     }
     return output;
-  }
+  };
 
-  const activeStyle = {backgroundColor:'#444'};
- 
+  const activeStyle = { backgroundColor: '#444' };
+
   return (
-    <React.Fragment>
-      <div className="cacheStatTab">
-        {/* title */}
-        <span style={{fontWeight:'bold', fontSize: '2rem'}}>Cache Server</span>
+    <div className='cacheStatTab'>
+      {/* title */}
+      {/* <span style={{fontSize: '1.5rem', fontWeight:'bold'}}>Cache Server</span> */}
+      <div className='title_bar'>Redis Cache Data</div>
 
-        <div className="Cache_Server">
-          <div className='serverTable'>
-          {genTable('server')}
+      <div className='Cache_Server'>
+        <div className='cacheTables'>
+          <div className='cacheButtons'>
+            <NavButton
+              text={'server'}
+              activeTab={activeTab}
+              setActiveTab={setActiveTab}
+              altClass={'cacheNavButton'}
+            />
+
+            <NavButton
+              text={'client'}
+              activeTab={activeTab}
+              setActiveTab={setActiveTab}
+              altClass={'cacheNavButton'}
+            />
+
+            <NavButton
+              text={'memory'}
+              activeTab={activeTab}
+              setActiveTab={setActiveTab}
+              altClass={'cacheNavButton'}
+            />
+
+            <NavButton
+              text={'stats'}
+              activeTab={activeTab}
+              setActiveTab={setActiveTab}
+              altClass={'cacheNavButton'}
+            />
           </div>
 
-          <div className='cacheTables'>         
-            < NavButton 
-              text={'client'} 
-              activeTab={activeTab} 
-              setActiveTab={setActiveTab}
-              altClass={'cacheNavButton'}
-            />
+          <div className='dynamicCacheTable'>
+            {activeTab === 'server' && <div>{genTable('server')}</div>}
 
-            < NavButton 
-              text={'memory'} 
-              activeTab={activeTab} 
-              setActiveTab={setActiveTab}
-              altClass={'cacheNavButton'}
-            />
+            {activeTab === 'client' && <div>{genTable('client')}</div>}
 
-            < NavButton 
-              text={'stats'} 
-              activeTab={activeTab} 
-              setActiveTab={setActiveTab}
-              altClass={'cacheNavButton'}
-            />
+            {activeTab === 'memory' && <div>{genTable('memory')}</div>}
 
-            <div className='dynamicCacheTable'>
-              {activeTab === 'client' && 
-                <div>
-                  {genTable('client')}
-                </div>
-              }
-
-              {activeTab === 'memory' && 
-                <div>
-                  {genTable('memory')}
-                </div>
-              }
-
-              {activeTab === 'stats' && 
-                <div>
-                  {genTable('stats')}
-                </div>
-              }
-            </div>
-          </div>  
+            {activeTab === 'stats' && <div>{genTable('stats')}</div>}
+          </div>
+        <button className='optionButtons' id='cacheTabRefresh' onClick={fetchRedisInfo}>
+          Refresh Data
+        </button>
+        <button className='optionButtons' id='cacheTabClear' onClick={handleClearCache}>
+          Clear Cache
+        </button>
         </div>
       </div>
-    </React.Fragment>
-  )
-}
+    </div>
+  );
+};
 
 export default CacheTab;

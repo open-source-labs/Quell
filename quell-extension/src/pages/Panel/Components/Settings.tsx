@@ -10,20 +10,17 @@ import 'codemirror/addon/hint/show-hint';
 import 'codemirror-graphql/lint';
 import 'codemirror-graphql/hint';
 import 'codemirror-graphql/mode';
-import { TextField, Typography } from '@mui/material';
 import beautify from 'json-beautify';
  
 const Settings = ({
   graphQLRoute,
   setGraphQLRoute,
-  clientAddress,
-  setClientAddress,
+
   serverAddress,
   setServerAddress,
-  redisAddress,
-  setRedisAddress,
+  redisRoute,
+  setRedisRoute,
   schema,
-  setSchema,
   clearCacheRoute,
   setClearCacheRoute
 } = props) => {
@@ -45,26 +42,25 @@ const Settings = ({
 
   return (
     <React.Fragment>
-      <div className="settingsInput" 
-        style={{paddingLeft:"10px"}}>
-          <h3>Basic Configuration</h3>
+      <div className="settingsInput">
+          <div className="title_bar">Basic Configuration</div>
           <form className="configSettings">
             {inputArea('GraphQL Route', setGraphQLRoute, graphQLRoute)}
             <div className="settingInputsDesc">Endpoint where GraphQL schema will be retrieved and queries sent</div>            
-            {inputArea('Client Address', setClientAddress, clientAddress)}
-            <div className="settingInputsDesc">HTTP address of client from which Quell makes GraphQL queries</div>
+            {/* {inputArea('Client Address', setClientAddress, clientAddress)}
+            <div className="settingInputsDesc">HTTP address of client from which Quell makes GraphQL queries</div> */}
             {inputArea('Server Address', setServerAddress, serverAddress)}
             <div className="settingInputsDesc">HTTP address of server from which Quell makes GraphQL queries</div>
-            {inputArea('Redis DB Address', setRedisAddress, redisAddress)}
-            <div className="settingInputsDesc">HTTP address of Redis DB for server-side Quell caching</div>
-            {inputArea('Clear Cache Router', setClearCacheRoute, clearCacheRoute)}
+            {inputArea('Redis Route', setRedisRoute, redisRoute)}
+            <div className="settingInputsDesc">Endpoint with <code>QuellCache.getStatsFromRedis</code> middleware installed</div>
+            {inputArea('Clear Cache Route', setClearCacheRoute, clearCacheRoute)}
             <div className="settingInputsDesc">Endpoint for clearing server-side cache</div>
           </form>
       </div>
 
       <div className="retrievedSchema"
         style={{}}>
-        <h3>Retrieved GraphQL Schema</h3>
+        <div className="title_bar">Retrieved GraphQL Schema</div>
         <CodeMirror
           className="schema_editor"
           value={editorText}
