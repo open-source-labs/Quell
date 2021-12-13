@@ -19,7 +19,7 @@ p {
 .title_bar {
   font-size: 1.5rem;
   font-weight: bold;
-  margin-top: -1vh;
+  margin-top: -5vh;
   margin-bottom: 1vh;
 }
 
@@ -166,7 +166,7 @@ table {
 #network-request-table {
   border: 1px solid #444;
   margin-left: 10px;
-  height: calc(100vh - 53px);
+  height: 80vh;
   overflow-y: auto;
 }
 
@@ -336,11 +336,11 @@ tr:hover {
 }
 
 .settingsInput .title_bar {
-  margin-top: 1vh;
+  margin-top: -5vh;
 }
 
 .retrievedSchema .title_bar {
-  margin-top: 1vh;
+  margin-top: -5vh;
 }
 
 // sets up underline and input boxes for settings
@@ -359,7 +359,7 @@ input:hover {
 }
 
 .configSettings {
-  border: 1px solid #555;
+  // border: 1px solid #555;
   color: #aaa;
 }
 
@@ -372,7 +372,8 @@ input:hover {
   font-size: 0.8rem;
   align-content: center;
   width: calc(100% - 8px);
-  height: calc(100vh - 64px);
+  // height: calc(100vh - 64px);
+  height: 75vh;
   // border: 1px solid rgb(104, 107, 112);
   padding: 5px;
   overflow-y: scroll;
@@ -385,5 +386,6 @@ input:hover {
 
 .schema_editor .CodeMirror {
   padding-left: 5px;
-  height: calc(100vh - 54px);
+  // height: calc(100vh - 54px);
+  height: 75vh;
 }

@@ -52,10 +52,10 @@ const App = () => {
   };
 
   // COMMENT OUT IF WORKING FROM DEV SERVER
-  // useEffect(() => {
-  //   handleRequestFinished(gqlListener);
-  //   handleNavigate(gqlListener);
-  // }, []);
+  useEffect(() => {
+    handleRequestFinished(gqlListener);
+    handleNavigate(gqlListener);
+  }, []);
 
   useEffect(() => {
     const introspectionQuery = getIntrospectionQuery();
