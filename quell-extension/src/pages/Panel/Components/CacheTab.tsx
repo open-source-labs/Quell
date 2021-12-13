@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react';
 import NavButton from './NavButton';
+import CacheView from './CacheView';
+import SearchImg from '../assets/search.png';
 import beautify from 'json-beautify';
 
 const CacheTab = ({ serverAddress, redisRoute, handleClearCache }) => {
@@ -60,29 +62,11 @@ const CacheTab = ({ serverAddress, redisRoute, handleClearCache }) => {
     return output;
   };
 
-//   <details>   
-//     <summary>key[i]</summary>   
-//     <p>value[i]</p>   
-//   </details>
-
-  const printShit = () => {
-    const temp = [];
-    let i = 0;
-    while (i < redisKeys.length && i < redisValues.length) {
-      temp.push(
-        <details key={i}>
-          <summary>{redisKeys[i]}</summary>
-          {beautify(JSON.parse(redisValues[i]), null, 2, 20)}
-        </details>
-      )
-      i++;
-    }
-    return temp;
-  }
-  
-
-
+  const [filter, setFilter] = useState('')
   const activeStyle = { backgroundColor: '#444' };
+  const handleFilter = (e) => {
+    setFilter(e.target.value);
+  }
 
   return (
     <div className='cacheStatTab'>
@@ -144,7 +128,15 @@ const CacheTab = ({ serverAddress, redisRoute, handleClearCache }) => {
         </div>
 
         <div className="redisCache">
-          {printShit()}
+          <div className="cacheSearchbar">
+            <img id="searchIcon" src={SearchImg} alt="search" />
+            <input className="cache_filter_field" type="text" placeholder="Filter by id" value={filter} onChange={handleFilter}/>
+          </div>
+          <CacheView 
+            redisKeys={redisKeys}
+            redisValues={redisValues}
+            filteredVal={filter}
+          />
         </div>
       </div>
     </div>
