@@ -5,7 +5,7 @@ import Metrics from './Metrics';
 import SplitPane from 'react-split-pane';
 
 
-const QueryTab = ({ 
+const ServerTab = ({ 
   clientAddress,
   serverAddress,
   graphQLRoute,
@@ -28,12 +28,17 @@ const QueryTab = ({
   };
 
   return (
-    <div className="queryTab">
-      <div id='queryLeft'>
+    <div className="serverTab">
+      <SplitPane
+        className="outer_pane"
+        split="vertical"
+        minSize={ 300 }
+        defaultSize={ window.innerWidth * 0.75}
+      >
+      <div id='serverLeft'>
         <SplitPane 
         split="vertical" 
         minSize={ 300 } 
-        maxSize={ -300 }
         defaultSize={ 400 }>
           <div className='queryInput resizable'>
             <InputEditor
@@ -60,8 +65,9 @@ const QueryTab = ({
           fetchTimeInt={ queryResponseTime }
         />
       </div>
+      </SplitPane>
     </div>
   )
 }
 
-export default QueryTab;
+export default ServerTab;

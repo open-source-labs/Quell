@@ -9,7 +9,7 @@ html {
 
   &::-webkit-scrollbar {
     width: 0px;
-}
+  }
 }
  
 p { 
@@ -19,11 +19,15 @@ p {
 .title_bar {
   font-size: 1.5rem;
   font-weight: bold;
-  margin-top: -5vh;
-  margin-bottom: 1vh;
+  margin: -28px 0 4px;
 }
 
 .devtools {
+  overflow-y: none;
+}
+
+.metrics-container {
+  height: calc(100vh - 80px);
   overflow-y: none;
 }
 
@@ -34,7 +38,8 @@ p {
 }
 
 button:hover {
-  background-color: #444;
+  background-color: #555;
+  color: white;
 }
 
 /******* CSS for Nav Bar *******/
@@ -54,7 +59,6 @@ button:hover {
   background-color: #222222;
   border-width: 0 0 2px;
   border-color:rgb(110, 110, 110);
-  // position: fixed;
   width: 100%;
   top:5px;
   z-index: 5;
@@ -80,71 +84,20 @@ button:hover {
   font-size: 0.8rem;
 }
 
-/******* CSS for Query Tab *******/
-// splits editor area from Metrics
+/******* CSS for ClientTab *******/
 
-.queryTab {
+#client_page_container {
   margin-left: 10px;
   margin-right: 10px;
   display: grid;
-  grid-template-columns: calc((100vw / 3) * 2) calc(100vw / 3);
+
   // grid-template-columns: 70vw 30vw;
   // grid-gap: 20px;
   min-height: 175px;
   overflow-y: hidden;
-
+  
   .SplitPane {
     margin-left: 10px;
-    max-width: calc((100vw / 3) * 2);
-    // min-width: 20vw;
-    position: static;
-  }
-
-  // limits height & width of the input editor
-  .query_input_editor .CodeMirror {
-    height: calc(100vh - 90px);
-    // height: 90vh;
-    // min-width: 400px;
-    min-height: 200px;
-  }
-
-  // limits height of output editor to keep elements in line with input editor
-  .query_output_editor .CodeMirror {
-    height: calc(100vh - 90px);
-    // height: 90vh;
-    min-height: 200px;
-  }
-}
-
-// css for 'Submit Query' and 'Clear Cache'
-.editorButtons {
-  // font-weight: bold;
-  // font-size: 1rem;
-  background-color: #222222;
-  border: none;
-  color:#999;
-  width: 50%;
-  margin-top: -25px;
-  z-index: 5;
-  padding: 3px 0 3px 0;
-}
-
-/******* CSS for NetworkTab *******/
-
-#network_page_container {
-  margin-left: 10px;
-  margin-right: 10px;
-  display: grid;
-  grid-template-columns: calc((100vw / 3) * 2) calc(100vw / 3);
-  // grid-template-columns: 70vw 30vw;
-  // grid-gap: 20px;
-  min-height: 175px;
-  overflow-y: hidden;
-
-  .SplitPane {
-    margin-left: 10px;
-    // max-width: calc((100vw / 3) * 2);
-    // min-width: 20vw;
     position: static;
   }
 }
@@ -163,10 +116,10 @@ table {
   }
 }
 
-#network-request-table {
+#client-request-table {
   border: 1px solid #444;
   margin-left: 10px;
-  height: 80vh;
+  height: calc(100vh - 70px);
   overflow-y: auto;
 }
 
@@ -179,8 +132,7 @@ tr:hover {
   flex-direction: column;
 }
 
-.headersBox {
-  height: 221px;
+.headersTabs {
   overflow: scroll;
   margin: 0 10px 0 10px;
   font: 0.8rem;
@@ -190,20 +142,20 @@ tr:hover {
   border: 1px solid #444;
   padding: 2px;
   width: 99%;
-  height: calc(100vh - 57px);
+  height: calc(100vh - 74px);
   overflow-x: hidden;
   body::-webkit-scrollbar {
     display: none;
   }
 }
 
-.networkNavBar {
+.clientNavBar {
   background-color: #999;
   display: flex;
   justify-content: space-evenly;
 }
 
-.networkNavButton {
+.clientNavButton {
   background-color: #222;
   color: #999;
   font-weight: bold;
@@ -212,7 +164,7 @@ tr:hover {
   font-size: 0.8rem;
 }
 
-.networkTitle {
+.clientTitle {
   font-size: 1.5rem;
   font-weight: bolder;
   border-width: 0 2px;
@@ -224,12 +176,55 @@ tr:hover {
   grid-template-columns: 25% 25% 25% 25%;
 }
 
-.network_editor .CodeMirror {
+.client_editor .CodeMirror {
   height: 221px;
   width: calc(100% - 2px);
   border: none;
 }
 
+/******* CSS for Server Tab *******/
+// splits editor area from Metrics
+
+.serverTab {
+  min-height: 175px;
+  overflow-y: hidden;
+
+  .outerPane .SplitPane {
+    margin-left: 10px;
+    position: static;
+    width:100vw;
+  }
+
+  .query_input_editor {
+    margin-left: 10px;
+  
+  // limits height & width of the input editor
+    .CodeMirror {
+      height: calc(100vh - 70px);
+      min-height: 200px;
+      border-width: 1px 1px 0px 1px;
+    }
+  }
+
+  // limits height of output editor to keep elements in line with input editor
+  .query_output_editor .CodeMirror {
+    height: calc(100vh - 70px);
+    min-height: 200px;
+  }
+}
+
+// css for 'Submit Query' and 'Clear Cache'
+.editorButtons {
+  // font-weight: bold;
+  // font-size: 1rem;
+  background-color: #222222;
+  border: none;
+  color:#999;
+  width: 50%;
+  margin-top: -25px;
+  z-index: 5;
+  padding: 3px 0 3px 0;
+}
 
 /******* CSS for cache data page *******/
 // evenly splits grid in each sub-table for value pairs
@@ -239,40 +234,61 @@ tr:hover {
   font-size: 0.8rem;
 }
 
-
-/******* For the entire extension *******/
-// padding for the sticky header
 .extensionTabs {
   margin-top: 30px;
-  padding-left: 10px;
-  padding-right: 10px;
+  padding: 0 10px 0 10px;
 }
-
+ 
 .Cache_Server {
   display: grid;  
-  grid-template-columns: 49.5% 49.5%;
-  grid-gap: 1%;
+  grid-template-columns: 50% 50%;
+  grid-gap: 1px;
 }
 
 // aligns selectable table to server cache table
 .cacheTables {
-  margin-top: -17px;
   margin-right: 5px;
+  margin-left: -8px;
+  border: 1px solid #444;
+}
+
+.optionButtons { 
+  background-color: #222;
+  color:#999;
+  width: 50%;
+  margin-top: -25px;
+  z-index: 5;
+  padding: 3px 0 3px 0;
+  border: 1px solid #444;
+}
+
+#cacheTabClear {
+  border-left: 0px;
+}
+
+.cacheButtons {
+  display: flex;
+  justify-content: space-around; 
+  margin: 0 1px 0 1px;
 }
 
 .cacheNavButton {
   border: none;
-  width: 33.333%;
-  background-color: #222;
-  color: #ccc;
+  width: calc(100% / 4);
+  background-color: #444;
+  color: white;
   font-weight: bold;
+  font-size: 0.8rem;
+  border: 1px solid #222;
+  border-top: 2px solid #222;
+  padding: 1px 2px 1px 2px;
 }
 
 .dynamicCacheTable {
-  max-height: calc(100vh - 54px);
+  max-height: calc(100vh - 110px);
   overflow-y: auto;
-  border-bottom: 1px solid #444;
 }
+
 
 /******* CSS for SplitPane Resizer *******/
 // DO NOT TOUCH WITHOUT REFERRING TO react-split-pane
@@ -332,21 +348,12 @@ tr:hover {
   width:100%;
   display: grid;
   grid-template-columns: 50% 50%;
-  grid-gap:5px;
-}
-
-.settingsInput .title_bar {
-  margin-top: -5vh;
-}
-
-.retrievedSchema .title_bar {
-  margin-top: -5vh;
+  grid-gap:1px;
 }
 
 // sets up underline and input boxes for settings
 input {
   background-color: #2b2a2a;
-  padding-left: 3px;
   color: #999;
   width: 98%;
   outline: 0;
@@ -359,7 +366,6 @@ input:hover {
 }
 
 .configSettings {
-  // border: 1px solid #555;
   color: #aaa;
 }
 
@@ -385,7 +391,6 @@ input:hover {
 }
 
 .schema_editor .CodeMirror {
-  padding-left: 5px;
   // height: calc(100vh - 54px);
   height: 75vh;
 }

@@ -4,7 +4,7 @@ import NavButton from './NavButton';
 const CacheTab = ({ serverAddress, redisRoute, handleClearCache }) => {
   //use state to store data from redis server
   const [redisStats, setRedisStats] = useState([]);
-  const [activeTab, setActiveTab] = useState('client');
+  const [activeTab, setActiveTab] = useState('server');
 
   const fetchRedisInfo = () => {
     fetch(`${serverAddress}${redisRoute}`)
@@ -24,14 +24,15 @@ const CacheTab = ({ serverAddress, redisRoute, handleClearCache }) => {
     const output = [];
     for (let key in redisStats[title]) {
       output.push(
-        <div className="subStats" style={{ maxWidth: '' }}>
+        <div className='subStats' >
           <div
             key={`${title}.name`}
             style={{
               fontWeight: '500',
               fontSize: '0.85rem',
               color: '#eee',
-              border: '1px solid #555',
+              border: '1px solid #333',
+              borderWidth: ' 1px 1px ',
               padding: '3px 12px 3px 10px',
             }}
           >
@@ -39,7 +40,10 @@ const CacheTab = ({ serverAddress, redisRoute, handleClearCache }) => {
           </div>
           <div
             key={`${title}.value`}
-            style={{ border: '1px solid #555', padding: '3px 12px 3px 10px' }}
+            style={{ 
+              borderTop: '1px solid #333', 
+              padding: '3px 12px 3px 10px' 
+            }}
           >
             {redisStats[title][key].value}
           </div>
@@ -52,60 +56,58 @@ const CacheTab = ({ serverAddress, redisRoute, handleClearCache }) => {
   const activeStyle = { backgroundColor: '#444' };
 
   return (
-    <div className="cacheStatTab">
+    <div className='cacheStatTab'>
       {/* title */}
       {/* <span style={{fontSize: '1.5rem', fontWeight:'bold'}}>Cache Server</span> */}
-      <div className="title_bar">Redis Cache Data</div>
+      <div className='title_bar'>Redis Cache Data</div>
 
-      <div className="Cache_Server">
-        <div className="serverTable">
-          {genTable('server')}
-          <div
-            style={{
-              border: '1px solid #555',
-              borderTop: '0px',
-              display: 'flex',
-              justifyContent: 'space-between',
-            }}
-          >
-            <button className="editorButtons" onClick={fetchRedisInfo}>
-              Refresh Data
-            </button>
-            <button className="editorButtons" onClick={handleClearCache}>
-              Clear Cache
-            </button>
+      <div className='Cache_Server'>
+        <div className='cacheTables'>
+          <div className='cacheButtons'>
+            <NavButton
+              text={'server'}
+              activeTab={activeTab}
+              setActiveTab={setActiveTab}
+              altClass={'cacheNavButton'}
+            />
+
+            <NavButton
+              text={'client'}
+              activeTab={activeTab}
+              setActiveTab={setActiveTab}
+              altClass={'cacheNavButton'}
+            />
+
+            <NavButton
+              text={'memory'}
+              activeTab={activeTab}
+              setActiveTab={setActiveTab}
+              altClass={'cacheNavButton'}
+            />
+
+            <NavButton
+              text={'stats'}
+              activeTab={activeTab}
+              setActiveTab={setActiveTab}
+              altClass={'cacheNavButton'}
+            />
           </div>
-        </div>
 
-        <div className="cacheTables">
-          <NavButton
-            text={'client'}
-            activeTab={activeTab}
-            setActiveTab={setActiveTab}
-            altClass={'cacheNavButton'}
-          />
+          <div className='dynamicCacheTable'>
+            {activeTab === 'server' && <div>{genTable('server')}</div>}
 
-          <NavButton
-            text={'memory'}
-            activeTab={activeTab}
-            setActiveTab={setActiveTab}
-            altClass={'cacheNavButton'}
-          />
-
-          <NavButton
-            text={'stats'}
-            activeTab={activeTab}
-            setActiveTab={setActiveTab}
-            altClass={'cacheNavButton'}
-          />
-
-          <div className="dynamicCacheTable">
             {activeTab === 'client' && <div>{genTable('client')}</div>}
 
             {activeTab === 'memory' && <div>{genTable('memory')}</div>}
 
             {activeTab === 'stats' && <div>{genTable('stats')}</div>}
           </div>
+        <button className='optionButtons' id='cacheTabRefresh' onClick={fetchRedisInfo}>
+          Refresh Data
+        </button>
+        <button className='optionButtons' id='cacheTabClear' onClick={handleClearCache}>
+          Clear Cache
+        </button>
         </div>
       </div>
     </div>

@@ -1,8 +1,8 @@
 import { useState, useEffect, useRef } from 'react';
 import PrimaryNavBar from './Components/PrimaryNavBar';
-import QueryTab from './Components/QueryTab';
+import ServerTab from './Components/ServerTab';
 import CacheTab from './Components/CacheTab';
-import NetworkTab from './Components/NetworkTab';
+import ClientTab from './Components/ClientTab';
 import Logo from './assets/Quell_full_size.png';
 import isGQLQuery from './helpers/isGQLQuery';
 import { handleNavigate, handleRequestFinished } from './helpers/listeners';
@@ -16,7 +16,7 @@ import data from './data/sampleClientRequests';
 
 const App = () => {
   // queried data results
-  const [activeTab, setActiveTab] = useState<string>('client');
+  const [activeTab, setActiveTab] = useState<string>('cache');
   const [results, setResults] = useState({});
   const [schema, setSchema] = useState({});
   const [queryString, setQueryString] = useState<string>('');
@@ -52,10 +52,10 @@ const App = () => {
   };
 
   // COMMENT OUT IF WORKING FROM DEV SERVER
-  useEffect(() => {
-    handleRequestFinished(gqlListener);
-    handleNavigate(gqlListener);
-  }, []);
+  // useEffect(() => {
+  //   handleRequestFinished(gqlListener);
+  //   handleNavigate(gqlListener);
+  // }, []);
 
   useEffect(() => {
     const introspectionQuery = getIntrospectionQuery();
@@ -91,7 +91,7 @@ const App = () => {
       <div className="extensionTabs">
 
         {activeTab === 'client' && (
-          <NetworkTab
+          <ClientTab
             graphQLRoute={graphQLRoute}
             clientAddress={clientAddress}
             clientRequests={clientRequests}
@@ -103,7 +103,7 @@ const App = () => {
             <div className='title_bar'>
               Query Quell Server
             </div>
-            < QueryTab
+            < ServerTab
               clientAddress={ clientAddress }
               serverAddress={ serverAddress }
               graphQLRoute={ graphQLRoute }
