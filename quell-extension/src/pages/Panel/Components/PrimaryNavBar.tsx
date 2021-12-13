@@ -11,16 +11,17 @@ const PrimaryNavBar = ({
         <img id="logo-img" src={Logo} alt="quell logo" />
 
         < NavButton 
-          text={'query'} 
+          text={'client'} 
           activeTab={activeTab} 
           setActiveTab={setActiveTab} 
         />
 
         < NavButton 
-          text={'network'} 
+          text={'server'} 
           activeTab={activeTab} 
           setActiveTab={setActiveTab} 
         />
+
         
         < NavButton 
           text={'cache'} 
