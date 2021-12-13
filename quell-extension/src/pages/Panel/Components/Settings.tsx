@@ -14,8 +14,7 @@ import beautify from 'json-beautify';
 const Settings = ({
   graphQLRoute,
   setGraphQLRoute,
-  clientAddress,
-  setClientAddress,
+
   serverAddress,
   setServerAddress,
   redisAddress,
