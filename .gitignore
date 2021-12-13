@@ -4,3 +4,5 @@ demo/dump.rdb
 dump.rdbquell-client/yarn.lock
 quell-server/yarn.lock
 demo/yarn.lock
+.rdb
+.DS_STORE
