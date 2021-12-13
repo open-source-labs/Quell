@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import NavButton from './NavButton';
+import beautify from 'json-beautify';
 
 const CacheTab = ({ serverAddress, redisRoute, handleClearCache }) => {
   //use state to store data from redis server
@@ -12,9 +13,10 @@ const CacheTab = ({ serverAddress, redisRoute, handleClearCache }) => {
     fetch(`${serverAddress}${redisRoute}`)
       .then((response) => response.json())
       .then((data) => {
+        console.log('redis info: ', data)
         if (data.redisStats) setRedisStats(data.redisStats);
         if (data.redisKeys) setRedisKeys(data.redisKeys);
-        if (data.redisValues) setRedisValues(data.redsValues);
+        if (data.redisValues) setRedisValues(data.redisValues);
       })
       .catch((error) =>
         console.log('error fetching from redis endpoint: ', error)
@@ -58,13 +60,39 @@ const CacheTab = ({ serverAddress, redisRoute, handleClearCache }) => {
     return output;
   };
 
+//   <details>   
+//     <summary>key[i]</summary>   
+//     <p>value[i]</p>   
+//   </details>
+
+  const printShit = () => {
+    const temp = [];
+    let i = 0;
+    while (i < redisKeys.length && i < redisValues.length) {
+      temp.push(
+        <details key={i}>
+          <summary>{redisKeys[i]}</summary>
+          {beautify(JSON.parse(redisValues[i]), null, 2, 20)}
+        </details>
+      )
+      i++;
+    }
+    return temp;
+  }
+  
+
+
   const activeStyle = { backgroundColor: '#444' };
 
   return (
     <div className='cacheStatTab'>
       {/* title */}
       {/* <span style={{fontSize: '1.5rem', fontWeight:'bold'}}>Cache Server</span> */}
-      <div className='title_bar'>Redis Cache Data</div>
+      
+      <div className='title_bar'>
+        <span>Redis Database Status</span>
+        <span>Quell Server Cache</span>
+      </div>
 
       <div className='Cache_Server'>
         <div className='cacheTables'>
@@ -113,6 +141,10 @@ const CacheTab = ({ serverAddress, redisRoute, handleClearCache }) => {
         <button className='optionButtons' id='cacheTabClear' onClick={handleClearCache}>
           Clear Cache
         </button>
+        </div>
+
+        <div className="redisCache">
+          {printShit()}
         </div>
       </div>
     </div>

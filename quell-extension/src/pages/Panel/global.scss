@@ -289,6 +289,17 @@ tr:hover {
   overflow-y: auto;
 }
 
+.redisCache {
+  padding: 0 5px 0 5px;
+  border: 1px solid #444;
+  height: calc(100vh - 114px);
+  overflow-y: auto;
+  font-size: 0.8rem;
+}
+.cacheStatTab .title_bar {
+  display: grid;
+  grid-template-columns: 50% 50%;
+}
 
 /******* CSS for SplitPane Resizer *******/
 // DO NOT TOUCH WITHOUT REFERRING TO react-split-pane
