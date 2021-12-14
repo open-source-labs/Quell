@@ -130,7 +130,7 @@
     "react-codemirror2": "^6.0.1",
     "react-split-pane": "^0.1.92",
     "react-trend": "^1.2.5",
-    "react-table": "^7.7.0",
+    "react-table": "^7.7.0"
   },
   "devDependencies": {
     "@babel/core": "^7.12.13",
