@@ -7,6 +7,12 @@ html {
   color: #ddd;
   overflow-y: hidden;
 
+  a:link, a:visited, a:hover, a:active {
+    color: #7cd1e9;
+    font-weight: bold;
+    text-decoration: none;
+  }
+
   &::-webkit-scrollbar {
     width: 0px;
   }
@@ -90,9 +96,6 @@ button:hover {
   margin-left: 10px;
   margin-right: 10px;
   display: grid;
-
-  // grid-template-columns: 70vw 30vw;
-  // grid-gap: 20px;
   min-height: 175px;
   overflow-y: hidden;
   
@@ -250,6 +253,7 @@ tr:hover {
   margin-right: 5px;
   margin-left: -8px;
   border: 1px solid #444;
+  height: auto;
 }
 
 .optionButtons { 
@@ -289,6 +293,50 @@ tr:hover {
   overflow-y: auto;
 }
 
+.redisCache {
+  padding: 0 5px 0 5px;
+  border: 1px solid #444;
+  height: calc(100vh - 71px);
+  overflow-y: auto;
+  font-size: 0.8rem;
+}
+.cacheStatTab .title_bar {
+  display: grid;
+  grid-template-columns: 50% 50%;
+}
+
+#cache_filter_field {
+  padding-right: -20px;
+}
+
+.cache_entry {
+  // border: 1px solid #444;
+  margin-top: 2vh;
+  margin-bottom: 2vh;
+  margin-left: 1vw;
+}
+
+.cache_entry_key {
+  margin-top: 2vh;
+  margin-bottom: 2vh;
+  // margin-left: 2vw;
+}
+
+.cache_entry_value {
+  margin: 2px 0 2px 4px;
+}
+
+.cacheSearchbar {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+}
+
+#searchIcon {
+  padding:2px 5px 0 2px;
+  height: 15px;
+  width: auto;
+}
 
 /******* CSS for SplitPane Resizer *******/
 // DO NOT TOUCH WITHOUT REFERRING TO react-split-pane

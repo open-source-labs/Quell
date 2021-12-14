@@ -17,7 +17,7 @@ import { IgnorePlugin } from 'webpack';
 
 const App = () => {
   // queried data results
-  const [activeTab, setActiveTab] = useState<string>('cache');
+  const [activeTab, setActiveTab] = useState<string>('client');
   const [results, setResults] = useState({});
   const [schema, setSchema] = useState({});
   const [queryString, setQueryString] = useState<string>('');
@@ -33,7 +33,7 @@ const App = () => {
   );
   const [clearCacheRoute, setClearCacheRoute] = useState<string>('/clearCache');
   // changes tab - defaults to query
-  const [clientRequests, setClientRequests] = useState(data);
+  const [clientRequests, setClientRequests] = useState([]);
 
   const handleClearCache = () => {
     const address=`${props.serverAddress}${props.clearCacheRoute}`
@@ -53,10 +53,10 @@ const App = () => {
   };
 
   // COMMENT OUT IF WORKING FROM DEV SERVER
-  // useEffect(() => {
-  //   handleRequestFinished(gqlListener);
-  //   handleNavigate(gqlListener);
-  // }, []);
+  useEffect(() => {
+    handleRequestFinished(gqlListener);
+    handleNavigate(gqlListener);
+  }, []);
 
   useEffect(() => {
     const introspectionQuery = getIntrospectionQuery();
@@ -76,6 +76,8 @@ const App = () => {
       .then((response) => response.json())
       .then((data) => {
         const schema = buildClientSchema(data.data);
+        console.log('data: ', data);
+        console.log('schema: ', schema);
         setSchema(schema || 'No schema retreived');
       })
       .catch((err) => console.log(err));
@@ -141,6 +143,7 @@ const App = () => {
               serverAddress={serverAddress}
               setServerAddress={setServerAddress}
               redisRoute={redisRoute}
+              schema={schema}
               setRedisRoute={setRedisRoute}
               clearCacheRoute={clearCacheRoute}
               setClearCacheRoute={setClearCacheRoute}

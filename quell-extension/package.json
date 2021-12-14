@@ -1,6 +1,6 @@
 {
   "name": "quell_devtools_extension",
-  "version": "0.0.1",
+  "version": "0.9b",
   "description": "Quell devtool to help visualize and query GraphQL ",
   "main": "index.js",
   "scripts": {
