@@ -1,16 +1,26 @@
 /* eslint-disable react/react-in-jsx-scope */
 import React, { useState, useEffect } from 'react';
 import NavButton from './NavButton';
+import CacheView from './CacheView';
+import SearchImg from '../assets/search.png';
+import beautify from 'json-beautify';
 
 const CacheTab = ({ serverAddress, redisRoute, handleClearCache }) => {
   //use state to store data from redis server
-  const [redisStats, setRedisStats] = useState([]);
+  const [redisStats, setRedisStats] = useState({});
+  const [redisKeys, setRedisKeys] = useState([]);
+  const [redisValues, setRedisValues] = useState([]);
   const [activeTab, setActiveTab] = useState('server');
 
   const fetchRedisInfo = () => {
     fetch(`${serverAddress}${redisRoute}`)
       .then((response) => response.json())
-      .then((data) => setRedisStats(data))
+      .then((data) => {
+        console.log('redis info: ', data)
+        if (data.redisStats) setRedisStats(data.redisStats);
+        if (data.redisKeys) setRedisKeys(data.redisKeys);
+        if (data.redisValues) setRedisValues(data.redisValues);
+      })
       .catch((error) =>
         console.log('error fetching from redis endpoint: ', error)
       );
@@ -21,7 +31,6 @@ const CacheTab = ({ serverAddress, redisRoute, handleClearCache }) => {
   }, []);
 
   const genTable = (title) => {
-    // console.log(redisStats)
     const output = [];
     for (let key in redisStats[title]) {
       output.push(
@@ -54,13 +63,21 @@ const CacheTab = ({ serverAddress, redisRoute, handleClearCache }) => {
     return output;
   };
 
+  const [filter, setFilter] = useState('')
   const activeStyle = { backgroundColor: '#444' };
+  const handleFilter = (e) => {
+    setFilter(e.target.value);
+  }
 
   return (
     <div className='cacheStatTab'>
       {/* title */}
       {/* <span style={{fontSize: '1.5rem', fontWeight:'bold'}}>Cache Server</span> */}
-      <div className='title_bar'>Redis Cache Data</div>
+      
+      <div className='title_bar'>
+        <span>Redis Database Status</span>
+        <span>Quell Server Cache</span>
+      </div>
 
       <div className='Cache_Server'>
         <div className='cacheTables'>
@@ -109,6 +126,18 @@ const CacheTab = ({ serverAddress, redisRoute, handleClearCache }) => {
         <button className='optionButtons' id='cacheTabClear' onClick={handleClearCache}>
           Clear Cache
         </button>
+        </div>
+
+        <div className="redisCache">
+          <div className="cacheSearchbar">
+            <img id="searchIcon" src={SearchImg} alt="search" />
+            <input className="cache_filter_field" type="text" placeholder="Filter by id" value={filter} onChange={handleFilter}/>
+          </div>
+          <CacheView 
+            redisKeys={redisKeys}
+            redisValues={redisValues}
+            filteredVal={filter}
+          />
         </div>
       </div>
     </div>

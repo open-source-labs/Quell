@@ -1314,7 +1314,6 @@ class QuellCache {
           this.getRedisKeys,
           this.getRedisValues,
           (req, res) => {
-            console.log(res.locals);
             return res.status(200).send(res.locals);
           }
         ]
@@ -1324,7 +1323,6 @@ class QuellCache {
           this.getStatsFromRedis,
           this.getRedisKeys,
           (req, res) => {
-            console.log(res.locals);
             return res.status(200).send(res.locals);
           }
         ]
@@ -1333,7 +1331,6 @@ class QuellCache {
         middleware = [
           this.getRedisKeys,
           (req, res) => {
-            console.log(res.locals);
             return res.status(200).send(res.locals);
           }
         ]
@@ -1342,7 +1339,6 @@ class QuellCache {
         middleware = [
           this.getStatsFromRedis,
           (req, res) => {
-            console.log(res.locals);
             return res.status(200).send(res.locals);
           }
         ];
@@ -1353,7 +1349,6 @@ class QuellCache {
           this.getRedisKeys,
           this.getRedisValues,
           (req, res) => {
-            console.log(res.locals);
             return res.status(200).send(res.locals);
           }
         ];

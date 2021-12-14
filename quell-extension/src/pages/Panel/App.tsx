@@ -4,7 +4,7 @@ import PrimaryNavBar from './Components/PrimaryNavBar';
 import ServerTab from './Components/ServerTab';
 import CacheTab from './Components/CacheTab';
 import ClientTab from './Components/ClientTab';
-// import Logo from './assets/Quell_full_size.png';
+import Logo from './assets/Quell_full_size.png';
 import isGQLQuery from './helpers/isGQLQuery';
 import { handleNavigate, handleRequestFinished } from './helpers/listeners';
 
@@ -14,6 +14,7 @@ import Settings from './Components/Settings';
 
 // Sample clientRequest data for building Network component
 import data from './data/sampleClientRequests';
+import { IgnorePlugin } from 'webpack';
 
 const App = () => {
   // queried data results
@@ -21,7 +22,7 @@ const App = () => {
   const [results, setResults] = useState({});
   const [schema, setSchema] = useState({});
   const [queryString, setQueryString] = useState<string>('');
-  const [graphQLRoute, setGraphQLRoute] = useState<string>('/graphQL');
+  const [graphQLRoute, setGraphQLRoute] = useState<string>('/graphQL');  
   const [clientAddress, setClientAddress] = useState<string>(
     'http://localhost:8080'
   );
@@ -33,7 +34,7 @@ const App = () => {
   );
   const [clearCacheRoute, setClearCacheRoute] = useState<string>('/clearCache');
   // changes tab - defaults to query
-  const [clientRequests, setClientRequests] = useState(data);
+  const [clientRequests, setClientRequests] = useState([]);
 
   const handleClearCache = () => {
     const address=`${props.serverAddress}${props.clearCacheRoute}`
@@ -86,7 +87,10 @@ const App = () => {
       <PrimaryNavBar
         activeTab={activeTab}
         setActiveTab={setActiveTab}
-        // Logo={Logo}
+        Logo={Logo}
+        graphQL_field={graphQLRoute !== ''}
+        server_field={serverAddress !== ''}
+        redis_field={redisRoute !== ''}
         />
 
       <div className="extensionTabs">
@@ -135,14 +139,10 @@ const App = () => {
             <Settings
               graphQLRoute={graphQLRoute}
               setGraphQLRoute={setGraphQLRoute}
-              clientAddress={clientAddress}
-              setClientAddress={setClientAddress}
               serverAddress={serverAddress}
               setServerAddress={setServerAddress}
               redisRoute={redisRoute}
-              setRedisAddress={setRedisRoute}
-              schema={schema}
-              setSchema={setSchema}
+              setRedisRoute={setRedisRoute}
               clearCacheRoute={clearCacheRoute}
               setClearCacheRoute={setClearCacheRoute}
             />
