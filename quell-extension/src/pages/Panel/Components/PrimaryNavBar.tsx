@@ -1,6 +1,14 @@
 import NavButton from './NavButton';
 
-const PrimaryNavBar = ({ activeTab, setActiveTab, Logo } = props) => {
+const PrimaryNavBar = ({ 
+  activeTab, 
+  setActiveTab, 
+  Logo,
+  graphQL_field,
+  server_field,
+  redis_field 
+} = props) => {
+
   return (
     <div id="navbar_container">
       <div id="navbar">
@@ -12,17 +20,33 @@ const PrimaryNavBar = ({ activeTab, setActiveTab, Logo } = props) => {
           setActiveTab={setActiveTab}
         />
 
-        <NavButton
-          text={'server'}
-          activeTab={activeTab}
-          setActiveTab={setActiveTab}
-        />
+        {(graphQL_field && server_field) ? 
+          <NavButton
+            text={'server'}
+            activeTab={activeTab}
+            setActiveTab={setActiveTab}
+          /> :
+          <button 
+            className="navbutton"  
+            onClick={()=>setActiveTab('settings')}
+          >
+            Server
+          </button>
+        }
 
-        <NavButton
-          text={'cache'}
-          activeTab={activeTab}
-          setActiveTab={setActiveTab}
-        />
+        {(redis_field && server_field) ? 
+          <NavButton
+            text={'cache'}
+            activeTab={activeTab}
+            setActiveTab={setActiveTab}
+          /> : 
+          <button 
+            className="navbutton"  
+            onClick={()=>setActiveTab('settings')}
+          >
+            Cache
+          </button>
+        }
 
         <NavButton
           text={'settings'}

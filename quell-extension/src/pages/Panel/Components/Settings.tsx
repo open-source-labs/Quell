@@ -45,13 +45,11 @@ const Settings = ({
           <div className="title_bar">Basic Configuration</div>
           <form className="configSettings">
             {inputArea('GraphQL Route', setGraphQLRoute, graphQLRoute)}
-            <div className="settingInputsDesc">Endpoint where GraphQL schema will be retrieved and queries sent</div>            
-            {/* {inputArea('Client Address', setClientAddress, clientAddress)}
-            <div className="settingInputsDesc">HTTP address of client from which Quell makes GraphQL queries</div> */}
+            <div className="settingInputsDesc" style={graphQLRoute === '' ? {color:'red'} : {}}>Endpoint where GraphQL schema will be retrieved and queries sent</div>            
             {inputArea('Server Address', setServerAddress, serverAddress)}
-            <div className="settingInputsDesc">HTTP address of server from which Quell makes GraphQL queries</div>
+            <div className="settingInputsDesc" style={serverAddress === '' ? {color:'red'} : {}}>HTTP address of server from which Quell makes GraphQL queries</div>
             {inputArea('Redis Route', setRedisRoute, redisRoute)}
-            <div className="settingInputsDesc">Endpoint with <code>QuellCache.getStatsFromRedis</code> middleware installed</div>
+            <div className="settingInputsDesc" style={redisRoute === '' ? {color:'red'} : {}}>Endpoint with <code>QuellCache.getStatsFromRedis</code> middleware installed</div>
             {inputArea('Clear Cache Route', setClearCacheRoute, clearCacheRoute)}
             <div className="settingInputsDesc">Endpoint for clearing server-side cache</div>
           </form>
