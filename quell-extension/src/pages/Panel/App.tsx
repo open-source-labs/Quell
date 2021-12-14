@@ -18,7 +18,7 @@ import { IgnorePlugin } from 'webpack';
 
 const App = () => {
   // queried data results
-  const [activeTab, setActiveTab] = useState<string>('cache');
+  const [activeTab, setActiveTab] = useState<string>('server');
   const [results, setResults] = useState({});
   const [schema, setSchema] = useState({});
   const [queryString, setQueryString] = useState<string>('');
@@ -37,7 +37,7 @@ const App = () => {
   const [clientRequests, setClientRequests] = useState([]);
 
   const handleClearCache = () => {
-    const address=`${props.serverAddress}${props.clearCacheRoute}`
+    const address=`${serverAddress}${clearCacheRoute}`
     fetch(address)
       .then(data => console.log(data))
       .catch(err => console.log(err));

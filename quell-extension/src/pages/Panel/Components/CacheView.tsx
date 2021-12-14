@@ -23,7 +23,7 @@ const CacheView = ({ redisKeys, redisValues, filteredVal } = props) => {
       )
      }) 
     } else temp.push(
-      <h4>The specified redis router is not currently configured to return cache keys or values. See the <a href="https://github.com/open-source-labs/Quell" target="_blank">Quell docs</a> for instructions on how to enable these features.</h4>
+      <h4>No keys or values returned. Your Redis cache may be empty, or the specified endpoint may not be configured to return keys and/or values. See the <a href="https://github.com/open-source-labs/Quell" target="_blank">Quell docs</a> for configuration instructions.</h4>
     )
     return temp;
   }
