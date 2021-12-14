@@ -70,8 +70,6 @@ describe('App', () => {
 
 
 
-
-
 describe('CacheTab', () => {
   it('renders CacheTab component correctly', () => {
     act(() => {
