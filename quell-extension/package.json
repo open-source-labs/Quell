@@ -1,11 +1,20 @@
 {
   "name": "quell_devtools_extension",
+  "jest": {
+    "verbose": true,
+    "moduleNameMapper": {
+      "\\.(jpg|jpeg|png|gif|eot|otf|webp|svg|ttf|woff|woff2|mp4|webm|wav|mp3|m4a|aac|oga)$": "./__mocks__/fileMock.js",
+      "\\.(css|less|scss|sass)$": "identity-obj-proxy"
+    },
+    "testEnvironment": "jsdom"
+  },
   "version": "0.0.1",
   "description": "Quell devtool to help visualize and query GraphQL ",
   "main": "index.js",
   "scripts": {
     "serve": "webpack serve --mode development",
-    "build": "webpack --mode production"
+    "build": "webpack --mode production",
+    "test": "jest"
   },
   "author": "Quell",
   "license": "MIT",
@@ -111,6 +120,8 @@
   "dependencies": {
     "codemirror": "^5.64.0",
     "codemirror-graphql": "^1.2.4",
+    "jest-environment-jsdom": "^27.4.4",
+    "jest-fetch-mock": "^3.0.3",
     "json-beautify": "^1.1.1",
     "graphql": "^16.0.1",
     "graphql-tag": "^2.12.6",
@@ -133,6 +144,9 @@
     "file-loader": "^6.2.0",
     "fs": "^0.0.1-security",
     "html-webpack-plugin": "^5.5.0",
+    "identity-obj-proxy": "^3.0.0",
+    "jest": "^27.4.4",
+    "jest-dom": "^4.0.0",
     "sass": "^1.32.6",
     "sass-loader": "^10.1.1",
     "source-map-loader": "^3.0.0",
