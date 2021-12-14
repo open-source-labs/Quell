@@ -7,52 +7,138 @@
     "serve": "webpack serve --mode development",
     "build": "webpack --mode production"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
+  "author": "Quell",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/open-source-labs/Quell/tree/master/quell-client"
+  },
+  "bugs": {
+    "url": "https://github.com/open-source-labs/Quell/issues"
+  },
+  "keywords": [
+    "cache-invalidation",
+    "LokiJS",
+    "graphQL",
+    "cache",
+    "caching",
+    "redis",
+    "batching",
+    "client-side",
+    "server-side",
+    "apollo",
+    "quell"
+  ],
+  "contributors": [
+    {
+      "name": "Chang Cai",
+      "url": "https://github.com/ccai89"
+    },
+    {
+      "name": "Joshua Jordan",
+      "url": "https://github.com/jjordan-90"
+    },
+    {
+      "name": "Robert Howton",
+      "url": "https://github.com/roberthowton"
+    },
+    {
+      "name": "Jinhee Choi",
+      "url": "https://github.com/jcroadmovie"
+    },
+    {
+      "name": "Nayan Parmar",
+      "url": "https://github.com/nparmar1"
+    },
+    {
+      "name": "Tashrif Sanil",
+      "url": "https://github.com/tashrifsanil"
+    },
+    {
+      "name": "Tim Frenzel",
+      "url": "(https://github.com/TimFrenzel"
+    },
+    {
+      "name": "Thomas Reeder",
+      "url": "https://github.com/nomtomnom"
+    },
+    {
+      "name": "Ken Litton",
+      "url": "https://github.com/kenlitton"
+    },
+    {
+      "name": "Robleh Farah",
+      "url": "https://github.com/farahrobleh"
+    },
+    {
+      "name": "Angela Franco",
+      "url": "https://github.com/ajfranco18"
+    },
+    {
+      "name": "Andrei Cabrera",
+      "url": "https://github.com/Andreicabrerao"
+    },
+    {
+      "name": "Dasha Kondratenko",
+      "url": "https://github.com/dasha-k"
+    },
+    {
+      "name": "Derek Sirola",
+      "url": "https://github.com/dsirola1"
+    },
+    {
+      "name": "Xiao Yu Omeara",
+      "url": "https://github.com/xyomeara"
+    },
+    {
+      "name": "Mike Lauri",
+      "url": "https://github.com/MichaelLauri"
+    },
+    {
+      "name": "Rob Nobile",
+      "url": "https://github.com/RobNobile"
+    },
+    {
+      "name": "Justin Jaeger",
+      "url": "https://github.com/justinjaeger"
+    },
+    {
+      "name": "Nick Kruckenberg",
+      "url": "https://github.com/kruckenberg"
+    }
+  ],
+  "homepage": "http://quellql.io",
   "dependencies": {
-    "@material/data-table": "^13.0.0",
-    "@mui/icons-material": "^5.2.0",
-    "@mui/styles": "^5.2.2",
-    "anychart-react": "^1.4.1",
+    "codemirror": "^5.64.0",
+    "codemirror-graphql": "^1.2.4",
     "json-beautify": "^1.1.1",
+    "graphql": "^16.0.1",
+    "graphql-tag": "^2.12.6",
     "react": "^17.0.1",
     "react-dom": "^17.0.1",
+    "react-codemirror2": "^6.0.1",
     "react-split-pane": "^0.1.92",
+    "react-trend": "^1.2.5",
     "react-table": "^7.7.0",
-    "url-loader": "^4.1.1"
   },
   "devDependencies": {
     "@babel/core": "^7.12.13",
     "@babel/preset-env": "^7.12.13",
     "@babel/preset-react": "^7.12.13",
     "@babel/preset-typescript": "^7.16.0",
-    "@emotion/react": "^11.7.0",
-    "@emotion/styled": "^11.6.0",
-    "@material-ui/core": "^4.12.3",
-    "@mui/material": "^5.2.1",
-    "@types/react": "^17.0.37",
-    "@types/react-dom": "^17.0.11",
-    "antd": "^4.17.2",
     "babel-loader": "^8.2.3",
-    "codemirror": "^5.64.0",
-    "codemirror-graphql": "^1.2.4",
     "copy-webpack-plugin": "^10.0.0",
     "css-loader": "^5.0.1",
     "css-modules-typescript-loader": "^4.0.1",
     "file-loader": "^6.2.0",
     "fs": "^0.0.1-security",
-    "graphql": "^16.0.1",
-    "graphql-tag": "^2.12.6",
     "html-webpack-plugin": "^5.5.0",
-    "react-codemirror2": "^6.0.1",
-    "react-table": "^7.7.0",
-    "react-trend": "^1.2.5",
     "sass": "^1.32.6",
     "sass-loader": "^10.1.1",
     "source-map-loader": "^3.0.0",
     "style-loader": "^2.0.0",
     "typescript": "^4.5.2",
+    "url-loader": "^4.1.1",
     "webpack": "^5.64.4",
     "webpack-cli": "^4.9.1",
     "webpack-dev-server": "^4.6.0"
