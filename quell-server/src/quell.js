@@ -18,10 +18,12 @@ class QuellCache {
     this.query = this.query.bind(this);
     this.clearCache = this.clearCache.bind(this);
     this.buildFromCache = this.buildFromCache.bind(this);
-    this.getStatsFromRedis = this.getStatsFromRedis.bind(this);
     this.generateCacheID = this.generateCacheID.bind(this);
     this.updateCacheByMutation = this.updateCacheByMutation.bind(this);
     this.deleteCacheById = this.deleteCacheById.bind(this);
+    this.getStatsFromRedis = this.getStatsFromRedis.bind(this);
+    this.getRedisKeys = this.getRedisKeys.bind(this);
+    this.getRedisValues = this.getRedisValues.bind(this);
   }
 
   /**
@@ -475,287 +477,7 @@ class QuellCache {
       );
     });
   }
-  /**
-   * getStatsFromRedis sends a command to the Redis cache 
-   * the returned string needs to be parsed with the following fields withdrawn:
-   *  1) "peak.allocated in bytes 1245584
-      2) "total.allocated" in bytes 1155392
-      3) "startup.allocated" in bytes 1011840
-      4) "keys.count" 90
-      5) "keys.bytes-per-key" 1595
-      6)"dataset.bytes" 65984
-      7) "dataset.percentage" "45.965225219726562 out of net memory usage
-      8) "peak.percentage" "92.759056091308594" out of total
-   *  command = '*2\r\n$6\r\nMEMORY\r\n$5\r\nSTATS\r\n';
-   */
-  getStatsFromRedis(req, res, next) {
-    try {
-      const getStats = async () => {
-        this.redisCache.info((err, response) => {
-          const dataLines = response.split('\r\n');
-          //dataLines is an array of strings
 
-          console.log(dataLines);
-          const output = {
-            //SERVER
-            server: [
-              //redis version
-              {
-                name: 'Redis version',
-                value: dataLines
-                  .find((line) => line.match(/redis_version/))
-                  .split(':')[1],
-              },
-              //redis build id
-              {
-                name: 'Redis build id',
-                value: dataLines
-                  .find((line) => line.match(/redis_build_id/))
-                  .split(':')[1],
-              },
-              //redis mode
-              {
-                name: 'Redis mode',
-                value: dataLines
-                  .find((line) => line.match(/redis_mode/))
-                  .split(':')[1],
-              },
-              //os hosting redis system
-              {
-                name: 'Host operating system',
-                value: dataLines.find((line) => line.match(/os/)).split(':')[1],
-              },
-              //TCP/IP listen port
-              {
-                name: 'TCP/IP port',
-                value: dataLines
-                  .find((line) => line.match(/tcp_port/))
-                  .split(':')[1],
-              },
-              //server time
-              // {
-              //   name: 'System time',
-              //   value: dataLines
-              //     .find((line) => line.match(/server_time_in_usec/))
-              //     .split(':')[1],
-              // },
-              //num of seconds since Redis server start
-              {
-                name: 'Server uptime (seconds)',
-                value: dataLines
-                  .find((line) => line.match(/uptime_in_seconds/))
-                  .split(':')[1],
-              },
-              //num of days since Redis server start
-              {
-                name: 'Server uptime (days)',
-                value: dataLines
-                  .find((line) => line.match(/uptime_in_days/))
-                  .split(':')[1],
-              },
-              //path to server's executable
-              {
-                name: 'Path to executable',
-                value: dataLines
-                  .find((line) => line.match(/executable/))
-                  .split(':')[1],
-              },
-              //num of days since Redis server start
-              {
-                name: 'Path to configuration file',
-                value: dataLines
-                  .find((line) => line.match(/config_file/))
-                  .split(':')[1],
-              },
-            ],
-            //CLIENT
-            client: [
-              //number of connected clients
-              {
-                name: 'Connected clients',
-                value: dataLines
-                  .find((line) => line.match(/connected_clients/))
-                  .split(':')[1],
-              },
-              //number of sockets used by cluster bus
-              {
-                name: 'Cluster connections',
-                value: dataLines
-                  .find((line) => line.match(/cluster_connections/))
-                  .split(':')[1],
-              },
-              //max clients
-              {
-                name: 'Max clients',
-                value: dataLines
-                  .find((line) => line.match(/maxclients/))
-                  .split(':')[1],
-              },
-              //number of clients being tracked
-              {
-                name: 'Tracked clients',
-                value: dataLines
-                  .find((line) => line.match(/tracking_clients/))
-                  .split(':')[1],
-              },
-              //blocked clients
-              {
-                name: 'Blocked clients',
-                value: dataLines
-                  .find((line) => line.match(/blocked_clients/))
-                  .split(':')[1],
-              },
-            ],
-            //MEMORY
-            memory: [
-              //total allocated memory
-              {
-                name: 'Total allocated memory',
-                value: dataLines
-                  .find((line) => line.match(/used_memory_human/))
-                  .split(':')[1],
-              },
-              //peak memory consumed
-              {
-                name: 'Peak memory consumed',
-                value: dataLines
-                  .find((line) => line.match(/used_memory_peak_human/))
-                  .split(':')[1],
-              },
-              // % of peak out of total
-              {
-                name: 'Peak memory used % total',
-                value: dataLines
-                  .find((line) => line.match(/used_memory_peak_perc/))
-                  .split(':')[1],
-              },
-              //initial amount of memory consumed at startup
-              {
-                name: 'Memory consumed at startup',
-                value: dataLines
-                  .find((line) => line.match(/used_memory_startup/))
-                  .split(':')[1],
-              },
-              //size of dataset
-              {
-                name: 'Dataset size (bytes)',
-                value: dataLines
-                  .find((line) => line.match(/used_memory_dataset/))
-                  .split(':')[1],
-              },
-              //percent of data out of net mem usage
-              {
-                name: 'Dataset memory % total',
-                value: dataLines
-                  .find((line) => line.match(/used_memory_dataset_perc/))
-                  .split(':')[1],
-              },
-              //total system memory
-              {
-                name: 'Total system memory',
-                value: dataLines
-                  .find((line) => line.match(/total_system_memory_human/))
-                  .split(':')[1],
-              },
-            ],
-            //STATS
-            stats: [
-              //total number of connections accepted by server
-              {
-                name: 'Total connections',
-                value: dataLines
-                  .find((line) => line.match(/total_connections_received/))
-                  .split(':')[1],
-              },
-              //total number of commands processed by server
-              {
-                name: 'Total commands',
-                value: dataLines
-                  .find((line) => line.match(/total_commands_processed/))
-                  .split(':')[1],
-              },
-              //number of commands processed per second
-              {
-                name: 'Commands processed per second',
-                value: dataLines
-                  .find((line) => line.match(/instantaneous_ops_per_sec/))
-                  .split(':')[1],
-              },
-              //total number of keys being tracked
-              {
-                name: 'Tracked keys',
-                value: dataLines
-                  .find((line) => line.match(/tracking_total_keys/))
-                  .split(':')[1],
-              },
-              //total number of items being tracked(sum of clients number for each key)
-              {
-                name: 'Tracked items',
-                value: dataLines
-                  .find((line) => line.match(/tracking_total_items/))
-                  .split(':')[1],
-              },
-              //total number of read events processed
-              {
-                name: 'Reads processed',
-                value: dataLines
-                  .find((line) => line.match(/total_reads_processed/))
-                  .split(':')[1],
-              },
-              //total number of write events processed
-              {
-                name: 'Writes processed',
-                value: dataLines
-                  .find((line) => line.match(/total_writes_processed/))
-                  .split(':')[1],
-              },
-              //total number of error replies
-              {
-                name: 'Error replies',
-                value: dataLines
-                  .find((line) => line.match(/total_error_replies/))
-                  .split(':')[1],
-              },
-              //total number of bytes read from network
-              {
-                name: 'Bytes read from network',
-                value: dataLines
-                  .find((line) => line.match(/total_net_input_bytes/))
-                  .split(':')[1],
-              },
-              //networks read rate per second
-              {
-                name: 'Network read rate (Kb/s)',
-                value: dataLines
-                  .find((line) => line.match(/instantaneous_input_kbps/))
-                  .split(':')[1],
-              },
-              //total number of bytes written to network
-              {
-                name: 'Bytes written to network',
-                value: dataLines
-                  .find((line) => line.match(/total_net_output_bytes/))
-                  .split(':')[1],
-              },
-              //networks write rate per second
-              {
-                name: 'Network write rate (Kb/s)',
-                value: dataLines
-                  .find((line) => line.match(/instantaneous_output_kbps/))
-                  .split(':')[1],
-              },
-            ],
-          };
-          res.locals.output = output;
-          console.log('this is inside func getStats', output);
-          next();
-        });
-      };
-      getStats();
-    } catch (err) {
-      return next(err);
-    }
-  }
   /**
    *  getMutationMap generates a map of mutation to GraphQL object types. This mapping is used
    *  to identify references to cached data when mutation occurs.
@@ -1557,6 +1279,385 @@ class QuellCache {
   clearCache(req, res, next) {
     this.redisCache.flushall();
     next();
+  }
+
+  /**
+   * The getRedisInfo returns a chain of middleware based on what information 
+   * (if any) the user would like to request from the specified redisCache. It 
+   * requires an appropriately configured Express route, for instance:
+   *  app.use('/redis', ...quellCache.getRedisInfo({
+   *    getStats: true,
+   *    getKeys: true,
+   *    getValues: true
+   *  }))
+   * 
+   * @param {Object} options - three properties with boolean values:
+   *                           getStats, getKeys, getValues
+   */
+  getRedisInfo(options = { getStats: true, getKeys: true, getValues: true }) {
+    let middleware;
+
+    const getOptions = (opts) => {
+      const { getStats, getKeys, getValues } = opts;
+      if (!getStats && getKeys && getValues) return 'dontGetStats';
+      else if (getStats && getKeys && !getValues) return 'dontGetValues';
+      else if (!getStats && getKeys && !getValues) return 'getKeysOnly';
+      else if (getStats && !getKeys && !getValues) return 'getStatsOnly';
+      else return 'getAll';
+    };
+
+    console.log(getOptions(options));
+
+    switch (getOptions(options)) {
+      case 'dontGetStats':
+        middleware = [
+          this.getRedisKeys,
+          this.getRedisValues,
+          (req, res) => {
+            return res.status(200).send(res.locals);
+          }
+        ]
+        break;
+      case 'dontGetValues':
+        middleware = [
+          this.getStatsFromRedis,
+          this.getRedisKeys,
+          (req, res) => {
+            return res.status(200).send(res.locals);
+          }
+        ]
+        break;
+      case 'getKeysOnly':
+        middleware = [
+          this.getRedisKeys,
+          (req, res) => {
+            return res.status(200).send(res.locals);
+          }
+        ]
+        break;
+      case 'getStatsOnly':
+        middleware = [
+          this.getStatsFromRedis,
+          (req, res) => {
+            return res.status(200).send(res.locals);
+          }
+        ];
+        break;
+      case 'getAll':
+        middleware = [
+          this.getStatsFromRedis,
+          this.getRedisKeys,
+          this.getRedisValues,
+          (req, res) => {
+            return res.status(200).send(res.locals);
+          }
+        ];
+        break;
+    }
+
+    console.log(middleware);
+    return middleware;
+  }
+
+  getStatsFromRedis(req, res, next) {
+    try {
+      const getStats = () => {
+        this.redisCache.info((err, response) => {
+          const dataLines = response.split('\r\n');
+          //dataLines is an array of strings
+
+          const output = {
+            //SERVER
+            server: [
+              //redis version
+              {
+                name: 'Redis version',
+                value: dataLines
+                  .find((line) => line.match(/redis_version/))
+                  .split(':')[1],
+              },
+              //redis build id
+              {
+                name: 'Redis build id',
+                value: dataLines
+                  .find((line) => line.match(/redis_build_id/))
+                  .split(':')[1],
+              },
+              //redis mode
+              {
+                name: 'Redis mode',
+                value: dataLines
+                  .find((line) => line.match(/redis_mode/))
+                  .split(':')[1],
+              },
+              //os hosting redis system
+              {
+                name: 'Host operating system',
+                value: dataLines.find((line) => line.match(/os/)).split(':')[1],
+              },
+              //TCP/IP listen port
+              {
+                name: 'TCP/IP port',
+                value: dataLines
+                  .find((line) => line.match(/tcp_port/))
+                  .split(':')[1],
+              },
+              //server time
+              // {
+              //   name: 'System time',
+              //   value: dataLines
+              //     .find((line) => line.match(/server_time_in_usec/))
+              //     .split(':')[1],
+              // },
+              //num of seconds since Redis server start
+              {
+                name: 'Server uptime (seconds)',
+                value: dataLines
+                  .find((line) => line.match(/uptime_in_seconds/))
+                  .split(':')[1],
+              },
+              //num of days since Redis server start
+              {
+                name: 'Server uptime (days)',
+                value: dataLines
+                  .find((line) => line.match(/uptime_in_days/))
+                  .split(':')[1],
+              },
+              //path to server's executable
+              {
+                name: 'Path to executable',
+                value: dataLines
+                  .find((line) => line.match(/executable/))
+                  .split(':')[1],
+              },
+              //num of days since Redis server start
+              {
+                name: 'Path to configuration file',
+                value: dataLines
+                  .find((line) => line.match(/config_file/))
+                  .split(':')[1],
+              },
+            ],
+            //CLIENT
+            client: [
+              //number of connected clients
+              {
+                name: 'Connected clients',
+                value: dataLines
+                  .find((line) => line.match(/connected_clients/))
+                  .split(':')[1],
+              },
+              //number of sockets used by cluster bus
+              {
+                name: 'Cluster connections',
+                value: dataLines
+                  .find((line) => line.match(/cluster_connections/))
+                  .split(':')[1],
+              },
+              //max clients
+              {
+                name: 'Max clients',
+                value: dataLines
+                  .find((line) => line.match(/maxclients/))
+                  .split(':')[1],
+              },
+              //number of clients being tracked
+              {
+                name: 'Tracked clients',
+                value: dataLines
+                  .find((line) => line.match(/tracking_clients/))
+                  .split(':')[1],
+              },
+              //blocked clients
+              {
+                name: 'Blocked clients',
+                value: dataLines
+                  .find((line) => line.match(/blocked_clients/))
+                  .split(':')[1],
+              },
+            ],
+            //MEMORY
+            memory: [
+              //total allocated memory
+              {
+                name: 'Total allocated memory',
+                value: dataLines
+                  .find((line) => line.match(/used_memory_human/))
+                  .split(':')[1],
+              },
+              //peak memory consumed
+              {
+                name: 'Peak memory consumed',
+                value: dataLines
+                  .find((line) => line.match(/used_memory_peak_human/))
+                  .split(':')[1],
+              },
+              // % of peak out of total
+              {
+                name: 'Peak memory used % total',
+                value: dataLines
+                  .find((line) => line.match(/used_memory_peak_perc/))
+                  .split(':')[1],
+              },
+              //initial amount of memory consumed at startup
+              {
+                name: 'Memory consumed at startup',
+                value: dataLines
+                  .find((line) => line.match(/used_memory_startup/))
+                  .split(':')[1],
+              },
+              //size of dataset
+              {
+                name: 'Dataset size (bytes)',
+                value: dataLines
+                  .find((line) => line.match(/used_memory_dataset/))
+                  .split(':')[1],
+              },
+              //percent of data out of net mem usage
+              {
+                name: 'Dataset memory % total',
+                value: dataLines
+                  .find((line) => line.match(/used_memory_dataset_perc/))
+                  .split(':')[1],
+              },
+              //total system memory
+              {
+                name: 'Total system memory',
+                value: dataLines
+                  .find((line) => line.match(/total_system_memory_human/))
+                  .split(':')[1],
+              },
+            ],
+            //STATS
+            stats: [
+              //total number of connections accepted by server
+              {
+                name: 'Total connections',
+                value: dataLines
+                  .find((line) => line.match(/total_connections_received/))
+                  .split(':')[1],
+              },
+              //total number of commands processed by server
+              {
+                name: 'Total commands',
+                value: dataLines
+                  .find((line) => line.match(/total_commands_processed/))
+                  .split(':')[1],
+              },
+              //number of commands processed per second
+              {
+                name: 'Commands processed per second',
+                value: dataLines
+                  .find((line) => line.match(/instantaneous_ops_per_sec/))
+                  .split(':')[1],
+              },
+              //total number of keys being tracked
+              {
+                name: 'Tracked keys',
+                value: dataLines
+                  .find((line) => line.match(/tracking_total_keys/))
+                  .split(':')[1],
+              },
+              //total number of items being tracked(sum of clients number for each key)
+              {
+                name: 'Tracked items',
+                value: dataLines
+                  .find((line) => line.match(/tracking_total_items/))
+                  .split(':')[1],
+              },
+              //total number of read events processed
+              {
+                name: 'Reads processed',
+                value: dataLines
+                  .find((line) => line.match(/total_reads_processed/))
+                  .split(':')[1],
+              },
+              //total number of write events processed
+              {
+                name: 'Writes processed',
+                value: dataLines
+                  .find((line) => line.match(/total_writes_processed/))
+                  .split(':')[1],
+              },
+              //total number of error replies
+              {
+                name: 'Error replies',
+                value: dataLines
+                  .find((line) => line.match(/total_error_replies/))
+                  .split(':')[1],
+              },
+              //total number of bytes read from network
+              {
+                name: 'Bytes read from network',
+                value: dataLines
+                  .find((line) => line.match(/total_net_input_bytes/))
+                  .split(':')[1],
+              },
+              //networks read rate per second
+              {
+                name: 'Network read rate (Kb/s)',
+                value: dataLines
+                  .find((line) => line.match(/instantaneous_input_kbps/))
+                  .split(':')[1],
+              },
+              //total number of bytes written to network
+              {
+                name: 'Bytes written to network',
+                value: dataLines
+                  .find((line) => line.match(/total_net_output_bytes/))
+                  .split(':')[1],
+              },
+              //networks write rate per second
+              {
+                name: 'Network write rate (Kb/s)',
+                value: dataLines
+                  .find((line) => line.match(/instantaneous_output_kbps/))
+                  .split(':')[1],
+              },
+            ],
+          };
+          res.locals.redisStats = output;
+          // console.log('this is inside func getStats', output);
+          next();
+        });
+      };
+
+      getStats();
+    } catch (err) {
+      return next(err);
+    }
+  }
+
+  getRedisKeys(req, res, next) {
+    try {
+      const getKeys = () => {
+        this.redisCache.keys('*', (err, response) => {
+          if (err) console.log(err);
+          res.locals.redisKeys = response;
+          return next();
+        });
+      };
+
+      getKeys();
+    } catch (err) {
+      return next(err);
+    }
+  }
+
+  getRedisValues(req, res, next) {
+    try {
+      const getValues = () => {
+        this.redisCache.mget(res.locals.redisKeys, (err, response) => {
+          if (err) console.log(err);
+          res.locals.redisValues = response;
+          return next();
+        });
+      };
+
+      getValues();
+    } catch (err) {
+      return next(err);
+    }
   }
 }
 

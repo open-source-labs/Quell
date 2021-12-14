@@ -42,7 +42,7 @@ const PrimaryNavBar = ({
           setActiveTab={setActiveTab}
         />
       </div>
-      <div id= "docs_link">
+      <div id="docs_link">
         <a href="https://github.com/open-source-labs/Quell" target="_blank">Docs</a>
       </div>
     </div>
