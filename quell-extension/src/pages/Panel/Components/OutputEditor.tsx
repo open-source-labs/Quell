@@ -15,7 +15,6 @@ const OutputEditor = ({results}) => {
     }
   }, [results])
 
-
   return(
     <CodeMirror
       className='query_output_editor'

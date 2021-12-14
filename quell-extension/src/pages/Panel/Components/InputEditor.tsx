@@ -46,12 +46,9 @@ const InputEditor = (props) => {
           theme: 'material-darker',
           lineNumbers: true,
           mode: 'graphql',
-          lint: {
-            schema: props.schema,
-          },
-          hintOptions: {
-            schema: props.schema,
-          },
+          // linting does not seem to work, and breaks app if no schema retrieved
+          // lint: props.schema === {} ? false : { schema: props.schema },
+          // hintOptions: props.schema === {} ? false : { schema: props.schema }
         }}
         onBeforeChange={(editor, data, value) => {
           setText(value);

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo} from 'react';
+import { useState, useMemo} from 'react';
 import { useTable } from 'react-table';
 import Metrics from './Metrics';
 import SplitPane from 'react-split-pane';
@@ -18,8 +18,10 @@ import { getResponseStatus } from '../helpers/getResponseStatus';
 import { getOperationNames } from '../helpers/parseQuery';
 
 const ClientTab = ({ graphQLRoute, clientAddress, clientRequests } = props) => {
-  const [clickedRowData, setClickedRowData] = useState({});
+  // allows for highlighting of selected row and saves row data in state to display upon clicking for more information
+  // A value of '-1' indicates row is not selected and will display metrics, otherwise >= 0 is the index of the row
   const [activeRow, setActiveRow] = useState<number>(-1);
+  const [clickedRowData, setClickedRowData] = useState({});
 
   return (
     <div className='clientTab'>
@@ -34,7 +36,7 @@ const ClientTab = ({ graphQLRoute, clientAddress, clientRequests } = props) => {
           maxSize={-300}
           defaultSize={activeRow === -1 ? (window.innerWidth / 3) * 2 : window.innerWidth / 2}
         >
-          <div id="client-request-table">
+          <div id="client-request-table" >
             <NetworkRequestTable
               className='clientTable'
               clientRequests={clientRequests}
@@ -43,6 +45,7 @@ const ClientTab = ({ graphQLRoute, clientAddress, clientRequests } = props) => {
               activeRow={activeRow}
             />
           </div>
+          {/* conditionally renders either the metrics or additional info about specific query*/}
           {activeRow > -1 ? (
             <RequestDetails
               clickedRowData={clickedRowData}
@@ -108,7 +111,9 @@ const RequestDetails = ({ clickedRowData } = props) => {
         />
 
       </div>
+
       <div className="headersTabs" style={activeTab === 'data' ? {height:'0px'}:{}}>
+
         {activeTab === 'request' && (
           <>
             {/* <div className="networkTitle">Request Headers</div> */}
@@ -119,6 +124,7 @@ const RequestDetails = ({ clickedRowData } = props) => {
             ))}
           </>
         )}
+
         {activeTab === 'response' && (
           <>
             {/* <div className="networkTitle">Response Headers</div> */}
@@ -129,7 +135,9 @@ const RequestDetails = ({ clickedRowData } = props) => {
             ))}
           </>
         )}
+      
       </div>
+
       {activeTab === 'data' && (
         <>
           <CodeMirror
