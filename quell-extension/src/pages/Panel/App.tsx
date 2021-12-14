@@ -36,7 +36,7 @@ const App = () => {
   const [clientRequests, setClientRequests] = useState([]);
 
   const handleClearCache = () => {
-    const address=`${props.serverAddress}${props.clearCacheRoute}`
+    const address=`${serverAddress}${clearCacheRoute}`
     fetch(address)
       .then(data => console.log(data))
       .catch(err => console.log(err));
