@@ -9,6 +9,10 @@ const PrimaryNavBar = ({
   redis_field 
 } = props) => {
 
+  const goToSettings = () => {
+    setActiveTab('settings');
+  }
+
   return (
     <div id="navbar_container">
       <div id="navbar">
@@ -20,33 +24,17 @@ const PrimaryNavBar = ({
           setActiveTab={setActiveTab}
         />
 
-        {(graphQL_field && server_field) ? 
           <NavButton
             text={'server'}
             activeTab={activeTab}
-            setActiveTab={setActiveTab}
-          /> :
-          <button 
-            className="navbutton"  
-            onClick={()=>setActiveTab('settings')}
-          >
-            Server
-          </button>
-        }
+            setActiveTab={(graphQL_field && server_field) ? setActiveTab : goToSettings}
+          />
 
-        {(redis_field && server_field) ? 
-          <NavButton
-            text={'cache'}
-            activeTab={activeTab}
-            setActiveTab={setActiveTab}
-          /> : 
-          <button 
-            className="navbutton"  
-            onClick={()=>setActiveTab('settings')}
-          >
-            Cache
-          </button>
-        }
+        <NavButton
+          text={'cache'}
+          activeTab={activeTab}
+          setActiveTab={(redis_field && server_field) ? setActiveTab : goToSettings}
+        />
 
         <NavButton
           text={'settings'}

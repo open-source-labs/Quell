@@ -45,13 +45,16 @@ const Settings = ({
           <div className="title_bar">Basic Configuration</div>
           <form className="configSettings">
             {inputArea('GraphQL Route', setGraphQLRoute, graphQLRoute)}
-            <div className="settingInputsDesc" style={graphQLRoute === '' ? {color:'red'} : {}}>Endpoint where GraphQL schema will be retrieved and queries sent</div>            
+            <div className="settingInputsDesc" style={graphQLRoute === '' ? {color:'red'} : {}}>
+              {`${graphQLRoute === '' ? '*REQUIRED!* Please enter e' : 'E'}ndpoint where GraphQL schema will be retrieved and queries sent.`}</div>            
             {inputArea('Server Address', setServerAddress, serverAddress)}
-            <div className="settingInputsDesc" style={serverAddress === '' ? {color:'red'} : {}}>HTTP address of server from which Quell makes GraphQL queries</div>
+            <div className="settingInputsDesc" style={serverAddress === '' ? {color:'red'} : {}}>
+              {`${serverAddress === '' ? '*REQUIRED!* Please enter ' : ''}HTTP address of server from which Quell makes GraphQL queries.`}</div>
             {inputArea('Redis Route', setRedisRoute, redisRoute)}
-            <div className="settingInputsDesc" style={redisRoute === '' ? {color:'red'} : {}}>Endpoint with <code>QuellCache.getStatsFromRedis</code> middleware installed</div>
+            <div className="settingInputsDesc" style={redisRoute === '' ? {color:'red'} : {}}>
+              {`${redisRoute === '' ? '*REQUIRED!* Please enter e' : 'E'}ndpoint with <code>QuellCache.getStatsFromRedis</code> middleware installed.`}</div>
             {inputArea('Clear Cache Route', setClearCacheRoute, clearCacheRoute)}
-            <div className="settingInputsDesc">Endpoint for clearing server-side cache</div>
+            <div className="settingInputsDesc">Endpoint for clearing server-side cache.</div>
           </form>
       </div>
 
