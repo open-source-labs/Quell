@@ -14,7 +14,6 @@ const OutputEditor = ({results}) => {
       setOutput(beautify(results, null, 2, 80));
     }
   }, [results])
-  
 
   return(
     <CodeMirror
