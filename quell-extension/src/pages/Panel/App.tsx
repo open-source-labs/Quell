@@ -32,7 +32,7 @@ const App = () => {
   );
   const [clearCacheRoute, setClearCacheRoute] = useState<string>('/clearCache');
   // changes tab - defaults to query
-  const [clientRequests, setClientRequests] = useState(data);
+  const [clientRequests, setClientRequests] = useState([]);
 
   const handleClearCache = () => {
     const address=`${props.serverAddress}${props.clearCacheRoute}`

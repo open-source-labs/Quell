@@ -51,7 +51,7 @@ const Settings = ({
             {inputArea('Server Address', setServerAddress, serverAddress)}
             <div className="settingInputsDesc">HTTP address of server from which Quell makes GraphQL queries</div>
             {inputArea('Redis Route', setRedisRoute, redisRoute)}
-            <div className="settingInputsDesc">Endpoint with <code>QuellCache.getStatsFromRedis</code> middleware installed</div>
+            <div className="settingInputsDesc">Endpoint where <code>QuellCache.getRedisInfo</code> middleware is configured</div>
             {inputArea('Clear Cache Route', setClearCacheRoute, clearCacheRoute)}
             <div className="settingInputsDesc">Endpoint for clearing server-side cache</div>
           </form>
