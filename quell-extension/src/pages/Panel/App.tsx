@@ -4,7 +4,6 @@ import PrimaryNavBar from './Components/PrimaryNavBar';
 import ServerTab from './Components/ServerTab';
 import CacheTab from './Components/CacheTab';
 import ClientTab from './Components/ClientTab';
-import Logo from './assets/Quell_full_size.png';
 import isGQLQuery from './helpers/isGQLQuery';
 import { handleNavigate, handleRequestFinished } from './helpers/listeners';
 
