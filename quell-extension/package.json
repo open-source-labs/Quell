@@ -1,11 +1,20 @@
 {
   "name": "quell_devtools_extension",
+  "jest": {
+    "verbose": true,
+    "moduleNameMapper": {
+      "\\.(jpg|jpeg|png|gif|eot|otf|webp|svg|ttf|woff|woff2|mp4|webm|wav|mp3|m4a|aac|oga)$": "./__mocks__/fileMock.js",
+      "\\.(css|less|scss|sass)$": "identity-obj-proxy"
+    },
+    "testEnvironment": "jsdom"
+  },
   "version": "0.9b",
   "description": "Quell devtool to help visualize and query GraphQL ",
   "main": "index.js",
   "scripts": {
     "serve": "webpack serve --mode development",
-    "build": "webpack --mode production"
+    "build": "webpack --mode production",
+    "test": "jest"
   },
   "keywords": [],
   "author": "",
@@ -15,6 +24,8 @@
     "@mui/icons-material": "^5.2.0",
     "@mui/styles": "^5.2.2",
     "anychart-react": "^1.4.1",
+    "jest-environment-jsdom": "^27.4.4",
+    "jest-fetch-mock": "^3.0.3",
     "json-beautify": "^1.1.1",
     "react": "^17.0.1",
     "react-dom": "^17.0.1",
@@ -31,9 +42,15 @@
     "@emotion/styled": "^11.6.0",
     "@material-ui/core": "^4.12.3",
     "@mui/material": "^5.2.1",
+    "@testing-library/dom": "^8.11.1",
+    "@testing-library/jest-dom": "^5.16.1",
+    "@testing-library/react": "^12.1.2",
+    "@testing-library/user-event": "^13.5.0",
+    "@types/jest": "^27.0.3",
     "@types/react": "^17.0.37",
     "@types/react-dom": "^17.0.11",
     "antd": "^4.17.2",
+    "babel-jest": "^27.4.4",
     "babel-loader": "^8.2.2",
     "codemirror": "^5.64.0",
     "codemirror-graphql": "^1.2.4",
@@ -45,7 +62,11 @@
     "graphql": "^16.0.1",
     "graphql-tag": "^2.12.6",
     "html-webpack-plugin": "^5.5.0",
+    "identity-obj-proxy": "^3.0.0",
+    "jest": "^27.4.4",
+    "jest-dom": "^4.0.0",
     "react-codemirror2": "^6.0.1",
+    "react-split-pane": "^0.1.92",
     "react-table": "^7.7.0",
     "react-trend": "^1.2.5",
     "sass": "^1.32.6",

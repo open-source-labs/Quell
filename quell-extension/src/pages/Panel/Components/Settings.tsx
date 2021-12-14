@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 import React, { useState } from "react";
 import { Controlled as CodeMirror } from "react-codemirror2";
 import "codemirror/lib/codemirror.css";
@@ -11,6 +12,22 @@ import "codemirror-graphql/hint";
 import "codemirror-graphql/mode";
 import beautify from "json-beautify";
 
+=======
+/* eslint-disable react/prop-types */
+import React, { useState } from 'react';
+import { Controlled as CodeMirror } from 'react-codemirror2';
+import 'codemirror/lib/codemirror.css';
+import 'codemirror/theme/material-darker.css';
+import 'codemirror/theme/xq-light.css';
+import 'codemirror';
+import 'codemirror/addon/lint/lint';
+import 'codemirror/addon/hint/show-hint';
+import 'codemirror-graphql/lint';
+import 'codemirror-graphql/hint';
+import 'codemirror-graphql/mode';
+import beautify from 'json-beautify';
+ 
+>>>>>>> dev
 const Settings = ({
   graphQLRoute,
   setGraphQLRoute,

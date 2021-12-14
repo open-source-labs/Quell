@@ -1,7 +1,8 @@
-import { useState, useEffect } from "react";
-import NavButton from "./NavButton";
-import CacheView from "./CacheView";
-import SearchImg from "../assets/search.png";
+/* eslint-disable react/react-in-jsx-scope */
+import React, { useState, useEffect } from 'react';
+import NavButton from './NavButton';
+import CacheView from './CacheView';
+import SearchImg from '../assets/search.png';
 
 const CacheTab = ({ serverAddress, redisRoute, handleClearCache }) => {
   //use state to store data from redis server
