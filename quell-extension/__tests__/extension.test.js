@@ -11,13 +11,12 @@ import CacheTab from '../src/pages/Panel/Components/CacheTab';
 import InputEditor from '../src/pages/Panel/Components/InputEditor';
 import Metrics from '../src/pages/Panel/Components/Metrics';
 import NavButton from '../src/pages/Panel/Components/NavButton';
-import NetworkTab from '../src/pages/Panel/Components/NetworkTab';
 import OutputEditor from '../src/pages/Panel/Components/OutputEditor';
 import PrimaryNavBar from '../src/pages/Panel/Components/PrimaryNavBar';
 import QueryTab from '../src/pages/Panel/Components/QueryTab';
 import Settings from '../src/pages/Panel/Components/Settings';
 import { act } from 'react-dom/test-utils';
-import expectExport from 'expect';
+
 
 
 enableFetchMocks();
@@ -46,11 +45,11 @@ describe('App', () => {
     render(<App />);
 
     const tabs = screen.queryAllByRole('button', /tab/i);
-    expect(tabs).toHaveLength(6);
+    expect(tabs).toHaveLength(10);
   })
 
   it('renders correct component when tab is clicked', () => {
-    const app = render( <App />);
+    const app = render(<App />);
     const querybtn = app.container.querySelector('#queryButton')
     const networkbtn = app.container.querySelector('#networkButton');
     const cachebtn = app.container.querySelector('#cacheButton')
@@ -68,7 +67,6 @@ describe('App', () => {
   })
 })
 //test the nav button 
-
 
 
 

@@ -1,9 +1,10 @@
+/* eslint-disable react/react-in-jsx-scope */
 import { useState, useEffect, useRef } from 'react';
 import PrimaryNavBar from './Components/PrimaryNavBar';
 import ServerTab from './Components/ServerTab';
 import CacheTab from './Components/CacheTab';
 import ClientTab from './Components/ClientTab';
-import Logo from './assets/Quell_full_size.png';
+// import Logo from './assets/Quell_full_size.png';
 import isGQLQuery from './helpers/isGQLQuery';
 import { handleNavigate, handleRequestFinished } from './helpers/listeners';
 
@@ -85,7 +86,7 @@ const App = () => {
       <PrimaryNavBar
         activeTab={activeTab}
         setActiveTab={setActiveTab}
-        Logo={Logo}
+        // Logo={Logo}
         />
 
       <div className="extensionTabs">
