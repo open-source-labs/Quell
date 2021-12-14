@@ -17,7 +17,7 @@ import { IgnorePlugin } from 'webpack';
 
 const App = () => {
   // queried data results
-  const [activeTab, setActiveTab] = useState<string>('cache');
+  const [activeTab, setActiveTab] = useState<string>('server');
   const [results, setResults] = useState({});
   const [schema, setSchema] = useState({});
   const [queryString, setQueryString] = useState<string>('');
