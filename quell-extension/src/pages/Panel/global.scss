@@ -317,20 +317,13 @@ tr:hover {
   overflow-y: auto;
 }
 
-.redisCache {
-  padding: 0 5px 0 5px;
-  border: 1px solid #444;
-  height: calc(100vh - 71px);
-  overflow-y: auto;
-  font-size: 0.8rem;
-}
 
 .cacheStatTab .title_bar {
   display: grid;
   grid-template-columns: 50% 50%;
 }
 
-#cache_filter_field {
+.cache_filter_field {
   padding-right: -20px;
 }
 
@@ -351,17 +344,30 @@ tr:hover {
   margin: 2px 0 2px 4px;
 }
 
+.redisCache {
+  padding: 0 5px 0 5px;
+  border: 1px solid #444;
+  height: calc(100vh - 71px);
+  font-size: 0.8rem;
+}
+
+.cacheViewer {
+  max-height: calc(100vh - 91px);
+  overflow-y: auto;
+}
+
 .cacheSearchbar {
-  padding-top: 2px;
   display: flex;
   flex-direction: row;
   justify-content: space-between;
+  padding: 3px 0 3px 0; 
 }
 
 #searchIcon {
   padding: 2px 5px 0 2px;
   height: 15px;
   width: auto;
+  border-right: 5px solid #222;
 }
 
 /******* CSS for Settings Tab *******/

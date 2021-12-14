@@ -146,11 +146,13 @@ const CacheTab = ({ serverAddress, redisRoute, handleClearCache }) => {
               onChange={handleFilter}
             />
           </div>
-          <CacheView
-            redisKeys={redisKeys}
-            redisValues={redisValues}
-            filteredVal={filter}
-          />
+          <div className="cacheViewer">
+            <CacheView
+              redisKeys={redisKeys}
+              redisValues={redisValues}
+              filteredVal={filter}
+            />
+          </div>
         </div>
       </div>
     </div>
