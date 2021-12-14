@@ -18,7 +18,7 @@ import { IgnorePlugin } from 'webpack';
 
 const App = () => {
   // queried data results
-  const [activeTab, setActiveTab] = useState<string>('server');
+  const [activeTab, setActiveTab] = useState<string>('client');
   const [results, setResults] = useState({});
   const [schema, setSchema] = useState({});
   const [queryString, setQueryString] = useState<string>('');
@@ -54,10 +54,10 @@ const App = () => {
   };
 
   // COMMENT OUT IF WORKING FROM DEV SERVER
-  // useEffect(() => {
-  //   handleRequestFinished(gqlListener);
-  //   handleNavigate(gqlListener);
-  // }, []);
+  useEffect(() => {
+    handleRequestFinished(gqlListener);
+    handleNavigate(gqlListener);
+  }, []);
 
   useEffect(() => {
     const introspectionQuery = getIntrospectionQuery();
