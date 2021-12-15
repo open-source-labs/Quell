@@ -1,11 +1,11 @@
 const request = require('supertest');
-const app = require('../../test-config/test-server.js');
+// const app = require('../../test-config/test-server.js');
 const QuellCache = require('../../src/quell');
 const schema = require('../../test-config/testSchema');
 
 const redisPort = 6379;
 
-// tests pass locally, but times out in travis CI build...
+// tests pass locally, but time out in travis CI build...
 xdescribe('server test for getRedisInfo', () => {
   const Quell = new QuellCache(schema, redisPort);
 
