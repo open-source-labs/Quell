@@ -137,7 +137,6 @@
     "@babel/preset-env": "^7.12.13",
     "@babel/preset-react": "^7.12.13",
     "@babel/preset-typescript": "^7.16.0",
-<<<<<<< HEAD
     "@emotion/react": "^11.7.0",
     "@emotion/styled": "^11.6.0",
     "@testing-library/dom": "^8.11.1",
@@ -152,9 +151,6 @@
     "babel-loader": "^8.2.2",
     "codemirror": "^5.64.0",
     "codemirror-graphql": "^1.2.4",
-=======
-    "babel-loader": "^8.2.3",
->>>>>>> c8e6a4bcd6ea42da6d6e80b0ea75ec0a0c11429a
     "copy-webpack-plugin": "^10.0.0",
     "css-loader": "^5.0.1",
     "css-modules-typescript-loader": "^4.0.1",
