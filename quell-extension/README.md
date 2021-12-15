@@ -28,7 +28,7 @@ cd Quell/quell-extension
 npm install
 npm run build
 ```
-Then, in the [Chrome Extensions Page](chrome://extensions/), click on "Load unpacked" and navigate to `.../Quell/quell-extension/dist/` and click "Select". (You may need to toggle on "Developer mode" to do this.) The extension should now be loaded and available in the Chrome Developer Tools.
+Then, in the Chrome Extensions Page (`chrome://extensions/`), click on "Load unpacked" and navigate to `.../Quell/quell-extension/dist/` and click "Select". (You may need to toggle on "Developer mode" to do this.) The extension should now be loaded and available in the Chrome Developer Tools.
 
 ## Usage and Configuration
 
