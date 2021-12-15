@@ -205,6 +205,13 @@ tr:hover {
   border: none;
 }
 
+.client_query_editor .CodeMirror {
+  margin-top: 10px;
+  height: calc(100vh - 92px);
+  width: calc(100% - 2px);
+  border: none;
+}
+
 /******* CSS for Server Tab *******/
 // splits editor area from Metrics
 
