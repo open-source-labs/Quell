@@ -142,8 +142,9 @@ const RequestDetails = ({ clickedRowData } = props) => {
               value={getQueryString(clickedRowData)}
               options={{
                 theme: 'material-darker',
-                mode: 'json',
+                mode: 'graphql',
                 scrollbarStyle: 'null',
+                lineWrapping: true
               }}
             />
           </>
