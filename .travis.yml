@@ -11,7 +11,7 @@ install:
 before_script:
   - echo running script
 script:
-  - npm run test
+  # - npm run test # debugging redis mock
   # - cd ../quell-client && jest # tests under development
   # - cd ../quell-extension && jest # tests under development
 after_success:
