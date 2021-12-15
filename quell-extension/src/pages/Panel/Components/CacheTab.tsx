@@ -129,7 +129,10 @@ const CacheTab = ({ serverAddress, redisRoute, handleClearCache }) => {
           <button
             className="optionButtons"
             id="cacheTabClear"
-            onClick={handleClearCache}
+            onClick={() => {
+              handleClearCache()
+              fetchRedisInfo()
+            }}
           >
             Clear Cache
           </button>

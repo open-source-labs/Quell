@@ -1,14 +1,18 @@
 language: node_js
 node_js:
   - "stable"
-before install:
-  - cd quell-client
+# before install:
+#   - cd quell-client
 install:
-  - npm install
+  - npm install ./quell-server
+  - npm install ./quell-client
+  - npm install ./quell-extension
 before_script:
   - echo running script
 script:
-  - npm run test
+  - cd quell-server && jest
+  # - cd ../quell-client && jest # tests under development
+  # - cd ../quell-extension && jest # tests under development
 after_success:
   - echo run success
 after_failure:
