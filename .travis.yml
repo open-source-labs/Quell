@@ -3,7 +3,7 @@ node_js:
   - "stable"
 # before install:
 #   - cd quell-client
-service:
+services:
   - redis-server
 install:
   - cd ./quell-server
