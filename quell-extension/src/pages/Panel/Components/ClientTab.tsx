@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo} from 'react';
+import { useState, useMemo } from 'react';
 import { useTable } from 'react-table';
 import Metrics from './Metrics';
 import SplitPane from 'react-split-pane';
@@ -15,38 +15,43 @@ import 'codemirror-graphql/mode';
 import beautify from 'json-beautify';
 import NavButton from './NavButton';
 import { getResponseStatus } from '../helpers/getResponseStatus';
-import { getOperationNames } from '../helpers/parseQuery';
+import { getQueryString, getOperationNames } from '../helpers/parseQuery';
+import { useEffect } from 'react';
 
 const ClientTab = ({ graphQLRoute, clientAddress, clientRequests } = props) => {
-  const [clickedRowData, setClickedRowData] = useState({});
+  // allows for highlighting of selected row and saves row data in state to display upon clicking for more information
+  // A value of '-1' indicates row is not selected and will display metrics, otherwise >= 0 is the index of the row
   const [activeRow, setActiveRow] = useState<number>(-1);
+  const [clickedRowData, setClickedRowData] = useState({});
+
 
   return (
-    <div className='clientTab'>
-      <div className='title_bar'>
-        Client Quell Requests
-      </div>
+    <div className="clientTab">
+      <div className="title_bar">Client Quell Requests</div>
       <div id="client-page-container">
         <SplitPane
           style={{ maxWidth: '100%' }}
           split="vertical"
           minSize={450}
           maxSize={-300}
-          defaultSize={activeRow === -1 ? (window.innerWidth / 3) * 2 : window.innerWidth / 2}
+          defaultSize={
+            activeRow === -1
+              ? (window.innerWidth / 3) * 2
+              : window.innerWidth / 2
+          }
         >
           <div id="client-request-table">
             <NetworkRequestTable
-              className='clientTable'
+              className="clientTable"
               clientRequests={clientRequests}
               setClickedRowData={setClickedRowData}
               setActiveRow={setActiveRow}
               activeRow={activeRow}
             />
           </div>
+          {/* conditionally renders either the metrics or additional info about specific query*/}
           {activeRow > -1 ? (
-            <RequestDetails
-              clickedRowData={clickedRowData}
-            />
+            <RequestDetails clickedRowData={clickedRowData} />
           ) : (
             <div
               id="client-request-metrics"
@@ -82,33 +87,43 @@ const RequestDetails = ({ clickedRowData } = props) => {
   return (
     <div id="queryExtras">
       <div className="clientNavBar">
-
-        < NavButton 
-          text={'request'} 
-          activeTab={activeTab} 
+        <NavButton
+          text={'request'}
+          activeTab={activeTab}
           setActiveTab={setActiveTab}
           altText={'Request Headers'}
           altClass={'clientNavButton'}
         />
 
-        < NavButton 
-          text={'response'} 
-          activeTab={activeTab} 
+        <NavButton
+          text={'query'}
+          activeTab={activeTab}
+          setActiveTab={setActiveTab}
+          altText={'Request Query'}
+          altClass={'clientNavButton'}
+        />
+
+        <NavButton
+          text={'response'}
+          activeTab={activeTab}
           setActiveTab={setActiveTab}
           altText={'Response Headers'}
           altClass={'clientNavButton'}
         />
 
-        < NavButton 
-          text={'data'} 
-          activeTab={activeTab} 
+        <NavButton
+          text={'data'}
+          activeTab={activeTab}
           setActiveTab={setActiveTab}
           altText={'Response Data'}
           altClass={'clientNavButton'}
         />
-
       </div>
-      <div className="headersTabs" style={activeTab === 'data' ? {height:'0px'}:{}}>
+
+      <div
+        className="headersTabs"
+        style={activeTab === 'data' ? { height: '0px' } : {}}
+      >
         {activeTab === 'request' && (
           <>
             {/* <div className="networkTitle">Request Headers</div> */}
@@ -119,6 +134,22 @@ const RequestDetails = ({ clickedRowData } = props) => {
             ))}
           </>
         )}
+
+        {activeTab === 'query' && (
+          <>
+            <CodeMirror
+              className="client_query_editor"
+              value={getQueryString(clickedRowData)}
+              options={{
+                theme: 'material-darker',
+                mode: 'graphql',
+                scrollbarStyle: 'null',
+                lineWrapping: true
+              }}
+            />
+          </>
+        )}
+
         {activeTab === 'response' && (
           <>
             {/* <div className="networkTitle">Response Headers</div> */}
@@ -130,10 +161,11 @@ const RequestDetails = ({ clickedRowData } = props) => {
           </>
         )}
       </div>
+
       {activeTab === 'data' && (
         <>
           <CodeMirror
-            className='client_editor'
+            className="client_editor"
             value={beautify(clickedRowData.responseData, null, 2, 80)}
             options={{
               theme: 'material-darker',
@@ -143,7 +175,6 @@ const RequestDetails = ({ clickedRowData } = props) => {
           />
         </>
       )}
-      
     </div>
   );
 };
@@ -170,7 +201,7 @@ const NetworkRequestTable = ({
         id: 'query-type',
         Header: 'Operation Type(s)',
         // accessor: (row) => Object.keys(JSON.parse(row.request.postData.text)),
-        accessor: row => getOperationNames(row)
+        accessor: (row) => getOperationNames(row),
       },
       {
         id: 'url',
@@ -234,7 +265,6 @@ const NetworkRequestTable = ({
                         }
                         {...cell.getCellProps()}
                         onClick={() => {
-                          console.log(cell.row.id);
                           if (activeRow !== cell.row.id)
                             setActiveRow(cell.row.id);
                           else setActiveRow(-1);

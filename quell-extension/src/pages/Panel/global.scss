@@ -1,13 +1,16 @@
-@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@100;300;500&display=swap');
+@import url("https://fonts.googleapis.com/css2?family=Roboto:wght@100;300;500&display=swap");
 
 /******* Global CSS for extension *******/
 html {
   background-color: #222;
-  font-family: 'Roboto', sans-serif;
+  font-family: "Roboto", sans-serif;
   color: #ddd;
   overflow-y: hidden;
 
-  a:link, a:visited, a:hover, a:active {
+  a:link,
+  a:visited,
+  a:hover,
+  a:active {
     color: #7cd1e9;
     font-weight: bold;
     text-decoration: none;
@@ -17,8 +20,8 @@ html {
     width: 0px;
   }
 }
- 
-p { 
+
+p {
   font-size: 0.8rem;
 }
 
@@ -56,27 +59,18 @@ button:hover {
   width: auto;
 }
 
-#navbar_container {
-  display: flex;
-  justify-content: space-between;
-}
-
 #navbar {
   background-color: #222222;
   border-width: 0 0 2px;
-  border-color:rgb(110, 110, 110);
+  border-color: rgb(110, 110, 110);
   width: 100%;
-  top:5px;
+  top: 5px;
   z-index: 5;
 }
 
-#docs_link {
-  margin-right: 10px;
-  a:link, a:visited, a:hover, a:active {
-    color: #7cd1e9;
-    font-weight: bold;
-    text-decoration: none;
-  }
+#navbar_container {
+  display: flex;
+  justify-content: space-between;
 }
 
 .navbutton {
@@ -90,18 +84,32 @@ button:hover {
   font-size: 0.8rem;
 }
 
+#docs_link {
+  margin-right: 10px;
+  a:link,
+  a:visited,
+  a:hover,
+  a:active {
+    color: #7cd1e9;
+    font-weight: bold;
+    text-decoration: none;
+  }
+}
+
 /******* CSS for ClientTab *******/
+
+.clientTable {
+  margin-top: -5px;
+  background-color: orange;
+}
 
 #client_page_container {
   margin-left: 10px;
   margin-right: 10px;
   display: grid;
-
-  // grid-template-columns: 70vw 30vw;
-  // grid-gap: 20px;
   min-height: 175px;
   overflow-y: hidden;
-  
+
   .SplitPane {
     margin-left: 10px;
     position: static;
@@ -110,16 +118,21 @@ button:hover {
 
 table {
   font-size: 0.8rem;
-  padding: -10px;
   
   th {
     background-color: #444;
+    border-top: 1px solid #222;
+    position: sticky;
+    top: 0px;
   }
-  
+
   td {
     height: 10px;
-    padding: 3px 0 3px;
+    padding: 1px 0 3px;
+    margin-top: -1px;
+
   }
+
 }
 
 #client-request-table {
@@ -139,8 +152,8 @@ tr:hover {
 }
 
 .headersTabs {
-  overflow: scroll;
-  margin: 0 10px 0 10px;
+  overflow: auto;
+  margin: -8px 10px 0 10px;
   font: 0.8rem;
 }
 
@@ -153,12 +166,16 @@ tr:hover {
   body::-webkit-scrollbar {
     display: none;
   }
+  display: grid;
+  grid-template-rows: 17px ;
 }
 
 .clientNavBar {
   background-color: #999;
   display: flex;
   justify-content: space-evenly;
+  position: sticky;
+  top:0;
 }
 
 .clientNavButton {
@@ -183,7 +200,14 @@ tr:hover {
 }
 
 .client_editor .CodeMirror {
-  height: 221px;
+  height: calc(100vh - 92px);
+  width: calc(100% - 2px);
+  border: none;
+}
+
+.client_query_editor .CodeMirror {
+  margin-top: 10px;
+  height: calc(100vh - 92px);
   width: calc(100% - 2px);
   border: none;
 }
@@ -198,13 +222,13 @@ tr:hover {
   .outerPane .SplitPane {
     margin-left: 10px;
     position: static;
-    width:100vw;
+    width: 100vw;
   }
 
   .query_input_editor {
     margin-left: 10px;
-  
-  // limits height & width of the input editor
+
+    // limits height & width of the input editor
     .CodeMirror {
       height: calc(100vh - 70px);
       min-height: 200px;
@@ -216,6 +240,7 @@ tr:hover {
   .query_output_editor .CodeMirror {
     height: calc(100vh - 70px);
     min-height: 200px;
+
   }
 }
 
@@ -225,7 +250,7 @@ tr:hover {
   // font-size: 1rem;
   background-color: #222222;
   border: none;
-  color:#999;
+  color: #999;
   width: 50%;
   margin-top: -25px;
   z-index: 5;
@@ -235,7 +260,7 @@ tr:hover {
 /******* CSS for cache data page *******/
 // evenly splits grid in each sub-table for value pairs
 .subStats {
-  display:grid;
+  display: grid;
   grid-template-columns: 50% 50%;
   font-size: 0.8rem;
 }
@@ -244,39 +269,42 @@ tr:hover {
   margin-top: 30px;
   padding: 0 10px 0 10px;
 }
- 
+
 .Cache_Server {
-  display: grid;  
+  display: grid;
   grid-template-columns: 50% 50%;
   grid-gap: 1px;
 }
 
 // aligns selectable table to server cache table
 .cacheTables {
-  margin-right: 5px;
   margin-left: -8px;
-  border: 1px solid #444;
+  border-top: 1px solid #444;
   height: auto;
 }
 
-.optionButtons { 
+.optionButtons {
   background-color: #222;
-  color:#999;
+  color: #999;
   width: 50%;
   margin-top: -25px;
   z-index: 5;
   padding: 3px 0 3px 0;
   border: 1px solid #444;
+  border-width: 1px 0 1px 1px;
 }
 
 #cacheTabClear {
+  border: 1px solid #444;
   border-left: 0px;
 }
 
 .cacheButtons {
   display: flex;
-  justify-content: space-around; 
-  margin: 0 1px 0 1px;
+  justify-content: space-around;
+  padding: 0 1px 2px 1px;
+  border: 1px solid #444;
+  border-width: 0 1px 0 1px;
 }
 
 .cacheNavButton {
@@ -296,19 +324,13 @@ tr:hover {
   overflow-y: auto;
 }
 
-.redisCache {
-  padding: 0 5px 0 5px;
-  border: 1px solid #444;
-  height: calc(100vh - 114px);
-  overflow-y: auto;
-  font-size: 0.8rem;
-}
+
 .cacheStatTab .title_bar {
   display: grid;
   grid-template-columns: 50% 50%;
 }
 
-#cache_filter_field {
+.cache_filter_field {
   padding-right: -20px;
 }
 
@@ -329,16 +351,78 @@ tr:hover {
   margin: 2px 0 2px 4px;
 }
 
+.redisCache {
+  padding: 0 5px 0 5px;
+  border: 1px solid #444;
+  height: calc(100vh - 71px);
+  font-size: 0.8rem;
+}
+
+.cacheViewer {
+  max-height: calc(100vh - 91px);
+  overflow-y: auto;
+}
+
 .cacheSearchbar {
   display: flex;
   flex-direction: row;
   justify-content: space-between;
+  padding: 3px 0 3px 0; 
 }
 
 #searchIcon {
-  padding:2px 5px 0 2px;
+  padding: 2px 5px 0 2px;
   height: 15px;
   width: auto;
+  border-right: 5px solid #222;
+}
+
+/******* CSS for Settings Tab *******/
+.settingsTab {
+  width: 100%;
+  display: grid;
+  grid-template-columns: 50% 50%;
+}
+
+// sets up underline and input boxes for settings
+input {
+  background-color: #2b2a2a;
+  color: #999;
+  width: calc(100% - 6px);
+  outline: 0;
+  border-width: 0 0 2px;
+  border-color: #999;
+}
+
+input:hover {
+  background-color: #505050;
+}
+
+.configSettings {
+  color: #aaa;
+  margin-left: -8px;
+}
+
+.settingInputsDesc {
+  font-size: 0.75rem;
+  color: #888;
+}
+
+.configSettings {
+  font-size: 0.8rem;
+  align-content: center;
+  width: calc(100%);
+  height: calc(100vh - 64px);
+  overflow-y: scroll;
+  color: white;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+.schema_editor .CodeMirror {
+  height: calc(100vh - 71px);
 }
 
 /******* CSS for SplitPane Resizer *******/
@@ -392,56 +476,4 @@ tr:hover {
 }
 .Resizer.disabled:hover {
   border-color: transparent;
-}
-
-/******* CSS for Settings Tab *******/
-.settingsTab {
-  width:100%;
-  display: grid;
-  grid-template-columns: 50% 50%;
-  grid-gap:1px;
-}
-
-// sets up underline and input boxes for settings
-input {
-  background-color: #2b2a2a;
-  color: #999;
-  width: 98%;
-  outline: 0;
-  border-width: 0 0 2px;
-  border-color: #999;
-}
-
-input:hover {
-  background-color: #505050;
-}
-
-.configSettings {
-  color: #aaa;
-}
-
-.settingInputsDesc {
-  font-size: .75rem;
-  color: #888;
-}
-
-.configSettings {
-  font-size: 0.8rem;
-  align-content: center;
-  width: calc(100% - 8px);
-  // height: calc(100vh - 64px);
-  height: 75vh;
-  // border: 1px solid rgb(104, 107, 112);
-  padding: 5px;
-  overflow-y: scroll;
-  color: white;
-
-  &::-webkit-scrollbar {
-    display: none;
-  }
-}
-
-.schema_editor .CodeMirror {
-  // height: calc(100vh - 54px);
-  height: 75vh;
 }

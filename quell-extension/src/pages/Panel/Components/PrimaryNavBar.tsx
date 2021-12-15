@@ -1,9 +1,9 @@
 import NavButton from './NavButton';
+import Logo from '../assets/Quell_full_size.png';
 
 const PrimaryNavBar = ({ 
   activeTab, 
   setActiveTab, 
-  Logo,
   graphQL_field,
   server_field,
   redis_field 
