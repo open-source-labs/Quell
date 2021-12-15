@@ -54,10 +54,10 @@ const App = () => {
   };
 
   // COMMENT OUT IF WORKING FROM DEV SERVER
-  // useEffect(() => {
-  //   handleRequestFinished(gqlListener);
-  //   handleNavigate(gqlListener);
-  // }, []);
+  useEffect(() => {
+    handleRequestFinished(gqlListener);
+    handleNavigate(gqlListener);
+  }, []);
 
   useEffect(() => {
     const introspectionQuery = getIntrospectionQuery();
@@ -78,6 +78,9 @@ const App = () => {
       .then((data) => {
         const schema = buildClientSchema(data.data);
         setSchema(schema || 'No schema retreived');
+        console.log("schema: ",schema);
+        console.log("data: ", data );
+
       })
       .catch((err) => console.log(err));
   }, [clientAddress, serverAddress, graphQLRoute]);
@@ -91,7 +94,7 @@ const App = () => {
         graphQL_field={graphQLRoute !== ''}
         server_field={serverAddress !== ''}
         redis_field={redisRoute !== ''}
-        />
+      />
 
       <div className="extensionTabs">
 
