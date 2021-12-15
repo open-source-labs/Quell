@@ -26,12 +26,14 @@ Accelerated by [OS Labs](https://github.com/open-source-labs) and developed by [
 
 ## Installation
 
+### Quell-Client and Quell-Server
+
 Quell is divided into two npm packages:
 
 - Download @quell/client from npm in your terminal with `npm i @quell/client`
 - Download @quell/server from npm in your terminal with `npm i @quell/server`
 
-### Installing and Connecting a Redis Server
+#### Installing and Connecting a Redis Server
 
 If not already installed on your server, install Redis.
 
@@ -44,15 +46,19 @@ If not already installed on your server, install Redis.
   - Follow installation instructions
   - Once Redis is successfully installed, follow instructions to open a Redis database connection (note the port on which it is listening)
 
-### Usage Notes
+#### Usage Notes
 
 - Currently, Quell can cache 1) query-type requests without variables or directives and 2) mutation-type requests (add, update, and delete) with cache invalidation implemented. Quell will still process other requests, but will not cache the responses.
+
+### Quell Developer Tool
+
+Quell Developer Tool is currently available as a Chrome developer tools extension. [Add it here.](https://chrome.google.com/webstore/detail/quell-developer-tool/jnegkegcgpgfomoolnjjkmkippoellod)
 
 ## Documentation
 
 - [@quell/client README](./quell-client/README.md)
 - [@quell/server README](./quell-server/README.md)
-- [Quell Developer Tools README](./quell-extension/README.md)
+- [Quell Developer Tool README](./quell-extension/README.md)
 
 ### Contribute to Quell
 
