@@ -4,13 +4,14 @@ node_js:
 # before install:
 #   - cd quell-client
 install:
-  - npm install ./quell-server
-  - npm install ./quell-client
-  - npm install ./quell-extension
+  - cd ./quell-server
+  - npm install
+  # - npm install ./quell-client
+  # - npm install ./quell-extension
 before_script:
   - echo running script
 script:
-  - cd ../quell-server && jest
+  - npm run test
   # - cd ../quell-client && jest # tests under development
   # - cd ../quell-extension && jest # tests under development
 after_success:
