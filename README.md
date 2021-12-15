@@ -18,10 +18,10 @@ Accelerated by [OS Labs](https://github.com/open-source-labs) and developed by [
 - Automatic unique cache key generation
 - Partial and exact match query caching
 - Programmatic rebuilding of GraphQL queries to fetch only the minimum data necessary to complete the response based upon current cache contents
-- A Chrome Developer Tools extension designed for Quell users. With this extension, users can:
+- A easy-to-use Chrome Developer Tools extension designed for Quell users. With this extension, users can:
   - Inspect and monitor the latency of client-side GraphQL/Quell requests
   - Make and monitor the latency of GraphQL/Quell requests to a specified server endpoint
-  - View server-side cache data and contents, with the ability to manually clear cache
+  - View server-side cache data and contents, with the ability to manually clear the cache
   - Features require zero-to-minimal configuration can work independently of `@quell/client` and `@quell/server`
 
 ## Installation

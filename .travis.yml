@@ -6,14 +6,14 @@ node_js:
 services:
   - redis-server
 install:
-  - cd ./quell-server
-  - npm install
+  # - cd ./quell-server
+  # - npm install
   # - npm install ./quell-client
   # - npm install ./quell-extension
 before_script:
   - echo running script
 script:
-  - npm run test # debugging redis mock
+  # - npm run test # debugging redis mock
   # - cd ../quell-client && jest # tests under development
   # - cd ../quell-extension && jest # tests under development
 after_success:
