@@ -38,7 +38,7 @@ document.createRange = () => {
   return range;
 }
 
-describe('App', () => {
+xdescribe('App', () => {
   it('renders App component correctly', () => {
     fetch.mockResponseOnce(JSON.stringify({ "data": {
       "__schema": { "types": [{"name": "String"}]}}}))

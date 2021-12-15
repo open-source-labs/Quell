@@ -70,11 +70,11 @@ const Settings = ({
           >
             {`${
               redisRoute === "" ? "*REQUIRED!* Please enter e" : "E"
-            }ndpoint with <code>QuellCache.getStatsFromRedis</code> middleware installed.`}
+            }ndpoint where QuellCache.getRedisInfo middleware is configured.`}
           </div>
           {inputArea("Clear Cache Route", setClearCacheRoute, clearCacheRoute)}
           <div className="settingInputsDesc">
-            Endpoint for clearing server-side cache.
+            Endpoint where QuellCache.clearCache endpoint is configured.
           </div>
         </form>
       </div>
