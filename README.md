@@ -52,7 +52,7 @@ If not already installed on your server, install Redis.
 
 ### Quell Developer Tool
 
-Quell Developer Tool is currently available as a Chrome developer tools extension. [Add it here.](https://chrome.google.com/webstore/detail/quell-developer-tool/jnegkegcgpgfomoolnjjkmkippoellod)
+Quell Developer Tool is currently available as a Chrome developer tools extension. [Add it from the Chrome Web Store.](https://chrome.google.com/webstore/detail/quell-developer-tool/jnegkegcgpgfomoolnjjkmkippoellod)
 
 ## Documentation
 
