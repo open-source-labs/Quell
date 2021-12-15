@@ -1,9 +1,19 @@
 {
-  "name": "@quell/client",
-  "version": "3.0.1",
-  "description": "Quell is an open-source NPM package providing a light-weight caching layer implementation and cache invalidation for GraphQL responses on both the client- and server-side. Use Quell to prevent redundant client-side API requests and to minimize costly server-side response latency.",
-  "main": "src/Quellify.js",
+  "name": "quell_devtools_extension",
+  "jest": {
+    "verbose": true,
+    "moduleNameMapper": {
+      "\\.(jpg|jpeg|png|gif|eot|otf|webp|svg|ttf|woff|woff2|mp4|webm|wav|mp3|m4a|aac|oga)$": "./__mocks__/fileMock.js",
+      "\\.(css|less|scss|sass)$": "identity-obj-proxy"
+    },
+    "testEnvironment": "jsdom"
+  },
+  "version": "0.9b",
+  "description": "Quell devtool to help visualize and query GraphQL ",
+  "main": "index.js",
   "scripts": {
+    "serve": "webpack serve --mode development",
+    "build": "webpack --mode production",
     "test": "jest"
   },
   "author": "Quell",
@@ -34,12 +44,12 @@
       "url": "https://github.com/ccai89"
     },
     {
-      "name": "Joshua Jordan",
-      "url": "https://github.com/jjordan-90"
-    },
-    {
       "name": "Robert Howton",
       "url": "https://github.com/roberthowton"
+    },
+    {
+      "name": "Joshua Jordan",
+      "url": "https://github.com/jjordan-90"
     },
     {
       "name": "Jinhee Choi",
@@ -108,11 +118,43 @@
   ],
   "homepage": "http://quellql.io",
   "dependencies": {
-    "graphql": "^15.3.0",
-    "jest": "^26.6.3",
-    "lokijs": "^1.5.12"
+    "codemirror": "^5.64.0",
+    "codemirror-graphql": "^1.2.4",
+    "jest-environment-jsdom": "^27.4.4",
+    "jest-fetch-mock": "^3.0.3",
+    "json-beautify": "^1.1.1",
+    "graphql": "^16.0.1",
+    "graphql-tag": "^2.12.6",
+    "react": "^17.0.1",
+    "react-dom": "^17.0.1",
+    "react-codemirror2": "^6.0.1",
+    "react-split-pane": "^0.1.92",
+    "react-trend": "^1.2.5",
+    "react-table": "^7.7.0"
   },
   "devDependencies": {
-    "@types/jest": "^26.0.20"
+    "@babel/core": "^7.12.13",
+    "@babel/preset-env": "^7.12.13",
+    "@babel/preset-react": "^7.12.13",
+    "@babel/preset-typescript": "^7.16.0",
+    "babel-loader": "^8.2.3",
+    "copy-webpack-plugin": "^10.0.0",
+    "css-loader": "^5.0.1",
+    "css-modules-typescript-loader": "^4.0.1",
+    "file-loader": "^6.2.0",
+    "fs": "^0.0.1-security",
+    "html-webpack-plugin": "^5.5.0",
+    "identity-obj-proxy": "^3.0.0",
+    "jest": "^27.4.4",
+    "jest-dom": "^4.0.0",
+    "sass": "^1.32.6",
+    "sass-loader": "^10.1.1",
+    "source-map-loader": "^3.0.0",
+    "style-loader": "^2.0.0",
+    "typescript": "^4.5.2",
+    "url-loader": "^4.1.1",
+    "webpack": "^5.64.4",
+    "webpack-cli": "^4.9.1",
+    "webpack-dev-server": "^4.6.0"
   }
 }

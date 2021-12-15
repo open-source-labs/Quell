@@ -1,0 +1,479 @@
+@import url("https://fonts.googleapis.com/css2?family=Roboto:wght@100;300;500&display=swap");
+
+/******* Global CSS for extension *******/
+html {
+  background-color: #222;
+  font-family: "Roboto", sans-serif;
+  color: #ddd;
+  overflow-y: hidden;
+
+  a:link,
+  a:visited,
+  a:hover,
+  a:active {
+    color: #7cd1e9;
+    font-weight: bold;
+    text-decoration: none;
+  }
+
+  &::-webkit-scrollbar {
+    width: 0px;
+  }
+}
+
+p {
+  font-size: 0.8rem;
+}
+
+.title_bar {
+  font-size: 1.5rem;
+  font-weight: bold;
+  margin: -28px 0 4px;
+}
+
+.devtools {
+  overflow-y: none;
+}
+
+.metrics-container {
+  height: calc(100vh - 80px);
+  overflow-y: none;
+}
+
+// gives border to codemirror editors
+.CodeMirror {
+  border: 1px solid rgb(85, 84, 84);
+  font-size: 0.9rem;
+}
+
+button:hover {
+  background-color: #555;
+  color: white;
+}
+
+/******* CSS for Nav Bar *******/
+#logo-img {
+  padding-left: 10px;
+  padding-right: 10px;
+  height: 12px;
+  width: auto;
+}
+
+#navbar {
+  background-color: #222222;
+  border-width: 0 0 2px;
+  border-color: rgb(110, 110, 110);
+  width: 100%;
+  top: 5px;
+  z-index: 5;
+}
+
+#navbar_container {
+  display: flex;
+  justify-content: space-between;
+}
+
+.navbutton {
+  background-color: #222222;
+  color: #ccc;
+  border: none;
+  padding: 5px;
+  padding-left: 10px;
+  padding-right: 10px;
+  font-weight: bold;
+  font-size: 0.8rem;
+}
+
+#docs_link {
+  margin-right: 10px;
+  a:link,
+  a:visited,
+  a:hover,
+  a:active {
+    color: #7cd1e9;
+    font-weight: bold;
+    text-decoration: none;
+  }
+}
+
+/******* CSS for ClientTab *******/
+
+.clientTable {
+  margin-top: -5px;
+  background-color: orange;
+}
+
+#client_page_container {
+  margin-left: 10px;
+  margin-right: 10px;
+  display: grid;
+  min-height: 175px;
+  overflow-y: hidden;
+
+  .SplitPane {
+    margin-left: 10px;
+    position: static;
+  }
+}
+
+table {
+  font-size: 0.8rem;
+  
+  th {
+    background-color: #444;
+    border-top: 1px solid #222;
+    position: sticky;
+    top: 0px;
+  }
+
+  td {
+    height: 10px;
+    padding: 1px 0 3px;
+    margin-top: -1px;
+
+  }
+
+}
+
+#client-request-table {
+  border: 1px solid #444;
+  margin-left: 10px;
+  height: calc(100vh - 70px);
+  overflow-y: auto;
+}
+
+tr:hover {
+  background-color: #444;
+}
+
+#dataTable_container {
+  display: flex;
+  flex-direction: column;
+}
+
+.headersTabs {
+  overflow: auto;
+  margin: -8px 10px 0 10px;
+  font: 0.8rem;
+}
+
+#queryExtras {
+  border: 1px solid #444;
+  padding: 2px;
+  width: 99%;
+  height: calc(100vh - 74px);
+  overflow-x: hidden;
+  body::-webkit-scrollbar {
+    display: none;
+  }
+  display: grid;
+  grid-template-rows: 17px ;
+}
+
+.clientNavBar {
+  background-color: #999;
+  display: flex;
+  justify-content: space-evenly;
+  position: sticky;
+  top:0;
+}
+
+.clientNavButton {
+  background-color: #222;
+  color: #999;
+  font-weight: bold;
+  width: 33.333%;
+  border: none;
+  font-size: 0.8rem;
+}
+
+.clientTitle {
+  font-size: 1.5rem;
+  font-weight: bolder;
+  border-width: 0 2px;
+  border-color: white;
+}
+
+.statsColumns {
+  display: grid;
+  grid-template-columns: 25% 25% 25% 25%;
+}
+
+.client_editor .CodeMirror {
+  height: calc(100vh - 92px);
+  width: calc(100% - 2px);
+  border: none;
+}
+
+.client_query_editor .CodeMirror {
+  margin-top: 10px;
+  height: calc(100vh - 92px);
+  width: calc(100% - 2px);
+  border: none;
+}
+
+/******* CSS for Server Tab *******/
+// splits editor area from Metrics
+
+.serverTab {
+  min-height: 175px;
+  overflow-y: hidden;
+
+  .outerPane .SplitPane {
+    margin-left: 10px;
+    position: static;
+    width: 100vw;
+  }
+
+  .query_input_editor {
+    margin-left: 10px;
+
+    // limits height & width of the input editor
+    .CodeMirror {
+      height: calc(100vh - 70px);
+      min-height: 200px;
+      border-width: 1px 1px 0px 1px;
+    }
+  }
+
+  // limits height of output editor to keep elements in line with input editor
+  .query_output_editor .CodeMirror {
+    height: calc(100vh - 70px);
+    min-height: 200px;
+
+  }
+}
+
+// css for 'Submit Query' and 'Clear Cache'
+.editorButtons {
+  // font-weight: bold;
+  // font-size: 1rem;
+  background-color: #222222;
+  border: none;
+  color: #999;
+  width: 50%;
+  margin-top: -25px;
+  z-index: 5;
+  padding: 3px 0 3px 0;
+}
+
+/******* CSS for cache data page *******/
+// evenly splits grid in each sub-table for value pairs
+.subStats {
+  display: grid;
+  grid-template-columns: 50% 50%;
+  font-size: 0.8rem;
+}
+
+.extensionTabs {
+  margin-top: 30px;
+  padding: 0 10px 0 10px;
+}
+
+.Cache_Server {
+  display: grid;
+  grid-template-columns: 50% 50%;
+  grid-gap: 1px;
+}
+
+// aligns selectable table to server cache table
+.cacheTables {
+  margin-left: -8px;
+  border-top: 1px solid #444;
+  height: auto;
+}
+
+.optionButtons {
+  background-color: #222;
+  color: #999;
+  width: 50%;
+  margin-top: -25px;
+  z-index: 5;
+  padding: 3px 0 3px 0;
+  border: 1px solid #444;
+  border-width: 1px 0 1px 1px;
+}
+
+#cacheTabClear {
+  border: 1px solid #444;
+  border-left: 0px;
+}
+
+.cacheButtons {
+  display: flex;
+  justify-content: space-around;
+  padding: 0 1px 2px 1px;
+  border: 1px solid #444;
+  border-width: 0 1px 0 1px;
+}
+
+.cacheNavButton {
+  border: none;
+  width: calc(100% / 4);
+  background-color: #444;
+  color: white;
+  font-weight: bold;
+  font-size: 0.8rem;
+  border: 1px solid #222;
+  border-top: 2px solid #222;
+  padding: 1px 2px 1px 2px;
+}
+
+.dynamicCacheTable {
+  max-height: calc(100vh - 110px);
+  overflow-y: auto;
+}
+
+
+.cacheStatTab .title_bar {
+  display: grid;
+  grid-template-columns: 50% 50%;
+}
+
+.cache_filter_field {
+  padding-right: -20px;
+}
+
+.cache_entry {
+  // border: 1px solid #444;
+  margin-top: 2vh;
+  margin-bottom: 2vh;
+  margin-left: 1vw;
+}
+
+.cache_entry_key {
+  margin-top: 2vh;
+  margin-bottom: 2vh;
+  // margin-left: 2vw;
+}
+
+.cache_entry_value {
+  margin: 2px 0 2px 4px;
+}
+
+.redisCache {
+  padding: 0 5px 0 5px;
+  border: 1px solid #444;
+  height: calc(100vh - 71px);
+  font-size: 0.8rem;
+}
+
+.cacheViewer {
+  max-height: calc(100vh - 91px);
+  overflow-y: auto;
+}
+
+.cacheSearchbar {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  padding: 3px 0 3px 0; 
+}
+
+#searchIcon {
+  padding: 2px 5px 0 2px;
+  height: 15px;
+  width: auto;
+  border-right: 5px solid #222;
+}
+
+/******* CSS for Settings Tab *******/
+.settingsTab {
+  width: 100%;
+  display: grid;
+  grid-template-columns: 50% 50%;
+}
+
+// sets up underline and input boxes for settings
+input {
+  background-color: #2b2a2a;
+  color: #999;
+  width: calc(100% - 6px);
+  outline: 0;
+  border-width: 0 0 2px;
+  border-color: #999;
+}
+
+input:hover {
+  background-color: #505050;
+}
+
+.configSettings {
+  color: #aaa;
+  margin-left: -8px;
+}
+
+.settingInputsDesc {
+  font-size: 0.75rem;
+  color: #888;
+}
+
+.configSettings {
+  font-size: 0.8rem;
+  align-content: center;
+  width: calc(100%);
+  height: calc(100vh - 64px);
+  overflow-y: scroll;
+  color: white;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+.schema_editor .CodeMirror {
+  height: calc(100vh - 71px);
+}
+
+/******* CSS for SplitPane Resizer *******/
+// DO NOT TOUCH WITHOUT REFERRING TO react-split-pane
+.Resizer {
+  background: #000;
+  opacity: 0.2;
+  z-index: 1;
+  -moz-box-sizing: border-box;
+  -webkit-box-sizing: border-box;
+  box-sizing: border-box;
+  -moz-background-clip: padding;
+  -webkit-background-clip: padding;
+  background-clip: padding-box;
+}
+
+.Resizer:hover {
+  -webkit-transition: all 2s ease;
+  transition: all 2s ease;
+}
+
+.Resizer.horizontal {
+  height: 11px;
+  margin: -5px 0;
+  border-top: 5px solid rgba(255, 255, 255, 0);
+  border-bottom: 5px solid rgba(255, 255, 255, 0);
+  cursor: row-resize;
+  width: 100%;
+}
+
+.Resizer.horizontal:hover {
+  border-top: 5px solid rgba(0, 0, 0, 0.5);
+  border-bottom: 5px solid rgba(0, 0, 0, 0.5);
+}
+
+.Resizer.vertical {
+  width: 11px;
+  height: calc(100vh - 51px);
+  margin: 0 -5px;
+  border-left: 5px solid rgba(255, 255, 255, 0);
+  border-right: 5px solid rgba(255, 255, 255, 0);
+  cursor: col-resize;
+}
+
+.Resizer.vertical:hover {
+  border-left: 5px solid rgba(0, 0, 0, 0.5);
+  border-right: 5px solid rgba(0, 0, 0, 0.5);
+}
+.Resizer.disabled {
+  cursor: not-allowed;
+}
+.Resizer.disabled:hover {
+  border-color: transparent;
+}
