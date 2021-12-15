@@ -1,0 +1,25 @@
+{
+  "manifest_version": 3,
+  "name": "Quell Developer Tool",
+  "description": "Developer tool for the Quell JavaScript library: https://quellql.io",
+  "version": "0.9",
+  "homepage_url": "https://quellql.io",
+  "author": "Chang Cai, Robert Howton, Joshua Jordan",
+  "action": {
+    "default_icon": {
+      "16": "./assets/icon16.png",
+      "48": "./assets/icon48.png",
+      "128": "./assets/icon128.png"
+    },
+    "default_title": "Quell Developer Tool"
+  },
+  "devtools_page": "devtools.html",
+  "background": {
+    "service_worker": "background.bundle.js"
+  },
+  "icons": {
+    "16": "./assets/icon16.png",
+    "48": "./assets/icon48.png",
+    "128": "./assets/icon128.png"
+  }
+}
