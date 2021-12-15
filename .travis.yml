@@ -10,7 +10,7 @@ install:
 before_script:
   - echo running script
 script:
-  - cd quell-server && jest
+  - cd ../quell-server && jest
   # - cd ../quell-client && jest # tests under development
   # - cd ../quell-extension && jest # tests under development
 after_success:
