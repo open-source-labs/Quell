@@ -1,5 +1,6 @@
+const express = require('express');
+const app = express();
 const request = require('supertest');
-const app = require('../../test-config/test-server.js');
 const QuellCache = require('../../src/quell');
 const schema = require('../../test-config/testSchema');
 
@@ -7,7 +8,8 @@ const redisPort = 6379;
 
 describe('server test for getRedisInfo', () => {
   const Quell = new QuellCache(schema, redisPort);
-
+  
+  app.use(express.json());
   app.use(
     '/redis',
     ...Quell.getRedisInfo({
