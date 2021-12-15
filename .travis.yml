@@ -1,21 +1,16 @@
 language: node_js
 node_js:
   - "stable"
-# before install:
-#   - cd quell-client
+before install:
+  - cd quell-client
 services:
   - redis-server
 install:
-  # - cd ./quell-server
-  # - npm install
-  # - npm install ./quell-client
-  # - npm install ./quell-extension
+  - npm install
 before_script:
   - echo running script
 script:
-  # - npm run test # debugging redis mock
-  # - cd ../quell-client && jest # tests under development
-  # - cd ../quell-extension && jest # tests under development
+  - npm run test
 after_success:
   - echo run success
 after_failure:
