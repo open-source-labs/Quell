@@ -3,6 +3,8 @@ node_js:
   - "stable"
 # before install:
 #   - cd quell-client
+service:
+  - redis-server
 install:
   - cd ./quell-server
   - npm install
@@ -11,7 +13,7 @@ install:
 before_script:
   - echo running script
 script:
-  # - npm run test # debugging redis mock
+  - npm run test # debugging redis mock
   # - cd ../quell-client && jest # tests under development
   # - cd ../quell-extension && jest # tests under development
 after_success:
