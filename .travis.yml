@@ -1,10 +1,7 @@
-language: node_js
 node_js:
   - "stable"
 before install:
   - cd quell-client
-services:
-  - redis-server
 install:
   - npm install
 before_script:
