@@ -1,6 +1,6 @@
 {
   "name": "demo",
-  "version": "3.0.0",
+  "version": "4.0.0",
   "main": "index.js",
   "scripts": {
     "start": "NODE_ENV=production node server/server.js",
@@ -11,6 +11,18 @@
   },
   "keywords": [],
   "contributors": [
+    {
+      "name": "Chang Cai",
+      "url": "https://github.com/ccai89"
+    },
+    {
+      "name": "Josh Jordan",
+      "url": "https://github.com/jjordan-90"
+    },
+    {
+      "name": "Robert Howton",
+      "url": "https://github.com/roberthowton"
+    },
     {
       "name": "Jinhee Choi",
       "url": "https://github.com/jcroadmovie"
@@ -99,7 +111,10 @@
     "@babel/plugin-transform-runtime": "^7.11.5",
     "@babel/preset-env": "^7.11.5",
     "@babel/preset-react": "^7.10.4",
+    "@babel/preset-typescript": "^7.16.0",
     "babel-loader": "^8.1.0",
+    "codemirror": "^5.64.0",
+    "codemirror-graphql": "^1.2.4",
     "bluebird": "^3.7.2",
     "clean-webpack-plugin": "^3.0.0",
     "css-loader": "^4.2.2",
@@ -107,6 +122,10 @@
     "html-webpack-plugin": "^4.4.1",
     "jest": "^26.4.2",
     "nodemon": "^2.0.4",
+    "react-codemirror2": "^6.0.1",
+    "react-split-pane": "^0.1.92",
+    "react-table": "^7.7.0",
+    "react-trend": "^1.2.5",
     "sass": "^1.26.10",
     "sass-loader": "^10.0.1",
     "style-loader": "^1.2.1",

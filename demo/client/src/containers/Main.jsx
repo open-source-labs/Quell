@@ -5,6 +5,7 @@ import Demo from './Demo.jsx';
 import Team from './Team.jsx';
 import Footer from './Footer.jsx';
 import Graphiql from './Graphiql.jsx';
+import Devtool from './Devtool.jsx';
 
 const Main = () => {
   return (
@@ -13,6 +14,7 @@ const Main = () => {
       <Info />
       <Demo />
       <Graphiql />
+      <Devtool />
       <Team />
       <Footer />
     </div>

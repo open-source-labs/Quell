@@ -23,18 +23,25 @@ module.exports = {
   module: {
     rules: [
       {
-        test: /.(js|jsx)$/,
+        test: /\.js$/,
+        enforce: 'pre',
+        use: ['source-map-loader'],
+      },
+      {
+        test: /\.(js|ts)x?$/,
         exclude: /node_modules/,
         use: {
           loader: 'babel-loader',
-          options: {
-            presets: ['@babel/preset-react']
-          },
         },
       },
       {
-        test: /.(css|scss)$/,
-        use: ['style-loader', 'css-loader', 'sass-loader'],
+        test: /\.(css|scss)$/,
+        use: [
+          'style-loader',
+          'css-modules-typescript-loader',
+          'css-loader',
+          'sass-loader',
+        ],
       },
       {
         test: /.(png|svg|jpg|gif|woff|ico|woff2|eot|ttf|otf)$/,
@@ -43,7 +50,7 @@ module.exports = {
     ],
   },
   resolve: {
-    extensions: ['.js', '.jsx'],
+    extensions: ['.tsx', '.ts', '.jsx', '.js', '.css', '.scss'],
   },
   plugins: [
     new HtmlWebpackPlugin({
