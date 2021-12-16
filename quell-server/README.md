@@ -1,5 +1,10 @@
 <p align="center"><img src="./assets/QUELL-nested-LG@0.75x.png" width='500' style="margin-top: 10px; margin-bottom: -10px;"></p>
 
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://github.com/open-source-labs/Quell/blob/master/LICENSE)
+![AppVeyor](https://img.shields.io/badge/build-passing-brightgreen.svg)
+![AppVeyor](https://img.shields.io/badge/version-2.3.1-blue.svg)
+[![contributions welcome](https://img.shields.io/badge/contributions-welcome-brightgreen.svg?style=flat)](https://github.com/open-source-labs/Quell/issues)
+
 # @quell/server
 
 @quell/server is an easy-to-implement Node.js/Express middleware that satisfies and caches GraphQL queries and mutations. Quell's schema-governed, type-level normalization algorithm caches GraphQL query and mutation responses as flattened key-value representations of the graph's nodes, making it possible to partially satisfy queries from the server's Redis cache, reformulate the query, and then fetch additional data from other APIs or databases.
