@@ -112,6 +112,72 @@ header {
   margin-top: 50px;
 }
 
+// ====== DEVTOOL SECTION ======
+
+.devtool_demo {
+  max-width: 800px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 2.5%;
+}
+
+#devtool-header {
+  margin: -20px 0 50px 0;
+}
+
+.devtool-text {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  width: 800px;
+
+  h4 {
+    align-self: center;
+  }
+
+  li {
+    align-self: flex-start;
+    padding-left: 20px;
+  }
+}
+
+.navbar {
+  display: flex;
+  align-items: flex-start;
+  background-color: #222222;
+  border-width: 0 0 2px;
+  border-color: rgb(110, 110, 110);
+  width: 100%;
+
+  img {
+    padding-left: 10px;
+    padding-right: 10px;
+    height: 12px;
+    width: auto;
+  }
+
+  button {
+    background-color: #222222;
+    color: #ccc;
+    border: none;
+    padding: 5px;
+    padding-left: 10px;
+    padding-right: 10px;
+    font-weight: bold;
+    font-size: 0.6rem;
+  }
+
+  button:hover {
+    background-color: #555;
+    color: white;
+  }
+
+}
+
+
 // ====== DEMO SECTION ======
 
 #demo {
@@ -372,7 +438,7 @@ textarea {
 
 .graphiql {
   margin: auto;
-  max-width: 60%;
+  max-width: 880px;
   margin-bottom: 25px;
 }
 
@@ -399,6 +465,10 @@ textarea {
   width: 55%;
   max-width: 400px;
   margin-bottom: 5%;
+  
+  p {
+    font-size: 1.05rem;
+  }
 }
 
 .profile-pics img {
@@ -424,7 +494,7 @@ textarea {
   // ====== TOP HEADER SECTION ======
 
   #logo-main {
-    width: 600px;
+    width: 55
   }
 
   // ====== INFO SECTION ======
@@ -486,7 +556,7 @@ textarea {
     grid-area: query;
     overflow: scroll;
     height: 400px;
-    width: 405px;
+    width: 550px;
   }
 
   .results-div {

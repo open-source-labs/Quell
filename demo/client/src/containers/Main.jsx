@@ -12,9 +12,9 @@ const Main = () => {
     <div className="main">
       <Header />
       <Info />
+      <Devtool />
       <Demo />
       <Graphiql />
-      <Devtool />
       <Team />
       <Footer />
     </div>
