@@ -9,6 +9,12 @@ module.exports = {
     filename: 'bundle.js',
     publicPath: '/dist/',
   },
+  node: {
+    fs: 'empty',
+    net: 'empty',
+    tls: 'empty',
+    'crypto': 'empty'
+  },
   devServer: {
     port: 8080,
     publicPath: '/dist/',
