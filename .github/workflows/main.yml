@@ -2,8 +2,8 @@ name: CI
 
 on:
   pull_request:
-    branches: 
-      - main
+    branches:
+      - master
       - dev
 
 jobs:
