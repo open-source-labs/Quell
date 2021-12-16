@@ -6,15 +6,15 @@ import { enableFetchMocks, fetchMock } from 'jest-fetch-mock';
 import '@testing-library/jest-dom';
 import userEvent from '@testing-library/user-event';
 
-import App from '../src/pages/Panel/App';
-import CacheTab from '../src/pages/Panel/Components/CacheTab';
-import InputEditor from '../src/pages/Panel/Components/InputEditor';
-import Metrics from '../src/pages/Panel/Components/Metrics';
-import NavButton from '../src/pages/Panel/Components/NavButton';
-import OutputEditor from '../src/pages/Panel/Components/OutputEditor';
-import PrimaryNavBar from '../src/pages/Panel/Components/PrimaryNavBar';
-import QueryTab from '../src/pages/Panel/Components/QueryTab';
-import Settings from '../src/pages/Panel/Components/Settings';
+// import App from '../src/pages/Panel/App';
+// import CacheTab from '../src/pages/Panel/Components/CacheTab';
+// import InputEditor from '../src/pages/Panel/Components/InputEditor';
+// import Metrics from '../src/pages/Panel/Components/Metrics';
+// import NavButton from '../src/pages/Panel/Components/NavButton';
+// import OutputEditor from '../src/pages/Panel/Components/OutputEditor';
+// import PrimaryNavBar from '../src/pages/Panel/Components/PrimaryNavBar';
+// import QueryTab from '../src/pages/Panel/Components/QueryTab';
+// import Settings from '../src/pages/Panel/Components/Settings';
 import { act } from 'react-dom/test-utils';
 
 
@@ -70,7 +70,7 @@ xdescribe('App', () => {
 
 
 
-describe('CacheTab', () => {
+xdescribe('CacheTab', () => {
   it('renders CacheTab component correctly', () => {
     act(() => {
     fetch.mockResponseOnce(JSON.stringify({ "server": [
