@@ -33,7 +33,7 @@ const Info = () => {
 
         <p>
           Subsequent GraphQL requests are then checked against the cached data
-          store in client-side cache storage first, allowing Quell to only request the data 
+          store first, allowing Quell to request only the data 
           it needs by dynamically reformulating a new query for what's missing.
         </p>
 
@@ -41,7 +41,7 @@ const Info = () => {
           <img id='quell-puzzle' src={Puzzle}></img>
         </div>
         <p>
-          Query responses are then merged with the data present in the client cache storage and
+          Query responses are then merged with the data present in cache storage and
           a full response is returned seamlessly.
         </p>
         <div className='quell-airmail-container'>

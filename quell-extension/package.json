@@ -8,13 +8,13 @@
     },
     "testEnvironment": "jsdom"
   },
-  "version": "0.9b",
+  "version": "0.9.1",
   "description": "Quell devtool to help visualize and query GraphQL ",
   "main": "index.js",
   "scripts": {
     "serve": "webpack serve --mode development",
     "build": "webpack --mode production",
-    "test": "jest"
+    "test": "jest --forceExit"
   },
   "author": "Quell",
   "license": "MIT",

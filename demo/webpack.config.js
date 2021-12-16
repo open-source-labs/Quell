@@ -9,6 +9,9 @@ module.exports = {
     filename: 'bundle.js',
     publicPath: '/dist/',
   },
+  node: {
+    fs: 'empty',
+  },
   devServer: {
     port: 8080,
     publicPath: '/dist/',
@@ -23,34 +26,27 @@ module.exports = {
   module: {
     rules: [
       {
-        test: /\.js$/,
-        enforce: 'pre',
-        use: ['source-map-loader'],
-      },
-      {
-        test: /\.(js|ts)x?$/,
+        test: /.(js|jsx)$/,
         exclude: /node_modules/,
         use: {
           loader: 'babel-loader',
+          options: {
+            presets: ['@babel/preset-react']
+          },
         },
       },
       {
-        test: /\.(css|scss)$/,
-        use: [
-          'style-loader',
-          'css-modules-typescript-loader',
-          'css-loader',
-          'sass-loader',
-        ],
+        test: /.(css|scss)$/,
+        use: ['style-loader', 'css-loader', 'sass-loader'],
       },
       {
-        test: /.(png|svg|jpg|gif|woff|ico|woff2|eot|ttf|otf)$/,
+        test: /.(png|svg|jpg|gif|woff|ico|woff2|eot|ttf|otf)$/i,
         use: ['file-loader'],
       },
     ],
   },
   resolve: {
-    extensions: ['.tsx', '.ts', '.jsx', '.js', '.css', '.scss'],
+    extensions: ['.js', '.jsx'],
   },
   plugins: [
     new HtmlWebpackPlugin({

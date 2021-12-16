@@ -9,6 +9,10 @@
     "dev": "concurrently \"webpack-dev-server --open --hot\" \"NODE_ENV=development nodemon -w ../quell-server/src/quell.js server/server.js\"",
     "test": "jest --verbose --runInBand --detectOpenHandles"
   },
+  "engines": {
+    "node": "14.17.5",
+    "npm": "8.1.0"
+  },
   "keywords": [],
   "contributors": [
     {
@@ -104,7 +108,8 @@
     "react": "^16.14.0",
     "react-dom": "^16.14.0",
     "react-trend": "^1.2.5",
-    "redis": "^3.0.2"
+    "redis": "^3.0.2",
+    "source-map-loader": "^3.0.0"
   },
   "devDependencies": {
     "@babel/core": "^7.11.5",
@@ -113,10 +118,10 @@
     "@babel/preset-react": "^7.10.4",
     "@babel/preset-typescript": "^7.16.0",
     "babel-loader": "^8.1.0",
-    "codemirror": "^5.64.0",
-    "codemirror-graphql": "^1.2.4",
     "bluebird": "^3.7.2",
     "clean-webpack-plugin": "^3.0.0",
+    "codemirror": "^5.64.0",
+    "codemirror-graphql": "^1.2.4",
     "css-loader": "^4.2.2",
     "file-loader": "^6.1.0",
     "html-webpack-plugin": "^4.4.1",
@@ -128,11 +133,12 @@
     "react-trend": "^1.2.5",
     "sass": "^1.26.10",
     "sass-loader": "^10.0.1",
-    "style-loader": "^1.2.1",
+    "style-loader": "^2.0.0",
     "supertest": "^4.0.2",
     "transform-runtime": "0.0.0",
+    "url-loader": "^4.1.1",
     "webpack": "^4.44.1",
     "webpack-cli": "^3.3.12",
-    "webpack-dev-server": "^3.11.0"
+    "webpack-dev-server": "^3.11.3"
   }
 }

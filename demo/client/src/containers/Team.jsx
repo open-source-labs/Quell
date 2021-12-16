@@ -1,10 +1,10 @@
 import React from "react";
 import TeamMember from "../components/TeamMember.jsx";
 import Header from "../images/headers/QUELL-team quell-2color_1.svg";
-import Nick from "../images/profile_pics/QUELL-headshot w border-Nick.svg";
-import Mike from "../images/profile_pics/QUELL-headshot w border-Mike.svg";
-import Rob from "../images/profile_pics/QUELL-headshot w border-Rob.svg";
-import Justin from "../images/profile_pics/QUELL-headshot w border-Justin.svg";
+import Nick from "../images/profile_pics/QUELL-headshot w border-Nick.png";
+import Mike from "../images/profile_pics/QUELL-headshot w border-Mike.png";
+import Rob from "../images/profile_pics/QUELL-headshot w border-Rob.png";
+import Justin from "../images/profile_pics/QUELL-headshot w border-Justin.png";
 import Andrei from "../images/profile_pics/QUELL-headshot w border-Andrei.png";
 import Dasha from "../images/profile_pics/QUELL-headshot w border-Dasha.png";
 import Derek from "../images/profile_pics/QUELL-headshot w border-Derek.png";
@@ -28,7 +28,7 @@ import Robert from "../images/profile_pics/QUELL-headshot w border-Robert.png";
 const robert = {
   name: "Robert Howton",
   src: Robert,
-  bio: "blah blah blah",
+  bio: "Robert is a software engineer with experience in React, Node.js/Express, and several database models (relational, document, and key-value). He believes in the importance of open-source software and strives to make contributions with clean, optimized, and maintainable code. When not at work, he can be found reading philosophy or science fiction, traveling to ancient sites, or sampling lesser-known varietals.",
   linkedin: "https://www.linkedin.com/in/roberthowton/",
   github: "https://github.com/roberthowton",
 };
@@ -36,7 +36,7 @@ const robert = {
 const chang = {
   name: "Chang Cai",
   src: Chang,
-  bio: "Chang is a full-stack developer specializing in React, Express, relational and non-relational databases, with a passion for React Hooks and state management. He is passionate about all things engineering whether he ",
+  bio: "Chang is a full-stack developer specializing in React and Node.js, with a passion for frontend development and optimization. He is passionate about all things engineering whether the medium is code, wood, 3D filaments and resins, fabric or otherwise.  He’s a natural born tinkerer with endless curiosity, always seeking new things to learn and new skills to master.",
   linkedin: "https://www.linkedin.com/in/chang-c-cai/",
   github: "https://github.com/ccai89",
 };
@@ -44,7 +44,7 @@ const chang = {
 const josh = {
   name: "Josh Jordan",
   src: Josh,
-  bio: "blah blah blah",
+  bio: "Josh is a full-stack software engineer specializing in Express and Redis, with a passion for exploring the cross-sections of database management and system design. When he is not working, Josh can be found reading Shogun, practicing yoga, cooking delicious meals for his wife, and participating in Dionysian mysteries.",
   linkedin: "https://www.linkedin.com/in/josh-r-jordan/",
   github: "https://github.com/jjordan-90",
 };
