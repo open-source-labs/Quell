@@ -2,7 +2,7 @@
 @import url('https://fonts.googleapis.com/css2?family=Rubik:wght@300;400;500&display=swap');
 
 $div-background: #7dd0e9;
-$app-background: white;
+$app-background: black;
 $off-white: #f8f8f8;
 
 //Quell Palette
@@ -85,7 +85,7 @@ header {
   margin: auto;
   left: 50%;
   right: 50%;
-  max-width: 800px;
+  max-width: 1000px;
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -111,6 +111,72 @@ header {
   margin: 0 auto;
   margin-top: 50px;
 }
+
+// ====== DEVTOOL SECTION ======
+
+.devtool_demo {
+  max-width: 800px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 2.5%;
+}
+
+#devtool-header {
+  margin: -20px 0 50px 0;
+}
+
+.devtool-text {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  width: 800px;
+
+  h4 {
+    align-self: center;
+  }
+
+  li {
+    align-self: flex-start;
+    padding-left: 20px;
+  }
+}
+
+.navbar {
+  display: flex;
+  align-items: flex-start;
+  background-color: #222222;
+  border-width: 0 0 2px;
+  border-color: rgb(110, 110, 110);
+  width: 100%;
+
+  img {
+    padding-left: 10px;
+    padding-right: 10px;
+    height: 12px;
+    width: auto;
+  }
+
+  button {
+    background-color: #222222;
+    color: #ccc;
+    border: none;
+    padding: 5px;
+    padding-left: 10px;
+    padding-right: 10px;
+    font-weight: bold;
+    font-size: 0.6rem;
+  }
+
+  button:hover {
+    background-color: #555;
+    color: white;
+  }
+
+}
+
 
 // ====== DEMO SECTION ======
 
@@ -372,7 +438,7 @@ textarea {
 
 .graphiql {
   margin: auto;
-  max-width: 60%;
+  max-width: 880px;
   margin-bottom: 25px;
 }
 
@@ -385,7 +451,7 @@ textarea {
   right: 50%;
   width: 60%;
   padding: 2%;
-  margin-bottom: 10%;
+  margin-bottom: 5%;
 }
 
 #team {
@@ -396,19 +462,24 @@ textarea {
 }
 
 .profile-pics {
-  width: 45%;
+  width: 55%;
   max-width: 400px;
-  margin-bottom: 4%;
+  margin-bottom: 5%;
+  
+  p {
+    font-size: 1.05rem;
+  }
 }
 
 .profile-pics img {
   margin-bottom: 4%;
+  max-width: 200px;
 }
 
 .team-member-name {
   font-weight: bold;
   margin-bottom: 10px;
-  letter-spacing: 5.2px;
+  letter-spacing: 4px;
 }
 
 .social-icons img {
@@ -423,7 +494,7 @@ textarea {
   // ====== TOP HEADER SECTION ======
 
   #logo-main {
-    width: 600px;
+    width: 55
   }
 
   // ====== INFO SECTION ======
@@ -438,15 +509,15 @@ textarea {
   }
 
   .quell-graph-container {
-    max-width: 700px;
+    max-width: 900px;
   }
 
   .quell-puzzle-container {
-    max-width: 700px;
+    max-width: 900px;
   }
 
   .quell-airmail-container {
-    max-width: 700px;
+    max-width: 900px;
   }
 
   // ====== DEMO SECTION ======
@@ -468,7 +539,7 @@ textarea {
     margin: auto;
     left: 50%;
     right: 50%;
-    max-width: 700px;
+    max-width: 900px;
     display: grid;
     grid-gap: 5px;
     grid-template:
@@ -485,7 +556,7 @@ textarea {
     grid-area: query;
     overflow: scroll;
     height: 400px;
-    width: 405px;
+    width: 550px;
   }
 
   .results-div {
@@ -537,16 +608,14 @@ textarea {
 
   .profile-pics {
     width: 70% !important;
-    max-width: 250px !important;
-    height: 725px;
+    max-width: 275px !important;
+    height: 810px;
   }
 
   #team {
     margin: auto;
-    left: 50%;
-    right: 50%;
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: 1fr 1fr 1fr;
     justify-items: center;
     top: 0;
     max-width: 800px;

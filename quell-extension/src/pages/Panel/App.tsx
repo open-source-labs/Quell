@@ -80,7 +80,10 @@ const App = () => {
       .then((response) => response.json())
       .then((data) => {
         const schema = buildClientSchema(data.data);
-        setSchema(schema || "No schema retreived");
+        setSchema(schema || 'No schema retreived');
+        console.log("schema: ",schema);
+        console.log("data: ", data );
+
       })
       .catch((err) => console.log(err));
   }, [clientAddress, serverAddress, graphQLRoute]);

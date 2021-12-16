@@ -9,7 +9,7 @@ const Header = () => {
   return (
     <header>
       <div id='logo-main-container'>
-        <img id='logo-main' src={Logo}></img>
+        <img id='logo_main' src={Logo} width={600} style={{margin:'20px'}}></img>
       </div>
 
       <ul className='header-links'>
@@ -20,13 +20,16 @@ const Header = () => {
           <a href="https://www.npmjs.com/package/@quell/server" target='_blank'>SERVER</a>
         </li>
         <li>
+          <a href="https://chrome.google.com/webstore/detail/quell-developer-tool/jnegkegcgpgfomoolnjjkmkippoellod" target='_blank'>DEVTOOL</a>
+        </li>
+        <li>
           <a href='#demo'>DEMO</a>
         </li>
         <li>
           <a href='#team-quell'>TEAM</a>
         </li>
         <li>
-          <a href='https://github.com/oslabs-beta/Quell' target='_blank'>
+          <a href='https://github.com/open-source-labs/Quell' target='_blank'>
             GITHUB
           </a>
         </li>
