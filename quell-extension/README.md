@@ -71,6 +71,9 @@ app.use('/redis', ...quellCache.getRedisInfo({
   getValues: true
 }))
 ```
+### Usage Note
+
+Use of `QuellCache.getRedisInfo` requires `@quell/server` at version `2.3.1` or greater.
 
 ## More information
 
