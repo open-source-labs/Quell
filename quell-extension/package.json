@@ -8,7 +8,7 @@
     },
     "testEnvironment": "jsdom"
   },
-  "version": "0.9",
+  "version": "0.9.1",
   "description": "Quell devtool to help visualize and query GraphQL ",
   "main": "index.js",
   "scripts": {
