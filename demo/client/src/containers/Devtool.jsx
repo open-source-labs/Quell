@@ -1,8 +1,4 @@
 import React, { useState } from "react";
-import Client from "../images/extension-gifs/client_tab.gif";
-import Server from "../images/extension-gifs/server_tab.gif";
-import Cache from "../images/extension-gifs/cache_tab.gif";
-import Settings from "../images/extension-gifs/settings_tab.gif";
 import logo from "../images/quell_logos/icon128.png";
 import Header from "../images/headers/QUELL-headers-devtools w lines.png";
 
@@ -28,7 +24,7 @@ const Devtool = () => {
 
       <div className="devtool_demo">
         <div className="navbar">
-          <img id="quell_extension_logo" src={logo} />
+          <img src={'https://imgur.com/180d29b4-ba3f-4c3b-93cd-ba635f087350'} />
           <button
             id='client_button'
             onClick={() => setActiveTab("client")}
@@ -59,10 +55,10 @@ const Devtool = () => {
           </button>
         </div>
         <div className="gif_container">
-          {activeTab === "client" && <img src={Client} width={800} />}
-          {activeTab === "server" && <img src={Server} width={800} />}
-          {activeTab === "cache" && <img src={Cache} width={800} />}
-          {activeTab === "settings" && <img src={Settings} width={800} />}
+          {activeTab === "client" && <img src={'https://i.imgur.com/mdZj4OD.gif'} width={800} />}
+          {activeTab === "server" && <img src={'https://i.imgur.com/FBlvNhI.gif'} width={800} />}
+          {activeTab === "cache" && <img src={'https://i.imgur.com/Wj435ZW.gif'} width={800} />}
+          {activeTab === "settings" && <img src={'https://i.imgur.com/FBlvNhI.gif'} width={800} />}
         </div>
       </div>
     </center>
