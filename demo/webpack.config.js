@@ -11,9 +11,6 @@ module.exports = {
   },
   node: {
     fs: 'empty',
-    net: 'empty',
-    tls: 'empty',
-    'crypto': 'empty'
   },
   devServer: {
     port: 8080,
@@ -43,7 +40,7 @@ module.exports = {
         use: ['style-loader', 'css-loader', 'sass-loader'],
       },
       {
-        test: /.(png|svg|jpg|gif|woff|ico|woff2|eot|ttf|otf)$/,
+        test: /.(png|svg|jpg|gif|woff|ico|woff2|eot|ttf|otf)$/i,
         use: ['file-loader'],
       },
     ],

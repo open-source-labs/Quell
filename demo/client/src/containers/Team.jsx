@@ -1,10 +1,10 @@
 import React from "react";
 import TeamMember from "../components/TeamMember.jsx";
 import Header from "../images/headers/QUELL-team quell-2color_1.svg";
-import Nick from "../images/profile_pics/QUELL-headshot w border-Nick.svg";
-import Mike from "../images/profile_pics/QUELL-headshot w border-Mike.svg";
-import Rob from "../images/profile_pics/QUELL-headshot w border-Rob.svg";
-import Justin from "../images/profile_pics/QUELL-headshot w border-Justin.svg";
+import Nick from "../images/profile_pics/QUELL-headshot w border-Nick.png";
+import Mike from "../images/profile_pics/QUELL-headshot w border-Mike.png";
+import Rob from "../images/profile_pics/QUELL-headshot w border-Rob.png";
+import Justin from "../images/profile_pics/QUELL-headshot w border-Justin.png";
 import Andrei from "../images/profile_pics/QUELL-headshot w border-Andrei.png";
 import Dasha from "../images/profile_pics/QUELL-headshot w border-Dasha.png";
 import Derek from "../images/profile_pics/QUELL-headshot w border-Derek.png";

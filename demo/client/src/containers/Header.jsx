@@ -9,7 +9,7 @@ const Header = () => {
   return (
     <header>
       <div id='logo-main-container'>
-        <img id='logo-main' src={Logo}></img>
+        <img id='logo_main' src={Logo} width={600} style={{margin:'20px'}}></img>
       </div>
 
       <ul className='header-links'>
