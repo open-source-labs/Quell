@@ -2,8 +2,8 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://github.com/open-source-labs/Quell/blob/master/LICENSE)
 ![AppVeyor](https://img.shields.io/badge/build-passing-brightgreen.svg)
-<!-- ![AppVeyor](https://img.shields.io/badge/version-1.0.1-blue.svg) -->
 [![contributions welcome](https://img.shields.io/badge/contributions-welcome-brightgreen.svg?style=flat)](https://github.com/open-source-labs/Quell/issues)
+<!-- ![AppVeyor](https://img.shields.io/badge/version-1.0.1-blue.svg) -->
 
 # Quell
 
