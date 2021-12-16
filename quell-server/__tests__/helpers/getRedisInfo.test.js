@@ -1,5 +1,5 @@
 const request = require('supertest');
-// const app = require('../../test-config/test-server.js');
+const app = require('../../test-config/test-server.js');
 const QuellCache = require('../../src/quell');
 const schema = require('../../test-config/testSchema');
 

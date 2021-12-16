@@ -10,7 +10,7 @@ import Header from '../images/headers/QUELL-headers-demo w lines.svg';
 import DropDown from '../images/buttons/dropdown-button.svg';
 import DropDownHover from '../images/buttons/dropdown-button-hover.svg';
 import {Quellify as QuellModule, lokiClientCache as lokiClientCacheModule } from '@quell/client';
-import { Quellify as QuellDev, lokiClientCache as lokiClientCacheDev } from '../../../../quell-client/src/Quellify';
+// import { Quellify as QuellDev, lokiClientCache as lokiClientCacheDev } from '../../../../quell-client/src/Quellify';
  
 const Quell =
   process.env.NODE_ENV === "development"

@@ -9,6 +9,10 @@
     "dev": "concurrently \"webpack-dev-server --open --hot\" \"NODE_ENV=development nodemon -w ../quell-server/src/quell.js server/server.js\"",
     "test": "jest --verbose --runInBand --detectOpenHandles"
   },
+  "engines": {
+    "node": "14.17.5",
+    "npm": "8.1.0"
+  },
   "keywords": [],
   "contributors": [
     {

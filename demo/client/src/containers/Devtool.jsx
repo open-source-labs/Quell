@@ -58,7 +58,7 @@ const Devtool = () => {
           {activeTab === "client" && <img src={'https://i.imgur.com/mdZj4OD.gif'} width={800} />}
           {activeTab === "server" && <img src={'https://i.imgur.com/FBlvNhI.gif'} width={800} />}
           {activeTab === "cache" && <img src={'https://i.imgur.com/Wj435ZW.gif'} width={800} />}
-          {activeTab === "settings" && <img src={'https://i.imgur.com/FBlvNhI.gif'} width={800} />}
+          {activeTab === "settings" && <img src={'https://i.imgur.com/WK5saAJ.gif'} width={800} />}
         </div>
       </div>
     </center>
