@@ -108,7 +108,8 @@
     "react": "^16.14.0",
     "react-dom": "^16.14.0",
     "react-trend": "^1.2.5",
-    "redis": "^3.0.2"
+    "redis": "^3.0.2",
+    "source-map-loader": "^3.0.0"
   },
   "devDependencies": {
     "@babel/core": "^7.11.5",
@@ -132,12 +133,12 @@
     "react-trend": "^1.2.5",
     "sass": "^1.26.10",
     "sass-loader": "^10.0.1",
-    "style-loader": "^1.2.1",
+    "style-loader": "^2.0.0",
     "supertest": "^4.0.2",
     "transform-runtime": "0.0.0",
     "url-loader": "^4.1.1",
     "webpack": "^4.44.1",
     "webpack-cli": "^3.3.12",
-    "webpack-dev-server": "^3.11.0"
+    "webpack-dev-server": "^3.11.3"
   }
 }
