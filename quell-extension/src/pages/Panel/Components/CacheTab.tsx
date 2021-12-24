@@ -3,25 +3,41 @@ import React, { useState, useEffect } from 'react';
 import NavButton from './NavButton';
 import CacheView from './CacheView';
 import SearchImg from '../assets/search.png';
+import { RedisInfo, RedisStats } from '../interfaces/RedisInfo';
 
-const CacheTab = ({ serverAddress, redisRoute, handleClearCache }) => {
+type CacheTabProps = {
+  serverAddress: string;
+  redisRoute: string;
+  handleClearCache: () => void;
+};
+
+const CacheTab = ({
+  serverAddress,
+  redisRoute,
+  handleClearCache,
+}: CacheTabProps) => {
   //use state to store data from redis server
-  const [redisStats, setRedisStats] = useState({});
-  const [redisKeys, setRedisKeys] = useState([]);
-  const [redisValues, setRedisValues] = useState([]);
-  const [activeTab, setActiveTab] = useState("server");
+  const [redisStats, setRedisStats] = useState<RedisStats>({
+    server: [],
+    client: [],
+    memory: [],
+    stats: [],
+  });
+  const [redisKeys, setRedisKeys] = useState<string[]>([]);
+  const [redisValues, setRedisValues] = useState<string[]>([]);
+  const [activeTab, setActiveTab] = useState<string>('server');
 
   const fetchRedisInfo = () => {
     fetch(`${serverAddress}${redisRoute}`)
       .then((response) => response.json())
-      .then((data) => {
-        console.log("redis info: ", data);
+      .then((data: RedisInfo) => {
+        console.log('redis info: ', data);
         if (data.redisStats) setRedisStats(data.redisStats);
         if (data.redisKeys) setRedisKeys(data.redisKeys);
         if (data.redisValues) setRedisValues(data.redisValues);
       })
       .catch((error) =>
-        console.log("error fetching from redis endpoint: ", error)
+        console.log('error fetching from redis endpoint: ', error)
       );
   };
 
@@ -29,43 +45,45 @@ const CacheTab = ({ serverAddress, redisRoute, handleClearCache }) => {
     fetchRedisInfo();
   }, []);
 
-  const genTable = (title) => {
+  const genTable = (title: string) => {
     const output = [];
-    for (let key in redisStats[title]) {
-      output.push(
-        <div className="subStats">
-          <div
-            key={`${title}.name`}
-            style={{
-              fontWeight: "500",
-              fontSize: "0.85rem",
-              color: "#eee",
-              border: "1px solid #444",
-              borderWidth: " 0 0 1px 1px ",
-              padding: "3px 12px 3px 10px",
-            }}
-          >
-            {redisStats[title][key].name}
+    if (title in redisStats) {
+      for (let key in redisStats[title]) {
+        output.push(
+          <div className="subStats">
+            <div
+              key={`${title}.name`}
+              style={{
+                fontWeight: '500',
+                fontSize: '0.85rem',
+                color: '#eee',
+                border: '1px solid #444',
+                borderWidth: ' 0 0 1px 1px ',
+                padding: '3px 12px 3px 10px',
+              }}
+            >
+              {redisStats[title][key].name}
+            </div>
+            <div
+              key={`${title}.value`}
+              style={{
+                border: '1px solid #444',
+                borderWidth: '0 1px 1px 1px',
+                padding: '3px 12px 3px 10px',
+              }}
+            >
+              {redisStats[title][key].value}
+            </div>
           </div>
-          <div
-            key={`${title}.value`}
-            style={{
-              border: "1px solid #444",
-              borderWidth: "0 1px 1px 1px",
-              padding: "3px 12px 3px 10px",
-            }}
-          >
-            {redisStats[title][key].value}
-          </div>
-        </div>
-      );
+        );
+      }
     }
     return output;
   };
 
-  const [filter, setFilter] = useState("");
-  const activeStyle = { backgroundColor: "#444" };
-  const handleFilter = (e) => {
+  const [filter, setFilter] = useState('');
+  const activeStyle = { backgroundColor: '#444' };
+  const handleFilter = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFilter(e.target.value);
   };
 
@@ -80,42 +98,42 @@ const CacheTab = ({ serverAddress, redisRoute, handleClearCache }) => {
         <div className="cacheTables">
           <div className="cacheButtons">
             <NavButton
-              text={"server"}
+              text={'server'}
               activeTab={activeTab}
               setActiveTab={setActiveTab}
-              altClass={"cacheNavButton"}
+              altClass={'cacheNavButton'}
             />
 
             <NavButton
-              text={"client"}
+              text={'client'}
               activeTab={activeTab}
               setActiveTab={setActiveTab}
-              altClass={"cacheNavButton"}
+              altClass={'cacheNavButton'}
             />
 
             <NavButton
-              text={"memory"}
+              text={'memory'}
               activeTab={activeTab}
               setActiveTab={setActiveTab}
-              altClass={"cacheNavButton"}
+              altClass={'cacheNavButton'}
             />
 
             <NavButton
-              text={"stats"}
+              text={'stats'}
               activeTab={activeTab}
               setActiveTab={setActiveTab}
-              altClass={"cacheNavButton"}
+              altClass={'cacheNavButton'}
             />
           </div>
 
           <div className="dynamicCacheTable">
-            {activeTab === "server" && <div>{genTable("server")}</div>}
+            {activeTab === 'server' && <div>{genTable('server')}</div>}
 
-            {activeTab === "client" && <div>{genTable("client")}</div>}
+            {activeTab === 'client' && <div>{genTable('client')}</div>}
 
-            {activeTab === "memory" && <div>{genTable("memory")}</div>}
+            {activeTab === 'memory' && <div>{genTable('memory')}</div>}
 
-            {activeTab === "stats" && <div>{genTable("stats")}</div>}
+            {activeTab === 'stats' && <div>{genTable('stats')}</div>}
           </div>
 
           <button
@@ -130,8 +148,8 @@ const CacheTab = ({ serverAddress, redisRoute, handleClearCache }) => {
             className="optionButtons"
             id="cacheTabClear"
             onClick={() => {
-              handleClearCache()
-              fetchRedisInfo()
+              handleClearCache();
+              fetchRedisInfo();
             }}
           >
             Clear Cache
