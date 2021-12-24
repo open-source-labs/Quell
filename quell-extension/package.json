@@ -121,6 +121,7 @@
     "@testing-library/jest-dom": "^5.16.1",
     "@testing-library/react": "^12.1.2",
     "@testing-library/user-event": "^13.5.0",
+    "@types/chrome": "^0.0.172",
     "codemirror": "^5.64.0",
     "codemirror-graphql": "^1.2.4",
     "graphql": "^16.0.1",

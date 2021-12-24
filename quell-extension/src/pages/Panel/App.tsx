@@ -1,5 +1,5 @@
 /* eslint-disable react/react-in-jsx-scope */
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import PrimaryNavBar from './Components/PrimaryNavBar';
 import ServerTab from './Components/ServerTab';
 import CacheTab from './Components/CacheTab';
@@ -13,7 +13,8 @@ import Settings from "./Components/Settings";
 
 // Sample clientRequest data for building Network component
 import data from "./data/sampleClientRequests";
-import { IgnorePlugin } from "webpack";
+import { ClientRequest } from './interfaces/ClientRequest';
+// import { IgnorePlugin } from "webpack";
 
 const App = () => {
   // sets active tab - default: 'client'
@@ -24,7 +25,7 @@ const App = () => {
   const [results, setResults] = useState({});
   const [schema, setSchema] = useState({});
   const [queryString, setQueryString] = useState<string>("");
-  const [clientRequests, setClientRequests] = useState([]);
+  const [clientRequests, setClientRequests] = useState<ClientRequest[]>([]);
 
   // various routes to get information
   const [graphQLRoute, setGraphQLRoute] = useState<string>("/graphQL");
@@ -38,7 +39,7 @@ const App = () => {
   const [clearCacheRoute, setClearCacheRoute] = useState<string>("/clearCache");
 
   // function to clear front end cache
-  const handleClearCache = () => {
+  const handleClearCache = (): void => {
     const address = `${serverAddress}${clearCacheRoute}`;
     fetch(address)
       .then((data) => console.log(data))
@@ -46,7 +47,7 @@ const App = () => {
   };
 
   // function used to listen to network requests and return any graphQL/Quell queries to populate client page
-  const gqlListener = (request: chrome.devtools.network.Request): void => {
+  const gqlListener = (request: ClientRequest): void => {
     if (isGQLQuery(request)) {
       request.getContent((body) => {
         const responseData = JSON.parse(body);
@@ -55,7 +56,7 @@ const App = () => {
       });
     }
   };
-
+  
   // COMMENT OUT IF WORKING FROM DEV SERVER
   useEffect(() => {
     handleRequestFinished(gqlListener);
