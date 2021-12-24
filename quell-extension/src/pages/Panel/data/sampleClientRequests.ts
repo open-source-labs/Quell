@@ -1,4 +1,5 @@
-const data = [
+
+const data: (chrome.devtools.network.Request | any) = [
   {
   "_initiator": {
     "type": "script",
