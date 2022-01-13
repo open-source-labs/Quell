@@ -22,7 +22,7 @@ Accelerated by [OS Labs](https://github.com/open-source-labs) and developed by [
   - Inspect and monitor the latency of client-side GraphQL/Quell requests
   - Make and monitor the latency of GraphQL/Quell requests to a specified server endpoint
   - View server-side cache data and contents, with the ability to manually clear the cache
-  - Features require zero-to-minimal configuration can work independently of `@quell/client` and `@quell/server`
+  - Features require zero-to-minimal configuration and can work independently of `@quell/client` and `@quell/server`
 
 ## Installation
 
