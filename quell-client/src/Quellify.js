@@ -1,6 +1,8 @@
 const { parse } = require('graphql/language/parser');
 const parseAST = require('./helpers/parseAST');
 // const normalizeForSessionCache = require("./helpers/normalizeForSessionCache");
+//test
+//test
 const {
   lokiClientCache,
   normalizeForLokiCache,
