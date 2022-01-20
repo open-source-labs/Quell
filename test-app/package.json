@@ -11,7 +11,7 @@
   "license": "ISC",
   "devDependencies": {
     "eslint": "^7.17.0",
-    "nodemon": "^2.0.7"
+    "nodemon": "^2.0.15"
   },
   "dependencies": {
     "@quell/server": "^2.3.1",

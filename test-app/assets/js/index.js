@@ -11,6 +11,16 @@ document.addEventListener('DOMContentLoaded',  () => {
   deleteBtn.onclick = () => handleDeleteClick();
 
 });  
+// const start = new Date().getTime();
+
+// for (i = 0; i < 50000; ++i) {
+// // do something
+// }
+
+// const end = new Date().getTime();
+// const time = end - start;
+// alert('Execution time: ' + time);
+
 
 const handleDeleteClick = async () => {
   const _id = document.querySelector('#deleteid').value;
@@ -41,6 +51,8 @@ const handleDeleteClick = async () => {
 const handleCreateClick = async () => {
   const name = document.querySelector('#createName').value;
   console.log(name)
+  const start = new Date().getTime();
+
   const results = await fetch('/graphql', {
     method: 'POST',
     headers: {
@@ -55,6 +67,10 @@ const handleCreateClick = async () => {
       }`
     })
   });
+  const end = new Date().getTime();
+  const time = end - start;
+  document.getElementById("time").innerHTML = "  Create call in milliSeconds: " + time
+  alert('Execution time: ' + time);
   const parsedResponse = await results.json();
   const characterData = parsedResponse.data.createCharacter
   const li = createLi(characterData)
@@ -81,6 +97,7 @@ const createLi = (character,time) => {
 
 //handle clicks
 const handleFetchClick = async () => {
+  const start = new Date().getTime();
   const _id = document.querySelector('#id').value;
   console.log(_id)
   const results = await fetch('/graphql', {
@@ -97,7 +114,13 @@ const handleFetchClick = async () => {
       }`
     })
   });
+  const end = new Date().getTime();
+  const time = end - start;
+  document.getElementById("time").innerHTML = "  Fetch call in milliSeconds: " + time
   const parsedResponse = await results.json();
+
+  console.log("Time in milliSeconds: " + time)
+  // alert('Execution time: ' + time);
   const characterData = parsedResponse.data.getCharacter;
   const li = createLi(characterData)
   const characterBoard = document.getElementById('character-list')
