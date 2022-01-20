@@ -20,16 +20,16 @@ app.use(cookieParser());
 
 
 
-app.use('/graphql', quellCache.query, (req, res) => {
-  return res.status(200).send(res.locals.queryResponse);
-});
+// app.use('/graphql', quellCache.query, (req, res) => {
+//   return res.status(200).send(res.locals.queryResponse);
+// });
 
 
 
-// app.use('/graphql', graphqlHTTP({
-//   schema: schema,
-//   graphiql: true
-// }));
+app.use('/graphql', graphqlHTTP({
+  schema: schema,
+  graphiql: true
+}));
 
 
 
