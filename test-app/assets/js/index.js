@@ -12,7 +12,7 @@ document.addEventListener('DOMContentLoaded',  () => {
 
 });  
 // const start = new Date().getTime();
-
+// 
 // for (i = 0; i < 50000; ++i) {
 // // do something
 // }
@@ -22,9 +22,13 @@ document.addEventListener('DOMContentLoaded',  () => {
 // alert('Execution time: ' + time);
 
 
+//  document.getElementById("time").innerHTML = ''
+// console.log("Hittin it")
+
 const handleDeleteClick = async () => {
   const _id = document.querySelector('#deleteid').value;
   console.log(_id)
+  const start = new Date().getTime();
   const results = await fetch('/graphql', {
     method: 'POST',
     headers: {
@@ -39,6 +43,9 @@ const handleDeleteClick = async () => {
       }`
     })
   });
+  const end = new Date().getTime();
+  const time = end - start;
+  document.getElementById("time").innerHTML = "  Delete call in milliSeconds: " + time
   const parsedResponse = await results.json();
   const characterData = parsedResponse.data.deleteCharacter;
   const li = createLi(characterData)
@@ -70,7 +77,6 @@ const handleCreateClick = async () => {
   const end = new Date().getTime();
   const time = end - start;
   document.getElementById("time").innerHTML = "  Create call in milliSeconds: " + time
-  alert('Execution time: ' + time);
   const parsedResponse = await results.json();
   const characterData = parsedResponse.data.createCharacter
   const li = createLi(characterData)
@@ -81,6 +87,8 @@ const handleCreateClick = async () => {
 const handleClearClick = () => {
   const characterBoard = document.getElementById('character-list')
   characterBoard.innerHTML = ''
+  document.getElementById("time").innerHTML = ''
+ 
 }
 
 //function that creates a new message element
