@@ -4,6 +4,7 @@ const parseAST = require('./helpers/parseAST');
 //hello world
 //test
 //fdsa
+//one more test
 
 const {
   lokiClientCache,
