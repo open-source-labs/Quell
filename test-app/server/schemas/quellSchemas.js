@@ -15,6 +15,7 @@ const CharacterType = new GraphQLObjectType({
     name: 'Character',
     fields: () => ({
         _id: { type: GraphQLID },
+        name: { type: GraphQLString },
         mass: { type: GraphQLString },
         hair_color: { type: GraphQLString },
         skin_color: { type: GraphQLString },
@@ -73,7 +74,9 @@ const RootMutation = new GraphQLObjectType({
             console.log(error)
             return error
         }
+      }
     },
+    
     // update book name using author data
     deleteCharacter: {
       type: CharacterType,
@@ -92,8 +95,7 @@ const RootMutation = new GraphQLObjectType({
           console.log(error)
           return error
         }
-    }
-      },
+      }
     },
 }
 });
