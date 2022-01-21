@@ -192,7 +192,7 @@ async function Quellify(
     // Execute fetch request with original query
     const serverResponse = await fetch(endPoint, fetchOptions);
     const parsedData = await serverResponse.json();
-    
+
     normalizeForLokiCache(parsedData.data, queryTypeMap, isMutation, map, proto);
     console.log(lokiClientCache);
     // Return response as a promise
@@ -325,12 +325,12 @@ async function Quellify(
       const parsedData = await serverResponse.json();
 
       if (parsedData.hasOwnProperty("error")) return next("graphql library error", parsedData.error);
-      
+
       // Stitch together cached response and the newly fetched data and assign to variable
       // mergedResponse = { data: joinResponses(cacheResponse, parsedData, prototype), };
       // cache the response
       normalizeForLokiCache(parsedData.data, queryTypeMap, isMutation, map, proto);
-      
+
     } else {
       // If everything needed was already in cache, only assign cached response to variable
       mergedResponse = { data: cacheResponse };
@@ -340,4 +340,4 @@ async function Quellify(
   }
 }
 
-module.exports = { Quellify, lokiClientCache };
+export default { Quellify, lokiClientCache };
