@@ -12,7 +12,7 @@ const cors = require('cors');
 const app = express();
 const redisPort = 6379;
 const PORT = 3434;
-const quellCache = new QuellCache(schema, redisPort, 1200);
+// const quellCache = new QuellCache(schema, redisPort, 1200);
 
 app.use(express.json());
 app.use(express.static(path.join(__dirname, '../assets')));
@@ -23,9 +23,9 @@ app.use(cors());
 //   return res.status(200).send(res.locals.queryResponse);
 // });
 
-console.log(quellCache.queryMap);
-console.log(quellCache.mutationMap);
-console.log(quellCache.fieldsMap);
+// console.log(quellCache.queryMap);
+// console.log(quellCache.mutationMap);
+// console.log(quellCache.fieldsMap);
 
 app.use(
   '/graphql',
@@ -57,4 +57,4 @@ app.listen(PORT, () => {
   console.log(`Server listening on port: ${PORT}`);
 });
 
-module.exports = app;
+module.exports = { app, QuellCache };
