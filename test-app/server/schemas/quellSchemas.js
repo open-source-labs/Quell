@@ -8,7 +8,7 @@ const {
   GraphQLString,
   GraphQLInt,
   GraphQLNonNull,
-} = require('graphql');
+} = require('../../../quell-server/node_modules/graphql');
 
 
 const CharacterType = new GraphQLObjectType({
