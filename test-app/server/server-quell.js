@@ -17,8 +17,6 @@ app.use(express.json());
 app.use(express.static(path.join(__dirname, '../assets')));
 app.use(cookieParser());
 
-console.log(quellCache.queryMap);
-
 // app.use('/graphql', quellCache.query, (req, res) => {
 //   return res.status(200).send(res.locals.queryResponse);
 // });

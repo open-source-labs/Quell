@@ -1,5 +1,5 @@
 import { Quellify, lokiClientCache } from './quell-client/src/Quellify';
-import { useRef } from 'react';
+import { useRef, useState } from 'react';
 import './App.css';
 
 function App() {
@@ -16,9 +16,11 @@ function App() {
     Character: 'Character',
   };
 
+  const [cache, setCache] = useState([]);
+
   const handleFetchClick = async () => {
     let startTime = new Date();
-    console.log(lokiClientCache);
+    console.log(lokiClientCache.data);
 
     const _id = fetchInfo.current.value;
     console.log(_id);
@@ -168,6 +170,17 @@ function App() {
         </button>
       </div>
       <button onClick={clearCache}>Clear Cache</button>
+      <div>
+        Cache
+        {lokiClientCache.data.forEach((el) => {
+          return (
+            <li>
+              id: {el.id} -- cacheID: {el.cacheID} -- queryType: {el.queryType}
+              -- $loki: {el.$loki}
+            </li>
+          );
+        })}
+      </div>
     </div>
   );
 }
