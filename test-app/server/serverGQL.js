@@ -23,9 +23,9 @@ app.use(cors());
 //   return res.status(200).send(res.locals.queryResponse);
 // });
 
-console.log(quellCache.queryMap);
-console.log(quellCache.mutationMap);
-console.log(quellCache.fieldsMap);
+// console.log(quellCache.queryMap);
+// console.log(quellCache.mutationMap);
+// console.log(quellCache.fieldsMap);
 
 app.use(
   '/graphql',

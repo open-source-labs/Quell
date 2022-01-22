@@ -22,7 +22,8 @@
     "graphql": "^15.8.0",
     "mongoose": "^6.1.5",
     "pg": "^8.7.1",
-    "redis": "^4.0.2"
+    "redis": "^4.0.2",
+    "redis-server": "^1.2.2"
   },
   "keywords": [],
   "description": ""
