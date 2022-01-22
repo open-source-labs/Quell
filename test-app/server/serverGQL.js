@@ -19,21 +19,21 @@ app.use(express.static(path.join(__dirname, '../assets')));
 app.use(cookieParser());
 app.use(cors());
 
-// app.use('/graphql', quellCache.query, (req, res) => {
-//   return res.status(200).send(res.locals.queryResponse);
-// });
+app.use('/graphql', quellCache.query, (req, res) => {
+  return res.status(200).send(res.locals.queryResponse);
+});
 
-console.log(quellCache.queryMap);
-console.log(quellCache.mutationMap);
-console.log(quellCache.fieldsMap);
+// console.log(quellCache.queryMap);
+// console.log(quellCache.mutationMap);
+// console.log(quellCache.fieldsMap);
 
-app.use(
-  '/graphql',
-  graphqlHTTP({
-    schema: schema,
-    graphiql: true,
-  })
-);
+// app.use(
+//   '/graphql',
+//   graphqlHTTP({
+//     schema: schema,
+//     graphiql: true,
+//   })
+// );
 
 //send html
 app.get('/', (req, res) => {
@@ -57,4 +57,4 @@ app.listen(PORT, () => {
   console.log(`Server listening on port: ${PORT}`);
 });
 
-module.exports = app;
+module.exports = { app, QuellCache };
