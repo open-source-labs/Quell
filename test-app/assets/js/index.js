@@ -1,3 +1,4 @@
+// import Quellify from '../../../quell-client/src/Quellify'
 
 document.addEventListener('DOMContentLoaded',  () => {
   //set save onclick
@@ -12,7 +13,7 @@ document.addEventListener('DOMContentLoaded',  () => {
 
 });  
 // const start = new Date().getTime();
-// 
+
 // for (i = 0; i < 50000; ++i) {
 // // do something
 // }
@@ -21,9 +22,7 @@ document.addEventListener('DOMContentLoaded',  () => {
 // const time = end - start;
 // alert('Execution time: ' + time);
 
-
 //  document.getElementById("time").innerHTML = ''
-// console.log("Hittin it")
 
 const handleDeleteClick = async () => {
   const _id = document.querySelector('#deleteid').value;
@@ -59,7 +58,6 @@ const handleCreateClick = async () => {
   const name = document.querySelector('#createName').value;
   console.log(name)
   const start = new Date().getTime();
-
   const results = await fetch('/graphql', {
     method: 'POST',
     headers: {

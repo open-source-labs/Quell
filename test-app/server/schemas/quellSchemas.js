@@ -32,7 +32,7 @@ const RootQuery = new GraphQLObjectType({
       type: CharacterType,
       args: { _id: { type: GraphQLID } },
       async resolve(parent, args) {
-        console.log('in getCharacter query');
+        console.log('in getCharacter query Root Definition');
         const query = 'SELECT * FROM PEOPLE WHERE _id = $1;';
         try{
           const response = await db.query(query,[args._id])

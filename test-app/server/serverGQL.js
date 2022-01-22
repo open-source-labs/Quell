@@ -2,7 +2,7 @@ const path = require('path');
 const express = require('express');
 const cookieParser = require('cookie-parser');
 const { graphqlHTTP } = require('express-graphql');
-const {GraphQLSchema} = require('graphql');
+const { GraphQLSchema } = require('graphql');
 const graphqlSchema = require('./schemas/schemas');
 const graphqlResolvers = require('./resolvers/message');
 const QuellCache = require('../../quell-server/src/quell');
@@ -30,9 +30,17 @@ app.use('/graphql', graphqlHTTP({
   schema: graphqlSchema,
   rootValue: graphqlResolvers,
   graphiql: true
-}));
+}),(req, res, next)=>{
+  console.log("Do you shred?")
+  next()
+});
 
-
+// app.get('/', (req, res, next)=>{
+//   console.log("Here is the request")
+//   //QuellCache(req)
+//   // console.log(res)
+//   next()
+// })
 
 
 
@@ -60,4 +68,4 @@ app.listen(PORT, () => {
   console.log(`Server listening on port: ${PORT}`);
 });
 
-module.exports = app;
+module.exports = { app, QuellCache };
