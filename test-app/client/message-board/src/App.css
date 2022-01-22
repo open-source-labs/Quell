@@ -33,10 +33,20 @@
   background-color: #4c50af;
   max-width: 20%;
 }
+
+#update {
+  background-color: #4c50af;
+  max-width: 300px;
+}
+
 #clear {
   background-color: #4c50af;
   max-width: 20%;
   align-self: center;
+}
+
+.updateInput {
+  max-width: 40%;
 }
 
 #cacheButton {

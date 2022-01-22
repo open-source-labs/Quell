@@ -185,6 +185,7 @@ async function Quellify(
   } else {
     // if the request is query
 
+    console.log('IAM A QUERY');
     /*
     const fetchOptions = {
       method: "POST",
@@ -244,11 +245,9 @@ async function Quellify(
         cacheID = generateCacheID(prototype[typeKey]);
     }
 
-    console.log(cacheID);
-
     let lokiJS = lokiClientCache.data;
 
-    console.log(lokiJS);
+    console.log('LOKISJS:', lokiJS);
 
     const cacheIDArr = [],
       cacheArr = [],
@@ -274,8 +273,14 @@ async function Quellify(
         }
       }
     });
+
+    console.log(cacheIDArr);
+    console.log(cacheArr);
+    console.log(tempArr);
+
     if (cacheIDArr.length > 0) cacheHasData = true;
 
+    console.log('CACHEHASDATA:', cacheHasData);
     const fetchOptions = {
       method: 'POST',
       headers: options.headers,
@@ -283,6 +288,7 @@ async function Quellify(
     };
     // Execute fetch request with original query
     const serverResponse = await fetch(endPoint, fetchOptions);
+    console.log('FETCHING:', serverResponse);
     const parsedData = await serverResponse.json();
     normalizeForLokiCache(
       parsedData.data,

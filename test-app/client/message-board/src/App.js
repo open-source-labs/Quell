@@ -1,11 +1,13 @@
 import { Quellify, lokiClientCache } from './quell-client/src/Quellify';
-import { useRef, useState, useEffect } from 'react';
+import { useRef, useState } from 'react';
 import './App.css';
 
 function App() {
   const fetchInfo = useRef(null);
   const createInfo = useRef(null);
   const deleteInfo = useRef(null);
+  const updatedID = useRef(null);
+  const updatedName = useRef(null);
 
   console.log(lokiClientCache.data);
 
@@ -64,7 +66,7 @@ function App() {
     const characterBoard = document.getElementById('character-list');
     characterBoard.appendChild(li);
 
-    setCache(lokiClientCache.data);
+    setCache([...lokiClientCache.data]);
 
     //update messageboard after creating new message
   };
@@ -77,6 +79,8 @@ function App() {
 
   const handleCreateClick = async (e) => {
     e.preventDefault();
+    let startTime = new Date();
+
     const name = createInfo.current.value;
     console.log(name);
     const results = await fetch('http://localhost:3434/graphql', {
@@ -93,13 +97,16 @@ function App() {
       }`,
       }),
     });
+
+    let endTime = new Date();
+    let diff = endTime - startTime;
     const parsedResponse = await results.json();
     const characterData = parsedResponse.data.createCharacter;
-    const li = createLi(characterData);
+    const li = createLi(characterData, diff);
     const characterBoard = document.getElementById('character-list');
     characterBoard.appendChild(li);
 
-    setCache(lokiClientCache.data);
+    setCache([...lokiClientCache.data]);
   };
 
   const createLi = (character, time) => {
@@ -115,6 +122,8 @@ function App() {
 
   const handleDeleteClick = async (e) => {
     e.preventDefault();
+    let startTime = new Date();
+
     const _id = deleteInfo.current.value;
     console.log(_id);
     const results = await fetch('http://localhost:3434/graphql', {
@@ -131,16 +140,54 @@ function App() {
       }`,
       }),
     });
+
+    let endTime = new Date();
+    let diff = endTime - startTime;
     const parsedResponse = await results.json();
     const characterData = parsedResponse.data.deleteCharacter;
-    const li = createLi(characterData);
+    const li = createLi(characterData, diff);
     let innerText = `(DELETED)\n`;
     innerText += li.innerText;
     li.innerText = innerText;
     const characterBoard = document.getElementById('character-list');
     characterBoard.appendChild(li);
 
-    setCache(lokiClientCache.data);
+    setCache([...lokiClientCache.data]);
+  };
+
+  const handleUpdateClick = async (e) => {
+    e.preventDefault();
+    let startTime = new Date();
+
+    const _id = updatedID.current.value;
+    const name = updatedName.current.value;
+    console.log(_id);
+    const results = await fetch('http://localhost:3434/graphql', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        query: `mutation{
+        updateCharacter(_id: ${_id},name: "${name}"){
+          _id
+          name
+        }
+      }`,
+      }),
+    });
+    const parsedResponse = await results.json();
+    let endTime = new Date();
+    let diff = endTime - startTime;
+    const characterData = parsedResponse.data.updateCharacter;
+    const li = createLi(characterData, diff);
+    let innerText = `UPDATED\n`;
+    innerText += li.innerText;
+    li.innerText = innerText;
+    const characterBoard = document.getElementById('character-list');
+    characterBoard.appendChild(li);
+
+    setCache([...lokiClientCache.data]);
   };
 
   const handleClearClick = () => {
@@ -174,6 +221,23 @@ function App() {
         <button onClick={handleDeleteClick} id='delete'>
           DELETE
         </button>
+        <div style={{ display: 'flex' }}>
+          <input
+            className='updateInput'
+            ref={updatedID}
+            placeholder='reference id'
+            type='text'
+          />
+          <input
+            className='updateInput'
+            ref={updatedName}
+            placeholder='new name'
+            type='text'
+          />
+          <button onClick={handleUpdateClick} id='update'>
+            UPDATE
+          </button>
+        </div>
       </div>
       <ul id='character-list'></ul>
       <div id='clear-btn-container'>
@@ -193,11 +257,15 @@ function App() {
           const meta = JSON.stringify(el.meta);
 
           return (
-            <div>
-              {` id: ${el.id} -- cacheID: ${cacheID}
-             -- queryType: ${el.queryType} -- meta: ${meta}
-              -- $loki: ${el.$loki}`}
-            </div>
+            <li key={key}>
+              {` id: ${el.id} \n
+              cacheID: ${cacheID}
+             \n
+             queryType: ${el.queryType} \n
+             meta: ${meta}
+              \n
+              $loki: ${el.$loki}`}
+            </li>
           );
         })}
       </div>
