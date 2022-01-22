@@ -16,6 +16,11 @@
   max-width: 80%;
 }
 
+.cacheBoard {
+  width: 800px;
+  height: 500px;
+}
+
 #fetch {
   background-color: #4c50af;
   max-width: 20%;
@@ -32,6 +37,10 @@
   background-color: #4c50af;
   max-width: 20%;
   align-self: center;
+}
+
+#cacheButton {
+  display: block;
 }
 
 .row input {

@@ -1,11 +1,13 @@
 import { Quellify, lokiClientCache } from './quell-client/src/Quellify';
-import { useRef, useState } from 'react';
+import { useRef, useState, useEffect } from 'react';
 import './App.css';
 
 function App() {
   const fetchInfo = useRef(null);
   const createInfo = useRef(null);
   const deleteInfo = useRef(null);
+
+  console.log(lokiClientCache.data);
 
   const queryMap = { getCharacter: 'Character' };
   const mutationMap = {
@@ -16,9 +18,10 @@ function App() {
     Character: 'Character',
   };
 
-  const [cache, setCache] = useState([]);
+  const [cache, setCache] = useState(lokiClientCache.data);
 
-  const handleFetchClick = async () => {
+  const handleFetchClick = async (e) => {
+    e.preventDefault();
     let startTime = new Date();
     console.log(lokiClientCache.data);
 
@@ -61,15 +64,19 @@ function App() {
     const characterBoard = document.getElementById('character-list');
     characterBoard.appendChild(li);
 
+    setCache(lokiClientCache.data);
+
     //update messageboard after creating new message
   };
 
   const clearCache = () => {
     lokiClientCache.clear();
     console.log(lokiClientCache);
+    setCache(lokiClientCache.data);
   };
 
-  const handleCreateClick = async () => {
+  const handleCreateClick = async (e) => {
+    e.preventDefault();
     const name = createInfo.current.value;
     console.log(name);
     const results = await fetch('http://localhost:3434/graphql', {
@@ -91,6 +98,8 @@ function App() {
     const li = createLi(characterData);
     const characterBoard = document.getElementById('character-list');
     characterBoard.appendChild(li);
+
+    setCache(lokiClientCache.data);
   };
 
   const createLi = (character, time) => {
@@ -104,7 +113,8 @@ function App() {
     return newLi;
   };
 
-  const handleDeleteClick = async () => {
+  const handleDeleteClick = async (e) => {
+    e.preventDefault();
     const _id = deleteInfo.current.value;
     console.log(_id);
     const results = await fetch('http://localhost:3434/graphql', {
@@ -129,6 +139,8 @@ function App() {
     li.innerText = innerText;
     const characterBoard = document.getElementById('character-list');
     characterBoard.appendChild(li);
+
+    setCache(lokiClientCache.data);
   };
 
   const handleClearClick = () => {
@@ -169,15 +181,23 @@ function App() {
           Clear Board
         </button>
       </div>
-      <button onClick={clearCache}>Clear Cache</button>
-      <div>
-        Cache
-        {lokiClientCache.data.forEach((el) => {
+      <div style={{ height: '50px' }}>
+        <button id='cacheButton' onClick={clearCache}>
+          Clear Cache
+        </button>
+      </div>
+      <div className='cacheBoard'>
+        Cache Board
+        {cache.map((el, key) => {
+          const cacheID = JSON.stringify(el.cacheID);
+          const meta = JSON.stringify(el.meta);
+
           return (
-            <li>
-              id: {el.id} -- cacheID: {el.cacheID} -- queryType: {el.queryType}
-              -- $loki: {el.$loki}
-            </li>
+            <div>
+              {` id: ${el.id} -- cacheID: ${cacheID}
+             -- queryType: ${el.queryType} -- meta: ${meta}
+              -- $loki: ${el.$loki}`}
+            </div>
           );
         })}
       </div>
