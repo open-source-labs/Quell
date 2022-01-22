@@ -7,7 +7,6 @@ const graphqlSchema = require('./schemas/schemas');
 const graphqlResolvers = require('./resolvers/message');
 const QuellCache = require('../../quell-server/src/quell');
 const schema = require('./schemas/quellSchemas');
-const cors = require('cors');
 
 const app = express();
 const redisPort = 6379;
@@ -17,15 +16,10 @@ const quellCache = new QuellCache(schema, redisPort, 1200);
 app.use(express.json());
 app.use(express.static(path.join(__dirname, '../assets')));
 app.use(cookieParser());
-app.use(cors());
 
 // app.use('/graphql', quellCache.query, (req, res) => {
 //   return res.status(200).send(res.locals.queryResponse);
 // });
-
-console.log(quellCache.queryMap);
-console.log(quellCache.mutationMap);
-console.log(quellCache.fieldsMap);
 
 app.use(
   '/graphql',
