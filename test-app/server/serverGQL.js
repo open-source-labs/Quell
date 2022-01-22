@@ -2,58 +2,56 @@ const path = require('path');
 const express = require('express');
 const cookieParser = require('cookie-parser');
 const { graphqlHTTP } = require('express-graphql');
-const {GraphQLSchema} = require('graphql');
+const { GraphQLSchema } = require('graphql');
 const graphqlSchema = require('./schemas/schemas');
 const graphqlResolvers = require('./resolvers/message');
 const QuellCache = require('../../quell-server/src/quell');
-const schema = require('./schemas/quellSchemas')
+const schema = require('./schemas/quellSchemas');
+const cors = require('cors');
 
 const app = express();
-const redisPort = 6379
+const redisPort = 6379;
 const PORT = 3434;
 const quellCache = new QuellCache(schema, redisPort, 1200);
 
 app.use(express.json());
-app.use(express.static(path.join(__dirname,'../assets')));
+app.use(express.static(path.join(__dirname, '../assets')));
 app.use(cookieParser());
+app.use(cors());
 
+// app.use('/graphql', quellCache.query, (req, res) => {
+//   return res.status(200).send(res.locals.queryResponse);
+// });
 
+console.log(quellCache.queryMap);
+console.log(quellCache.mutationMap);
+console.log(quellCache.fieldsMap);
 
-
-app.use('/graphql', quellCache.query, (req, res) => {
-  return res.status(200).send(res.locals.queryResponse);
-});
-
-
-
-// app.use('/graphql', graphqlHTTP({
-//   schema: schema,
-//   graphiql: true
-// }));
-
-
-
-
-
+app.use(
+  '/graphql',
+  graphqlHTTP({
+    schema: schema,
+    graphiql: true,
+  })
+);
 
 //send html
-app.get('/' , (req,res) => {
-  res.status(200).sendFile(path.join(__dirname,'../views/index.html'));
+app.get('/', (req, res) => {
+  res.status(200).sendFile(path.join(__dirname, '../views/index.html'));
 });
 //global catch
-app.use('*', (req,res) => res.sendStatus(404));
-//global error handler 
-app.use((err,req,res,next)=>{
+app.use('*', (req, res) => res.sendStatus(404));
+//global error handler
+app.use((err, req, res, next) => {
   const defaultErr = {
     log: 'Express error handler caught unknown middleware error',
     status: 400,
-    message: { err: 'An error occurred' }, 
+    message: { err: 'An error occurred' },
   };
-  const errorObj = Object.assign(defaultErr,err);
+  const errorObj = Object.assign(defaultErr, err);
   console.log(errorObj.log);
   res.status(500).send(JSON.stringify(errorObj.message));
 });
-
 
 app.listen(PORT, () => {
   console.log(`Server listening on port: ${PORT}`);
