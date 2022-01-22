@@ -6,7 +6,7 @@ const db = require('../models/db');
 module.exports = {
 
   getCharacter: async (args) =>{
-    console.log('in getCharacter query');
+    console.log('in getCharacter query ASYNC');
     const query = 'SELECT * FROM PEOPLE WHERE _id = $1;';
     try{
       const response = await db.query(query,[args._id])
