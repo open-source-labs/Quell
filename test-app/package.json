@@ -4,7 +4,7 @@
   "main": "server.js",
   "scripts": {
     "merge": "node util/merge.js",
-    "start": "nodemon server/serverGQL"
+    "start": "nodemon server/server-quell"
   },
   "author": "Brandon Mizuno",
   "license": "ISC",

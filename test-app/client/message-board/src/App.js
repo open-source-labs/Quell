@@ -61,6 +61,7 @@ function App() {
 
     let endTime = new Date();
     let diff = endTime - startTime;
+    console.log(parsedResponse);
     const characterData = parsedResponse.data.data.getCharacter;
     const li = createLi(characterData, diff);
     const characterBoard = document.getElementById('character-list');
@@ -161,6 +162,9 @@ function App() {
 
     const _id = updatedID.current.value;
     const name = updatedName.current.value;
+
+    console.log(_id, name);
+
     console.log(_id);
     const results = await fetch('http://localhost:3434/graphql', {
       method: 'POST',
@@ -177,8 +181,10 @@ function App() {
       }),
     });
     const parsedResponse = await results.json();
+    console.log(parsedResponse);
     let endTime = new Date();
     let diff = endTime - startTime;
+    console.log(parsedResponse);
     const characterData = parsedResponse.data.updateCharacter;
     const li = createLi(characterData, diff);
     let innerText = `UPDATED\n`;
