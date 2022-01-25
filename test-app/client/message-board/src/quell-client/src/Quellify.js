@@ -265,11 +265,13 @@ async function Quellify(
     console.log(prototypeKeys);
     let cacheID;
     let specificID;
+    let actionQuery;
     for (const typeKey in proto) {
       if (prototypeKeys.includes(typeKey)) {
         cacheID = generateCacheID(prototype[typeKey]);
         console.log(prototype[typeKey]);
         specificID = prototype[typeKey].__id;
+        actionQuery = typeKey;
       }
     }
 
@@ -376,18 +378,39 @@ async function Quellify(
     }
 
     if (dataInLoki.length > 0) {
+      // this is the shape of the data the APP wants (1/24/2022)
+      //{"data":{"getCharacter":{"name": "Obi-Wan Kenobi"}}}
+      // what we are supplying from cache = {_id:"10", name: "obi-wan Kenobi"}
+      // {
+      //   "data": {
+      //     "getCharacter": {
+      //       "name": "Obi-Wan Kenobi"
+      //     }
+      //   }
+      // }
+      // we can build the desired object using the variables/props we already have to maintain consitency for all queries.
+      //  obj = {data:{}}
+
+      let cacheInfo = dataInLoki[0]['cacheID'];
+
+      let info = { [`${actionQuery}`]: cacheInfo };
+      let obj = { data: { data: info } };
+
+      //console.log(dataInLoki[0]['cacheID']);
+      console.log(info);
+      console.log(obj);
+
       console.log('FROM CACHE');
-      return new Promise((resolve, reject) =>
-        resolve(dataInLoki[0]['cacheID'])
-      );
+      return new Promise((resolve, reject) => resolve(obj));
     }
+  }
 
-    // const cacheResponse = Object.assign({}, parsedData);
+  // const cacheResponse = Object.assign({}, parsedData);
 
-    // console.log('cacheResp: ', cacheResponse);
-    //const finalResponse = {data: cacheResponse};
+  // console.log('cacheResp: ', cacheResponse);
+  //const finalResponse = {data: cacheResponse};
 
-    /*
+  /*
     // If found data in cache:
     // Create query object from only false prototype fields
     //let mergedResponse;
@@ -420,8 +443,7 @@ async function Quellify(
       mergedResponse = { data: cacheResponse };
     }
     */
-    // return new Promise((resolve, reject) => resolve(cacheResponse));
-  }
+  // return new Promise((resolve, reject) => resolve(cacheResponse));
 }
 
 module.exports = { Quellify, lokiClientCache };

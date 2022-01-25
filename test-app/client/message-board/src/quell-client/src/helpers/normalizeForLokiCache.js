@@ -43,19 +43,15 @@ function normalizeForLokiCache(
           currProto.__type = map[property];
       }
     }
-
+    console.log(responseData);
     console.log(currField);
 
     // check if the value stored at that key is array
     if (Array.isArray(currField)) {
-      console.log(currField);
-
       const cacheKey = subID ? subID + '--' + resultName : resultName;
       let queryTypeKey = cacheKey;
       // create empty array to store refs
       const refList = [];
-
-      console.log(cacheKey);
 
       // iterate over countries array
       for (let i = 0; i < currField.length; i++) {
@@ -75,6 +71,8 @@ function normalizeForLokiCache(
         // push fieldID onto refList
         refList.push(fieldID);
 
+        console.log(refList);
+
         // if object, recurse to add all nested values of el to cache as individual entries
         if (typeof el === 'object') {
           normalizeForLokiCache(
@@ -91,14 +89,9 @@ function normalizeForLokiCache(
       // old code for sessionStorage
       // sessionStorage.setItem(cacheKey, JSON.stringify(refList));
 
-      console.log(queryTypeMap);
-      console.log(queryTypeKey);
-
       // find if queryType value exists in lokiJS client cache and set it to dataInLoki
       let dataInLoki = lokiClientCache.find(queryTypeMap[queryTypeKey]);
       let isExisting = false;
-
-      console.log(refList);
 
       //if there is no data in LokiJS, then we know that we can cache the data query/mutation requested
       if (dataInLoki.length === 0) {
@@ -133,16 +126,11 @@ function normalizeForLokiCache(
         ? map[currProto.__type]
         : currProto.__type;
 
-      console.log(cacheID);
-
       // assign cacheID to queryTypeID to be used for finding query type in lokiJS
       let queryTypeID = cacheID;
       // if prototype has ID, append it to cacheID
       cacheID += currProto.__id ? `--${currProto.__id}` : '';
 
-      console.log(cacheID);
-
-      console.log(currField);
       // iterate over keys in object
       for (const key in currField) {
         // if prototype has no ID, check field keys for ID (mostly for arrays)
@@ -168,28 +156,14 @@ function normalizeForLokiCache(
           );
       }
 
-      console.log(currField);
-      console.log(currProto);
-      console.log(fieldStore);
-      console.log(queryTypeMap);
-      console.log(cacheID);
-
       // store "current object" on cache
       const specificID = fieldStore._id;
 
-      console.log({
-        cacheID: { _id: `${specificID}` },
-      });
-
       let dataInLoki = lokiClientCache.find({ 'cacheID._id': `${specificID}` });
-
-      console.log(queryTypeMap);
-      console.log(queryTypeID);
 
       // use isExisting as tracker/flag to check whether the cacheID exists in dataInLoki
       // let isExisting = false;
       //if there is no data in LokiJS, then we know that we can cache the data query/mutation requested
-      console.log(dataInLoki);
       if (dataInLoki.length === 0) {
         lokiClientCache.insert({
           id: cacheID,
@@ -200,22 +174,17 @@ function normalizeForLokiCache(
         //otherwise, check if cacheID exists in dataLoki; if the condition exists, then we know we
         //do not need to cache it in lokiJS anymore.
       } else {
-        console.log(fieldStore);
         const result = lokiClientCache.findOne({
           'cacheID._id': `${specificID}`,
         });
-        console.log(result);
         if (result) {
           if (typeOfOperation.typeOfMutation === 'update') {
             const obj = result.cacheID;
-            console.log(obj);
-            console.log(fieldStore);
+
             result.cacheID = { ...obj, ...fieldStore };
-            console.log(result.cacheID);
           }
 
           if (typeOfOperation.typeOfMutation === 'delete') {
-            console.log('IN DELETE');
             lokiClientCache.findAndRemove({ 'cacheID._id': `${specificID}` });
           }
         }
