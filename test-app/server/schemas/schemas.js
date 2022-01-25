@@ -18,10 +18,11 @@ type Character{
 type Mutation{
   createCharacter(name: String!): Character
   deleteCharacter(_id: ID!): Character
-  updateCharacter(name: String!): Character
+  updateCharacter(_id: ID!,name: String!): Character
 }
 type Query {
   getCharacter(_id: ID!): Character
+  getCharacters:[Character!]!
 }
 
 
@@ -34,6 +35,7 @@ schema {
 
 //old schema
 // `
+// getCharacter(_id: ID!): Character
 
 // type Character{
 //   _id: ID!

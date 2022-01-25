@@ -1,10 +1,6 @@
 const { parse } = require('graphql/language/parser');
 const parseAST = require('./helpers/parseAST');
 // const normalizeForSessionCache = require("./helpers/normalizeForSessionCache");
-//hello world
-//test
-//fdsa
-//one more test
 
 const {
   lokiClientCache,
@@ -64,7 +60,11 @@ async function Quellify(
   // merge defaultOptions with userOptions
   // defaultOptions will supply any necessary options that the user hasn't specified
   const options = { ...defaultOptions, ...userOptions };
-  let isMutation = false;
+  // let isMutation = false;
+  let typeOfOperation = {
+    isMutation: false,
+    typeOfMutation: '',
+  };
   // iterate over map to create all lowercase map for consistent caching
   for (const props in map) {
     const value = map[props].toLowerCase();
@@ -75,6 +75,8 @@ async function Quellify(
 
   // Create AST based on the input query using the parse method available in the graphQL library (further reading: https://en.wikipedia.org/wiki/Abstract_syntax_tree)
   const AST = parse(query);
+
+  console.log(AST);
 
   /**
    * parseAST creates a proto object that contains a key for every root query in the user's request. Also, every root query key contains a key for each field requested on that root query, which is assigned the value of "true". The proto object also carries the following details for every root query
@@ -104,22 +106,28 @@ async function Quellify(
     // Execute fetch request with original query
     const serverResponse = await fetch(endPoint, fetchOptions);
     const parsedData = await serverResponse.json();
+    console.log('HEYYY IN UNQUELLABLE');
 
     // Return response as a promise
     return new Promise((resolve, reject) => resolve(parsedData));
   } else if (operationType === 'mutation') {
     //if operationType is mutation
-
+    console.log('HEYYY IN MUTATION');
     //if the mutationQuery is not coming from demo, mutation Query can be created using the code below
     //let mutationQuery = createMutationStr(proto);
     // create mutation object using mutationMap and proto created from parseAST;
-    isMutation = true;
+    // isMutation = true;
+    typeOfOperation.isMutation = true;
     let mutationObject;
+    console.log(mutationMap);
+    console.log(proto);
+
     for (let mutation in mutationMap) {
       if (proto.hasOwnProperty(mutation)) mutationObject = proto[mutation];
     }
 
     //determine the number of args
+    console.log(mutationObject);
     let argsLen = Object.keys(mutationObject.__args).length;
 
     //if it is add mutation, do below
@@ -144,7 +152,8 @@ async function Quellify(
       normalizeForLokiCache(
         parsedData.data,
         queryTypeMap,
-        isMutation,
+        // isMutation,delete once new function is working
+        typeOfOperation,
         map,
         proto
       ); //using lokiJS
@@ -158,26 +167,40 @@ async function Quellify(
       //update or delete mutation
       let fetchOptions;
       if (argsLen === 1) {
+        typeOfOperation.typeOfMutation = 'delete';
+        console.log('DELETE MUTATION');
         //delete mutation if the number of args is one
         fetchOptions = {
-          method: 'DELETE',
+          method: 'POST',
           headers: options.headers,
           body: JSON.stringify({ query: query }),
         };
       } else if (argsLen > 1) {
+        typeOfOperation.typeOfMutation = 'update';
         //update mutation if the number of args is more than one
+        console.log('UPDATE MUTATION');
         fetchOptions = {
           method: 'POST',
           headers: options.headers,
           body: JSON.stringify({ query: query }),
         };
       }
+
       //regardless of update or delete, clear lokiJS
-      lokiClientCache.clear();
       console.log(lokiClientCache);
       // Execute fetch request with original query
       const serverResponse = await fetch(endPoint, fetchOptions);
       const parsedData = await serverResponse.json();
+
+      normalizeForLokiCache(
+        parsedData.data,
+        queryTypeMap,
+        // isMutation, delete once new function is working
+        typeOfOperation,
+        map,
+        proto
+      );
+
       // no nomarlizeForLokiCache as query will pull out updated cache from server cache;
       // Return response as a promise
       return new Promise((resolve, reject) => resolve({ data: parsedData }));
@@ -238,17 +261,33 @@ async function Quellify(
       }
     }
     */
-
+    console.log(proto);
+    console.log(prototypeKeys);
     let cacheID;
+    let specificID;
+    let actionQuery;
     for (const typeKey in proto) {
-      if (prototypeKeys.includes(typeKey))
+      if (prototypeKeys.includes(typeKey)) {
         cacheID = generateCacheID(prototype[typeKey]);
+        console.log(prototype[typeKey]);
+        specificID = prototype[typeKey].__id;
+        actionQuery = typeKey;
+      }
     }
 
+    console.log(cacheID);
+
+    //console.log('LOKISJS:', lokiJS);
+    //if currField from Cache is an object , go through cache to find the matching value/info
+
+    console.log(specificID);
+    let dataInLoki = lokiClientCache.find({
+      'cacheID._id': `${specificID}`,
+    });
+
+    //if currField from Cache is an array , do below logic to get CacheIDArr
+
     let lokiJS = lokiClientCache.data;
-
-    console.log('LOKISJS:', lokiJS);
-
     const cacheIDArr = [],
       cacheArr = [],
       tempArr = [];
@@ -260,66 +299,118 @@ async function Quellify(
           prevProperty === 'cacheKey' &&
           cachedData[property] === cacheID
         ) {
+          console.log(prevProperty);
           cacheIDArr.push(cachedData[prevProperty]);
-        } else if (
-          property === 'queryType' &&
-          prevProperty === 'cacheID' &&
-          cachedData[property] &&
-          cachedData[property] === cacheID
-        ) {
-          cacheArr.push(cachedData);
-        } else {
+        }
+        // else if (
+        //   property === 'queryType' &&
+        //   prevProperty === 'cacheID' &&
+        //   cachedData[property] &&
+        //   cachedData[property] === cacheID
+        // ) {
+        //   console.log(prevProperty);
+        //   cacheArr.push(cachedData);
+        // }
+        else {
+          console.log(prevProperty);
           prevProperty = property;
         }
       }
     });
 
-    console.log(cacheIDArr);
-    console.log(cacheArr);
-    console.log(tempArr);
+    // checking to see if these variables are ever used, They are not
+    // console.log(cacheIDArr);
+    // console.log(cacheArr);
+    // console.log(tempArr);
 
     if (cacheIDArr.length > 0) cacheHasData = true;
+    if (dataInLoki.length > 0) cacheHasData = true;
+
+    console.log(cacheIDArr);
+    console.log(dataInLoki);
 
     console.log('CACHEHASDATA:', cacheHasData);
-    const fetchOptions = {
-      method: 'POST',
-      headers: options.headers,
-      body: JSON.stringify({ query: query }),
-    };
-    // Execute fetch request with original query
-    const serverResponse = await fetch(endPoint, fetchOptions);
-    console.log('FETCHING:', serverResponse);
-    const parsedData = await serverResponse.json();
-    normalizeForLokiCache(
-      parsedData.data,
-      queryTypeMap,
-      isMutation,
-      map,
-      proto
-    );
-
     if (!cacheHasData) {
-      console.log(lokiClientCache);
+      console.log('FROM DB');
+      const fetchOptions = {
+        method: 'POST',
+        headers: options.headers,
+        body: JSON.stringify({ query: query }),
+      };
+      // Execute fetch request with original query
+      const serverResponse = await fetch(endPoint, fetchOptions);
+      console.log('FETCHING:', serverResponse);
+      const parsedData = await serverResponse.json();
+      console.log(parsedData);
+      normalizeForLokiCache(
+        parsedData.data,
+        queryTypeMap,
+        // isMutation, DELETE ONCE NEW FUNCTION IS WORKING
+        typeOfOperation,
+        map,
+        proto
+      );
+
       // Return response as a promise
       return new Promise((resolve, reject) => resolve({ data: parsedData }));
     }
 
-    cacheIDArr.forEach((ID) => {
-      let idx = 0;
-      cacheArr.forEach((cached) => {
-        for (const property in cached) {
-          if (property === 'id' && cached[property] === ID[idx])
-            tempArr.push(cached);
-        }
-        idx += 1;
+    // if (!cacheHasData) {
+    //   console.log(lokiClientCache);
+    //   // Return response as a promise
+    //   return new Promise((resolve, reject) => resolve({ data: parsedData }));
+    // }
+    if (cacheIDArr.length > 0) {
+      cacheIDArr.forEach((ID) => {
+        let idx = 0;
+        cacheArr.forEach((cached) => {
+          for (const property in cached) {
+            if (property === 'id' && cached[property] === ID[idx])
+              tempArr.push(cached);
+          }
+          idx += 1;
+        });
       });
-    });
 
-    const cacheResponse = Object.assign({}, tempArr, parsedData);
-    console.log('cacheResp: ', cacheResponse);
-    //const finalResponse = {data: cacheResponse};
+      const cacheResponse = Object.assign({}, tempArr);
 
-    /*
+      return new Promise((resolve, reject) => resolve(cacheResponse));
+    }
+
+    if (dataInLoki.length > 0) {
+      // this is the shape of the data the APP wants (1/24/2022)
+      //{"data":{"getCharacter":{"name": "Obi-Wan Kenobi"}}}
+      // what we are supplying from cache = {_id:"10", name: "obi-wan Kenobi"}
+      // {
+      //   "data": {
+      //     "getCharacter": {
+      //       "name": "Obi-Wan Kenobi"
+      //     }
+      //   }
+      // }
+      // we can build the desired object using the variables/props we already have to maintain consitency for all queries.
+      //  obj = {data:{}}
+
+      let cacheInfo = dataInLoki[0]['cacheID'];
+
+      let info = { [`${actionQuery}`]: cacheInfo };
+      let obj = { data: { data: info } };
+
+      //console.log(dataInLoki[0]['cacheID']);
+      console.log(info);
+      console.log(obj);
+
+      console.log('FROM CACHE');
+      return new Promise((resolve, reject) => resolve(obj));
+    }
+  }
+
+  // const cacheResponse = Object.assign({}, parsedData);
+
+  // console.log('cacheResp: ', cacheResponse);
+  //const finalResponse = {data: cacheResponse};
+
+  /*
     // If found data in cache:
     // Create query object from only false prototype fields
     //let mergedResponse;
@@ -352,8 +443,7 @@ async function Quellify(
       mergedResponse = { data: cacheResponse };
     }
     */
-    return new Promise((resolve, reject) => resolve(cacheResponse));
-  }
+  // return new Promise((resolve, reject) => resolve(cacheResponse));
 }
 
 module.exports = { Quellify, lokiClientCache };

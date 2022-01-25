@@ -11,11 +11,14 @@ function App() {
 
   console.log(lokiClientCache.data);
 
-  const queryMap = { getCharacter: 'Character' };
+  const queryMap = { getCharacter: 'Character', getCharacters: 'Character' };
+
   const mutationMap = {
     createCharacter: 'Character',
     deleteCharacter: 'Character',
+    updateCharacter: 'Character',
   };
+
   const map = {
     Character: 'Character',
   };
@@ -61,8 +64,12 @@ function App() {
 
     let endTime = new Date();
     let diff = endTime - startTime;
+    console.log(parsedResponse);
     const characterData = parsedResponse.data.data.getCharacter;
     const li = createLi(characterData, diff);
+    let innerText = `(FETCHED)\n`;
+    innerText += li.innerText;
+    li.innerText = innerText;
     const characterBoard = document.getElementById('character-list');
     characterBoard.appendChild(li);
 
@@ -83,26 +90,30 @@ function App() {
 
     const name = createInfo.current.value;
     console.log(name);
-    const results = await fetch('http://localhost:3434/graphql', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        query: `mutation {
+
+    const query = `mutation {
         createCharacter(name: "${name}"){
           _id
           name
         }
-      }`,
-      }),
-    });
+      }`;
+
+    const parsedResponse = await Quellify(
+      'http://localhost:3434/graphql',
+      query,
+      mutationMap,
+      map,
+      queryMap
+    );
 
     let endTime = new Date();
     let diff = endTime - startTime;
-    const parsedResponse = await results.json();
-    const characterData = parsedResponse.data.createCharacter;
+    console.log(parsedResponse);
+    const characterData = parsedResponse.data.data.createCharacter;
     const li = createLi(characterData, diff);
+    let innerText = `(CREATED)\n`;
+    innerText += li.innerText;
+    li.innerText = innerText;
     const characterBoard = document.getElementById('character-list');
     characterBoard.appendChild(li);
 
@@ -126,25 +137,26 @@ function App() {
 
     const _id = deleteInfo.current.value;
     console.log(_id);
-    const results = await fetch('http://localhost:3434/graphql', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        query: `mutation{
+
+    const query = `mutation{
         deleteCharacter(_id: ${_id}){
           _id
           name
         }
-      }`,
-      }),
-    });
+      }`;
+
+    const parsedResponse = await Quellify(
+      'http://localhost:3434/graphql',
+      query,
+      mutationMap,
+      map,
+      queryMap
+    );
 
     let endTime = new Date();
     let diff = endTime - startTime;
-    const parsedResponse = await results.json();
-    const characterData = parsedResponse.data.deleteCharacter;
+    console.log(parsedResponse);
+    const characterData = parsedResponse.data.data.deleteCharacter;
     const li = createLi(characterData, diff);
     let innerText = `(DELETED)\n`;
     innerText += li.innerText;
@@ -161,25 +173,31 @@ function App() {
 
     const _id = updatedID.current.value;
     const name = updatedName.current.value;
+
+    console.log(_id, name);
+
     console.log(_id);
-    const results = await fetch('http://localhost:3434/graphql', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        query: `mutation{
+
+    const query = `mutation{
         updateCharacter(_id: ${_id},name: "${name}"){
           _id
           name
         }
-      }`,
-      }),
-    });
-    const parsedResponse = await results.json();
+      }`;
+
+    const parsedResponse = await Quellify(
+      'http://localhost:3434/graphql',
+      query,
+      mutationMap,
+      map,
+      queryMap
+    );
+
+    console.log(parsedResponse);
     let endTime = new Date();
     let diff = endTime - startTime;
-    const characterData = parsedResponse.data.updateCharacter;
+    console.log(parsedResponse);
+    const characterData = parsedResponse.data.data.updateCharacter;
     const li = createLi(characterData, diff);
     let innerText = `UPDATED\n`;
     innerText += li.innerText;
@@ -193,6 +211,44 @@ function App() {
   const handleClearClick = () => {
     const characterBoard = document.getElementById('character-list');
     characterBoard.innerHTML = '';
+  };
+
+  const getCharacterNames = async (e) => {
+    e.preventDefault();
+    let startTime = new Date();
+
+    const query = `query {
+      getCharacters {
+       _id
+       name
+      }
+     }`;
+
+    const parsedResponse = await Quellify(
+      'http://localhost:3434/graphql',
+      query,
+      mutationMap,
+      map,
+      queryMap
+    );
+
+    console.log(parsedResponse);
+    const characterData = parsedResponse.data.data.getCharacters;
+    console.log(characterData);
+    const characterBoard = document.getElementById('character-list');
+    for (let i = 0; i < characterData.length; i++) {
+      const li = document.createElement('li');
+      li.innerText = characterData[i].name + ' ' + characterData[i]._id;
+      characterBoard.appendChild(li);
+    }
+
+    let endTime = new Date();
+    let diff = endTime - startTime;
+    const li = document.createElement('li');
+    li.innerText = `timeElapsed:${diff} ms`;
+    characterBoard.appendChild(li);
+
+    setCache([...lokiClientCache.data]);
   };
 
   return (
@@ -237,6 +293,9 @@ function App() {
           <button onClick={handleUpdateClick} id='update'>
             UPDATE
           </button>
+        </div>
+        <div>
+          <button onClick={getCharacterNames}>Get Character Names</button>
         </div>
       </div>
       <ul id='character-list'></ul>
