@@ -22,6 +22,7 @@ type Mutation{
 }
 type Query {
   getCharacter(_id: ID!): Character
+  getCharacters:[Character!]!
 }
 
 
@@ -34,6 +35,7 @@ schema {
 
 //old schema
 // `
+// getCharacter(_id: ID!): Character
 
 // type Character{
 //   _id: ID!

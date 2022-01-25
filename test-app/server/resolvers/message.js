@@ -3,10 +3,23 @@ const db = require('../models/db');
 module.exports = {
   getCharacter: async (args) => {
     console.log('in getCharacter query ASYNC');
-    const query = 'SELECT * FROM PEOPLE WHERE _id = $1;';
+    console.log(args);
     try {
+      query = 'SELECT * FROM PEOPLE WHERE _id = $1;';
       const response = await db.query(query, [args._id]);
+      console.log('id response:', response);
       return response.rows[0];
+    } catch (error) {
+      console.log(error);
+      return error;
+    }
+  },
+  getCharacters: async (args) => {
+    try {
+      query = 'SELECT * FROM PEOPLE';
+      const response = await db.query(query);
+      console.log(response.rows);
+      return response.rows;
     } catch (error) {
       console.log(error);
       return error;
