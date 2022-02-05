@@ -23,6 +23,10 @@ app.use(cors());
 //   return res.status(200).send(res.locals.queryResponse);
 // });
 
+console.log(quellCache.getQueryMap(graphqlSchema));
+console.log(quellCache.getMutationMap(graphqlSchema));
+console.log(quellCache.getFieldsMap(graphqlSchema));
+
 app.use(
   '/graphql',
   graphqlHTTP({

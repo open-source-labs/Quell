@@ -40,6 +40,8 @@ class QuellCache {
    *  @param {Function} next - Express next middleware function, invoked when QuellCache completes its work
    */
   async query(req, res, next) {
+    console.log('iam in quell-server');
+
     // handle request without query
     if (!req.body.query) {
       return next('Error: no GraphQL query found on request body');
@@ -517,6 +519,8 @@ class QuellCache {
     // get object containing all root queries defined in the schema
     const queryTypeFields = schema._queryType._fields;
 
+    console.log('hey here');
+    console.log('this is querytypeFields:', queryTypeFields);
     // if queryTypeFields is a function, invoke it to get object with queries
     const queriesObj =
       typeof queryTypeFields === 'function'
@@ -546,6 +550,9 @@ class QuellCache {
   getFieldsMap(schema) {
     const fieldsMap = {};
     const typesList = schema._typeMap;
+
+    console.log('this is typeList:', typesList);
+
     const builtInTypes = [
       'String',
       'Int',
@@ -1065,13 +1072,13 @@ class QuellCache {
         let fieldKeysToRemove = new Set();
         for (let i = 0; i < cachedFieldKeysList.length; i++) {
           let fieldKey = cachedFieldKeysList[i];
+
           let fieldKeyValueRaw = await this.getFromRedis(
             fieldKey.toLowerCase()
           );
           let fieldKeyValue = JSON.parse(fieldKeyValueRaw);
 
           let remove = true;
-          console.log(mutationQueryObject);
           for (let arg in mutationQueryObject.__args) {
             if (fieldKeyValue.hasOwnProperty(arg)) {
               let argValue = mutationQueryObject.__args[arg];
@@ -1282,15 +1289,15 @@ class QuellCache {
   }
 
   /**
-   * The getRedisInfo returns a chain of middleware based on what information 
-   * (if any) the user would like to request from the specified redisCache. It 
+   * The getRedisInfo returns a chain of middleware based on what information
+   * (if any) the user would like to request from the specified redisCache. It
    * requires an appropriately configured Express route, for instance:
    *  app.use('/redis', ...quellCache.getRedisInfo({
    *    getStats: true,
    *    getKeys: true,
    *    getValues: true
    *  }))
-   * 
+   *
    * @param {Object} options - three properties with boolean values:
    *                           getStats, getKeys, getValues
    */
@@ -1306,8 +1313,6 @@ class QuellCache {
       else return 'getAll';
     };
 
-    console.log(getOptions(options));
-
     switch (getOptions(options)) {
       case 'dontGetStats':
         middleware = [
@@ -1315,8 +1320,8 @@ class QuellCache {
           this.getRedisValues,
           (req, res) => {
             return res.status(200).send(res.locals);
-          }
-        ]
+          },
+        ];
         break;
       case 'dontGetValues':
         middleware = [
@@ -1324,23 +1329,23 @@ class QuellCache {
           this.getRedisKeys,
           (req, res) => {
             return res.status(200).send(res.locals);
-          }
-        ]
+          },
+        ];
         break;
       case 'getKeysOnly':
         middleware = [
           this.getRedisKeys,
           (req, res) => {
             return res.status(200).send(res.locals);
-          }
-        ]
+          },
+        ];
         break;
       case 'getStatsOnly':
         middleware = [
           this.getStatsFromRedis,
           (req, res) => {
             return res.status(200).send(res.locals);
-          }
+          },
         ];
         break;
       case 'getAll':
@@ -1350,12 +1355,11 @@ class QuellCache {
           this.getRedisValues,
           (req, res) => {
             return res.status(200).send(res.locals);
-          }
+          },
         ];
         break;
     }
 
-    console.log(middleware);
     return middleware;
   }
 

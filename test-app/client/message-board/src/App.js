@@ -1,4 +1,4 @@
-import { Quellify, lokiClientCache } from './quell-client/src/Quellify';
+import { Quellify, lokiClientCache } from './quell-client/src/Quellify.js';
 import { useRef, useState } from 'react';
 import './App.css';
 
@@ -8,8 +8,6 @@ function App() {
   const deleteInfo = useRef(null);
   const updatedID = useRef(null);
   const updatedName = useRef(null);
-
-  console.log(lokiClientCache.data);
 
   const queryMap = { getCharacter: 'Character', getCharacters: 'Character' };
 
@@ -24,6 +22,8 @@ function App() {
   };
 
   const [cache, setCache] = useState(lokiClientCache.data);
+
+  const [counter, setCounter] = useState(1);
 
   const handleFetchClick = async (e) => {
     e.preventDefault();
@@ -67,7 +67,16 @@ function App() {
     console.log(parsedResponse);
     const characterData = parsedResponse.data.data.getCharacter;
     const li = createLi(characterData, diff);
-    let innerText = `(FETCHED)\n`;
+
+    setCounter(counter + 1);
+    let innerText;
+    console.log(counter);
+    if (counter === 1) {
+      innerText = `(FETCHED) FROM DB\n`;
+    } else {
+      innerText = `(FETCHED) FROM LOKIJS CACHE\n`;
+    }
+
     innerText += li.innerText;
     li.innerText = innerText;
     const characterBoard = document.getElementById('character-list');
@@ -111,6 +120,7 @@ function App() {
     console.log(parsedResponse);
     const characterData = parsedResponse.data.data.createCharacter;
     const li = createLi(characterData, diff);
+
     let innerText = `(CREATED)\n`;
     innerText += li.innerText;
     li.innerText = innerText;

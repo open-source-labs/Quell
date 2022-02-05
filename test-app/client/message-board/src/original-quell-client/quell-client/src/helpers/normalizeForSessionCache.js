@@ -1,5 +1,5 @@
-/** THIS CODE IS DEPRICATED SINCE THE IMPLIMENTATION OF LOKIJS
- normalizeForSessionCache traverses server response data and creates objects out of responses for cache.
+/** 
+ normalizeForSessionCache traverses server response data and creates objects out of responses for cache. 
  * Iterates & recurses over response object & preps data to be sent to cache
  * and sends data to cache
  * necessary for cache consistency
@@ -23,9 +23,8 @@ function normalizeForCache(
     const currField = responseData[resultName];
     const currProto = protoField[resultName];
 
-    for (const property in map) {
-      if (currProto.__type.includes(map[property]))
-        currProto.__type = map[property];
+    for(const property in map){
+      if(currProto.__type.includes(map[property])) currProto.__type = map[property];
     }
 
     // check if the value stored at that key is array
@@ -59,6 +58,7 @@ function normalizeForCache(
         }
       }
       sessionStorage.setItem(cacheKey, JSON.stringify(refList));
+
     } else if (typeof currField === 'object') {
       // need to get non-Alias ID for cache
       // temporary store for field properties
@@ -70,7 +70,7 @@ function normalizeForCache(
         : currProto.__type;
       // if prototype has ID, append it to cacheID
       cacheID += currProto.__id ? `--${currProto.__id}` : '';
-
+      
       // iterate over keys in object
       for (const key in currField) {
         // if prototype has no ID, check field keys for ID (mostly for arrays)

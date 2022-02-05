@@ -1,6 +1,10 @@
 const { parse } = require('graphql/language/parser');
 const parseAST = require('./helpers/parseAST');
 // const normalizeForSessionCache = require("./helpers/normalizeForSessionCache");
+//hello world
+//test
+//fdsa
+//one more test
 
 const {
   lokiClientCache,
@@ -30,86 +34,6 @@ const defaultOptions = {
   },
 };
 
-const mapGenerator = async (endpoint) => {
-  //for queryTypeMap
-
-  console.log('in map generator');
-
-  const mapGeneratorForQueryAndMutation = async (endpoint, query, isQuery) => {
-    const obj = {};
-
-    const fetchOptions = {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ query: query }),
-    };
-
-    const serverResponse = await fetch(endpoint, fetchOptions);
-    const parsedData = await serverResponse.json();
-
-    let fieldsArray;
-    if (isQuery) {
-      fieldsArray = parsedData.data.__schema.queryType.fields;
-    } else {
-      fieldsArray = parsedData.data.__schema.mutationType.fields;
-    }
-
-    for (let types of fieldsArray) {
-      let queryType = types.name;
-      let queryTypeValue = types.type.name;
-      obj[queryType] = queryTypeValue;
-    }
-
-    return obj;
-  };
-
-  const queryForQueryType = `{
-__schema{
-  queryType{
-    fields{
-        name
-        type {
-          name
-        }
-      }
-    }
-  }
-}`;
-
-  const queryForMutationMap = `{
-__schema{
-  mutationType{
-    fields{
-        name
-        type {
-          name
-        }
-      }
-    }
-  }
-}`;
-
-  const queryTypeMap = await mapGeneratorForQueryAndMutation(
-    endpoint,
-    queryForQueryType,
-    true
-  );
-
-  const mutationMap = await mapGeneratorForQueryAndMutation(
-    endpoint,
-    queryForMutationMap,
-    false
-  );
-
-  const responseObject = Object.assign({}, { mutationMap }, { queryTypeMap });
-
-  console.log(responseObject);
-
-  // return responseObject;
-};
-
 /**
  * Quellify replaces the need for front-end developers who are using GraphQL to communicate with their servers
  * to write fetch requests. Quell provides caching functionality that a normal fetch request would not provide.
@@ -137,26 +61,10 @@ async function Quellify(
   queryTypeMap,
   userOptions
 ) {
-  //by using passed in schema param , generate belowthere schema
-  // let memoize={};
-
-  // if(memoize[getmutationMap]){
-  //   return memoize[getmutationMap];
-  // }else{
-  //   getmutationMap()
-  // }
-
-  // mutationMap
-  // queryTypeMap
-  // map
-
   // merge defaultOptions with userOptions
   // defaultOptions will supply any necessary options that the user hasn't specified
   const options = { ...defaultOptions, ...userOptions };
-  let typeOfOperation = {
-    isMutation: false,
-    typeOfMutation: '',
-  };
+  let isMutation = false;
   // iterate over map to create all lowercase map for consistent caching
   for (const props in map) {
     const value = map[props].toLowerCase();
@@ -199,13 +107,12 @@ async function Quellify(
     return new Promise((resolve, reject) => resolve(parsedData));
   } else if (operationType === 'mutation') {
     //if operationType is mutation
+
     //if the mutationQuery is not coming from demo, mutation Query can be created using the code below
     //let mutationQuery = createMutationStr(proto);
     // create mutation object using mutationMap and proto created from parseAST;
-    // isMutation = true;
-    typeOfOperation.isMutation = true;
+    isMutation = true;
     let mutationObject;
-
     for (let mutation in mutationMap) {
       if (proto.hasOwnProperty(mutation)) mutationObject = proto[mutation];
     }
@@ -235,11 +142,13 @@ async function Quellify(
       normalizeForLokiCache(
         parsedData.data,
         queryTypeMap,
-        typeOfOperation,
+        isMutation,
         map,
         proto
       ); //using lokiJS
       // normalizeForCache(parsedData.data, map, proto); //using sessionStorage - old client cache storage
+
+      console.log(lokiClientCache); // to be deleted
 
       // Return response as a promise
       return new Promise((resolve, reject) => resolve({ data: parsedData }));
@@ -247,15 +156,13 @@ async function Quellify(
       //update or delete mutation
       let fetchOptions;
       if (argsLen === 1) {
-        typeOfOperation.typeOfMutation = 'delete';
         //delete mutation if the number of args is one
         fetchOptions = {
-          method: 'POST',
+          method: 'DELETE',
           headers: options.headers,
           body: JSON.stringify({ query: query }),
         };
       } else if (argsLen > 1) {
-        typeOfOperation.typeOfMutation = 'update';
         //update mutation if the number of args is more than one
         fetchOptions = {
           method: 'POST',
@@ -263,26 +170,19 @@ async function Quellify(
           body: JSON.stringify({ query: query }),
         };
       }
-
       //regardless of update or delete, clear lokiJS
+      lokiClientCache.clear();
+      console.log(lokiClientCache);
       // Execute fetch request with original query
       const serverResponse = await fetch(endPoint, fetchOptions);
       const parsedData = await serverResponse.json();
-
-      normalizeForLokiCache(
-        parsedData.data,
-        queryTypeMap,
-        typeOfOperation,
-        map,
-        proto
-      );
-
       // no nomarlizeForLokiCache as query will pull out updated cache from server cache;
       // Return response as a promise
       return new Promise((resolve, reject) => resolve({ data: parsedData }));
     }
   } else {
     // if the request is query
+
     /*
     const fetchOptions = {
       method: "POST",
@@ -332,24 +232,12 @@ async function Quellify(
       }
     }
     */
+
     let cacheID;
-    let specificID;
-    let actionQuery;
     for (const typeKey in proto) {
-      if (prototypeKeys.includes(typeKey)) {
+      if (prototypeKeys.includes(typeKey))
         cacheID = generateCacheID(prototype[typeKey]);
-        specificID = prototype[typeKey].__id;
-        actionQuery = typeKey;
-      }
     }
-
-    //console.log('LOKISJS:', lokiJS);
-    //if currField from Cache is an object , go through cache to find the matching value/info
-    let dataInLoki = lokiClientCache.find({
-      'cacheID._id': `${specificID}`,
-    });
-
-    //if currField from Cache is an array , do below logic to get CacheIDArr
 
     let lokiJS = lokiClientCache.data;
     const cacheIDArr = [],
@@ -363,105 +251,59 @@ async function Quellify(
           prevProperty === 'cacheKey' &&
           cachedData[property] === cacheID
         ) {
-          console.log(prevProperty);
           cacheIDArr.push(cachedData[prevProperty]);
-        }
-        // else if (
-        //   property === 'queryType' &&
-        //   prevProperty === 'cacheID' &&
-        //   cachedData[property] &&
-        //   cachedData[property] === cacheID
-        // ) {
-        //   console.log(prevProperty);
-        //   cacheArr.push(cachedData);
-        // }
-        else {
+        } else if (
+          property === 'queryType' &&
+          prevProperty === 'cacheID' &&
+          cachedData[property] &&
+          cachedData[property] === cacheID
+        ) {
+          cacheArr.push(cachedData);
+        } else {
           prevProperty = property;
         }
       }
     });
-
-    // checking to see if these variables are ever used, They are not
-    // console.log(cacheIDArr);
-    // console.log(cacheArr);
-    // console.log(tempArr);
-
     if (cacheIDArr.length > 0) cacheHasData = true;
-    if (dataInLoki.length > 0) cacheHasData = true;
+
+    const fetchOptions = {
+      method: 'POST',
+      headers: options.headers,
+      body: JSON.stringify({ query: query }),
+    };
+    // Execute fetch request with original query
+    const serverResponse = await fetch(endPoint, fetchOptions);
+    const parsedData = await serverResponse.json();
+    normalizeForLokiCache(
+      parsedData.data,
+      queryTypeMap,
+      isMutation,
+      map,
+      proto
+    );
 
     if (!cacheHasData) {
-      console.log('FROM DB');
-      const fetchOptions = {
-        method: 'POST',
-        headers: options.headers,
-        body: JSON.stringify({ query: query }),
-      };
-      // Execute fetch request with original query
-      const serverResponse = await fetch(endPoint, fetchOptions);
-      const parsedData = await serverResponse.json();
-      normalizeForLokiCache(
-        parsedData.data,
-        queryTypeMap,
-        typeOfOperation,
-        map,
-        proto
-      );
-
+      console.log(lokiClientCache);
       // Return response as a promise
       return new Promise((resolve, reject) => resolve({ data: parsedData }));
     }
 
-    // if (!cacheHasData) {
-    //   console.log(lokiClientCache);
-    //   // Return response as a promise
-    //   return new Promise((resolve, reject) => resolve({ data: parsedData }));
-    // }
-    if (cacheIDArr.length > 0) {
-      cacheIDArr.forEach((ID) => {
-        let idx = 0;
-        cacheArr.forEach((cached) => {
-          for (const property in cached) {
-            if (property === 'id' && cached[property] === ID[idx])
-              tempArr.push(cached);
-          }
-          idx += 1;
-        });
+    cacheIDArr.forEach((ID) => {
+      let idx = 0;
+      cacheArr.forEach((cached) => {
+        for (const property in cached) {
+          if (property === 'id' && cached[property] === ID[idx])
+            tempArr.push(cached);
+        }
+        idx += 1;
       });
+    });
 
-      const cacheResponse = Object.assign({}, tempArr);
+    const cacheResponse = Object.assign({}, tempArr, parsedData);
+    console.log('cacheResp: ', cacheResponse);
+    //const finalResponse = {data: cacheResponse};
 
-      return new Promise((resolve, reject) => resolve(cacheResponse));
-    }
-
-    if (dataInLoki.length > 0) {
-      // this is the shape of the data the APP wants (1/24/2022)
-      //{"data":{"getCharacter":{"name": "Obi-Wan Kenobi"}}}
-      // what we are supplying from cache = {_id:"10", name: "obi-wan Kenobi"}
-      // {
-      //   "data": {
-      //     "getCharacter": {
-      //       "name": "Obi-Wan Kenobi"
-      //     }
-      //   }
-      // }
-      // we can build the desired object using the variables/props we already have to maintain consitency for all queries.
-      //  obj = {data:{}}
-
-      let cacheInfo = dataInLoki[0]['cacheID'];
-
-      let info = { [`${actionQuery}`]: cacheInfo };
-      let obj = { data: { data: info } };
-
-      return new Promise((resolve, reject) => resolve(obj));
-    }
-  }
-
-  // const cacheResponse = Object.assign({}, parsedData);
-
-  // console.log('cacheResp: ', cacheResponse);
-  //const finalResponse = {data: cacheResponse};
-
-  /*
+    /*
     // If found data in cache:
     // Create query object from only false prototype fields
     //let mergedResponse;
@@ -494,7 +336,8 @@ async function Quellify(
       mergedResponse = { data: cacheResponse };
     }
     */
-  // return new Promise((resolve, reject) => resolve(cacheResponse));
+    return new Promise((resolve, reject) => resolve(cacheResponse));
+  }
 }
 
-module.exports = { Quellify, lokiClientCache, mapGenerator };
+module.exports = { Quellify, lokiClientCache };

@@ -49,16 +49,23 @@ function normalizeForLokiCache(
     // check if the value stored at that key is array
     if (Array.isArray(currField)) {
       const cacheKey = subID ? subID + '--' + resultName : resultName;
+
+      console.log('this is CACHEKEY:', cacheKey);
+
       let queryTypeKey = cacheKey;
       // create empty array to store refs
       const refList = [];
+
+      console.log('this is resultName:', resultName);
 
       // iterate over countries array
       for (let i = 0; i < currField.length; i++) {
         const el = currField[i];
         // for each object "resultName" is key on "map" for our Data Type
-        const dataType = map[resultName];
-
+        //const dataType = map[resultName]; this is the original code
+        const dataType = queryTypeMap[resultName]; // this is our test
+        console.log('This is queryTypeMap:', map);
+        console.log('This is resultName:', resultName);
         // grab ID from object we are iterating over
         let fieldID = dataType;
 
@@ -71,10 +78,16 @@ function normalizeForLokiCache(
         // push fieldID onto refList
         refList.push(fieldID);
 
-        console.log(refList);
+        console.log('this is reflist: ', refList);
 
         // if object, recurse to add all nested values of el to cache as individual entries
         if (typeof el === 'object') {
+          console.log('this is the datatype in the recursive call:', {
+            [dataType]: el,
+          });
+          console.log('this is the currProto in the recursive call:', {
+            [dataType]: currProto,
+          });
           normalizeForLokiCache(
             { [dataType]: el },
             queryTypeMap,
@@ -86,15 +99,23 @@ function normalizeForLokiCache(
         }
       }
 
+      console.log('this is queryTypeMap:', queryTypeMap);
+      console.log('this is querytypeKey:', queryTypeKey);
+
       // old code for sessionStorage
       // sessionStorage.setItem(cacheKey, JSON.stringify(refList));
 
       // find if queryType value exists in lokiJS client cache and set it to dataInLoki
+
+      //FIND FUNCTION DOESNT WORK WITH INPUT OF STRING . IT GIVES THE FULL CACHE
       let dataInLoki = lokiClientCache.find(queryTypeMap[queryTypeKey]);
       let isExisting = false;
 
+      console.log('this is datainloki:', dataInLoki);
+
       //if there is no data in LokiJS, then we know that we can cache the data query/mutation requested
       if (dataInLoki.length === 0) {
+        console.log('HEYY data in LOKI is empty');
         lokiClientCache.insert({
           id: cacheKey,
           cacheKey: refList,
@@ -156,9 +177,9 @@ function normalizeForLokiCache(
           );
       }
 
-      // store "current object" on cache
       const specificID = fieldStore._id;
 
+      // store "current object" on cache
       let dataInLoki = lokiClientCache.find({ 'cacheID._id': `${specificID}` });
 
       // use isExisting as tracker/flag to check whether the cacheID exists in dataInLoki
