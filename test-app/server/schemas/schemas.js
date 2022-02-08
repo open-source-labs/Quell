@@ -21,6 +21,7 @@ type Mutation{
 }
 type Query {
   getCharacter(_id: ID!): Character
+  allCharacters: [Character]
 }
 
 

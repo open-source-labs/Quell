@@ -6,11 +6,27 @@ const db = require('../models/db');
 module.exports = {
 
   getCharacter: async (args) =>{
-    console.log('in getCharacter query ASYNC');
+    console.time('get Character');
+
     const query = 'SELECT * FROM PEOPLE WHERE _id = $1;';
     try{
       const response = await db.query(query,[args._id])
+      console.timeEnd('get Character');
+
       return response.rows[0]
+    }catch(error){
+      console.log(error)
+      return error
+    }
+  },
+  allCharacters: async (args) =>{
+    console.time('get All');
+    const query = 'SELECT * FROM PEOPLE;';
+    try{
+      const response = await db.query(query)
+      console.timeEnd('get All');
+
+      return response.rows
     }catch(error){
       console.log(error)
       return error

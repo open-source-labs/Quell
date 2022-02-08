@@ -33,16 +33,32 @@ const RootQuery = new GraphQLObjectType({
       type: CharacterType,
       args: { _id: { type: GraphQLID } },
       async resolve(parent, args) {
-        console.log('in getCharacter query Root Definition');
+        console.time('getCharacter timer')
         const query = 'SELECT * FROM PEOPLE WHERE _id = $1;';
         try{
           const response = await db.query(query,[args._id])
+          console.timeEnd('getCharacter timer')
           return response.rows[0]
         }catch(error){
           console.log(error)
           return error
         }
-      },
+      }
+    },
+      allCharacters: {
+        type:  new GraphQLList(CharacterType),
+        async resolve(parent, args) {
+          console.time('getAll timer')
+          const query = 'SELECT * FROM PEOPLE';
+          try{
+            const response = await db.query(query)
+            console.timeEnd('getAll timer')
+            return response.rows
+          }catch(error){
+            console.log(error)
+            return error
+          }
+        },
     }
 }
 });

@@ -30,7 +30,8 @@ app.use('/graphql', quellCache.query, (req, res) => {
 // app.use(
 //   '/graphql',
 //   graphqlHTTP({
-//     schema: schema,
+//     schema: graphqlSchema,
+//     rootValue: graphqlResolvers,
 //     graphiql: true,
 //   })
 // );

@@ -83,12 +83,41 @@ const createLi = (character, time) => {
   newLi.innerText = idAndName;
   return newLi;
 };
+const fetchAll = async () => {
+  const start = new Date().getTime();
+  const results = await fetch('/graphql', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      query: `{
+        allCharacters{
+          name
+        }
+      }`,
+    }),
+  });
+  const end = new Date().getTime();
+  const time = end - start;
+  document.getElementById("time").innerHTML = "  Fetch call in milliSeconds: " + time
+  const parsedResponse = await results.json();
 
+  console.log("Time in milliSeconds: " + time)
+  // alert('Execution time: ' + time);
+  const characterData = parsedResponse.data.allCharacters.length;
+  const li = createLi({name: characterData, _id: 'all'});
+  const characterBoard = document.getElementById('character-list');
+  characterBoard.appendChild(li);
+}
 //handle clicks
 const handleFetchClick = async () => {
   const start = new Date().getTime();
   const _id = document.querySelector('#id').value;
-  console.log(_id);
+  if(_id == 'all'){
+    fetchAll()
+    return
+  }
   const results = await fetch('/graphql', {
     method: 'POST',
     headers: {

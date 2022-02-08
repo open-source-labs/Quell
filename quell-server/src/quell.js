@@ -52,8 +52,7 @@ class QuellCache {
 
     // create response prototype, and operation type, and fragments object
     // the response prototype is used as a template for most operations in quell including caching, building modified requests, and more
-    const { proto, operationType, frags } = this.parseAST(AST);
-
+      const { proto, operationType, frags } = this.parseAST(AST);
     // pass-through for queries and operations that QuellCache cannot handle
     if (operationType === 'unQuellable') {
       graphql(this.schema, queryString)
@@ -69,7 +68,33 @@ class QuellCache {
        * we can have two types of operation to take care of
        * MUTATION OR QUERY
        */
-      // if MUTATION
+      
+    } else if (operationType === 'noID'){
+     graphql(this.schema, queryString)
+      .then((queryResult) => {
+        res.locals.queryResponse = queryResult;
+        next();
+      })
+      .catch((error) => {
+        return next('graphql library error: ', error);
+      });
+      let redisValue = await this.getFromRedis(queryString);
+      if(redisValue != null){
+        redisValue = JSON.parse(redisValue);
+        res.locals.queriesResponse = redisValue
+        return next()
+      }else{
+        graphql(this.schema, queryString)
+        .then((queryResult) => {
+          res.locals.queryResponse = queryResult;
+          this.writeToCache(queryString, queryResult)
+          next();
+        })
+        .catch((error) => {
+          return next('graphql library error: ', error);
+        });
+      }
+    
     } else if (operationType === 'mutation') {
       let mutationQueryObject;
       let mutationName;
@@ -103,15 +128,14 @@ class QuellCache {
         });
     } else {
       // if QUERY
-
       // combines fragments on prototype so we can access fragment values in cache
       const prototype =
         Object.keys(frags).length > 0
           ? this.updateProtoWithFragment(proto, frags)
           : proto;
-
       // list keys on prototype as reference for buildFromCache
       const prototypeKeys = Object.keys(prototype);
+      
       // check cache for any requested values
       // modifies prototype to track any values not in the cache
       const cacheResponse = await this.buildFromCache(prototype, prototypeKeys);
@@ -128,7 +152,6 @@ class QuellCache {
             const databaseResponse = JSON.parse(
               JSON.stringify(databaseResponseRaw)
             );
-
             // iterate over the keys in cacheresponse data to see if the cache has any data
             let cacheHasData = false;
             for (const key in cacheResponse.data) {
@@ -219,7 +242,7 @@ class QuellCache {
       },
       OperationDefinition(node) {
         targetObj = proto;
-        //cannot cache subscriptions or mutations, return as unquellable
+        //cannot cache subscriptions, return as unquellable
         operationType = node.operation;
         if (node.operation === 'subscription') {
           operationType = 'unQuellable';
@@ -265,10 +288,8 @@ class QuellCache {
           const auxObj = {
             __id: null,
           };
-
           node.arguments.forEach((arg) => {
             const key = arg.name.value;
-
             // pass variables through
             if (arg.value.kind === 'Variable' && operationType === 'query') {
               operationType = 'unQuellable';
@@ -351,7 +372,7 @@ class QuellCache {
               !fieldsValues.hasOwnProperty('ID') &&
               !fieldsValues.hasOwnProperty('Id')
             ) {
-              operationType = 'unQuellable';
+              operationType = 'noID';
               return BREAK;
             }
 
@@ -1178,7 +1199,16 @@ class QuellCache {
       }
     }
   }
-
+  generateIDFromQuery (AST){
+    let query = ''
+    visit(AST, {
+      forEach(node){
+        if(node.type == querytype){
+          query += node.val
+        }
+      }
+    })
+  }
   /**
    * deleteCacheById removes key-value from the cache unless the key indicates that the item is not available. // Note: writeToCache will JSON.stringify the input item
    * @param {String} key - unique id under which the cached data is stored that needs to be removed
@@ -1200,10 +1230,10 @@ class QuellCache {
    * @param {Object} fieldsMap - another map of queries to desired data types, deprecated but untested
    */
   async normalizeForCache(responseData, map = {}, protoField, fieldsMap = {}) {
+
     for (const resultName in responseData) {
       const currField = responseData[resultName];
       const currProto = protoField[resultName];
-
       if (Array.isArray(currField)) {
         // create empty array to store references to data types in the form of their cacheID
         const refList = [];
@@ -1263,6 +1293,7 @@ class QuellCache {
             });
           }
         }
+        console.log(cacheID)
         // store "current object" on cache in JSON format
         this.writeToCache(cacheID, fieldStore);
       }
@@ -1643,7 +1674,7 @@ class QuellCache {
       return next(err);
     }
   }
-
+  
   getRedisValues(req, res, next) {
     try {
       const getValues = () => {
