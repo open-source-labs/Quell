@@ -174,9 +174,7 @@ header {
     background-color: #555;
     color: white;
   }
-
 }
-
 
 // ====== DEMO SECTION ======
 
@@ -300,6 +298,12 @@ textarea {
   background: #fff;
 }
 .button-query-secondary:hover {
+  color: #fff;
+  border: 3px solid $quell-dark !important;
+  background: $quell-dark !important;
+}
+
+.cacheBtn {
   color: #fff;
   border: 3px solid $quell-dark !important;
   background: $quell-dark !important;
@@ -465,7 +469,7 @@ textarea {
   width: 55%;
   max-width: 400px;
   margin-bottom: 5%;
-  
+
   p {
     font-size: 1.05rem;
   }
@@ -494,7 +498,7 @@ textarea {
   // ====== TOP HEADER SECTION ======
 
   #logo-main {
-    width: 55
+    width: 55;
   }
 
   // ====== INFO SECTION ======

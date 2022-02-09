@@ -13,7 +13,6 @@ import {
 import Header from '../images/headers/QUELL-headers-demo w lines.svg';
 import DropDown from '../images/buttons/dropdown-button.svg';
 import DropDownHover from '../images/buttons/dropdown-button-hover.svg';
-
 import {
   Quellify as QuellModule,
   lokiClientCache as lokiClientCacheModule,
@@ -23,7 +22,7 @@ import {
   Quellify as QuellDev,
   lokiClientCache as lokiClientCacheDev,
   mapGenerator as mapGeneratorDev,
-} from '../../../../test-app/client/message-board/src/quell-client/src/Quellify.js';
+} from '../../../../quell-client/quell-client/src/Quellify.js';
 
 const Quell = process.env.NODE_ENV === 'development' ? QuellDev : QuellModule;
 
@@ -31,6 +30,9 @@ const lokiClientCache =
   process.env.NODE_ENV === 'development'
     ? lokiClientCacheDev
     : lokiClientCacheModule;
+
+const mapGenerator =
+  process.env.NODE_ENV === 'development' ? mapGeneratorDev : mapGeneratorModule;
 
 /*
   Container that renders the whole demo dashboard
@@ -48,9 +50,16 @@ const Demo = () => {
   const [resetComponent, setResetComponent] = useState(false);
   const [queryDropdown, toggleDropdown] = useState(false);
   const [theQuery, setTheQuery] = useState('blank');
+  const [URL, setURL] = useState('/graphql');
+  const [clientBtnActive, setClientBtnActive] = useState('');
+  const [serverBtnActive, setServerBtnActive] = useState('');
+
   const formatTimer = (time) => {
     return time.toFixed(2) + ' ms';
   };
+
+  // //backend route
+  // let URL = '/graphql';
 
   // ====================================================================== //
   // ======= Functionality to close dropdowns when clicking outside ======= //
@@ -83,10 +92,10 @@ const Demo = () => {
     - Array of queries to choose from
   */
   const dropdownList = [
-    'Simple Query For Characters',
-    'Simple Query For Planets',
-    'Simple Query For Species',
-    'Simple Query For Vessels',
+    'Simple Query For Books',
+    'Simple Query For Cities',
+    'Simple Query For Attractions',
+    'Simple query For Countries',
     'Simple Query With Argument',
     'Alias',
     'Multiple Queries',
@@ -97,17 +106,17 @@ const Demo = () => {
   ];
 
   const selectQuery = (selection) => {
-    if (selection === 'Simple Query For Characters') {
-      displaySimpleQueryForCharacters();
+    if (selection === 'Simple Query For Books') {
+      displaySimpleQueryForBooks();
     }
-    if (selection === 'Simple Query For Planets') {
-      displaySimpleQueryForPlanets();
+    if (selection === 'Simple Query For Cities') {
+      displaySimpleQueryForCities();
     }
-    if (selection === 'Simple Query For Species') {
-      displaySimpleQueryForSpecies();
+    if (selection === 'Simple Query For Attractions') {
+      displaySimpleQueryForAttractions();
     }
-    if (selection === 'Simple Query For Vessels') {
-      displaySimpleQueryForVessels();
+    if (selection === 'Simple Query For Countries') {
+      displaySimpleQueryForCountries();
     }
     if (selection === 'Simple Query With Argument') {
       displaySimpleQueryWithArg();
@@ -145,74 +154,71 @@ const Demo = () => {
   // ===== Functionality to change output based on Query Type ===== //
   // ============================================================== //
 
-  const displaySimpleQueryForCharacters = () => {
-    setTheQuery('Simple Query For Characters');
+  const displaySimpleQueryForBooks = () => {
+    setTheQuery('simple query for books');
     const uncached = '0.00 ms';
     setUncachedTime(uncached);
     output = setOutput({
-      getCharacters: {
-        name: true,
-        __alias: null,
-        __args: null,
+      books: {
         __id: null,
-        __type: 'getcharacters',
-        _id: true,
+        __alias: null,
+        __args: {},
+        __type: 'books',
+        id: false,
+        name: false,
+        author: false,
+        shelf_id: false,
       },
     });
   };
 
-  const displaySimpleQueryForPlanets = () => {
-    setTheQuery('Simple Query For Planets');
+  const displaySimpleQueryForCities = () => {
+    setTheQuery('simple query for cities');
     const uncached = '0.00 ms';
     setUncachedTime(uncached);
     output = setOutput({
-      getPlanets: {
-        name: true,
-        __alias: null,
-        __args: null,
+      cities: {
         __id: null,
-        __type: 'getplanets',
-        _id: true,
-        diameter: true,
-        climate: true,
+        __alias: null,
+        __args: {},
+        __type: 'cities',
+        id: false,
+        name: false,
+        population: false,
+        country_id: false,
       },
     });
   };
 
-  const displaySimpleQueryForSpecies = () => {
-    setTheQuery('Simple Query For Species');
+  const displaySimpleQueryForAttractions = () => {
+    setTheQuery('simple query for attractions');
     const uncached = '0.00 ms';
     setUncachedTime(uncached);
     output = setOutput({
-      getSpecies: {
-        name: true,
-        __alias: null,
-        __args: null,
+      attractions: {
         __id: null,
-        __type: 'getSpecies',
-        _id: true,
-        classification: true,
-        average_height: true,
-        average_lifespan: true,
+        __alias: null,
+        __args: {},
+        __type: 'attractions',
+        id: false,
+        name: false,
+        city_id: false,
       },
     });
   };
 
-  const displaySimpleQueryForVessels = () => {
-    setTheQuery('Simple Query For Vessels');
+  const displaySimpleQueryForCountries = () => {
+    setTheQuery('simple query for countries');
     const uncached = '0.00 ms';
     setUncachedTime(uncached);
     output = setOutput({
-      getVessels: {
-        name: true,
-        __alias: null,
-        __args: null,
+      countries: {
         __id: null,
-        __type: 'getVessels',
-        _id: true,
-        manufacturer: true,
-        model: true,
-        vessel_type: true,
+        __alias: null,
+        __args: {},
+        __type: 'countries',
+        id: false,
+        name: false,
       },
     });
   };
@@ -223,14 +229,14 @@ const Demo = () => {
     const uncached = '0.00 ms';
     setUncachedTime(uncached);
     output = setOutput({
-      getCharacter: {
-        name: true,
-        __alias: null,
-        __args: { _id: '1' },
+      book: {
         __id: null,
-        __type: 'getcharacter',
-        _id: true,
-        gender: true,
+        __type: 'book',
+        __alias: null,
+        __args: { id: '5' },
+        id: false,
+        name: false,
+        author: false,
       },
     });
   };
@@ -240,14 +246,14 @@ const Demo = () => {
     const uncached = '0.00 ms';
     setUncachedTime(uncached);
     output = setOutput({
-      LeiaOrgana: {
+      SevenMileBeach: {
         __id: null,
-        __type: 'getCharacter',
-        __args: { _id: '5' },
-        __alias: 'Leia Organa',
+        __type: 'attraction',
+        __args: { id: '29' },
+        __alias: 'Seven Mile Beach',
+        id: false,
         name: false,
-        gender: false,
-        birth_year: false,
+        city_id: false,
       },
     });
   };
@@ -257,21 +263,23 @@ const Demo = () => {
     const uncached = '0.00 ms';
     setUncachedTime(uncached);
     output = setOutput({
-      LukeSkywalker: {
-        __id: '1',
-        __type: 'getCharacter',
-        __args: { _id: '1' },
-        __alias: 'LukeSkywalker',
+      Metsaven: {
+        __id: '15',
+        __type: 'city',
+        __args: { id: '15' },
+        __alias: 'Metsaven',
+        id: false,
         name: false,
-        gender: false,
+        population: false,
       },
-      LeiaOrgana: {
-        __id: '5',
-        __type: 'getCharacter',
-        __args: { _id: '5' },
-        __alias: 'LeiaOrgana',
+      Capitona: {
+        __id: '9',
+        __type: 'city',
+        __args: { id: '9' },
+        __alias: 'Capitona',
+        id: false,
         name: false,
-        gender: false,
+        population: false,
       },
     });
   };
@@ -282,20 +290,28 @@ const Demo = () => {
     setUncachedTime(uncached);
     setTheQuery('fragment');
     output = setOutput({
-      LukeSkywalker: {
-        __id: '1',
-        __args: { _id: '1' },
-        __alias: 'LukeSkywalker',
-        __type: 'getCharacter',
-        _id: false,
+      Seoul: {
+        __id: '24',
+        __args: { id: '24' },
+        __alias: 'Seoul',
+        __type: 'city',
+        id: false,
         theFields: true,
       },
-      LeiaOrgana: {
-        __id: '5',
-        __args: { _id: '5' },
-        __alias: 'LeiaOrgana',
-        __type: 'getCharacter',
-        _id: false,
+      Uiwang: {
+        __id: '25',
+        __args: { id: '25' },
+        __alias: 'Uiwang',
+        __type: 'city',
+        id: false,
+        theFields: true,
+      },
+      Incheon: {
+        __id: '26',
+        __args: { id: '26' },
+        __alias: 'Incheon',
+        __type: 'city',
+        id: false,
         theFields: true,
       },
     });
@@ -306,13 +322,19 @@ const Demo = () => {
     const uncached = '0.00 ms';
     setUncachedTime(uncached);
     output = setOutput({
-      createCharacter: {
-        name: true,
-        __alias: null,
-        __args: { name: 'Blade The Daywalker' },
+      addBook: {
         __id: null,
-        __type: 'character',
-        _id: true,
+        __type: 'book',
+        __alias: null,
+        __args: {
+          name: 'Jinhee is cooler than Tim',
+          author: 'Jinhee Choi',
+          shelf_id: '1',
+        },
+        id: true,
+        name: true,
+        author: true,
+        shelf_id: true,
       },
     });
   };
@@ -322,13 +344,18 @@ const Demo = () => {
     const uncached = '0.00 ms';
     setUncachedTime(uncached);
     output = setOutput({
-      updateCharacter: {
-        name: true,
+      changeBooksByAuthor: {
+        __id: null,
+        __type: 'changebooksbyauthor',
         __alias: null,
-        __args: { _id: '241', name: 'Max Payne' },
-        __id: '241',
-        __type: 'character',
-        _id: true,
+        __args: {
+          author: 'Jinhee Choi',
+          name: 'No, Tim is cooler than Jinhee',
+        },
+        id: true,
+        name: true,
+        author: true,
+        shelf_id: true,
       },
     });
   };
@@ -338,12 +365,17 @@ const Demo = () => {
     const uncached = '0.00 ms';
     setUncachedTime(uncached);
     output = setOutput({
-      deleteCharacter: {
+      deleteBooksByName: {
+        __id: null,
+        __type: 'deletebooksbyname',
         __alias: null,
-        __args: { _id: '241' },
-        __id: '241',
-        __type: 'character',
-        _id: true,
+        __args: {
+          name: 'No, Tim is cooler than Jinhee',
+        },
+        id: true,
+        name: true,
+        author: true,
+        shelf_id: true,
       },
     });
   };
@@ -367,9 +399,9 @@ const Demo = () => {
     } else if (theQuery === 'fragment') {
       const fragment = {
         theFields: {
-          hair_color: true,
-          skin_color: true,
-          eye_color: true,
+          name: true,
+          population: true,
+          country_id: true,
         },
       };
       let protoFrag = updateProtoWithFragment(output, fragment);
@@ -378,62 +410,129 @@ const Demo = () => {
       parsedResult = CreateQueryStr(output);
     }
 
-    const queryTypeMap = {
-      getCharacter: 'Character',
-      getCharacters: 'Character',
-    };
+    // const mutationMap = {
+    //   addBook: 'Book',
+    //   changeBooksByAuthor: 'Book',
+    //   changeBooksByName: 'Book',
+    //   deleteBooksByName: 'Book',
+    //   deleteBookByAuthor: 'Book',
+    //   addBookShelf: 'BookShelf',
+    // };
 
-    const mutationMap = {
-      createCharacter: 'Character',
-      deleteCharacter: 'Character',
-      updateCharacter: 'Character',
-    };
+    // const map = {
+    //   Countries: 'Country',
+    //   Country: 'Country',
+    //   citiesByCountry: 'City',
+    //   cities: 'City',
+    //   bookShelves: 'BookShelf',
+    //   bookShelf: 'BookShelf',
+    //   book: 'Book',
+    //   books: 'Book',
+    //   attraction: 'attractions',
+    //   attractions: 'attractions',
+    //   Attraction: 'attractions',
+    //   Attractions: 'attractions',
+    // };
 
-    const map = {
-      Character: 'Character',
-    };
+    // const queryTypeMap = {
+    //   Countries: 'countries',
+    //   Country: 'countries',
+    //   city: 'cities',
+    //   City: 'cities',
+    //   citiesByCountry: 'cities',
+    //   cities: 'cities',
+    //   Cities: 'cities',
+    //   bookShelves: 'BookShelves',
+    //   bookShelf: 'BookShelves',
+    //   book: 'books',
+    //   books: 'books',
+    //   Book: 'books',
+    //   Books: 'books',
+    //   attraction: 'attractions',
+    //   attractions: 'attractions',
+    //   Attraction: 'attractions',
+    //   Attractions: 'attractions',
+    // };
 
-    const maps = await mapGenerator('http://localhost:3434/graphql');
+    const maps = await mapGenerator('/graphql');
 
     // start the timer (eventually displayed in Metrics)
     let startTime, endTime;
     startTime = performance.now();
 
     // Make the fetch request
-    Quell(
-      'http://localhost:3434/graphql', // our route
-      parsedResult,
-      maps // our input
-      // mutationMap, //map used for mutation caching
-      // map, //map used for query from database/server-cache
-      // queryTypeMap, //map used for query from client-cache
-      // {}
-    )
-      .then((res) => {
-        endTime = performance.now(); // stop the timer
-        const rawTime = endTime - startTime; // calculate how long it took
-        if (uncachedTime === '0.00 ms') {
-          const uncached = (endTime - startTime).toFixed(2) + ' ms';
-          setUncachedTime(uncached);
-        }
+    console.log('URL: ', URL);
+    if (URL !== '/graphql') {
+      const fetchOptions = {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ query: parsedResult }),
+      };
 
-        console.log(res.data);
+      fetch('/graphql', fetchOptions)
+        .then((res) => res.json())
+        .then((data) => {
+          endTime = performance.now(); // stop the timer
+          const rawTime = endTime - startTime; // calculate how long it took
+          if (uncachedTime === '0.00 ms') {
+            const uncached = (endTime - startTime).toFixed(2) + ' ms';
+            setUncachedTime(uncached);
+          }
 
-        // Set Query Response state
-        setQueryResponse(res.data);
-        // Set Timer State
-        const fTime = formatTimer(rawTime);
-        setFetchTime(fTime);
+          console.log('this is server side caching');
+          console.log(data);
+          // Set Query Response state
+          setQueryResponse(data.data);
+          // Set Timer State
+          const fTime = formatTimer(rawTime);
+          setFetchTime(fTime);
 
-        setCacheAddStatus('Yes');
-        setCacheClearStatus('No');
+          setCacheAddStatus('Yes');
+          setCacheClearStatus('No');
 
-        // Set Line Graph
-        const newTime = Number(rawTime.toFixed(3));
-        setFetchTimeIntegers([...fetchTimeIntegers, newTime]);
-      })
+          // Set Line Graph
+          const newTime = Number(rawTime.toFixed(3));
+          setFetchTimeIntegers([...fetchTimeIntegers, newTime]);
+        })
 
-      .catch((err) => console.log(err));
+        .catch((err) => console.log(err));
+    } else {
+      Quell(
+        '/graphql', // our route
+        parsedResult, // our input
+        maps
+        // mutationMap, //map used for mutation caching
+        // map, //map used for query from database/server-cache
+        // queryTypeMap, //map used for query from client-cache
+        // {}
+      )
+        .then((res) => {
+          endTime = performance.now(); // stop the timer
+          const rawTime = endTime - startTime; // calculate how long it took
+          if (uncachedTime === '0.00 ms') {
+            const uncached = (endTime - startTime).toFixed(2) + ' ms';
+            setUncachedTime(uncached);
+          }
+
+          console.log('this is client side caching');
+          // Set Query Response state
+          setQueryResponse(res.data);
+          // Set Timer State
+          const fTime = formatTimer(rawTime);
+          setFetchTime(fTime);
+
+          setCacheAddStatus('Yes');
+          setCacheClearStatus('No');
+
+          // Set Line Graph
+          const newTime = Number(rawTime.toFixed(3));
+          setFetchTimeIntegers([...fetchTimeIntegers, newTime]);
+        })
+
+        .catch((err) => console.log(err));
+    }
   };
 
   // ============================================================== //
@@ -484,7 +583,6 @@ const Demo = () => {
     // Clear sessionStorage
     // sessionStorage.clear();
     lokiClientCache.clear();
-    console.log(lokiClientCache.data);
     setCacheClearStatus('Yes');
     setCacheAddStatus('No');
     // Clear server cache:
@@ -493,6 +591,10 @@ const Demo = () => {
     setCacheStatus('');
     // Zero-out line graph
     setFetchTimeIntegers([0, 0]);
+
+    //reset the active cache buttons
+    setClientBtnActive('');
+    setServerBtnActive('');
   };
 
   return (
@@ -577,7 +679,39 @@ const Demo = () => {
                   {dropdownMenu}
                 </div>
               )}
-              <b>SELECT YOUR QUERY</b>
+              <b style={{ marginRight: '40px' }}>SELECT YOUR QUERY</b>
+            </button>
+            <button
+              onClick={() => {
+                setURL('/graphql');
+                setClientBtnActive('cacheBtn');
+                setServerBtnActive('');
+              }}
+              className={`button-query button-query-secondary ${clientBtnActive}`}
+              style={{
+                margin: '4px',
+                fontSize: '10px',
+                width: '100px',
+                height: '40px',
+              }}
+            >
+              QUELL-CLIENT
+            </button>
+            <button
+              onClick={() => {
+                setURL('/quellql');
+                setServerBtnActive('cacheBtn');
+                setClientBtnActive('');
+              }}
+              className={`button-query button-query-secondary ${serverBtnActive}`}
+              style={{
+                margin: '4px',
+                fontSize: '10px',
+                width: '100px',
+                height: '40px',
+              }}
+            >
+              QUELL-SERVER
             </button>
           </span>
         </div>

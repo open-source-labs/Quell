@@ -35,7 +35,7 @@ const Query = (props) => {
     );
   }
 
-  if (theQuery === 'Simple Query For Characters') {
+  if (theQuery === 'simple query for books') {
     return (
       <>
         <div className='query-div'>
@@ -43,7 +43,11 @@ const Query = (props) => {
           <div className='queryLine'>
             {space}
             {space}
-            {'getCharacters'} {ob}
+            {'books'} {ob}
+          </div>
+          <div className='queryLine'>
+            {tab}
+            {'id'}
           </div>
           <div className='queryLine'>
             {tab}
@@ -51,7 +55,11 @@ const Query = (props) => {
           </div>
           <div className='queryLine'>
             {tab}
-            {'_id'}
+            {'author'}
+          </div>
+          <div className='queryLine'>
+            {tab}
+            {'shelf_id'}
           </div>
           <div className='queryLine'>
             {space}
@@ -64,7 +72,7 @@ const Query = (props) => {
     );
   }
 
-  if (theQuery === 'Simple Query For Planets') {
+  if (theQuery === 'simple query for cities') {
     return (
       <>
         <div className='query-div'>
@@ -72,7 +80,11 @@ const Query = (props) => {
           <div className='queryLine'>
             {space}
             {space}
-            {'getPlanets'} {ob}
+            {'cities'} {ob}
+          </div>
+          <div className='queryLine'>
+            {tab}
+            {'id'}
           </div>
           <div className='queryLine'>
             {tab}
@@ -80,15 +92,11 @@ const Query = (props) => {
           </div>
           <div className='queryLine'>
             {tab}
-            {'_id'}
+            {'population'}
           </div>
           <div className='queryLine'>
             {tab}
-            {'diameter'}
-          </div>
-          <div className='queryLine'>
-            {tab}
-            {'climate'}
+            {'country_id'}
           </div>
           <div className='queryLine'>
             {space}
@@ -101,7 +109,7 @@ const Query = (props) => {
     );
   }
 
-  if (theQuery === 'Simple Query For Species') {
+  if (theQuery === 'simple query for attractions') {
     return (
       <>
         <div className='query-div'>
@@ -109,7 +117,11 @@ const Query = (props) => {
           <div className='queryLine'>
             {space}
             {space}
-            {'getSpecies'} {ob}
+            {'attractions'} {ob}
+          </div>
+          <div className='queryLine'>
+            {tab}
+            {'id'}
           </div>
           <div className='queryLine'>
             {tab}
@@ -117,19 +129,7 @@ const Query = (props) => {
           </div>
           <div className='queryLine'>
             {tab}
-            {'_id'}
-          </div>
-          <div className='queryLine'>
-            {tab}
-            {'classification'}
-          </div>
-          <div className='queryLine'>
-            {tab}
-            {'average_height'}
-          </div>
-          <div className='queryLine'>
-            {tab}
-            {'average_lifespan'}
+            {'city_id'}
           </div>
           <div className='queryLine'>
             {space}
@@ -142,7 +142,7 @@ const Query = (props) => {
     );
   }
 
-  if (theQuery === 'Simple Query For Vessels') {
+  if (theQuery === 'simple query for countries') {
     return (
       <>
         <div className='query-div'>
@@ -150,27 +150,15 @@ const Query = (props) => {
           <div className='queryLine'>
             {space}
             {space}
-            {'getVessels'} {ob}
+            {'countries'} {ob}
+          </div>
+          <div className='queryLine'>
+            {tab}
+            {'id'}
           </div>
           <div className='queryLine'>
             {tab}
             {'name'}
-          </div>
-          <div className='queryLine'>
-            {tab}
-            {'_id'}
-          </div>
-          <div className='queryLine'>
-            {tab}
-            {'manufacturer'}
-          </div>
-          <div className='queryLine'>
-            {tab}
-            {'model'}
-          </div>
-          <div className='queryLine'>
-            {tab}
-            {'vessel_type'}
           </div>
           <div className='queryLine'>
             {space}
@@ -192,7 +180,11 @@ const Query = (props) => {
           <div className='queryLine'>
             {space}
             {space}
-            {'getCharacter(id: "1")'} {ob}
+            {'book(id: "5")'} {ob}
+          </div>
+          <div className='queryLine'>
+            {tab}
+            {'id'}
           </div>
           <div className='queryLine'>
             {tab}
@@ -200,11 +192,7 @@ const Query = (props) => {
           </div>
           <div className='queryLine'>
             {tab}
-            {'_id'}
-          </div>
-          <div className='queryLine'>
-            {tab}
-            {'gender'}
+            {'author'}
           </div>
           <div className='queryLine'>
             {space}
@@ -225,7 +213,11 @@ const Query = (props) => {
           <div className='queryLine'>
             {space}
             {space}
-            {'LeiaOrgana:getCharacter(_id:"5")'} {ob}
+            {'SevenMileBeach: attraction(id: "29")'} {ob}
+          </div>
+          <div className='queryLine'>
+            {tab}
+            {'id'}
           </div>
           <div className='queryLine'>
             {tab}
@@ -233,11 +225,7 @@ const Query = (props) => {
           </div>
           <div className='queryLine'>
             {tab}
-            {'gender'}
-          </div>
-          <div className='queryLine'>
-            {tab}
-            {'birth_year'}
+            {'city_id'}
           </div>
           <div className='queryLine'>
             {space}
@@ -258,7 +246,11 @@ const Query = (props) => {
           <div className='queryLine'>
             {space}
             {space}
-            {'LukeSkywalker:getCharacter(_id:"1")'} {ob}
+            {'Metsaven: city(id: "15")'} {ob}
+          </div>
+          <div className='queryLine'>
+            {tab}
+            {'id'}
           </div>
           <div className='queryLine'>
             {tab}
@@ -266,7 +258,7 @@ const Query = (props) => {
           </div>
           <div className='queryLine'>
             {tab}
-            {'gender'}
+            {'population'}
           </div>
           <div className='queryLine'>
             {space}
@@ -276,7 +268,11 @@ const Query = (props) => {
           <div className='queryLine'>
             {space}
             {space}
-            {'LeiaOrgana:getCharacter(_id:"5")'} {ob}
+            {'Capitona: city(id: "9")'} {ob}
+          </div>
+          <div className='queryLine'>
+            {tab}
+            {'id'}
           </div>
           <div className='queryLine'>
             {tab}
@@ -284,9 +280,8 @@ const Query = (props) => {
           </div>
           <div className='queryLine'>
             {tab}
-            {'gender'}
+            {'population'}
           </div>
-
           <div className='queryLine'>
             {space}
             {space}
@@ -298,7 +293,7 @@ const Query = (props) => {
     );
   }
 
-  //characters;
+  //cities;
   if (theQuery === 'fragment') {
     return (
       <>
@@ -307,11 +302,11 @@ const Query = (props) => {
           <div className='queryLine'>
             {space}
             {space}
-            {'LukeSkywalker:getCharacter(_id:"1")'} {ob}
+            {'Seoul: city(id: "24")'} {ob}
           </div>
           <div className='queryLine'>
             {tab}
-            {'...phenoTypes'}
+            {'...fields'}
           </div>
           <div className='queryLine'>
             {space}
@@ -324,11 +319,28 @@ const Query = (props) => {
           <div className='queryLine'>
             {space}
             {space}
-            {'LeiaOrgana:getCharacter(_id:"5")'} {ob}
+            {'Uiwang: city(id: "25")'} {ob}
           </div>
           <div className='queryLine'>
             {tab}
-            {'...phenoTypes'}
+            {'...fields'}
+          </div>
+          <div className='queryLine'>
+            {space}
+            {space}
+            {cb}
+          </div>
+          <div className='queryLine'>{cb}</div>
+
+          <div className='queryLine'>{ob}</div>
+          <div className='queryLine'>
+            {space}
+            {space}
+            {'Incheon: city(id: "26")'} {ob}
+          </div>
+          <div className='queryLine'>
+            {tab}
+            {'...fields'}
           </div>
           <div className='queryLine'>
             {space}
@@ -339,19 +351,19 @@ const Query = (props) => {
 
           <div className='queryLine'>{tab}</div>
           <div className='queryLine'>
-            {'fragment phenoTypes on Character'} {ob}
+            {'fragment fields on Cities'} {ob}
           </div>
           <div className='queryLine'>
             {tab}
-            {'hair_color'}
+            {'name'}
           </div>
           <div className='queryLine'>
             {tab}
-            {'skin_color'}
+            {'population'}
           </div>
           <div className='queryLine'>
             {tab}
-            {'eye_color'}
+            {'country_id'}
           </div>
           <div className='queryLine'>{cb}</div>
         </div>
@@ -367,7 +379,7 @@ const Query = (props) => {
           <div className='queryLine'>
             {space}
             {space}
-            {'createCharacter'}
+            {'addbook'}
           </div>
           <div>
             {tab}
@@ -377,7 +389,19 @@ const Query = (props) => {
             {tab}
             {space}
             {space}
-            {'name: "Blade The Daywalker"'}
+            {'name: "Jinhee is cooler than Tim"'}
+          </div>
+          <div className='queryLine'>
+            {tab}
+            {space}
+            {space}
+            {'author: "Jinhee Choi"'}
+          </div>
+          <div className='queryLine'>
+            {tab}
+            {space}
+            {space}
+            {'shelf_id: "1"'}
           </div>
           <div className='queryLine'>
             {tab}
@@ -391,13 +415,25 @@ const Query = (props) => {
             {tab}
             {space}
             {space}
-            {'_id'}
+            {'id'}
           </div>
           <div className='queryLine'>
             {tab}
             {space}
             {space}
             {'name'}
+          </div>
+          <div className='queryLine'>
+            {tab}
+            {space}
+            {space}
+            {'author'}
+          </div>
+          <div className='queryLine'>
+            {tab}
+            {space}
+            {space}
+            {'shelf_id'}
           </div>
           <div className='queryLine'>
             {tab}
@@ -417,7 +453,7 @@ const Query = (props) => {
           <div className='queryLine'>
             {space}
             {space}
-            {'updateCharacter'}
+            {'changeBooksByAuthor'}
           </div>
           <div>
             {tab}
@@ -427,13 +463,13 @@ const Query = (props) => {
             {tab}
             {space}
             {space}
-            {'_id: 241'}
+            {'name: "No, Tim is cooler than Jinhee"'}
           </div>
           <div className='queryLine'>
             {tab}
             {space}
             {space}
-            {'name: "Max Payne"'}
+            {'author: "Jinhee Choi"'}
           </div>
           <div className='queryLine'>
             {tab}
@@ -447,7 +483,7 @@ const Query = (props) => {
             {tab}
             {space}
             {space}
-            {'_id'}
+            {'id'}
           </div>
           <div className='queryLine'>
             {tab}
@@ -455,7 +491,18 @@ const Query = (props) => {
             {space}
             {'name'}
           </div>
-
+          <div className='queryLine'>
+            {tab}
+            {space}
+            {space}
+            {'author'}
+          </div>
+          <div className='queryLine'>
+            {tab}
+            {space}
+            {space}
+            {'shelf_id'}
+          </div>
           <div className='queryLine'>
             {tab}
             {cb}
@@ -474,7 +521,7 @@ const Query = (props) => {
           <div className='queryLine'>
             {space}
             {space}
-            {'deleteCharacter'}
+            {'deleteBooksByName'}
           </div>
           <div>
             {tab}
@@ -484,7 +531,7 @@ const Query = (props) => {
             {tab}
             {space}
             {space}
-            {'_id: "241"'}
+            {'name: "No, Tim is cooler than Jinhee"'}
           </div>
           <div className='queryLine'>
             {tab}
@@ -498,13 +545,25 @@ const Query = (props) => {
             {tab}
             {space}
             {space}
-            {'_id'}
+            {'id'}
           </div>
           <div className='queryLine'>
             {tab}
             {space}
             {space}
             {'name'}
+          </div>
+          <div className='queryLine'>
+            {tab}
+            {space}
+            {space}
+            {'author'}
+          </div>
+          <div className='queryLine'>
+            {tab}
+            {space}
+            {space}
+            {'shelf_id'}
           </div>
           <div className='queryLine'>
             {tab}
