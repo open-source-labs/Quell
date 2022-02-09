@@ -25,6 +25,39 @@ module.exports = {
       return error;
     }
   },
+  getPlanets: async (args) => {
+    try {
+      query = 'SELECT * FROM PLANETS';
+      const response = await db.query(query);
+      console.log(response.rows);
+      return response.rows;
+    } catch (error) {
+      console.log(error);
+      return error;
+    }
+  },
+  getSpecies: async (args) => {
+    try {
+      query = 'SELECT * FROM SPECIES';
+      const response = await db.query(query);
+      console.log(response.rows);
+      return response.rows;
+    } catch (error) {
+      console.log(error);
+      return error;
+    }
+  },
+  getVessels: async (args) => {
+    try {
+      query = 'SELECT * FROM VESSELS';
+      const response = await db.query(query);
+      console.log(response.rows);
+      return response.rows;
+    } catch (error) {
+      console.log(error);
+      return error;
+    }
+  },
   createCharacter: async (args) => {
     console.log('in createCharacter');
     const query = `

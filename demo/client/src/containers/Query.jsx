@@ -1,7 +1,7 @@
 import React from 'react';
 
 /*
-  Container that renders Query in the Query box in Demo 
+  Container that renders Query in the Query box in Demo
 */
 
 const Query = (props) => {
@@ -15,420 +15,506 @@ const Query = (props) => {
   const eighted = <span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>;
   const space = <span>&nbsp;</span>;
 
-
-  if (theQuery === "blank") {
+  if (theQuery === 'blank') {
     return (
       <>
-        <div className="query-div">
-        </div>
+        <div className='query-div'></div>
       </>
     );
-    }
-
-    if (theQuery === "error") {
-      return (
-        <>
-          <div className="query-div">
-          <div className="queryLine">{"Error: please select a query to run."}</div>
-          </div>
-        </>
-      );
-      }
-
-  if (theQuery === "simple query for books") {
-  return (
-    <>
-      <div className="query-div">
-        <div className="queryLine">{ob}</div>
-        <div className="queryLine">
-          {space}{space}{'books'} {ob}
-        </div>
-        <div className="queryLine">
-          {tab}{"id"} 
-        </div>
-        <div className="queryLine">
-          {tab}{"name"} 
-        </div>
-        <div className="queryLine">
-          {tab}{"author"} 
-        </div>
-        <div className="queryLine">
-          {tab}{"shelf_id"} 
-        </div>
-        <div className="queryLine">
-          {space}{space}{cb}
-        </div>
-        <div className="queryLine">{cb}</div>
-      </div>
-    </>
-  );
   }
 
-  if (theQuery === "simple query for cities") {
+  if (theQuery === 'error') {
     return (
       <>
-        <div className="query-div">
-          <div className="queryLine">{ob}</div>
-          <div className="queryLine">
-            {space}{space}{'cities'} {ob}
+        <div className='query-div'>
+          <div className='queryLine'>
+            {'Error: please select a query to run.'}
           </div>
-          <div className="queryLine">
-            {tab}{"id"} 
-          </div>
-          <div className="queryLine">
-            {tab}{"name"} 
-          </div>
-          <div className="queryLine">
-            {tab}{"population"} 
-          </div>
-          <div className="queryLine">
-            {tab}{"country_id"} 
-          </div>
-          <div className="queryLine">
-            {space}{space}{cb}
-          </div>
-          <div className="queryLine">{cb}</div>
         </div>
       </>
     );
-    }  
-
-    if (theQuery === "simple query for attractions") {
-  return (
-    <>
-      <div className="query-div">
-        <div className="queryLine">{ob}</div>
-        <div className="queryLine">
-          {space}{space}{'attractions'} {ob}
-        </div>
-        <div className="queryLine">
-          {tab}{"id"} 
-        </div>
-        <div className="queryLine">
-          {tab}{"name"} 
-        </div>
-        <div className="queryLine">
-          {tab}{"city_id"} 
-        </div>
-        <div className="queryLine">
-          {space}{space}{cb}
-        </div>
-        <div className="queryLine">{cb}</div>
-      </div>
-    </>
-  );
   }
 
-  if (theQuery === "simple query for countries") {
+  if (theQuery === 'Simple Query For Characters') {
     return (
       <>
-        <div className="query-div">
-          <div className="queryLine">{ob}</div>
-          <div className="queryLine">
-            {space}{space}{'countries'} {ob}
+        <div className='query-div'>
+          <div className='queryLine'>{ob}</div>
+          <div className='queryLine'>
+            {space}
+            {space}
+            {'getCharacters'} {ob}
           </div>
-          <div className="queryLine">
-            {tab}{"id"} 
+          <div className='queryLine'>
+            {tab}
+            {'name'}
           </div>
-          <div className="queryLine">
-            {tab}{"name"} 
+          <div className='queryLine'>
+            {tab}
+            {'_id'}
           </div>
-          <div className="queryLine">
-            {space}{space}{cb}
+          <div className='queryLine'>
+            {space}
+            {space}
+            {cb}
           </div>
-          <div className="queryLine">{cb}</div>
+          <div className='queryLine'>{cb}</div>
         </div>
       </>
     );
-    }
+  }
+
+  if (theQuery === 'Simple Query For Planets') {
+    return (
+      <>
+        <div className='query-div'>
+          <div className='queryLine'>{ob}</div>
+          <div className='queryLine'>
+            {space}
+            {space}
+            {'getPlanets'} {ob}
+          </div>
+          <div className='queryLine'>
+            {tab}
+            {'name'}
+          </div>
+          <div className='queryLine'>
+            {tab}
+            {'_id'}
+          </div>
+          <div className='queryLine'>
+            {tab}
+            {'diameter'}
+          </div>
+          <div className='queryLine'>
+            {tab}
+            {'climate'}
+          </div>
+          <div className='queryLine'>
+            {space}
+            {space}
+            {cb}
+          </div>
+          <div className='queryLine'>{cb}</div>
+        </div>
+      </>
+    );
+  }
+
+  if (theQuery === 'Simple Query For Species') {
+    return (
+      <>
+        <div className='query-div'>
+          <div className='queryLine'>{ob}</div>
+          <div className='queryLine'>
+            {space}
+            {space}
+            {'getSpecies'} {ob}
+          </div>
+          <div className='queryLine'>
+            {tab}
+            {'name'}
+          </div>
+          <div className='queryLine'>
+            {tab}
+            {'_id'}
+          </div>
+          <div className='queryLine'>
+            {tab}
+            {'classification'}
+          </div>
+          <div className='queryLine'>
+            {tab}
+            {'average_height'}
+          </div>
+          <div className='queryLine'>
+            {tab}
+            {'average_lifespan'}
+          </div>
+          <div className='queryLine'>
+            {space}
+            {space}
+            {cb}
+          </div>
+          <div className='queryLine'>{cb}</div>
+        </div>
+      </>
+    );
+  }
+
+  if (theQuery === 'Simple Query For Vessels') {
+    return (
+      <>
+        <div className='query-div'>
+          <div className='queryLine'>{ob}</div>
+          <div className='queryLine'>
+            {space}
+            {space}
+            {'getVessels'} {ob}
+          </div>
+          <div className='queryLine'>
+            {tab}
+            {'name'}
+          </div>
+          <div className='queryLine'>
+            {tab}
+            {'_id'}
+          </div>
+          <div className='queryLine'>
+            {tab}
+            {'manufacturer'}
+          </div>
+          <div className='queryLine'>
+            {tab}
+            {'model'}
+          </div>
+          <div className='queryLine'>
+            {tab}
+            {'vessel_type'}
+          </div>
+          <div className='queryLine'>
+            {space}
+            {space}
+            {cb}
+          </div>
+          <div className='queryLine'>{cb}</div>
+        </div>
+      </>
+    );
+  }
 
   //book;
-  if (theQuery === "simple query with argument") {
+  if (theQuery === 'simple query with argument') {
     return (
       <>
-        <div className="query-div">
-          <div className="queryLine">{ob}</div>
-          <div className="queryLine">
-            {space}{space}{'book(id: "5")'} {ob}
+        <div className='query-div'>
+          <div className='queryLine'>{ob}</div>
+          <div className='queryLine'>
+            {space}
+            {space}
+            {'getCharacter(id: "1")'} {ob}
           </div>
-          <div className="queryLine">
-            {tab}{"id"} 
+          <div className='queryLine'>
+            {tab}
+            {'name'}
           </div>
-          <div className="queryLine">
-            {tab}{"name"} 
+          <div className='queryLine'>
+            {tab}
+            {'_id'}
           </div>
-          <div className="queryLine">
-            {tab}{"author"} 
+          <div className='queryLine'>
+            {tab}
+            {'gender'}
           </div>
-          <div className="queryLine">
-            {space}{space}{cb}
+          <div className='queryLine'>
+            {space}
+            {space}
+            {cb}
           </div>
-          <div className="queryLine">{cb}</div>
-        </div>
-      </>
-    );
-    }
-    //attractions;
-    if (theQuery === "simple query with argument and alias") {
-      return (
-        <>
-          <div className="query-div">
-            <div className="queryLine">{ob}</div>
-            <div className="queryLine">
-              {space}{space}{'SevenMileBeach: attraction(id: "29")'} {ob}
-            </div>
-            <div className="queryLine">
-              {tab}{"id"} 
-            </div>
-            <div className="queryLine">
-              {tab}{"name"} 
-            </div>
-            <div className="queryLine">
-              {tab}{"city_id"} 
-            </div>
-            <div className="queryLine">
-              {space}{space}{cb}
-            </div>
-            <div className="queryLine">{cb}</div>
-          </div>
-        </>
-      );
-      } 
-    //cities;
-  if (theQuery === "multiple queries") {
-    return (
-      <>
-        <div className="query-div" id="smaller-text">
-          <div className="queryLine">{ob}</div>
-          <div className="queryLine">
-            {space}{space}{'Metsaven: city(id: "15")'} {ob}
-          </div>
-          <div className="queryLine">
-            {tab}{"id"} 
-          </div>
-          <div className="queryLine">
-            {tab}{"name"} 
-          </div>
-          <div className="queryLine">
-            {tab}{"population"} 
-          </div>
-          <div className="queryLine">
-            {space}{space}{cb}
-          </div>
-          <div className="queryLine">
-            {space}{space}{'Capitona: city(id: "9")'} {ob}
-          </div>
-          <div className="queryLine">
-            {tab}{"id"} 
-          </div>
-          <div className="queryLine">
-            {tab}{"name"} 
-          </div>
-          <div className="queryLine">
-            {tab}{"population"} 
-          </div>
-          <div className="queryLine">
-            {space}{space}{cb}
-          </div>
-          <div className="queryLine">{cb}</div>
+          <div className='queryLine'>{cb}</div>
         </div>
       </>
     );
   }
-
+  //attractions;
+  if (theQuery === 'simple query with argument and alias') {
+    return (
+      <>
+        <div className='query-div'>
+          <div className='queryLine'>{ob}</div>
+          <div className='queryLine'>
+            {space}
+            {space}
+            {'LeiaOrgana:getCharacter(_id:"5")'} {ob}
+          </div>
+          <div className='queryLine'>
+            {tab}
+            {'name'}
+          </div>
+          <div className='queryLine'>
+            {tab}
+            {'gender'}
+          </div>
+          <div className='queryLine'>
+            {tab}
+            {'birth_year'}
+          </div>
+          <div className='queryLine'>
+            {space}
+            {space}
+            {cb}
+          </div>
+          <div className='queryLine'>{cb}</div>
+        </div>
+      </>
+    );
+  }
   //cities;
-  if (theQuery === "fragment") {
+  if (theQuery === 'multiple queries') {
     return (
       <>
-        <div className="query-div" id="smaller-text">
-          <div className="queryLine">{ob}</div>
-          <div className="queryLine">
-            {space}{space}{'Seoul: city(id: "24")'} {ob}
+        <div className='query-div' id='smaller-text'>
+          <div className='queryLine'>{ob}</div>
+          <div className='queryLine'>
+            {space}
+            {space}
+            {'LukeSkywalker:getCharacter(_id:"1")'} {ob}
           </div>
-          <div className="queryLine">
-            {tab}{"...fields"} 
+          <div className='queryLine'>
+            {tab}
+            {'name'}
           </div>
-          <div className="queryLine">
-            {space}{space}{cb}
+          <div className='queryLine'>
+            {tab}
+            {'gender'}
           </div>
-          <div className="queryLine">{cb}</div>
+          <div className='queryLine'>
+            {space}
+            {space}
+            {cb}
+          </div>
+          <div className='queryLine'>
+            {space}
+            {space}
+            {'LeiaOrgana:getCharacter(_id:"5")'} {ob}
+          </div>
+          <div className='queryLine'>
+            {tab}
+            {'name'}
+          </div>
+          <div className='queryLine'>
+            {tab}
+            {'gender'}
+          </div>
 
-          <div className="queryLine">{ob}</div>
-          <div className="queryLine">
-            {space}{space}{'Uiwang: city(id: "25")'} {ob}
+          <div className='queryLine'>
+            {space}
+            {space}
+            {cb}
           </div>
-          <div className="queryLine">
-            {tab}{"...fields"} 
-          </div>
-          <div className="queryLine">
-            {space}{space}{cb}
-          </div>
-          <div className="queryLine">{cb}</div>
-
-          <div className="queryLine">{ob}</div>
-          <div className="queryLine">
-            {space}{space}{'Incheon: city(id: "26")'} {ob}
-          </div>
-          <div className="queryLine">
-            {tab}{"...fields"} 
-          </div>
-          <div className="queryLine">
-            {space}{space}{cb}
-          </div>
-          <div className="queryLine">{cb}</div>
-
-          <div className="queryLine">{tab}</div>
-          <div className="queryLine">
-          {'fragment fields on Cities'} {ob}
-          </div>
-          <div className="queryLine">
-            {tab}{"name"} 
-          </div>
-          <div className="queryLine">
-            {tab}{"population"} 
-          </div>
-          <div className="queryLine">
-            {tab}{"country_id"} 
-          </div>
-          <div className="queryLine">{cb}</div>
-        </div>
-      </>
-    );
-    }
-    
-    
-  if (theQuery === "add mutation") {
-    return (
-      <>
-        <div className="query-div">
-          <div className="queryLine">{ob}</div>
-          <div className="queryLine">
-            {space}{space}{'addbook'}
-          </div>
-          <div>
-            {tab}{op}
-          </div>
-          <div className="queryLine">
-            {tab}{space}{space}{'name: "Jinhee is cooler than Tim"'}
-          </div>
-          <div className="queryLine">
-            {tab}{space}{space}{'author: "Jinhee Choi"'}
-          </div>
-          <div className="queryLine">
-            {tab}{space}{space}{'shelf_id: "1"'}
-          </div>
-          <div className="queryLine">
-            {tab}{cp}
-          </div>
-          <div>
-            {tab}{ob}
-          </div>
-          <div className="queryLine">
-            {tab}{space}{space}{"id"} 
-          </div>
-          <div className="queryLine">
-            {tab}{space}{space}{"name"} 
-          </div>
-          <div className="queryLine">
-            {tab}{space}{space}{"author"} 
-          </div>
-          <div className="queryLine">
-            {tab}{space}{space}{"shelf_id"} 
-          </div>
-          <div className="queryLine">
-            {tab}{cb}
-          </div>
-          <div className="queryLine">{cb}</div>
+          <div className='queryLine'>{cb}</div>
         </div>
       </>
     );
   }
 
-  if (theQuery === "update mutation") {
+  //characters;
+  if (theQuery === 'fragment') {
     return (
       <>
-        <div className="query-div">
-          <div className="queryLine">{ob}</div>
-          <div className="queryLine">
-            {space}{space}{'changeBooksByAuthor'}
+        <div className='query-div' id='smaller-text'>
+          <div className='queryLine'>{ob}</div>
+          <div className='queryLine'>
+            {space}
+            {space}
+            {'LukeSkywalker:getCharacter(_id:"1")'} {ob}
           </div>
-          <div>
-            {tab}{op}
+          <div className='queryLine'>
+            {tab}
+            {'...phenoTypes'}
           </div>
-          <div className="queryLine">
-            {tab}{space}{space}{'name: "No, Tim is cooler than Jinhee"'}
+          <div className='queryLine'>
+            {space}
+            {space}
+            {cb}
           </div>
-          <div className="queryLine">
-            {tab}{space}{space}{'author: "Jinhee Choi"'}
+          <div className='queryLine'>{cb}</div>
+
+          <div className='queryLine'>{ob}</div>
+          <div className='queryLine'>
+            {space}
+            {space}
+            {'LeiaOrgana:getCharacter(_id:"5")'} {ob}
           </div>
-          <div className="queryLine">
-            {tab}{cp}
+          <div className='queryLine'>
+            {tab}
+            {'...phenoTypes'}
           </div>
-          <div>
-            {tab}{ob}
+          <div className='queryLine'>
+            {space}
+            {space}
+            {cb}
           </div>
-          <div className="queryLine">
-            {tab}{space}{space}{"id"} 
+          <div className='queryLine'>{cb}</div>
+
+          <div className='queryLine'>{tab}</div>
+          <div className='queryLine'>
+            {'fragment phenoTypes on Character'} {ob}
           </div>
-          <div className="queryLine">
-            {tab}{space}{space}{"name"} 
+          <div className='queryLine'>
+            {tab}
+            {'hair_color'}
           </div>
-          <div className="queryLine">
-            {tab}{space}{space}{"author"} 
+          <div className='queryLine'>
+            {tab}
+            {'skin_color'}
           </div>
-          <div className="queryLine">
-            {tab}{space}{space}{"shelf_id"} 
+          <div className='queryLine'>
+            {tab}
+            {'eye_color'}
           </div>
-          <div className="queryLine">
-            {tab}{cb}
-          </div>
-          <div className="queryLine">{cb}</div>
+          <div className='queryLine'>{cb}</div>
         </div>
       </>
     );
   }
 
-  if (theQuery === "delete mutation") {
+  if (theQuery === 'add mutation') {
     return (
       <>
-        <div className="query-div">
-          <div className="queryLine">{ob}</div>
-          <div className="queryLine">
-            {space}{space}{'deleteBooksByName'}
+        <div className='query-div'>
+          <div className='queryLine'>{ob}</div>
+          <div className='queryLine'>
+            {space}
+            {space}
+            {'createCharacter'}
           </div>
           <div>
-            {tab}{op}
+            {tab}
+            {op}
           </div>
-          <div className="queryLine">
-            {tab}{space}{space}{'name: "No, Tim is cooler than Jinhee"'}
+          <div className='queryLine'>
+            {tab}
+            {space}
+            {space}
+            {'name: "Blade The Daywalker"'}
           </div>
-          <div className="queryLine">
-            {tab}{cp}
+          <div className='queryLine'>
+            {tab}
+            {cp}
           </div>
           <div>
-            {tab}{ob}
+            {tab}
+            {ob}
           </div>
-          <div className="queryLine">
-            {tab}{space}{space}{"id"} 
+          <div className='queryLine'>
+            {tab}
+            {space}
+            {space}
+            {'_id'}
           </div>
-          <div className="queryLine">
-            {tab}{space}{space}{"name"} 
+          <div className='queryLine'>
+            {tab}
+            {space}
+            {space}
+            {'name'}
           </div>
-          <div className="queryLine">
-            {tab}{space}{space}{"author"} 
+          <div className='queryLine'>
+            {tab}
+            {cb}
           </div>
-          <div className="queryLine">
-            {tab}{space}{space}{"shelf_id"} 
+          <div className='queryLine'>{cb}</div>
+        </div>
+      </>
+    );
+  }
+
+  if (theQuery === 'update mutation') {
+    return (
+      <>
+        <div className='query-div'>
+          <div className='queryLine'>{ob}</div>
+          <div className='queryLine'>
+            {space}
+            {space}
+            {'updateCharacter'}
           </div>
-          <div className="queryLine">
-            {tab}{cb}
+          <div>
+            {tab}
+            {op}
           </div>
-          <div className="queryLine">{cb}</div>
+          <div className='queryLine'>
+            {tab}
+            {space}
+            {space}
+            {'_id: 241'}
+          </div>
+          <div className='queryLine'>
+            {tab}
+            {space}
+            {space}
+            {'name: "Max Payne"'}
+          </div>
+          <div className='queryLine'>
+            {tab}
+            {cp}
+          </div>
+          <div>
+            {tab}
+            {ob}
+          </div>
+          <div className='queryLine'>
+            {tab}
+            {space}
+            {space}
+            {'_id'}
+          </div>
+          <div className='queryLine'>
+            {tab}
+            {space}
+            {space}
+            {'name'}
+          </div>
+
+          <div className='queryLine'>
+            {tab}
+            {cb}
+          </div>
+          <div className='queryLine'>{cb}</div>
+        </div>
+      </>
+    );
+  }
+
+  if (theQuery === 'delete mutation') {
+    return (
+      <>
+        <div className='query-div'>
+          <div className='queryLine'>{ob}</div>
+          <div className='queryLine'>
+            {space}
+            {space}
+            {'deleteCharacter'}
+          </div>
+          <div>
+            {tab}
+            {op}
+          </div>
+          <div className='queryLine'>
+            {tab}
+            {space}
+            {space}
+            {'_id: "241"'}
+          </div>
+          <div className='queryLine'>
+            {tab}
+            {cp}
+          </div>
+          <div>
+            {tab}
+            {ob}
+          </div>
+          <div className='queryLine'>
+            {tab}
+            {space}
+            {space}
+            {'_id'}
+          </div>
+          <div className='queryLine'>
+            {tab}
+            {space}
+            {space}
+            {'name'}
+          </div>
+          <div className='queryLine'>
+            {tab}
+            {cb}
+          </div>
+          <div className='queryLine'>{cb}</div>
         </div>
       </>
     );
   }
 };
-
 
 export default Query;

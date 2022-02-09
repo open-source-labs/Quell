@@ -2,6 +2,8 @@ const { parse } = require('graphql/language/parser');
 const parseAST = require('./helpers/parseAST');
 // const normalizeForSessionCache = require("./helpers/normalizeForSessionCache");
 
+const mapGenerator = require('./helpers/mapGenerator');
+
 const {
   lokiClientCache,
   normalizeForLokiCache,
@@ -30,86 +32,6 @@ const defaultOptions = {
   },
 };
 
-const mapGenerator = async (endpoint) => {
-  //for queryTypeMap
-
-  console.log('in map generator');
-
-  const mapGeneratorForQueryAndMutation = async (endpoint, query, isQuery) => {
-    const obj = {};
-
-    const fetchOptions = {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ query: query }),
-    };
-
-    const serverResponse = await fetch(endpoint, fetchOptions);
-    const parsedData = await serverResponse.json();
-
-    let fieldsArray;
-    if (isQuery) {
-      fieldsArray = parsedData.data.__schema.queryType.fields;
-    } else {
-      fieldsArray = parsedData.data.__schema.mutationType.fields;
-    }
-
-    for (let types of fieldsArray) {
-      let queryType = types.name;
-      let queryTypeValue = types.type.name;
-      obj[queryType] = queryTypeValue;
-    }
-
-    return obj;
-  };
-
-  const queryForQueryType = `{
-__schema{
-  queryType{
-    fields{
-        name
-        type {
-          name
-        }
-      }
-    }
-  }
-}`;
-
-  const queryForMutationMap = `{
-__schema{
-  mutationType{
-    fields{
-        name
-        type {
-          name
-        }
-      }
-    }
-  }
-}`;
-
-  const queryTypeMap = await mapGeneratorForQueryAndMutation(
-    endpoint,
-    queryForQueryType,
-    true
-  );
-
-  const mutationMap = await mapGeneratorForQueryAndMutation(
-    endpoint,
-    queryForMutationMap,
-    false
-  );
-
-  const responseObject = Object.assign({}, { mutationMap }, { queryTypeMap });
-
-  console.log(responseObject);
-
-  // return responseObject;
-};
-
 /**
  * Quellify replaces the need for front-end developers who are using GraphQL to communicate with their servers
  * to write fetch requests. Quell provides caching functionality that a normal fetch request would not provide.
@@ -129,26 +51,27 @@ __schema{
  *  @param {object} userOptions - JavaScript object with customizable properties (note: this feature is still in development, please see defaultOptions for an example)
  */
 
-async function Quellify(
-  endPoint,
-  query,
-  mutationMap,
-  map,
-  queryTypeMap,
-  userOptions
-) {
-  //by using passed in schema param , generate belowthere schema
-  // let memoize={};
+async function Quellify(endPoint, query, maps, userOptions = {}) {
+  // const memoize = (func) => {
+  //   const results = {};
+  //   return async (...args) => {
+  //     const argsKey = JSON.stringify(args);
+  //     if (!results[argsKey]) {
+  //       results[argsKey] = func(...args);
+  //     }
+  //     return results[argsKey];
+  //   };
+  // };
 
-  // if(memoize[getmutationMap]){
-  //   return memoize[getmutationMap];
-  // }else{
-  //   getmutationMap()
-  // }
+  // const memoizedMapGenerator = memoize(mapGenerator);
+  // const { map, queryTypeMap, mutationMap } = await mapGenerator(endPoint);
 
-  // mutationMap
-  // queryTypeMap
-  // map
+  //mapGenerator to generate mutationMap,map,queryTypeMap
+  const { map, queryTypeMap, mutationMap } = maps;
+
+  console.log(map);
+  console.log(queryTypeMap);
+  console.log(mutationMap);
 
   // merge defaultOptions with userOptions
   // defaultOptions will supply any necessary options that the user hasn't specified
@@ -182,6 +105,8 @@ async function Quellify(
 
   //create proto, operationType, and frags using parseAST
   const { proto, operationType, frags } = parseAST(AST, options);
+
+  console.log('line 186', proto, operationType, frags);
 
   // pass-through for queries and operations that QuellCache cannot handle
   if (operationType === 'unQuellable') {

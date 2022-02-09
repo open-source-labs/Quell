@@ -11,9 +11,40 @@ type Character{
   eye_color: String!
   birth_year: String!
   gender: String!
-  fetchTime: String!
 }
 
+type Planet{
+ _id: ID!
+  name: String
+  rotation_period: Int!
+  orbital_period: Int!
+  diameter: Int
+  climate: String
+  gravity: String!
+  terrain: String!
+}
+
+type Species{
+ _id: ID!
+  name: String!
+  classification: String!
+  average_height: String!
+  average_lifespan: String!
+  hair_colors: String!
+  skin_colors: String!
+  eye_colors: String!
+}
+
+type Vessel{
+ _id: ID!
+  name: String!
+  manufacturer: String
+  model: String!
+  vessel_type: String!
+  vessel_class: String!
+  length: String!
+  crew: Int!
+}
 
 type Mutation{
   createCharacter(name: String!): Character
@@ -23,6 +54,9 @@ type Mutation{
 type Query {
   getCharacter(_id: ID!): Character
   getCharacters:[Character!]!
+  getPlanets:[Planet!]!
+  getSpecies:[Species!]!
+  getVessels:[Vessel!]!
 }
 
 

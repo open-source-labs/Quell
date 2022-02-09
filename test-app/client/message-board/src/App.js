@@ -47,12 +47,16 @@ function App() {
     //   }),
     // });
 
-    const query = `query {
-      getCharacter(_id: ${_id}){
-        _id
-       name
-      }
-     }`;
+    const query = `{
+  LukeSkywalker:getCharacter(_id:1){
+    name
+    gender
+  }
+   LeiaOrgana:getCharacter(_id:5){
+    name
+    gender
+  }
+}`;
 
     const parsedResponse = await Quellify(
       'http://localhost:3434/graphql',
