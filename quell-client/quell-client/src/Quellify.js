@@ -1,10 +1,8 @@
 const { parse } = require('graphql/language/parser');
 const parseAST = require('./helpers/parseAST');
 // const normalizeForSessionCache = require("./helpers/normalizeForSessionCache");
-//hello world
-//test
-//fdsa
-//one more test
+
+const mapGenerator = require('./helpers/mapGenerator');
 
 const {
   lokiClientCache,
@@ -53,18 +51,19 @@ const defaultOptions = {
  *  @param {object} userOptions - JavaScript object with customizable properties (note: this feature is still in development, please see defaultOptions for an example)
  */
 
-async function Quellify(
-  endPoint,
-  query,
-  mutationMap,
-  map,
-  queryTypeMap,
-  userOptions
-) {
+async function Quellify(endPoint, query, map, userOptions = {}) {
   // merge defaultOptions with userOptions
   // defaultOptions will supply any necessary options that the user hasn't specified
+
+  // mapGenerator  is used to generate mutationMap, map and queryTypeMap, these were all required inputs prior to the latest revision.
+  const { map, queryTypeMap, mutationMap } = maps;
+
   const options = { ...defaultOptions, ...userOptions };
-  let isMutation = false;
+  let typeOfOperation = {
+    isMutation: false,
+    typeOfMutation: '',
+  };
+
   // iterate over map to create all lowercase map for consistent caching
   for (const props in map) {
     const value = map[props].toLowerCase();

@@ -14,11 +14,15 @@ import Header from '../images/headers/QUELL-headers-demo w lines.svg';
 import DropDown from '../images/buttons/dropdown-button.svg';
 import DropDownHover from '../images/buttons/dropdown-button-hover.svg';
 
-// import {Quellify as QuellModule, lokiClientCache as lokiClientCacheModule } from '@quell/client';
+import {
+  Quellify as QuellModule,
+  lokiClientCache as lokiClientCacheModule,
+  mapGenerator as mapGeneratorModule,
+} from '@quell/client';
 import {
   Quellify as QuellDev,
   lokiClientCache as lokiClientCacheDev,
-  mapGenerator,
+  mapGenerator as mapGeneratorDev,
 } from '../../../../test-app/client/message-board/src/quell-client/src/Quellify.js';
 
 const Quell = process.env.NODE_ENV === 'development' ? QuellDev : QuellModule;
@@ -48,17 +52,6 @@ const Demo = () => {
     return time.toFixed(2) + ' ms';
   };
 
-  // Here We are Trying to make the response from our mapGenerator function persist after the fetch request
-  //
-  // maps.then(res)
-  // const maps = new Promise((resolve, reject) => {
-  //   setTimeout(() => {
-  //     resolve(mapGenerator('http://localhost:3434/graphql'));
-  //   }, 1000);
-  // });
-  // //  const maps = await mapGenerator('http://localhost:3434/graphql');
-  // maps.then((res) => console.log(res));
-  // console.log('line 60:', maps);
   // ====================================================================== //
   // ======= Functionality to close dropdowns when clicking outside ======= //
   // ====================================================================== //
@@ -105,47 +98,36 @@ const Demo = () => {
 
   const selectQuery = (selection) => {
     if (selection === 'Simple Query For Characters') {
-      // setSelectedQuery('1');
       displaySimpleQueryForCharacters();
     }
     if (selection === 'Simple Query For Planets') {
-      // setSelectedQuery('2');
       displaySimpleQueryForPlanets();
     }
     if (selection === 'Simple Query For Species') {
-      // setSelectedQuery('3');
       displaySimpleQueryForSpecies();
     }
     if (selection === 'Simple Query For Vessels') {
-      // setSelectedQuery('4');
       displaySimpleQueryForVessels();
     }
     if (selection === 'Simple Query With Argument') {
-      // setSelectedQuery('5');
       displaySimpleQueryWithArg();
     }
     if (selection === 'Alias') {
-      // setSelectedQuery('6');
       displaySimpleQueryWithArgAndAlias();
     }
     if (selection === 'Multiple Queries') {
-      // setSelectedQuery('7');
       displayMultipleQueries();
     }
     if (selection === 'Fragment') {
-      // setSelectedQuery('8');
       displayFragment();
     }
     if (selection === 'Add Mutation') {
-      // setSelectedQuery('9');
       displayAddMutation();
     }
     if (selection === 'Update Mutation') {
-      // setSelectedQuery('10');
       displayUpdateMutation();
     }
     if (selection === 'Delete Mutation') {
-      // setSelectedQuery('11');
       displayDeleteMutation();
     }
     // Close dropdown

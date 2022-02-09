@@ -1,5 +1,7 @@
 const express = require('express');
-const schema = require('./schema/schema');
+// const schema = require('./schema/schema');
+const graphqlSchema = require('./schema/schemas');
+const graphqlResolvers = require('./resolvers/message');
 const path = require('path');
 const graphqlNodeModule =
   process.env.NODE_ENV === 'development'
@@ -9,12 +11,12 @@ const QuellCache = require(graphqlNodeModule);
 
 // Express instance
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 3434;
 
 // Instantiate cache GraphQL middleware
 const redisPort =
   process.env.NODE_ENV === 'production' ? process.env.REDIS_URL : 6379;
-const quellCache = new QuellCache(schema, redisPort, 1200);
+const quellCache = new QuellCache(graphqlSchema, redisPort, 1200);
 
 // middleware that adds quellCache to request/response object?
 
