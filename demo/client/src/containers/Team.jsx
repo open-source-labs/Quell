@@ -20,11 +20,42 @@ import Tim from "../images/profile_pics/QUELL-headshot w border-Tim.png";
 import Chang from "../images/profile_pics/QUELL-headshot w border-Chang.png";
 import Josh from "../images/profile_pics/QUELL-headshot w border-Josh.png";
 import Robert from "../images/profile_pics/QUELL-headshot w border-Robert.png";
-
+import DavidLopez from "../images/profile_pics/QUELL-headshot w border-DavidLopez.png";
+import IdanMichael from "../images/profile_pics/QUELL-headshot w border-IdanMichael.png";
+import SercanTuna from "../images/profile_pics/QUELL-headshot w border-SercanTuna.png";
+import ThomasPryor from "../images/profile_pics/QUELL-headshot w border-ThomasPryor.png";
 /* 
   Component to generate each teams section
 */
 
+const davidLopez = {
+  name: "David Lopez",
+  src: DavidLopez,
+  bio: "David is a fullstack software engineer with experience in React,Redux, GraphQL, Node.JS and Express. He takes pride in the software engineering community's culture of knowledge sharing and collaboration. When he is not at his desk, he’s probably in the garage, working on one of his project cars, brewing beer, or in the kitchen pursuing that perfect bowl of ramen.",
+  linkedin: "http://www.linkedin.com/in/david-michael-lopez/",
+  github: "https://github.com/DavidMPLopez",
+};
+const idanMichael = {
+  name: "Idan Michael",
+  src: IdanMichael,
+  bio: "Idan is a full-stack software engineer with experience in Express, React and several database models. His goal with Quell is to scale the caching algorithms to create a more thorough caching platform. In his free time he likes to practice Brazilian Jiu Jitsu and watch movies.",
+  linkedin: "https://www.linkedin.com/in/idanmichael/",
+  github: "https://github.com/IdanMichael",
+};
+const sercanTuna = {
+  name: "Sercan Tuna",
+  src: SercanTuna,
+  bio: "Sercan is a full stack software engineer specializing in React , Nodejs ,Express and GraphQl . He has particular interest in user interface and performance optimization , and passionate about contributing to the open-source community . In his spare time , he can be found playing tennis , watching soccer and traveling .",
+  linkedin: "https://www.linkedin.com/in/sercantuna/",
+  github: "https://github.com/srcntuna",
+};
+const thomasPryor = {
+  name: "Thomas Pryor",
+  src: ThomasPryor,
+  bio: "Tom Pryor is a software engineer who also enjoys playing guitar and video games in between coding full-stack projects! Everything from Express on the back end to React on the front end!",
+  linkedin: "https://www.linkedin.com/in/thomas-pryor-639347b2",
+  github: "https://github.com/Turmbeoz",
+};
 const robert = {
   name: "Robert Howton",
   src: Robert,
@@ -183,7 +214,34 @@ const Team = () => {
     <>
       <img id="team-quell" src={Header}></img>
       <div id="team">
-
+      <TeamMember
+          src={davidLopez.src}
+          bio={davidLopez.bio}
+          name={davidLopez.name}
+          linkedin={davidLopez.linkedin}
+          github={davidLopez.github}
+        />
+        <TeamMember
+          src={idanMichael.src}
+          bio={idanMichael.bio}
+          name={idanMichael.name}
+          linkedin={idanMichael.linkedin}
+          github={idanMichael.github}
+        />
+      <TeamMember
+          src={sercanTuna.src}
+          bio={sercanTuna.bio}
+          name={sercanTuna.name}
+          linkedin={sercanTuna.linkedin}
+          github={sercanTuna.github}
+        />
+        <TeamMember
+        src={thomasPryor.src}
+        bio={thomasPryor.bio}
+        name={thomasPryor.name}
+        linkedin={thomasPryor.linkedin}
+        github={thomasPryor.github}
+      />
         <TeamMember
           src={robert.src}
           bio={robert.bio}
