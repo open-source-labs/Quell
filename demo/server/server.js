@@ -1,15 +1,21 @@
 const express = require('express');
 const schema = require('./schema/schema');
+const { graphqlHTTP } = require('express-graphql');
+const { graphql } = require('../../quell-server/node_modules/graphql');
+
 const path = require('path');
 const graphqlNodeModule =
   process.env.NODE_ENV === 'development'
     ? '../../quell-server/src/quell'
     : '@quell/server';
 const QuellCache = require(graphqlNodeModule);
+const cors = require('cors');
 
 // Express instance
 const app = express();
 const PORT = process.env.PORT || 3000;
+
+app.use(cors());
 
 // Instantiate cache GraphQL middleware
 const redisPort =
@@ -37,10 +43,29 @@ app.get('/clearCache', quellCache.clearCache, (req, res) => {
   return res.status(200).send('Redis cache successfully cleared');
 });
 
-// GraphQL route
+// Graphql with server side caching
 app.use('/graphql', quellCache.query, (req, res) => {
+
   return res.status(200).send(res.locals.queryResponse);
 });
+
+// GraphQL client route
+// app.use('/graphql', (req, res) => {
+//   const queryString = req.body.query;
+
+//   graphql(schema, queryString)
+//     .then((result) => {
+//       res.json(result);
+//     })
+//     .catch((error) => {
+
+//     });
+// });
+
+// app.use('/graphql', (req, res) => {
+
+//   return res.status(200).send(res.locals.queryResponse);
+// });
 
 // Catch-all endpoint handler
 app.use((req, res) => {

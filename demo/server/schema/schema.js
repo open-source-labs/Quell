@@ -115,7 +115,7 @@ const RootQuery = new GraphQLObjectType({
   fields: {
     // GET COUNTRY BY ID
     country: {
-      type: CountryType,
+      type: new GraphQLList(CountryType),
       args: { id: { type: GraphQLID } },
       async resolve(parent, args) {
         const country = await db.query(
@@ -124,7 +124,7 @@ const RootQuery = new GraphQLObjectType({
           [Number(args.id)]
         );
 
-        return country.rows[0];
+        return country.rows;
       },
     },
     // GET ALL COUNTRIES
@@ -154,7 +154,7 @@ const RootQuery = new GraphQLObjectType({
     },
     // GET CITY BY ID
     city: {
-      type: CityType,
+      type: new GraphQLList(CityType),
       args: { id: { type: GraphQLID } },
       async resolve(parent, args) {
         const city = await db.query(
@@ -162,8 +162,7 @@ const RootQuery = new GraphQLObjectType({
           SELECT * FROM cities WHERE id=$1`,
           [Number(args.id)]
         );
-
-        return city.rows[0];
+        return city.rows;
       },
     },
     // GET ALL CITIES
@@ -192,7 +191,7 @@ const RootQuery = new GraphQLObjectType({
     },
     // GET ATTRACTION BY ID
     attraction: {
-      type: AttractionType,
+      type: new GraphQLList(AttractionType),
       args: { id: { type: GraphQLID } },
       async resolve(parent, args) {
         const attraction = await db.query(
@@ -201,7 +200,7 @@ const RootQuery = new GraphQLObjectType({
           [Number(args.id)]
         );
 
-        return attraction.rows[0];
+        return attraction.rows;
       },
     },
     // GET ALL ATTRACTIONS
@@ -224,13 +223,13 @@ const RootQuery = new GraphQLObjectType({
     },
     // GET BOOK BY ID
     book: {
-      type: BookType,
+      type: new GraphQLList(BookType),
       args: { id: { type: GraphQLID } },
       async resolve(parent, args) {
         const book = await dbBooks.query(`SELECT * FROM books WHERE id=$1`, [
           Number(args.id),
         ]);
-        return book.rows[0];
+        return book.rows;
       },
     },
     // GET ALL BOOKSHELVES
@@ -245,7 +244,7 @@ const RootQuery = new GraphQLObjectType({
     },
     // GET SHELF BY ID
     bookShelf: {
-      type: BookShelfType,
+      type: new GraphQLList(BookShelfType),
       args: { id: { type: GraphQLID } },
       async resolve(parent, args) {
         const bookShelf = await dbBooks.query(
@@ -253,7 +252,7 @@ const RootQuery = new GraphQLObjectType({
           [Number(args.id)]
         );
 
-        return bookShelf.rows[0];
+        return bookShelf.rows;
       },
     },
   },
@@ -332,7 +331,7 @@ const RootMutation = new GraphQLObjectType({
     // delete book by author
     deleteBooksByAuthor: {
       type: BookType,
-      args: { 
+      args: {
         author: { type: new GraphQLNonNull(GraphQLID) },
       },
       async resolve(parent, args) {

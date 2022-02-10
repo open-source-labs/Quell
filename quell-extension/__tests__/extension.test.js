@@ -17,8 +17,6 @@ import userEvent from '@testing-library/user-event';
 // import Settings from '../src/pages/Panel/Components/Settings';
 import { act } from 'react-dom/test-utils';
 
-
-
 enableFetchMocks();
 
 //workaround for TypeError: range(...).getBoundingClientRect is not a function
@@ -31,31 +29,35 @@ document.createRange = () => {
     return {
       item: () => null,
       length: 0,
-      [Symbol.iterator]: jest.fn()
+      [Symbol.iterator]: jest.fn(),
     };
   };
 
   return range;
-}
+};
 
-xdescribe('App', () => {
+describe('App', () => {
   it('renders App component correctly', () => {
-    fetch.mockResponseOnce(JSON.stringify({ "data": {
-      "__schema": { "types": [{"name": "String"}]}}}))
+    fetch.mockResponseOnce(
+      JSON.stringify({
+        data: {
+          __schema: { types: [{ name: 'String' }] },
+        },
+      })
+    );
     render(<App />);
 
     const tabs = screen.queryAllByRole('button', /tab/i);
     expect(tabs).toHaveLength(10);
-  })
+  });
 
   it('renders correct component when tab is clicked', () => {
     const app = render(<App />);
-    const querybtn = app.container.querySelector('#queryButton')
+    const querybtn = app.container.querySelector('#queryButton');
     const networkbtn = app.container.querySelector('#networkButton');
-    const cachebtn = app.container.querySelector('#cacheButton')
-    const settingsbtn = app.container.querySelector('#settingsButton')
+    const cachebtn = app.container.querySelector('#cacheButton');
+    const settingsbtn = app.container.querySelector('#settingsButton');
 
-    
     fireEvent.click(networkbtn);
     expect(activeTab).toEqual('network');
     fireEvent.click(cachebtn);
@@ -64,21 +66,23 @@ xdescribe('App', () => {
     expect(activeTab).toEqual('settings');
     fireEvent.click(querybtn);
     expect(activeTab).toEqual('query');
-  })
-})
-//test the nav button 
+  });
+});
+//test the nav button
 
-
-
-xdescribe('CacheTab', () => {
+describe('CacheTab', () => {
   it('renders CacheTab component correctly', () => {
     act(() => {
-    fetch.mockResponseOnce(JSON.stringify({ "server": [
-      {
-        "name": "Redis version"
-      }
-    ]}))
-    render(<CacheTab />)
-  })
-  })
-})
+      fetch.mockResponseOnce(
+        JSON.stringify({
+          server: [
+            {
+              name: 'Redis version',
+            },
+          ],
+        })
+      );
+      render(<CacheTab />);
+    });
+  });
+});

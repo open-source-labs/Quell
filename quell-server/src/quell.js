@@ -40,6 +40,8 @@ class QuellCache {
    *  @param {Function} next - Express next middleware function, invoked when QuellCache completes its work
    */
   async query(req, res, next) {
+    console.log('iam in quell-server');
+
     // handle request without query
     if (!req.body.query) {
       return next('Error: no GraphQL query found on request body');
@@ -52,8 +54,7 @@ class QuellCache {
 
     // create response prototype, and operation type, and fragments object
     // the response prototype is used as a template for most operations in quell including caching, building modified requests, and more
-    const { proto, operationType, frags } = this.parseAST(AST);
-
+      const { proto, operationType, frags } = this.parseAST(AST);
     // pass-through for queries and operations that QuellCache cannot handle
     if (operationType === 'unQuellable') {
       graphql(this.schema, queryString)
@@ -69,7 +70,33 @@ class QuellCache {
        * we can have two types of operation to take care of
        * MUTATION OR QUERY
        */
-      // if MUTATION
+      
+    } else if (operationType === 'noID'){
+     graphql(this.schema, queryString)
+      .then((queryResult) => {
+        res.locals.queryResponse = queryResult;
+        next();
+      })
+      .catch((error) => {
+        return next('graphql library error: ', error);
+      });
+      let redisValue = await this.getFromRedis(queryString);
+      if(redisValue != null){
+        redisValue = JSON.parse(redisValue);
+        res.locals.queriesResponse = redisValue
+        return next()
+      }else{
+        graphql(this.schema, queryString)
+        .then((queryResult) => {
+          res.locals.queryResponse = queryResult;
+          this.writeToCache(queryString, queryResult)
+          next();
+        })
+        .catch((error) => {
+          return next('graphql library error: ', error);
+        });
+      }
+    
     } else if (operationType === 'mutation') {
       let mutationQueryObject;
       let mutationName;
@@ -103,15 +130,14 @@ class QuellCache {
         });
     } else {
       // if QUERY
-
       // combines fragments on prototype so we can access fragment values in cache
       const prototype =
         Object.keys(frags).length > 0
           ? this.updateProtoWithFragment(proto, frags)
           : proto;
-
       // list keys on prototype as reference for buildFromCache
       const prototypeKeys = Object.keys(prototype);
+      
       // check cache for any requested values
       // modifies prototype to track any values not in the cache
       const cacheResponse = await this.buildFromCache(prototype, prototypeKeys);
@@ -128,7 +154,6 @@ class QuellCache {
             const databaseResponse = JSON.parse(
               JSON.stringify(databaseResponseRaw)
             );
-
             // iterate over the keys in cacheresponse data to see if the cache has any data
             let cacheHasData = false;
             for (const key in cacheResponse.data) {
@@ -219,7 +244,7 @@ class QuellCache {
       },
       OperationDefinition(node) {
         targetObj = proto;
-        //cannot cache subscriptions or mutations, return as unquellable
+        //cannot cache subscriptions, return as unquellable
         operationType = node.operation;
         if (node.operation === 'subscription') {
           operationType = 'unQuellable';
@@ -265,10 +290,8 @@ class QuellCache {
           const auxObj = {
             __id: null,
           };
-
           node.arguments.forEach((arg) => {
             const key = arg.name.value;
-
             // pass variables through
             if (arg.value.kind === 'Variable' && operationType === 'query') {
               operationType = 'unQuellable';
@@ -351,7 +374,7 @@ class QuellCache {
               !fieldsValues.hasOwnProperty('ID') &&
               !fieldsValues.hasOwnProperty('Id')
             ) {
-              operationType = 'unQuellable';
+              operationType = 'noID';
               return BREAK;
             }
 
@@ -517,6 +540,8 @@ class QuellCache {
     // get object containing all root queries defined in the schema
     const queryTypeFields = schema._queryType._fields;
 
+    console.log('hey here');
+    console.log('this is querytypeFields:', queryTypeFields);
     // if queryTypeFields is a function, invoke it to get object with queries
     const queriesObj =
       typeof queryTypeFields === 'function'
@@ -546,6 +571,9 @@ class QuellCache {
   getFieldsMap(schema) {
     const fieldsMap = {};
     const typesList = schema._typeMap;
+
+    console.log('this is typeList:', typesList);
+
     const builtInTypes = [
       'String',
       'Int',
@@ -1065,13 +1093,13 @@ class QuellCache {
         let fieldKeysToRemove = new Set();
         for (let i = 0; i < cachedFieldKeysList.length; i++) {
           let fieldKey = cachedFieldKeysList[i];
+
           let fieldKeyValueRaw = await this.getFromRedis(
             fieldKey.toLowerCase()
           );
           let fieldKeyValue = JSON.parse(fieldKeyValueRaw);
 
           let remove = true;
-          console.log(mutationQueryObject);
           for (let arg in mutationQueryObject.__args) {
             if (fieldKeyValue.hasOwnProperty(arg)) {
               let argValue = mutationQueryObject.__args[arg];
@@ -1178,7 +1206,16 @@ class QuellCache {
       }
     }
   }
-
+  generateIDFromQuery (AST){
+    let query = ''
+    visit(AST, {
+      forEach(node){
+        if(node.type == querytype){
+          query += node.val
+        }
+      }
+    })
+  }
   /**
    * deleteCacheById removes key-value from the cache unless the key indicates that the item is not available. // Note: writeToCache will JSON.stringify the input item
    * @param {String} key - unique id under which the cached data is stored that needs to be removed
@@ -1200,10 +1237,10 @@ class QuellCache {
    * @param {Object} fieldsMap - another map of queries to desired data types, deprecated but untested
    */
   async normalizeForCache(responseData, map = {}, protoField, fieldsMap = {}) {
+
     for (const resultName in responseData) {
       const currField = responseData[resultName];
       const currProto = protoField[resultName];
-
       if (Array.isArray(currField)) {
         // create empty array to store references to data types in the form of their cacheID
         const refList = [];
@@ -1263,6 +1300,7 @@ class QuellCache {
             });
           }
         }
+        console.log(cacheID)
         // store "current object" on cache in JSON format
         this.writeToCache(cacheID, fieldStore);
       }
@@ -1282,15 +1320,15 @@ class QuellCache {
   }
 
   /**
-   * The getRedisInfo returns a chain of middleware based on what information 
-   * (if any) the user would like to request from the specified redisCache. It 
+   * The getRedisInfo returns a chain of middleware based on what information
+   * (if any) the user would like to request from the specified redisCache. It
    * requires an appropriately configured Express route, for instance:
    *  app.use('/redis', ...quellCache.getRedisInfo({
    *    getStats: true,
    *    getKeys: true,
    *    getValues: true
    *  }))
-   * 
+   *
    * @param {Object} options - three properties with boolean values:
    *                           getStats, getKeys, getValues
    */
@@ -1306,8 +1344,6 @@ class QuellCache {
       else return 'getAll';
     };
 
-    console.log(getOptions(options));
-
     switch (getOptions(options)) {
       case 'dontGetStats':
         middleware = [
@@ -1315,8 +1351,8 @@ class QuellCache {
           this.getRedisValues,
           (req, res) => {
             return res.status(200).send(res.locals);
-          }
-        ]
+          },
+        ];
         break;
       case 'dontGetValues':
         middleware = [
@@ -1324,23 +1360,23 @@ class QuellCache {
           this.getRedisKeys,
           (req, res) => {
             return res.status(200).send(res.locals);
-          }
-        ]
+          },
+        ];
         break;
       case 'getKeysOnly':
         middleware = [
           this.getRedisKeys,
           (req, res) => {
             return res.status(200).send(res.locals);
-          }
-        ]
+          },
+        ];
         break;
       case 'getStatsOnly':
         middleware = [
           this.getStatsFromRedis,
           (req, res) => {
             return res.status(200).send(res.locals);
-          }
+          },
         ];
         break;
       case 'getAll':
@@ -1350,12 +1386,11 @@ class QuellCache {
           this.getRedisValues,
           (req, res) => {
             return res.status(200).send(res.locals);
-          }
+          },
         ];
         break;
     }
 
-    console.log(middleware);
     return middleware;
   }
 
@@ -1643,7 +1678,7 @@ class QuellCache {
       return next(err);
     }
   }
-
+  
   getRedisValues(req, res, next) {
     try {
       const getValues = () => {
