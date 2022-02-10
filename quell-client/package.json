@@ -1,6 +1,6 @@
 {
   "name": "@quell/client",
-  "version": "3.1.1",
+  "version": "3.2.0",
   "description": "Quell is an open-source NPM package providing a light-weight caching layer implementation and cache invalidation for GraphQL responses on both the client- and server-side. Use Quell to prevent redundant client-side API requests and to minimize costly server-side response latency.",
   "main": "src/Quellify.js",
   "scripts": {
@@ -33,6 +33,22 @@
     "quell"
   ],
   "contributors": [
+    {
+      "name": "Idan Michael",
+      "url": "https://github.com/idanmichael"
+    },
+    {
+      "name": "Sercan Tuna",
+      "url": "https://github.com/srcntuna"
+    },
+    {
+      "name": "Thomas Pryor",
+      "url": " https://github.com/Turmbeoz"
+    },
+    {
+      "name": "David Lopez",
+      "url": "https://github.com/DavidMPLopez"
+    },
     {
       "name": "Chang Cai",
       "url": "https://github.com/ccai89"
