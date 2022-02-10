@@ -100,7 +100,7 @@ describe('server test for buildFromCache', () => {
     expect(responseFromCache).toEqual(expectedResponseFromCache);
   });
 
-  test('Multiple nested queries that include args and aliases', async () => {
+  xtest('Multiple nested queries that include args and aliases', async () => {
     const testProto = {
       Canada: {
         id: true,
@@ -189,7 +189,7 @@ describe('server test for buildFromCache', () => {
     expect(responseFromCache).toEqual(expectedResponseFromCache);
   });
 
-  test('Handles array', async () => {
+  xtest('Handles array', async () => {
     const testProto = {
       countries: {
         id: true,
