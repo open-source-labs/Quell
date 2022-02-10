@@ -67,7 +67,7 @@ async function Quellify(endPoint, query, maps, userOptions = {}) {
 
   // Create AST based on the input query using the parse method available in the graphQL library (further reading: https://en.wikipedia.org/wiki/Abstract_syntax_tree)
   const AST = parse(query);
-  console.log('In Quellify line 70:AST', AST);
+
   /**
    * parseAST creates a proto object that contains a key for every root query in the user's request. Also, every root query key contains a key for each field requested on that root query, which is assigned the value of "true". The proto object also carries the following details for every root query
    *    __args - arguments the user passed into the query (null if no arguments were given)
@@ -227,13 +227,13 @@ async function Quellify(endPoint, query, maps, userOptions = {}) {
         actionQuery = typeKey;
       }
     }
-    console.log('cacheID line 230', specificID);
+ 
     //if currField from Cache is an object , go through cache to find the matching value/info
     let dataInLoki = lokiClientCache.find({
       'cacheID.id': `${specificID}`,
     });
 
-    console.log('line 236:', dataInLoki);
+
 
     //if currField from Cache is an array , do below logic to get CacheIDArr
 
@@ -256,23 +256,22 @@ async function Quellify(endPoint, query, maps, userOptions = {}) {
           cachedData[property] &&
           cachedData[property] === cacheID
         ) {
-          //console.log(prevProperty);
+
           cacheArr.push(cachedData);
         } else {
-          //console.log(prevProperty);
+
           prevProperty = property;
         }
       }
     });
 
-    console.log(cacheIDArr);
-    console.log(dataInLoki);
+
 
     if (cacheIDArr.length > 0) cacheHasData = true;
     if (dataInLoki.length > 0) cacheHasData = true;
-    console.log('does cache have data?', cacheHasData);
+
     if (!cacheHasData) {
-      console.log('From DB');
+
       const fetchOptions = {
         method: 'POST',
         headers: options.headers,
@@ -314,11 +313,6 @@ async function Quellify(endPoint, query, maps, userOptions = {}) {
       let cacheInfo = dataInLoki[0]['cacheID'];
       let info = { [`${actionQuery}`]: cacheInfo };
       let obj = { data: { data: info } };
-
-      console.log(info);
-      console.log(obj);
-
-      console.log('FROM CACHE');
 
       return new Promise((resolve, reject) => resolve(obj));
     }

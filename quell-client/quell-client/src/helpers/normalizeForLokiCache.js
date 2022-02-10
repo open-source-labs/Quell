@@ -43,8 +43,7 @@ function normalizeForLokiCache(
           currProto.__type = map[property];
       }
     }
-    console.log(responseData);
-    console.log(currField);
+   
 
     // check if the value stored at that key is array
     if (Array.isArray(currField)) {
@@ -70,8 +69,6 @@ function normalizeForLokiCache(
 
         // push fieldID onto refList
         refList.push(fieldID);
-
-        console.log(refList);
 
         // if object, recurse to add all nested values of el to cache as individual entries
         if (typeof el === 'object') {

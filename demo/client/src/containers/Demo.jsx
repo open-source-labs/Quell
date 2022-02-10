@@ -461,7 +461,7 @@ const Demo = () => {
     startTime = performance.now();
 
     // Make the fetch request
-    console.log('URL: ', URL);
+    
     if (URL !== '/graphql') {
       const fetchOptions = {
         method: 'POST',
@@ -481,8 +481,7 @@ const Demo = () => {
             setUncachedTime(uncached);
           }
 
-          console.log('this is server side caching');
-          console.log(data);
+          
           // Set Query Response state
           setQueryResponse(data.data);
           // Set Timer State
@@ -516,7 +515,7 @@ const Demo = () => {
             setUncachedTime(uncached);
           }
 
-          console.log('this is client side caching');
+          
           // Set Query Response state
           setQueryResponse(res.data);
           // Set Timer State
@@ -544,7 +543,7 @@ const Demo = () => {
     // sessionStorage.clear();
     //lokiJS is the new storage for client cache storage
     lokiClientCache.clear();
-    console.log(lokiClientCache.data);
+    
     // Time cleared
     const uncached = '0.00 ms';
     setUncachedTime(uncached);
@@ -560,7 +559,7 @@ const Demo = () => {
 
   const handleClearServerCache = () => {
     // GET request - Clear sever cache
-    fetch('/clearCache').then((res) => console.log(res));
+    fetch('/clearCache');
     // Time cleared
     let date = new Date();
     setCacheStatus(date.toLocaleTimeString());
@@ -586,7 +585,7 @@ const Demo = () => {
     setCacheClearStatus('Yes');
     setCacheAddStatus('No');
     // Clear server cache:
-    fetch('/clearCache').then((res) => console.log(res));
+    fetch('/clearCache')
     // Time cleared
     setCacheStatus('');
     // Zero-out line graph

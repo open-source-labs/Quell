@@ -60,7 +60,7 @@ function CreateQueryStr(queryObject, operationType) {
   // create final query string
   const queryStr = openCurly + mainStr + ' ' + closeCurly;
 
-  console.log(queryStr);
+
 
   // if operation type supplied, place in front of queryString, otherwise just pass queryStr
   return operationType ? operationType + ' ' + queryStr : queryStr;

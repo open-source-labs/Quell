@@ -45,25 +45,25 @@ app.get('/clearCache', quellCache.clearCache, (req, res) => {
 
 // Graphql with server side caching
 app.use('/graphql', quellCache.query, (req, res) => {
-  console.log('in quellql');
+
   return res.status(200).send(res.locals.queryResponse);
 });
 
 // GraphQL client route
 // app.use('/graphql', (req, res) => {
 //   const queryString = req.body.query;
-//   console.log('line 54: ', queryString);
+
 //   graphql(schema, queryString)
 //     .then((result) => {
 //       res.json(result);
 //     })
 //     .catch((error) => {
-//       console.log(error);
+
 //     });
 // });
 
 // app.use('/graphql', (req, res) => {
-//   console.log('line 50:', res.locals.queryResponse);
+
 //   return res.status(200).send(res.locals.queryResponse);
 // });
 

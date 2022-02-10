@@ -157,13 +157,11 @@ const RootQuery = new GraphQLObjectType({
       type: new GraphQLList(CityType),
       args: { id: { type: GraphQLID } },
       async resolve(parent, args) {
-        console.log('line 160:', args);
         const city = await db.query(
           `
           SELECT * FROM cities WHERE id=$1`,
           [Number(args.id)]
         );
-        console.log('city: ', city.rows);
         return city.rows;
       },
     },
@@ -220,7 +218,6 @@ const RootQuery = new GraphQLObjectType({
       type: new GraphQLList(BookType),
       async resolve(parent, args) {
         const books = await dbBooks.query(`SELECT * FROM books`);
-        console.log('line 222:', books);
         return books.rows;
       },
     },

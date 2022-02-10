@@ -1,10 +1,12 @@
 /// this is the code used to take in the clients endpoint and generate the mutationMap,Map and queryTypeMap
 // it takes advantage of GraphQl's built in introspection.
 
-const mapGenerator = async (endpoint) => {
-  //for queryTypeMap
+/**
+ *  @param {string} endpoint - The address to where requests are sent and processed. E.g. '/graphql'
+*/
 
-  console.log('here in mapGenerator');
+const mapGenerator = async (endpoint) => {
+
   const mapGeneratorHelper = async (endpoint, query, type) => {
     const obj = {};
 
@@ -17,24 +19,21 @@ const mapGenerator = async (endpoint) => {
     };
 
     const serverResponse = await fetch(endpoint, fetchOptions);
-    console.log('line 20');
-    console.log(serverResponse);
     const parsedData = await serverResponse.json();
-    console.log('line 22', parsedData);
 
+//get fieldsArray by fetching introspection query which are queryType or mutationType or map
     let fieldsArray;
     let typesList;
     if (type === 'queryType') {
       fieldsArray = parsedData.data.__schema.queryType.fields;
-      console.log('line 26:', fieldsArray);
     } else if (type === 'mutationType') {
       fieldsArray = parsedData.data.__schema.mutationType.fields;
-      console.log(fieldsArray);
     } else {
       typesList = parsedData.data.__schema.types;
     }
 
-    console.log('line 32');
+//for queryTypeMap
+
     if (type === 'queryType') {
       for (let types of fieldsArray) {
         let queryType = types.name;
@@ -45,6 +44,8 @@ const mapGenerator = async (endpoint) => {
       return obj;
     }
 
+//for mutationTypeMap
+
     if (type === 'mutationType') {
       for (let types of fieldsArray) {
         let queryType = types.name;
@@ -54,6 +55,8 @@ const mapGenerator = async (endpoint) => {
       return obj;
     }
 
+
+//for map
     const builtInTypes = [
       'String',
       'Int',
@@ -74,12 +77,12 @@ const mapGenerator = async (endpoint) => {
       '__Directive',
     ];
 
-    // exclude built-in types
+    // exclude built-in types and filter the only custom types
     const customTypes = typesList.filter(
       (type) => !builtInTypes.includes(type.name)
     );
-
-    console.log('line 74:', customTypes);
+   
+    // generate the object includes key-value pairs for map
     for (let types of customTypes) {
       let queryType = types.name;
       let queryTypeValue = types.name;
@@ -164,9 +167,6 @@ __schema{
 
   const map = await mapGeneratorHelper(endpoint, queryforMap, 'map');
 
-  console.log(map);
-  console.log(mutationMap);
-  console.log(queryTypeMap);
 
   return { map, mutationMap, queryTypeMap };
 };
