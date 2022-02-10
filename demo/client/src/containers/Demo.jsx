@@ -5,22 +5,34 @@ import DemoButton from '../components/DemoButton';
 import QueryResults from '../components/QueryResults';
 import Metrics from '../components/Metrics';
 import Graph from '../components/Graph';
-import { CreateQueryStr, CreateMutationStr, updateProtoWithFragment } from '../helper-functions/HelperFunctions.js';
+import {
+  CreateQueryStr,
+  CreateMutationStr,
+  updateProtoWithFragment,
+} from '../helper-functions/HelperFunctions.js';
 import Header from '../images/headers/QUELL-headers-demo w lines.svg';
 import DropDown from '../images/buttons/dropdown-button.svg';
 import DropDownHover from '../images/buttons/dropdown-button-hover.svg';
-import {Quellify as QuellModule, lokiClientCache as lokiClientCacheModule } from '@quell/client';
-// import { Quellify as QuellDev, lokiClientCache as lokiClientCacheDev } from '../../../../quell-client/src/Quellify';
- 
-const Quell =
-  process.env.NODE_ENV === "development"
-    ? QuellDev
-    : QuellModule;
+import {
+  Quellify as QuellModule,
+  lokiClientCache as lokiClientCacheModule,
+  mapGenerator as mapGeneratorModule,
+} from '@quell/client';
+import {
+  Quellify as QuellDev,
+  lokiClientCache as lokiClientCacheDev,
+  mapGenerator as mapGeneratorDev,
+} from '../../../../quell-client/quell-client/src/Quellify.js';
+
+const Quell = process.env.NODE_ENV === 'development' ? QuellDev : QuellModule;
 
 const lokiClientCache =
-  process.env.NODE_ENV === "development"
+  process.env.NODE_ENV === 'development'
     ? lokiClientCacheDev
     : lokiClientCacheModule;
+
+const mapGenerator =
+  process.env.NODE_ENV === 'development' ? mapGeneratorDev : mapGeneratorModule;
 
 /*
   Container that renders the whole demo dashboard
@@ -30,18 +42,24 @@ const Demo = () => {
   const [queryResponse, setQueryResponse] = useState({});
   const [fetchTime, setFetchTime] = useState('0.00 ms');
   const [fetchTimeIntegers, setFetchTimeIntegers] = useState([0, 0]);
-  const [cacheStatus, setCacheStatus] = useState(''); //can we delete? 
+  const [cacheStatus, setCacheStatus] = useState(''); //can we delete?
   const [cacheAddStatus, setCacheAddStatus] = useState('No');
   const [cacheClearStatus, setCacheClearStatus] = useState('No');
   const [uncachedTime, setUncachedTime] = useState('0.00 ms');
   let [output, setOutput] = useState({});
   const [resetComponent, setResetComponent] = useState(false);
   const [queryDropdown, toggleDropdown] = useState(false);
-  const [theQuery, setTheQuery] = useState("blank"); 
+  const [theQuery, setTheQuery] = useState('blank');
+  const [URL, setURL] = useState('/graphql');
+  const [clientBtnActive, setClientBtnActive] = useState('');
+  const [serverBtnActive, setServerBtnActive] = useState('');
 
   const formatTimer = (time) => {
     return time.toFixed(2) + ' ms';
   };
+
+  // //backend route
+  // let URL = '/graphql';
 
   // ====================================================================== //
   // ======= Functionality to close dropdowns when clicking outside ======= //
@@ -70,7 +88,7 @@ const Demo = () => {
   // ======= Functionality for changing query ======= //
   // ================================================ //
 
-  /* 
+  /*
     - Array of queries to choose from
   */
   const dropdownList = [
@@ -84,11 +102,10 @@ const Demo = () => {
     'Fragment',
     'Add Mutation',
     'Update Mutation',
-    'Delete Mutation'
+    'Delete Mutation',
   ];
 
   const selectQuery = (selection) => {
-      
     if (selection === 'Simple Query For Books') {
       displaySimpleQueryForBooks();
     }
@@ -102,16 +119,16 @@ const Demo = () => {
       displaySimpleQueryForCountries();
     }
     if (selection === 'Simple Query With Argument') {
-      displaySimpleQueryWithArg(); 
+      displaySimpleQueryWithArg();
     }
     if (selection === 'Alias') {
-      displaySimpleQueryWithArgAndAlias(); 
+      displaySimpleQueryWithArgAndAlias();
     }
     if (selection === 'Multiple Queries') {
-      displayMultipleQueries(); 
-    } 
+      displayMultipleQueries();
+    }
     if (selection === 'Fragment') {
-      displayFragment(); 
+      displayFragment();
     }
     if (selection === 'Add Mutation') {
       displayAddMutation();
@@ -122,24 +139,23 @@ const Demo = () => {
     if (selection === 'Delete Mutation') {
       displayDeleteMutation();
     }
-      // Close dropdown
+    // Close dropdown
     toggleDropdown(false);
   };
 
-     // Creates dropdown menu from the above array
+  // Creates dropdown menu from the above array
   const dropdownMenu = dropdownList.map((item, i) => {
     return (
       <DropdownItem func={selectQuery} item={item} key={'QueryDropdown' + i} />
     );
   });
- 
+
   // ============================================================== //
   // ===== Functionality to change output based on Query Type ===== //
   // ============================================================== //
-    
 
   const displaySimpleQueryForBooks = () => {
-    setTheQuery("simple query for books");
+    setTheQuery('simple query for books');
     const uncached = '0.00 ms';
     setUncachedTime(uncached);
     output = setOutput({
@@ -151,13 +167,13 @@ const Demo = () => {
         id: false,
         name: false,
         author: false,
-        shelf_id: false
-      }
+        shelf_id: false,
+      },
     });
-  }
+  };
 
   const displaySimpleQueryForCities = () => {
-    setTheQuery("simple query for cities");
+    setTheQuery('simple query for cities');
     const uncached = '0.00 ms';
     setUncachedTime(uncached);
     output = setOutput({
@@ -169,13 +185,13 @@ const Demo = () => {
         id: false,
         name: false,
         population: false,
-        country_id: false
-      }
+        country_id: false,
+      },
     });
-  }
+  };
 
   const displaySimpleQueryForAttractions = () => {
-    setTheQuery("simple query for attractions");
+    setTheQuery('simple query for attractions');
     const uncached = '0.00 ms';
     setUncachedTime(uncached);
     output = setOutput({
@@ -186,13 +202,13 @@ const Demo = () => {
         __type: 'attractions',
         id: false,
         name: false,
-        city_id: false
-      }
+        city_id: false,
+      },
     });
-  }
+  };
 
   const displaySimpleQueryForCountries = () => {
-    setTheQuery("simple query for countries");
+    setTheQuery('simple query for countries');
     const uncached = '0.00 ms';
     setUncachedTime(uncached);
     output = setOutput({
@@ -203,13 +219,13 @@ const Demo = () => {
         __type: 'countries',
         id: false,
         name: false,
-      }
+      },
     });
-  }
+  };
 
   //book;
   const displaySimpleQueryWithArg = () => {
-    setTheQuery("simple query with argument");
+    setTheQuery('simple query with argument');
     const uncached = '0.00 ms';
     setUncachedTime(uncached);
     output = setOutput({
@@ -221,62 +237,62 @@ const Demo = () => {
         id: false,
         name: false,
         author: false,
-      }
+      },
     });
-  }
+  };
   // attractions;
   const displaySimpleQueryWithArgAndAlias = () => {
-    setTheQuery("simple query with argument and alias");
+    setTheQuery('simple query with argument and alias');
     const uncached = '0.00 ms';
     setUncachedTime(uncached);
     output = setOutput({
       SevenMileBeach: {
         __id: null,
         __type: 'attraction',
-        __args: {id: '29'},
-        __alias: "Seven Mile Beach",
+        __args: { id: '29' },
+        __alias: 'Seven Mile Beach',
         id: false,
         name: false,
-        city_id: false
-      }
+        city_id: false,
+      },
     });
-  }
+  };
   // cities;
   const displayMultipleQueries = () => {
-    setTheQuery("multiple queries");
+    setTheQuery('multiple queries');
     const uncached = '0.00 ms';
     setUncachedTime(uncached);
     output = setOutput({
       Metsaven: {
         __id: '15',
         __type: 'city',
-        __args: {id: '15'},
-        __alias: "Metsaven",
+        __args: { id: '15' },
+        __alias: 'Metsaven',
         id: false,
         name: false,
-        population: false
+        population: false,
       },
       Capitona: {
         __id: '9',
         __type: 'city',
-        __args: {id: '9'},
-        __alias: "Capitona",
+        __args: { id: '9' },
+        __alias: 'Capitona',
         id: false,
         name: false,
-        population: false
-      }
+        population: false,
+      },
     });
-  }
+  };
 
   // cities;
   const displayFragment = () => {
     const uncached = '0.00 ms';
     setUncachedTime(uncached);
-    setTheQuery("fragment");
+    setTheQuery('fragment');
     output = setOutput({
       Seoul: {
         __id: '24',
-        __args: {id: '24'},
+        __args: { id: '24' },
         __alias: 'Seoul',
         __type: 'city',
         id: false,
@@ -284,7 +300,7 @@ const Demo = () => {
       },
       Uiwang: {
         __id: '25',
-        __args: {id: '25'},
+        __args: { id: '25' },
         __alias: 'Uiwang',
         __type: 'city',
         id: false,
@@ -292,101 +308,95 @@ const Demo = () => {
       },
       Incheon: {
         __id: '26',
-        __args: {id: '26'},
+        __args: { id: '26' },
         __alias: 'Incheon',
         __type: 'city',
         id: false,
         theFields: true,
       },
     });
-  }
+  };
 
   const displayAddMutation = () => {
-    setTheQuery("add mutation");
+    setTheQuery('add mutation');
     const uncached = '0.00 ms';
     setUncachedTime(uncached);
     output = setOutput({
       addBook: {
         __id: null,
-        __type: "book",
+        __type: 'book',
         __alias: null,
         __args: {
-          name: "Jinhee is cooler than Tim",
-          author: "Jinhee Choi",
-          shelf_id: "1",
+          name: 'Jinhee is cooler than Tim',
+          author: 'Jinhee Choi',
+          shelf_id: '1',
         },
         id: true,
         name: true,
         author: true,
         shelf_id: true,
-      }
+      },
     });
-  }
-  
+  };
+
   const displayUpdateMutation = () => {
-    setTheQuery("update mutation");
+    setTheQuery('update mutation');
     const uncached = '0.00 ms';
     setUncachedTime(uncached);
     output = setOutput({
       changeBooksByAuthor: {
         __id: null,
-        __type: "changebooksbyauthor",
+        __type: 'changebooksbyauthor',
         __alias: null,
         __args: {
-          author: "Jinhee Choi",
-          name: "No, Tim is cooler than Jinhee",
+          author: 'Jinhee Choi',
+          name: 'No, Tim is cooler than Jinhee',
         },
         id: true,
         name: true,
         author: true,
         shelf_id: true,
-      }
+      },
     });
-  }
+  };
 
   const displayDeleteMutation = () => {
-    setTheQuery("delete mutation");
+    setTheQuery('delete mutation');
     const uncached = '0.00 ms';
     setUncachedTime(uncached);
     output = setOutput({
       deleteBooksByName: {
         __id: null,
-        __type: "deletebooksbyname",
+        __type: 'deletebooksbyname',
         __alias: null,
         __args: {
-          name: "No, Tim is cooler than Jinhee",
+          name: 'No, Tim is cooler than Jinhee',
         },
         id: true,
         name: true,
         author: true,
         shelf_id: true,
-      }
+      },
     });
-  }
+  };
 
   // ============================================================== //
   // === Function that makes the fetch request to run the query === //
   // ============================================================== //
-  
-  const handleRunQueryClick = () => {
+
+  const handleRunQueryClick = async () => {
     if (theQuery === 'blank') {
       setTheQuery('error');
     }
     // Run ResultsParser on output to get the query
-    let parsedResult; 
+    let parsedResult;
     if (theQuery === 'add mutation') {
       parsedResult = CreateMutationStr(output);
-    }
-
-    else if (theQuery === 'update mutation' ) {
+    } else if (theQuery === 'update mutation') {
       parsedResult = CreateMutationStr(output);
-    }
-
-    else if (theQuery === 'delete mutation' ) {
+    } else if (theQuery === 'delete mutation') {
       parsedResult = CreateMutationStr(output);
-    }
-
-    else if (theQuery === 'fragment') {
+    } else if (theQuery === 'fragment') {
       const fragment = {
         theFields: {
           name: true,
@@ -400,85 +410,128 @@ const Demo = () => {
       parsedResult = CreateQueryStr(output);
     }
 
+    // const mutationMap = {
+    //   addBook: 'Book',
+    //   changeBooksByAuthor: 'Book',
+    //   changeBooksByName: 'Book',
+    //   deleteBooksByName: 'Book',
+    //   deleteBookByAuthor: 'Book',
+    //   addBookShelf: 'BookShelf',
+    // };
+
+    // const map = {
+    //   Countries: 'Country',
+    //   Country: 'Country',
+    //   citiesByCountry: 'City',
+    //   cities: 'City',
+    //   bookShelves: 'BookShelf',
+    //   bookShelf: 'BookShelf',
+    //   book: 'Book',
+    //   books: 'Book',
+    //   attraction: 'attractions',
+    //   attractions: 'attractions',
+    //   Attraction: 'attractions',
+    //   Attractions: 'attractions',
+    // };
+
+    // const queryTypeMap = {
+    //   Countries: 'countries',
+    //   Country: 'countries',
+    //   city: 'cities',
+    //   City: 'cities',
+    //   citiesByCountry: 'cities',
+    //   cities: 'cities',
+    //   Cities: 'cities',
+    //   bookShelves: 'BookShelves',
+    //   bookShelf: 'BookShelves',
+    //   book: 'books',
+    //   books: 'books',
+    //   Book: 'books',
+    //   Books: 'books',
+    //   attraction: 'attractions',
+    //   attractions: 'attractions',
+    //   Attraction: 'attractions',
+    //   Attractions: 'attractions',
+    // };
+
+    const maps = await mapGenerator('/graphql');
+
     // start the timer (eventually displayed in Metrics)
     let startTime, endTime;
     startTime = performance.now();
 
-    const mutationMap = {
-      addBook: "Book",
-      changeBooksByAuthor: "Book",
-      changeBooksByName: "Book",
-      deleteBooksByName: "Book",
-      deleteBookByAuthor: "Book",
-      addBookShelf: "BookShelf",
-    };
-
-    const map = {
-      Countries: 'Country',
-      Country: 'Country',
-      citiesByCountry: 'City',
-      cities: 'City',
-      bookShelves: 'BookShelf',
-      bookShelf: 'BookShelf',
-      book: 'Book',
-      books: 'Book',
-      attraction: 'attractions',
-      attractions: 'attractions',
-      Attraction: 'attractions',
-      Attractions: 'attractions'
-    };
-
-    const queryTypeMap = {
-      Countries: 'countries',
-      Country: 'countries',
-      city: 'cities',
-      City: 'cities',
-      citiesByCountry: 'cities',
-      cities: 'cities',
-      Cities: 'cities',
-      bookShelves: 'BookShelves',
-      bookShelf: 'BookShelves',
-      book: 'books',
-      books: 'books',
-      Book: 'books',
-      Books: 'books', 
-      attraction: 'attractions',
-      attractions: 'attractions',
-      Attraction: 'attractions',
-      Attractions: 'attractions'
-    };
-
     // Make the fetch request
-    Quell(
-      '/graphql', // our route
-      parsedResult, // our input
-      mutationMap, //map used for mutation caching
-      map, //map used for query from database/server-cache
-      queryTypeMap, //map used for query from client-cache
-      {}
-    )
-      .then((res) => {
-        endTime = performance.now(); // stop the timer
-        const rawTime = endTime - startTime; // calculate how long it took
-        if (uncachedTime === '0.00 ms') {
-          const uncached = (endTime - startTime).toFixed(2) + ' ms';
-          setUncachedTime(uncached);
-        } 
-        // Set Query Response state
-        setQueryResponse(res.data);
-        // Set Timer State
-        const fTime = formatTimer(rawTime);
-        setFetchTime(fTime);
-        
-        setCacheAddStatus('Yes');
-        setCacheClearStatus('No');
+    
+    if (URL !== '/graphql') {
+      const fetchOptions = {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ query: parsedResult }),
+      };
 
-        // Set Line Graph
-        const newTime = Number(rawTime.toFixed(3));
-        setFetchTimeIntegers([...fetchTimeIntegers, newTime]);
-      })
+      fetch('/graphql', fetchOptions)
+        .then((res) => res.json())
+        .then((data) => {
+          endTime = performance.now(); // stop the timer
+          const rawTime = endTime - startTime; // calculate how long it took
+          if (uncachedTime === '0.00 ms') {
+            const uncached = (endTime - startTime).toFixed(2) + ' ms';
+            setUncachedTime(uncached);
+          }
 
-      .catch((err) => console.log(err));
+          
+          // Set Query Response state
+          setQueryResponse(data.data);
+          // Set Timer State
+          const fTime = formatTimer(rawTime);
+          setFetchTime(fTime);
+
+          setCacheAddStatus('Yes');
+          setCacheClearStatus('No');
+
+          // Set Line Graph
+          const newTime = Number(rawTime.toFixed(3));
+          setFetchTimeIntegers([...fetchTimeIntegers, newTime]);
+        })
+
+        .catch((err) => console.log(err));
+    } else {
+      Quell(
+        '/graphql', // our route
+        parsedResult, // our input
+        maps
+        // mutationMap, //map used for mutation caching
+        // map, //map used for query from database/server-cache
+        // queryTypeMap, //map used for query from client-cache
+        // {}
+      )
+        .then((res) => {
+          endTime = performance.now(); // stop the timer
+          const rawTime = endTime - startTime; // calculate how long it took
+          if (uncachedTime === '0.00 ms') {
+            const uncached = (endTime - startTime).toFixed(2) + ' ms';
+            setUncachedTime(uncached);
+          }
+
+          
+          // Set Query Response state
+          setQueryResponse(res.data);
+          // Set Timer State
+          const fTime = formatTimer(rawTime);
+          setFetchTime(fTime);
+
+          setCacheAddStatus('Yes');
+          setCacheClearStatus('No');
+
+          // Set Line Graph
+          const newTime = Number(rawTime.toFixed(3));
+          setFetchTimeIntegers([...fetchTimeIntegers, newTime]);
+        })
+
+        .catch((err) => console.log(err));
+    }
   };
 
   // ============================================================== //
@@ -490,14 +543,14 @@ const Demo = () => {
     // sessionStorage.clear();
     //lokiJS is the new storage for client cache storage
     lokiClientCache.clear();
-    console.log(lokiClientCache.data);
+    
     // Time cleared
     const uncached = '0.00 ms';
     setUncachedTime(uncached);
     setOutput({});
     setTheQuery('blank');
 
-    setCacheClearStatus('Yes'); 
+    setCacheClearStatus('Yes');
     setCacheAddStatus('No');
 
     let date = new Date();
@@ -506,7 +559,7 @@ const Demo = () => {
 
   const handleClearServerCache = () => {
     // GET request - Clear sever cache
-    fetch('/clearCache').then((res) => console.log(res));
+    fetch('/clearCache');
     // Time cleared
     let date = new Date();
     setCacheStatus(date.toLocaleTimeString());
@@ -529,35 +582,39 @@ const Demo = () => {
     // Clear sessionStorage
     // sessionStorage.clear();
     lokiClientCache.clear();
-    console.log(lokiClientCache.data);
-    setCacheClearStatus('Yes'); 
+    setCacheClearStatus('Yes');
     setCacheAddStatus('No');
     // Clear server cache:
-    fetch('/clearCache').then((res) => console.log(res));
+    fetch('/clearCache')
     // Time cleared
     setCacheStatus('');
     // Zero-out line graph
     setFetchTimeIntegers([0, 0]);
+
+    //reset the active cache buttons
+    setClientBtnActive('');
+    setServerBtnActive('');
   };
 
   return (
-    <div id="demo">
-      <div id="demo-header-container">
-        <img id="demo-header" src={Header}></img>
+    <div id='demo'>
+      <div id='demo-header-container'>
+        <img id='demo-header' src={Header}></img>
       </div>
-      <div className="demo-inst-container">
-        <p className="demo-inst">It's time to take Quell for a spin!</p>
+      <div className='demo-inst-container'>
+        <p className='demo-inst'>It's time to take Quell for a spin!</p>
         <br></br>
-        <p className="demo-inst">
-          Below is a sample GraphQL query and mutation that you can manipulate using the
-          drop-down, plus, and minus buttons. Click <em>Run Query/mutation</em> to
-          initiate the request/response cycle. To clear the client-side cache,
-          click <em>Clear Client Cache</em> or alternatively clear the
-          server-side cache by clicking <em>Clear Server Cache</em>.{' '}
-          <em>Reset All</em> will take you back to square one.
+        <p className='demo-inst'>
+          Below is a sample GraphQL query and mutation that you can manipulate
+          using the drop-down, plus, and minus buttons. Click{' '}
+          <em>Run Query/mutation</em> to initiate the request/response cycle. To
+          clear the client-side cache, click <em>Clear Client Cache</em> or
+          alternatively clear the server-side cache by clicking{' '}
+          <em>Clear Server Cache</em>. <em>Reset All</em> will take you back to
+          square one.
         </p>
         <br></br>
-        <p className="demo-inst">
+        <p className='demo-inst'>
           <em>Suggestions:</em>
         </p>
         <ul>
@@ -575,13 +632,14 @@ const Demo = () => {
             now only be seeing the effects of Quell server-side caching.
           </li>
           <li>
-            Play around and try sending different queries to see Quell's partial query caching hard at work under the hood.
+            Play around and try sending different queries to see Quell's partial
+            query caching hard at work under the hood.
           </li>
         </ul>
       </div>
 
-      <div className="dashboard-grid">
-        <div className="button-grid">
+      <div className='dashboard-grid'>
+        <div className='button-grid'>
           <DemoButton
             text={'Run Query/Mutation'}
             func={handleRunQueryClick}
@@ -604,28 +662,67 @@ const Demo = () => {
           />
         </div>
         <div>
-        <span>
-   {/* Query Dropdown button */}
-     <button
-      className="dropdown-button"
-      onClick={() => toggleDropdown(!queryDropdown)}
-    >
-       <div className="plus-minus-icons dropdown-icon">
-       <img src={DropDown}/>
-        <img src={DropDownHover} className="hover-button" />
-       </div>
-      {/* Query Dropdown Menu */}
-      {queryDropdown && (
-        <div className="dropdown-menu" ref={ref}>
-          {dropdownMenu}
-      </div>
-      )}
-     <b>SELECT YOUR QUERY</b></button>
- </span> 
+          <span>
+            {/* Query Dropdown button */}
+            <button
+              className='dropdown-button'
+              onClick={() => toggleDropdown(!queryDropdown)}
+            >
+              <div className='plus-minus-icons dropdown-icon'>
+                <img src={DropDown} />
+                <img src={DropDownHover} className='hover-button' />
+              </div>
+              {/* Query Dropdown Menu */}
+              {queryDropdown && (
+                <div className='dropdown-menu' ref={ref}>
+                  {dropdownMenu}
+                </div>
+              )}
+              <b style={{ marginRight: '40px' }}>SELECT YOUR QUERY</b>
+            </button>
+            <button
+              onClick={() => {
+                setURL('/graphql');
+                setClientBtnActive('cacheBtn');
+                setServerBtnActive('');
+              }}
+              className={`button-query button-query-secondary ${clientBtnActive}`}
+              style={{
+                margin: '4px',
+                fontSize: '10px',
+                width: '100px',
+                height: '40px',
+              }}
+            >
+              QUELL-CLIENT
+            </button>
+            <button
+              onClick={() => {
+                setURL('/quellql');
+                setServerBtnActive('cacheBtn');
+                setClientBtnActive('');
+              }}
+              className={`button-query button-query-secondary ${serverBtnActive}`}
+              style={{
+                margin: '4px',
+                fontSize: '10px',
+                width: '100px',
+                height: '40px',
+              }}
+            >
+              QUELL-SERVER
+            </button>
+          </span>
         </div>
         {/* The key prop makes it so that when component changes, it completely reloads -- useful when clicking "Reset All" */}
         <Query theQuery={theQuery} />
-        <Metrics fetchTime={fetchTime} cacheStatus={cacheStatus} cacheAddStatus={cacheAddStatus} cacheClearStatus={cacheClearStatus} uncachedTime={uncachedTime}/>
+        <Metrics
+          fetchTime={fetchTime}
+          cacheStatus={cacheStatus}
+          cacheAddStatus={cacheAddStatus}
+          cacheClearStatus={cacheClearStatus}
+          uncachedTime={uncachedTime}
+        />
         <QueryResults queryResponse={queryResponse} />
         <Graph fetchTimeIntegers={fetchTimeIntegers} />
       </div>
