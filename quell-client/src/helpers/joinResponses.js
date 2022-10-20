@@ -1,6 +1,8 @@
 ///////////////////////////////////////////////////////////////////////////////////
 ////////THIS CODE IS DEPRICATED SINCE THE INTRODUCTION OF LOKIJS///////////////////
 //////////////////////////////////////////////////////////////////////////////////
+// ### DELETE ###
+
 
 /**
  joinResponses combines two objects containing results from the cached response and fetched (uncached) and outputs a single array response that will ultimately be formatted and delivered to the client.

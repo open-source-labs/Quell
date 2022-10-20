@@ -40,7 +40,7 @@ class QuellCache {
    *  @param {Function} next - Express next middleware function, invoked when QuellCache completes its work
    */
   async query(req, res, next) {
-    console.log('iam in quell-server');
+    console.log('Quell Cache Query');
 
     // handle request without query
     if (!req.body.query) {

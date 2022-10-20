@@ -1,3 +1,6 @@
+//### DELETE ###
+//whole file? Can't find where this is used or why.
+
 const { lokiClientCache } = require("./normalizeForLokiCache");
 
 /* 
@@ -35,14 +38,13 @@ function buildFromCache(prototype, prototypeKeys, itemFromCache = {}, firstRun =
     if (prototypeKeys.includes(typeKey)) {
       const cacheID = subID ? subID : generateCacheID(prototype[typeKey]);
       
-      // code for storing cacheID in sessionStorage - old client cache storage
-      // const cacheResponse = sessionStorage.getItem(cacheID);
 
       // check if cacheID exists in the lokiJS - meaning the data was already cached - and set it to cacheResponse
       // create a property on itemFromCache and set the value to the fetched response from cache
       // const cacheResponse = lokiClientCache.find(cacheID);
       const cacheResponse = Object.assign({}, lokiClientCache.find(cacheID));
 
+      //### DELETE ### ? This appears to be unused, perhaps from session storage?
       // documentation for sesisonStorage: if data for the current typeKey is not found in sessionStorage 
       //then we receive null. Need to replace null with empty object
       // itemFromCache[typeKey] = cacheResponse ? JSON.parse(cacheResponse) : {};

@@ -1,3 +1,6 @@
+//### DELETE ###
+//whole file, sessionCache deprecated
+
 /** 
  normalizeForSessionCache traverses server response data and creates objects out of responses for cache. 
  * Iterates & recurses over response object & preps data to be sent to cache
