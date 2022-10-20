@@ -1,5 +1,4 @@
 const { visit, BREAK } = require('graphql/language/visitor');
-const { parse } = require('graphql/language/parser');
 
 /**
  * parseAST traverses the abstract syntax tree and creates a prototype object
@@ -17,7 +16,7 @@ const defaultOptions = {
 const parseAST = (AST, options = defaultOptions) => {
   // initialize prototype as empty object
   // information from AST is distilled into the prototype for easy access during caching, rebuilding query strings, etc.
-  const proto= {};
+  const proto = {};
   const frags = {};
   // target Object will be updated to point to prototype when iterating through Field and it will point to frags when iterating through Fragment Definition
   let targetObj;
@@ -59,7 +58,6 @@ const parseAST = (AST, options = defaultOptions) => {
       targetObj = proto;
       operationType = node.operation;
       if (node.operation === 'subscription') {
-      // if (node.operation === 'subscription' || node.operation === 'mutation') {
         operationType = 'unQuellable';
         return BREAK;
       }
@@ -204,6 +202,5 @@ const parseAST = (AST, options = defaultOptions) => {
   });
   return { proto, operationType, frags };
 };
-
 
 module.exports = parseAST;

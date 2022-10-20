@@ -1,5 +1,3 @@
-//importing lokiJS to be used as client cache storage to replace sessionStorage
-
 const loki = require('lokijs');
 
 let lokidb = new loki('client-cache');
@@ -16,18 +14,15 @@ let lokiClientCache = lokidb.addCollection('loki-client-cache', {
  @param {object} queryTypeMap - a map of queryType i.e. books, countries for query caching purpose
  @param {object} map - a map of graphQL fields to their corresponding graphQL Types
  @param {object} protoField - the prototype object, or a section of the prototype object, for accessing arguments, aliases, etc.
- * fieldsMap: potentially deprecated?
  */
 
 function normalizeForLokiCache(
   responseData,
   queryTypeMap,
-  // isMutation,Delete once new Function is WORKING
   typeOfOperation,
   map = {},
   protoField,
-  subID,
-  fieldsMap = {}
+  subID
 ) {
   // if we are recursing, we want to add a subid before caching
   // iterate over keys in our response data object
@@ -82,9 +77,6 @@ function normalizeForLokiCache(
           );
         }
       }
-
-      // old code for sessionStorage
-      // sessionStorage.setItem(cacheKey, JSON.stringify(refList));
 
       // find if queryType value exists in lokiJS client cache and set it to dataInLoki
       let dataInLoki = lokiClientCache.find(queryTypeMap[queryTypeKey]);
@@ -145,7 +137,6 @@ function normalizeForLokiCache(
           normalizeForLokiCache(
             { [key]: currField[key] },
             queryTypeMap,
-            // isMutation,DELETE ONCE FUNCTION WORKS
             typeOfOperation,
             map,
             { [key]: protoField[resultName][key] },
@@ -158,8 +149,7 @@ function normalizeForLokiCache(
 
       let dataInLoki = lokiClientCache.find({ 'cacheID.id': `${specificID}` });
 
-      // use isExisting as tracker/flag to check whether the cacheID exists in dataInLoki
-      // let isExisting = false;
+
       //if there is no data in LokiJS, then we know that we can cache the data query/mutation requested
       if (dataInLoki.length === 0) {
         lokiClientCache.insert({
@@ -168,8 +158,7 @@ function normalizeForLokiCache(
           queryType: queryTypeMap[queryTypeID],
         });
 
-        //otherwise, check if cacheID exists in dataLoki; if the condition exists, then we know we
-        //do not need to cache it in lokiJS anymore.
+        //otherwise, check if cacheID exists in dataLoki; if the condition exists, then we know we do not need to cache it in lokiJS anymore.
       } else {
         const result = lokiClientCache.findOne({
           'cacheID.id': `${specificID}`,
@@ -185,14 +174,6 @@ function normalizeForLokiCache(
             lokiClientCache.findAndRemove({ 'cacheID.id': `${specificID}` });
           }
         }
-
-        //if it doesn't exist in lokiJS, cache the cacheID data in lokiJS.
-        // if (!isExisting)
-        //   lokiClientCache.insert({
-        //     id: cacheID,
-        //     cacheID: fieldStore,
-        //     queryType: queryTypeMap[queryTypeID],
-        //   });
       }
     }
   }
