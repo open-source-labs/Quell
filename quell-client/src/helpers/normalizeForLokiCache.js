@@ -24,6 +24,7 @@ function normalizeForLokiCache(
   protoField,
   subID
 ) {
+  console.log('inside lokijs');
   // if we are recursing, we want to add a subid before caching
   // iterate over keys in our response data object
 
@@ -33,6 +34,7 @@ function normalizeForLokiCache(
     const currProto = protoField[resultName];
 
     if (typeOfOperation.isMutation) {
+      console.log('typeofoperation is mutation');
       for (const property in map) {
         if (currProto.__type.includes(map[property]))
           currProto.__type = map[property];
@@ -42,6 +44,7 @@ function normalizeForLokiCache(
 
     // check if the value stored at that key is array
     if (Array.isArray(currField)) {
+      console.log('inside conditional if currField is an array');
       const cacheKey = subID ? subID + '--' + resultName : resultName;
       let queryTypeKey = cacheKey;
       // create empty array to store refs
@@ -84,6 +87,7 @@ function normalizeForLokiCache(
 
       //if there is no data in LokiJS, then we know that we can cache the data query/mutation requested
       if (dataInLoki.length === 0) {
+        console.log('if data is not inside LokiJS, pre-fetch')
         lokiClientCache.insert({
           id: cacheKey,
           cacheKey: refList,
@@ -106,6 +110,7 @@ function normalizeForLokiCache(
 
       // if currField type is object
     } else if (typeof currField === 'object') {
+      console.log('Type of currField is an object');
       // need to get non-Alias ID for cache
       // temporary store for field properties
       const fieldStore = {};
@@ -152,6 +157,7 @@ function normalizeForLokiCache(
 
       //if there is no data in LokiJS, then we know that we can cache the data query/mutation requested
       if (dataInLoki.length === 0) {
+        console.log('another check for no data in Loki');
         lokiClientCache.insert({
           id: cacheID,
           cacheID: fieldStore,
@@ -160,17 +166,20 @@ function normalizeForLokiCache(
 
         //otherwise, check if cacheID exists in dataLoki; if the condition exists, then we know we do not need to cache it in lokiJS anymore.
       } else {
+        console.log('else content does exist in lokiJS');
         const result = lokiClientCache.findOne({
           'cacheID.id': `${specificID}`,
         });
         if (result) {
+          console.log('checking result');
           if (typeOfOperation.typeOfMutation === 'update') {
             const obj = result.cacheID;
-
+            console.log('checking result if mutationtype is update');
             result.cacheID = { ...obj, ...fieldStore };
           }
 
           if (typeOfOperation.typeOfMutation === 'delete') {
+            console.log('checking cache and deleting if type of mutation is delete');
             lokiClientCache.findAndRemove({ 'cacheID.id': `${specificID}` });
           }
         }

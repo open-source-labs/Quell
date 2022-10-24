@@ -61,6 +61,7 @@ async function Quellify(endPoint, query, userOptions = {}) {
 
   // mapGenerator is used to generate mutationMap, map and queryTypeMap
   const { map, queryTypeMap, mutationMap } = mapGenerator(endPoint);
+  console.log('maps generated')
 
   // iterate over map to create all lowercase map for consistent caching
   for (const props in map) {
@@ -71,6 +72,7 @@ async function Quellify(endPoint, query, userOptions = {}) {
   }
 
   // Create AST based on the input query using the parse method available in the graphQL library (further reading: https://en.wikipedia.org/wiki/Abstract_syntax_tree)
+  console.log('parsing query:', query)
   const AST = parse(query);
 
   //create proto, operationType, and frags using parseAST
