@@ -92,25 +92,6 @@ const mapGenerator = async (endpoint) => {
     return obj;
   };
 
-  //   const queryForQueryType = `{
-  // __schema{
-  //   queryType{
-  //     fields{
-  //         name
-  //         type{
-  //           name
-  //           ofType{
-  //             ofType{
-  //               ofType{
-  //                 name
-  //               }
-  //             }
-  //           }
-  //         }
-  //       }
-  //     }
-  //   }
-  // }`;
 
   const queryForQueryType = `{
 __schema{

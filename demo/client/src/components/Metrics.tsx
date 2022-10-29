@@ -1,3 +1,8 @@
+// ### DELETE ###
+//Entire file flagged for deletion, same as Metrics.tsx file in extension, 
+//I do not believe this file does anything in the Demo
+
+
 /* eslint-disable react/prop-types */
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import React, { useState, useEffect } from 'react';

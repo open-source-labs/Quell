@@ -13,16 +13,21 @@ import {
 import Header from '../images/headers/QUELL-headers-demo w lines.svg';
 import DropDown from '../images/buttons/dropdown-button.svg';
 import DropDownHover from '../images/buttons/dropdown-button-hover.svg';
+
+//production import
 import {
   Quellify as QuellModule,
   lokiClientCache as lokiClientCacheModule,
   mapGenerator as mapGeneratorModule,
 } from '@quell/client';
-import {
-  Quellify as QuellDev,
-  lokiClientCache as lokiClientCacheDev,
-  mapGenerator as mapGeneratorDev,
-} from '../../../../quell-client/quell-client/src/Quellify.js';
+
+//### DELETE ### 
+//commented out - uncomment when working in development and @quell/client node module is not matching dev functions
+// import {
+//   Quellify as QuellDev,
+//   lokiClientCache as lokiClientCacheDev,
+//   mapGenerator as mapGeneratorDev,
+// } from '../../../../quell-client/quell-client/src/Quellify.js';
 
 const Quell = process.env.NODE_ENV === 'development' ? QuellDev : QuellModule;
 
@@ -42,11 +47,11 @@ const Demo = () => {
   const [queryResponse, setQueryResponse] = useState({});
   const [fetchTime, setFetchTime] = useState('0.00 ms');
   const [fetchTimeIntegers, setFetchTimeIntegers] = useState([0, 0]);
-  const [cacheStatus, setCacheStatus] = useState(''); //can we delete?
+  const [cacheStatus, setCacheStatus] = useState(''); 
   const [cacheAddStatus, setCacheAddStatus] = useState('No');
   const [cacheClearStatus, setCacheClearStatus] = useState('No');
   const [uncachedTime, setUncachedTime] = useState('0.00 ms');
-  let [output, setOutput] = useState({});
+  const [output, setOutput] = useState({});
   const [resetComponent, setResetComponent] = useState(false);
   const [queryDropdown, toggleDropdown] = useState(false);
   const [theQuery, setTheQuery] = useState('blank');
@@ -409,7 +414,7 @@ const Demo = () => {
     } else {
       parsedResult = CreateQueryStr(output);
     }
-
+    //### DELETE ###
     // const mutationMap = {
     //   addBook: 'Book',
     //   changeBooksByAuthor: 'Book',
@@ -418,7 +423,7 @@ const Demo = () => {
     //   deleteBookByAuthor: 'Book',
     //   addBookShelf: 'BookShelf',
     // };
-
+    //### DELETE ###
     // const map = {
     //   Countries: 'Country',
     //   Country: 'Country',
@@ -433,7 +438,7 @@ const Demo = () => {
     //   Attraction: 'attractions',
     //   Attractions: 'attractions',
     // };
-
+    //### DELETE ###
     // const queryTypeMap = {
     //   Countries: 'countries',
     //   Country: 'countries',
@@ -502,6 +507,7 @@ const Demo = () => {
         '/graphql', // our route
         parsedResult, // our input
         maps
+        //### DELETE ###
         // mutationMap, //map used for mutation caching
         // map, //map used for query from database/server-cache
         // queryTypeMap, //map used for query from client-cache
@@ -539,20 +545,20 @@ const Demo = () => {
   // ============================================================== //
 
   const handleClearClientCache = () => {
-    // Clear sessionStorage - old storage for client cache
-    // sessionStorage.clear();
-    //lokiJS is the new storage for client cache storage
+    //clear local cache
     lokiClientCache.clear();
     
-    // Time cleared
+    //Clear time from cache
     const uncached = '0.00 ms';
     setUncachedTime(uncached);
     setOutput({});
     setTheQuery('blank');
 
+    //Reset cache status
     setCacheClearStatus('Yes');
     setCacheAddStatus('No');
 
+    //set time of new cache
     let date = new Date();
     setCacheStatus(date.toLocaleTimeString());
   };
@@ -579,8 +585,7 @@ const Demo = () => {
     // Zero-out uncached/FetchTime
     const uncached = '0.00 ms';
     setUncachedTime(uncached);
-    // Clear sessionStorage
-    // sessionStorage.clear();
+    // Clear local cache
     lokiClientCache.clear();
     setCacheClearStatus('Yes');
     setCacheAddStatus('No');

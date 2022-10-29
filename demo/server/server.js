@@ -69,7 +69,7 @@ app.use('/graphql', quellCache.query, (req, res) => {
 
 // Catch-all endpoint handler
 app.use((req, res) => {
-  return res.status(400).send('Page not found.');
+  return res.status(404).send('Page not found.');
 });
 
 // Global error handler
