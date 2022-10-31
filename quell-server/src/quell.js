@@ -433,6 +433,10 @@ class QuellCache {
             }, targetObj);
           }
         },
+        leave() {
+          // pop stacks to keep track of depth-first parsing path
+          stack.pop();
+        },
       },
     }); 
     return { proto, operationType, frags };
