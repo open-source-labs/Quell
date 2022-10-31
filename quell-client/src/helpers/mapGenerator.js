@@ -6,8 +6,10 @@
 */
 
 const mapGenerator = async (endpoint) => {
+  console.log('inside mapGenerator');
 
   const mapGeneratorHelper = async (endpoint, query, type) => {
+    // console.log('Inside mapGeneratorHelper');
     const obj = {};
 
     const fetchOptions = {
@@ -17,9 +19,11 @@ const mapGenerator = async (endpoint) => {
       },
       body: JSON.stringify({ query: query }),
     };
-
+    // console.log('Before fetch, fetchOptions and endPoint:', fetchOptions, endpoint);
     const serverResponse = await fetch(endpoint, fetchOptions);
     const parsedData = await serverResponse.json();
+    console.log('parsing data from response');
+    console.log('parsedData:', parsedData);
 
 //get fieldsArray by fetching introspection query which are queryType or mutationType or map
     let fieldsArray;
@@ -35,12 +39,14 @@ const mapGenerator = async (endpoint) => {
 //for queryTypeMap
 
     if (type === 'queryType') {
+      console.log('if type === queryType', fieldsArray);
       for (let types of fieldsArray) {
-        let queryType = types.name;
+        console.log("checking types:", types);
+        let queryType = types.name; 
         let queryTypeValue = types.type.ofType.name;
         obj[queryType] = queryTypeValue;
       }
-
+      // console.log('query type obj:', obj);
       return obj;
     }
 
@@ -48,6 +54,7 @@ const mapGenerator = async (endpoint) => {
 
     if (type === 'mutationType') {
       for (let types of fieldsArray) {
+        console.log(fieldsArray);
         let queryType = types.name;
         let queryTypeValue = types.type.name;
         obj[queryType] = queryTypeValue;
@@ -133,19 +140,18 @@ __schema{
 }
 
 `;
-
   const queryTypeMap = await mapGeneratorHelper(
     endpoint,
     queryForQueryType,
     'queryType'
   );
-
+  console.log("queryMap ok")
   const mutationMap = await mapGeneratorHelper(
     endpoint,
     queryForMutationMap,
     'mutationType'
   );
-
+  console.log("mutationMap ok")
   const map = await mapGeneratorHelper(endpoint, queryforMap, 'map');
 
 
