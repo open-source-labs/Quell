@@ -128,7 +128,7 @@
   ],
   "homepage": "http://quellql.io",
   "dependencies": {
-    "graphql": "^15.3.0",
+    "graphql": "^16.6.0",
     "lokijs": "^1.5.12"
   }
 }
