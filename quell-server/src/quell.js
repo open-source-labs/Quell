@@ -11,7 +11,7 @@ class QuellCache {
   constructor(schema, redisPort, cacheExpiration = 1209600000, limit = 10, cost = 10) {
     this.schema = schema;
     this.limit = limit;
-    this.cost = cost
+    this.cost = cost;
     this.depthLimit = this.depthLimit.bind(this);
     this.costLimit = this.costLimit.bind(this);
     this.queryMap = this.getQueryMap(schema);
