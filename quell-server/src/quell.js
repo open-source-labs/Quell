@@ -2,9 +2,7 @@ const redis = require('redis');
 const { parse } = require('graphql/language/parser');
 const { visit, BREAK } = require('graphql/language/visitor');
 const { graphql } = require('graphql');
-
-
-
+const albumsModel = require('../../server/models/albumsModel');
 
 class QuellCache {
   // default expiry time is 14 days in milliseconds
@@ -52,7 +50,7 @@ class QuellCache {
    *  @param {Function} next - Express next middleware function, invoked when QuellCache completes its work
    */
   async query(req, res, next) {
-    console.log('RedisCache', this.redisCache);
+    // console.log('RedisCache', this.redisCache);
 
     // handle request without query
     if (!req.body.query) {
@@ -60,20 +58,26 @@ class QuellCache {
     }
     // retrieve GraphQL query string from request object;
     const queryString = req.body.query;
+    // console.log('QueryString before AST; queryString:', queryString);
 
     // create abstract syntax tree with graphql-js parser
     //if depth limit was implemented, then we don't need to run parse again and instead grab from res.locals.
     const AST = res.locals.AST ? res.locals.AST : parse(queryString);
+    // console.log('QueryString after being parsed into an AST, AST:', AST);
     // create response prototype, and operation type, and fragments object
     // the response prototype is used as a template for most operations in quell including caching, building modified requests, and more
     const { proto, operationType, frags } = res.locals.parsedAST ? res.locals.parsedAST : this.parseAST(AST);
+
+    // console.log('ProtoObject from from parseAST, line 69ish, proto', proto);
+    // console.log('operationtype from parseAST, operationType:', operationType);
+    // console.log('frags Obj from parseAST, frags:', frags);
     
 
     // pass-through for queries and operations that QuellCache cannot handle
     if (operationType === 'unQuellable') {
       graphql({ schema: this.schema, source: queryString })
         .then((queryResult) => {
-          console.log("Checking Query Result: ", queryResult)
+          // console.log("Checking Query Result: ", queryResult)
           res.locals.queryResponse = queryResult;
           return next();
         })
@@ -89,7 +93,7 @@ class QuellCache {
     } else if (operationType === 'noID'){
       graphql({ schema: this.schema, source: queryString })
       .then((queryResult) => {
-        console.log('query result if operationType noID');
+        // console.log('query result if operationType noID');
         res.locals.queryResponse = queryResult;
         return next();
       })
@@ -235,15 +239,12 @@ class QuellCache {
  * RETURNS prototype, operationType, and frags object
 */
 
- parseAST(AST, options = { userDefinedID: null }) {
-    console.log('Inside parseAST')
+ parseAST(AST, options = { userDefinedID: null }) { //options = { userDefinedID: null }
+    console.log('Inside parseAST :', AST)
     // initialize prototype as empty object
     // information from AST is distilled into the prototype for easy access during caching, rebuilding query strings, etc.
     const proto = {};
     const frags = {};
-
-    // target Object points to prototype when iterating through Field, and will point to frags when iterating through Fragment Definition
-    let targetObj;
 
     // will be query, mutation, subscription, or unQuellable
     let operationType = '';
@@ -280,7 +281,7 @@ class QuellCache {
         }
       },
       OperationDefinition(node) {
-        targetObj = proto;
+        console.log("Checking Op Definition Node: ", node);
         //cannot cache subscriptions, return as unquellable
         operationType = node.operation;
         if (node.operation === 'subscription') {
@@ -289,28 +290,31 @@ class QuellCache {
         }
       },
       // set-up for fragment definition traversal
-      FragmentDefinition: {
-        enter(node) {
-          // update stack for path tracking
-          stack.push(node.name.value);
-          // point the targetObj that we update to the frags object while inside the loop
-          targetObj = frags;
+      FragmentDefinition(node) {
+        // console.log("Inside Fragment Definition :",  node)
+        // update stack for path tracking
+        stack.push(node.name.value);
 
-          // extract base-level fields in the fragment into frags object
-          const fragName = node.name.value;
-          targetObj[fragName] = {};
-          for (let i = 0; i < node.selectionSet.selections.length; i++) {
-            targetObj[fragName][
+
+        // extract base-level fields in the fragment into frags object
+        // const fragName = node.typeCondition.name.value.toLowerCase() + "s"; //this returns albums
+        const fragName = node.name.value; //this returns albumFragment
+        console.log('fragName should be albumFragment:', node.name.value);
+        console.log('fragName should be album:', node.typeCondition.name.value);
+        
+
+        frags[fragName] = {}; //adding fragName to frags object as an empty object
+        for (let i = 0; i < node.selectionSet.selections.length; i++) {
+          frags[fragName][
               node.selectionSet.selections[i].name.value
             ] = true;
           }
         },
-        leave() {
-          stack.pop();
-        },
-      },
       Field: {
         enter(node) {
+          console.log('inside Field in parseAST, current node:', node);
+          console.log('frags:', frags);
+
           // return introspection queries as unQuellable to not cache them
           // "__keyname" syntax is later used for Quell's field-specific options, though this does not create collision with introspection
           if (node.name.value.includes('__')) {
@@ -318,6 +322,8 @@ class QuellCache {
             operationType = 'unQuellable';
             return BREAK;
           }
+
+          //if node.name.value === frags name, need to map this into the...?
 
           // populates argsObj from current node's arguments
           // generates uniqueID
@@ -329,6 +335,7 @@ class QuellCache {
             __id: null,
           };
           node.arguments.forEach((arg) => {
+            console.log('inside nodeargs forEach in field, arg:', arg)
             const key = arg.name.value;
             // pass variables through
             if (arg.value.kind === 'Variable' && operationType === 'query') {
@@ -340,6 +347,7 @@ class QuellCache {
             // assign args to argsObj, skipping field-specific options ('__') provided as arguments
             if (!key.includes('__')) {
               argsObj[key] = arg.value.value;
+              console.log('argsObj when key doesnt include __, argsObj:', argsObj);
             }
 
             // identify uniqueID from args, options
@@ -356,13 +364,9 @@ class QuellCache {
               auxObj.__id = arg.value.value;
             }
 
-            // handle custom field-specific options passed in as arguments (ie __customCacheTime)
-            // arguments parsed in this way should not pass from client to server
-            // downstream support not fully integrated
-            if (key.includes('__')) {
-              auxObj[key] = arg.value.value;
-            }
           });
+
+          
 
           // gather auxillary data such as aliases, arguments, query type, and more to append to the prototype for future reference
 
@@ -374,63 +378,83 @@ class QuellCache {
 
           auxObj.__args = Object.keys(argsObj).length > 0 ? argsObj : null;
 
-          // adds auxObj fields to prototype, allowing future access to type, alias, args, etc.
-          fieldArgs[fieldType] = {
-            ...fieldArgs[fieldType],
-            ...auxObj,
-          };
+         // adds auxObj fields to prototype, allowing future access to type, alias, args, etc.
+         fieldArgs[fieldType] = {
+          ...argsObj[fieldType],
+          ...auxObj,
+        };
 
+        console.log('fieldArgs before leaving:', fieldArgs);
           // add value to stacks to keep track of depth-first parsing path
           stack.push(fieldType);
         },
         leave() {
+          console.log('stack before leaving Field', stack)
+          console.log('fieldArgs before leaving in Field Leave():', fieldArgs);
           // pop stacks to keep track of depth-first parsing path
           stack.pop();
+          console.log('stack after leaving Field', stack)
         },
       },
       SelectionSet: {
         // selection sets contain all of the sub-fields
         // iterate through the sub-fields to construct fieldsObject
         enter(node, key, parent, path, ancestors) {
+          console.log('Inside SelectionSet');
 
           /* Exclude SelectionSet nodes whose parents' are not of the kind
            * 'Field' to exclude nodes that do not contain information about
            *  queried fields.
            */
           if (parent.kind === 'Field') {
-            console.log('inside if parent.kind is field');
             const fieldsValues = {};
+
+            //this fragment variable keeps track of whether or not the current node is a FragmentSpread.
+            //it should reset back to false when traversing a new node.
+            let fragment = false;
             for (let field of node.selections) {
+              console.log('its field time:', field);
+              if (field.kind === 'FragmentSpread') fragment = true;
               // sets any fields values to true, unless it is a nested object (ie has selectionSet)
               if (!field.selectionSet) fieldsValues[field.name.value] = true;
             }
-
             // if ID was not included on the request then the query will not be included in the cache, but the request will be processed
+            // AND if current node is NOT a fragment.
             if (
               !fieldsValues.hasOwnProperty('id') &&
               !fieldsValues.hasOwnProperty('_id') &&
               !fieldsValues.hasOwnProperty('ID') &&
-              !fieldsValues.hasOwnProperty('Id')
+              !fieldsValues.hasOwnProperty('Id') &&
+              !fragment
             ) {
               console.log('inside if no id present in fieldsValues');
               operationType = 'noID';
               return BREAK;
             }
 
+
             // place current fieldArgs object onto fieldsObject so it gets passed along to prototype
             // fieldArgs contains arguments, aliases, etc.
+            
+            console.log("Before reassigning fieldsObject, fieldsValue: ", fieldsValues)
+            console.log("Before reassigning fieldsObject, fieldArgs: ", fieldArgs)
             const fieldsObject = {
               ...fieldsValues,
               ...fieldArgs[stack[stack.length - 1]],
             };
+            console.log("Before reassigning fieldsObject: ", fieldsObject)
 
             // loop through stack to get correct path in proto for temp object;
             console.log('Before stack.reduce', stack);
+            console.log('also before stack.reduce, proto', proto);
+            console.log('also before stack.reduce, fieldsObj', fieldsObject);
+            console.log('also before stack.reduce, fieldsArgs', fieldArgs);
             stack.reduce((prev, curr, index) => {
               return index + 1 === stack.length // if last item in path
                 ? (prev[curr] = { ...fieldsObject }) //set value
                 : (prev[curr] = prev[curr]); // otherwise, if index exists, keep value
-            }, targetObj);
+            }, proto);
+            console.log('proto after stack.reduce, proto:', proto);
           }
         },
         leave() {
@@ -450,21 +474,30 @@ class QuellCache {
    * RETURNS updated prototype
    */
   updateProtoWithFragment(protoObj, frags) {
-    console.log('updating proto with frags');
+    console.log('updating proto with frags, protoObj:', protoObj);
     if (!protoObj) return;
 
-    for (const key in protoObj) {
+    //PROBLEM: RECURSING WITHOUT ACTUALLY DOING ANYTHING???
+
+    for (let key in protoObj) {
+      console.log('inside forLoop, current key:', key);
       // if nested field, recurse
       if (typeof protoObj[key] === 'object' && !key.includes('__')) {
+        console.log('Recursively calling update with key and frags, ProtoObj[key]:', protoObj[key]);
+        console.log('frags:', frags);
         protoObj[key] = this.updateProtoWithFragment(protoObj[key], frags);
       }
 
       // if field is a reference to a fragment, add fragment to field in place of the reference to the fragment
-      else if (frags.hasOwnProperty(key)) {
+      if (frags.hasOwnProperty(key)) {
+        console.log('adding fragment to field in protoObj, deleting key from protoObj')
+        console.log('protoObj pre deletion/addition, protoObj;', protoObj);
         protoObj = { ...protoObj, ...frags[key] };
         delete protoObj[key];
+        console.log('protoObj post, protoObj:', protoObj);
       }
     }
+    console.log('')
     return protoObj;
   }
 
@@ -876,7 +909,7 @@ class QuellCache {
 
     // filter fields object to contain only values needed from server
     function reducer(fields) {
-      console.log('inside reducer func, filtering fields');
+      console.log('inside reducer func, filtering fields, fields:', fields);
       // filter stores values needed from server
       const filter = {};
       // propsFilter for properties such as args, aliases, etc.
@@ -1692,7 +1725,6 @@ class QuellCache {
             ],
           }
           res.locals.redisStats = output;
-          console.log('here is the output of getRedisInfo:', output)
           return next();
         })
           .catch((err) => {
@@ -1708,10 +1740,8 @@ class QuellCache {
 
 
   getRedisKeys(req, res, next) {
-    console.log('Inside getRedisKeys');
     this.redisCache.keys('*')
       .then((response) => {
-        console.log('here is the response from getRedisKeys:', response)
         res.locals.redisKeys = response;
         return next();
         })
@@ -1722,11 +1752,9 @@ class QuellCache {
     };
   
   getRedisValues(req, res, next) {
-    console.log('Inside getRedisValues');
     if (res.locals.redisKeys.length !== 0) {
         this.redisCache.mGet(res.locals.redisKeys)
         .then((response) => {
-          console.log('Inside response, res:', response);
           res.locals.redisValues = response;
           return next();
           })
@@ -1735,11 +1763,11 @@ class QuellCache {
           return next(err);
         });
       }
-      else {
-        res.locals.redisValues = [];
-        return next();
-      }
+    else {
+      res.locals.redisValues = [];
+      return next();
     }
+  }
 
     /**
    * depthLimit takes in the query, parses it, and identifies the general shape of the request.
@@ -1762,11 +1790,13 @@ class QuellCache {
     // create response prototype, and operation type, and fragments object
     // the response prototype is used as a template for most operations in quell including caching, building modified requests, and more
     const { proto, operationType, frags } = this.parseAST(AST);
+    console.log("Before Prototype Updated with Fragments: ", proto);
     //check for fragments
     const prototype =
     Object.keys(frags).length > 0
       ? this.updateProtoWithFragment(proto, frags)
       : proto;
+    console.log("Updated Prototype with Fragments: ", prototype);
     console.log("checking frags ", frags)
 
     //helper function to determine the depth of the proto.
@@ -1779,7 +1809,7 @@ class QuellCache {
           http: {status: 400}
         }
       );
-      console.log("Checking depth:", currentDepth)
+      // console.log("Checking depth:", currentDepth)
       Object.keys(proto).forEach((key) => {
         if (typeof proto[key] === 'object' && !key.includes('__')) {
           determineDepth(proto[key], currentDepth + 1);
