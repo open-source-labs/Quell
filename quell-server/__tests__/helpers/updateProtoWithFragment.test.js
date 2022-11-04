@@ -1,5 +1,4 @@
 const QuellCache = require('../../src/quell');
-const testSchema = require('../../test-config/testSchema');
 const schema = require('../../test-config/testSchema');
 
 const redisPort = 6379;
@@ -11,11 +10,8 @@ describe('tests for update prototype with fragments on the server side', () => {
 
 
   afterAll((done) => {
-    Quell.redisCache.flushall();
-    Quell.redisCache.quit(() => {
-      console.log('closing redis server');
-      done();
-    });
+    Quell.redisCache.flushAll();
+    done();
   });
   test('basic prototype object with 2 fields and a fragment, should convert to a protoype with 2 fields and the fields from the fragment without the fragment key on the prototype object', () => {
     const protoObj = {

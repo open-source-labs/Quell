@@ -8,11 +8,8 @@ describe('server side tests for createQueryObj.js', () => {
   const Quell = new QuellCache(schema, redisPort, timeout);
 
   afterAll((done) => {
-    Quell.redisCache.flushall();
-    Quell.redisCache.quit(() => {
-      console.log('closing redis server');
-      done();
-    });
+    Quell.redisCache.flushAll();
+    done();
   });
 
   // TO-DO: Add the same test to the client side test folder 
