@@ -1,5 +1,0 @@
-{
-  "dependencies": {
-    "@quell/server": "file:quell-server"
-  }
-}
