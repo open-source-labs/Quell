@@ -3,12 +3,21 @@ const { parse } = require('graphql/language/parser');
 const { visit, BREAK } = require('graphql/language/visitor');
 const { graphql } = require('graphql');
 
+const defaultCostParams = {
+  maxCost: 5000, // maximum cost allowed before a request is rejected
+  mutationCost: 5, // cost of a mutation
+  objectCost: 2, // cost of retrieving an object
+  scalarCost: 1, // cost of retrieving a scalar
+  depthCostFactor: 1.5, // multiplicative cost of each depth level
+  depthMax: 10 //depth limit parameter
+}
+
+
 class QuellCache {
   // default expiry time is 14 days in milliseconds
-  constructor(schema, redisPort, cacheExpiration = 1209600000, limit = 10, cost = 10) {
+  constructor(schema, redisPort, cacheExpiration = 1209600000, costParameters = defaultCostParams) {
     this.schema = schema;
-    this.limit = limit;
-    this.cost = cost;
+    this.costParameters = Object.assign(defaultCostParams, costParameters);
     this.depthLimit = this.depthLimit.bind(this);
     this.costLimit = this.costLimit.bind(this);
     this.queryMap = this.getQueryMap(schema);
@@ -29,8 +38,7 @@ class QuellCache {
     this.getRedisInfo = this.getRedisInfo.bind(this);
     this.getRedisKeys = this.getRedisKeys.bind(this);
     this.getRedisValues = this.getRedisValues.bind(this);
-    this.writeToCache = this.writeToCache.bind(this);
-    this.joinResponses = this.joinResponses.bind(this);
+    this.joinResponses  = this.joinResponses.bind(this);
     this.redisCache.connect()
       .then(() => {
         console.log('Connected to redisCache');
@@ -1788,16 +1796,19 @@ class QuellCache {
     }
   }
 
-    /**
+   /**
    * depthLimit takes in the query, parses it, and identifies the general shape of the request.
    * depthLimit then checks the depth limit set on server connection and compares it against the current queries depth.
    * In the instance of a malicious or overly nested query, depthLimit short-circuits the query before it goes to the database,
    * sending a status code 400 (bad request) back to the client/requester. 
    */
 
+
   //what parameters should they take? If middleware, good as is, has to take in query obj in request, limit set inside.
   // If function inside whole of Quell, (query, limit), so they are explicitly defined and passed in
   depthLimit(req, res, next) {
+    //get depth max limit from cost parameters
+    const { depthMax } = this.costParameters;
     //return error if no query in request.
     if (!req.body.query) return res.status(400);
     //assign graphQL query string to variable queryString
@@ -1809,20 +1820,17 @@ class QuellCache {
     // create response prototype, and operation type, and fragments object
     // the response prototype is used as a template for most operations in quell including caching, building modified requests, and more
     const { proto, operationType, frags } = this.parseAST(AST);
-    // console.log("Before Prototype Updated with Fragments: ", proto);
     //check for fragments
     const prototype =
     Object.keys(frags).length > 0
       ? this.updateProtoWithFragment(proto, frags)
       : proto;
-    // console.log("Updated Prototype with Fragments: ", prototype);
-    // console.log("checking frags ", frags)
 
     //helper function to determine the depth of the proto.
     //will be using this function to recursively go deeper into the nested query
     const determineDepth = (proto, currentDepth = 0) => {
-      if (currentDepth > this.limit) throw new GraphQLError(
-        `Your query exceeds maximum operation depth of ${this.limit}`,
+      if (currentDepth > depthMax) throw new GraphQLError(
+        `Your query exceeds maximum operation depth of ${depthMax}`,
         {
           code: "DEPTH_LIMIT_EXCEEDED",
           http: {status: 400}
@@ -1844,10 +1852,9 @@ class QuellCache {
     return next();
   }
 
- /**
-   * depthLimit takes in the query, parses it, and identifies the general shape of the request.
-   * depthLimit then checks the depth limit set on server connection and compares it against the current queries depth.
-   * In the instance of a malicious or overly nested query, depthLimit short-circuits the query before it goes to the database,
+    /**
+   * costLimit checks the cost of the query and, n the instance of a malicious or overly nested query, 
+   * costLimit short-circuits the query before it goes to the database,
    * sending a status code 400 (bad request) back to the client/requester. 
    * @param 
    * @param 
@@ -1855,11 +1862,11 @@ class QuellCache {
    */
 
   costLimit(req, res, next) {
+     const {maxCost, mutationCost, objectCost, depthCostFactor, scalarCost} = this.costParameters;
      //return error if no query in request.
      if (!req.body.query) return res.status(400);
      //assign graphQL query string to variable queryString
      const queryString = req.body.query;
- 
      //create AST
      const AST = parse(queryString);
      
@@ -1871,20 +1878,61 @@ class QuellCache {
      Object.keys(frags).length > 0
        ? this.updateProtoWithFragment(proto, frags)
        : proto;
-    //  console.log("checking frags ", frags)
 
+    let cost = 0;
+    
+    //mutation check
+    operationType === 'mutation' ? cost += (Object.keys(prototype).length * mutationCost) : null
 
-  //traverse over the prototype and calculate cost;
-  const determineCost = (proto, currentCost = 0) => {
-    if (currentCost > this.cost) return res.status(400).send("Request exceeds cost.");
-    // console.log("Checking cost:", currentCost)
-    Object.keys(proto).forEach((key) => {
-      // SOMETHING SHOULD GO HERE OR ### DELETE ### DETERMINE COST
-    })
-  }
-
-      return next();
+    const determineCost = (proto) => {
+      if (cost > maxCost) {
+        throw new GraphQLError(
+          `Your query exceeds maximum operation cost of ${maxCost}`,
+          {
+            code: "COST_LIMIT_EXCEEDED",
+            http: {status: 400}
+          }
+        );
+      }
+      Object.keys(proto).forEach((key) => {
+        if (typeof proto[key] === 'object' && !key.includes('__')) {
+          cost += objectCost
+          return determineCost(proto[key]);
+        }
+        if (proto[key] === true && !key.includes('__')) {
+          cost += scalarCost
+        }
+      })
     }
+      
+    determineCost(prototype)
+
+  
+    const determineDepthCost = (proto, totalCost = cost) => {
+      if (totalCost > maxCost) {
+        throw new GraphQLError(
+          `Your query exceeds maximum operation depth of ${maxCost}`,
+          {
+            code: "COST_LIMIT_EXCEEDED",
+            http: {status: 400}
+          }
+        );
+      }
+
+      Object.keys(proto).forEach((key) => {
+        if (typeof proto[key] === 'object' && !key.includes('__')) {
+          determineDepthCost(proto[key], totalCost * depthCostFactor);
+        }
+      })
+    }
+    
+    determineDepthCost(prototype)
+    //attach to res.locals so query doesn't need to re run these functions again.
+    res.locals.AST = AST;
+    res.locals.parsedAST = { proto, operationType, frags };
+    //return next
+    return next();
+  }
 };
 
 
