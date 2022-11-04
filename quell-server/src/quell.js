@@ -1055,7 +1055,10 @@ class QuellCache {
           cacheResponse.hasOwnProperty(key) &&
           serverResponse.hasOwnProperty(key)
         ) {
-          // we first check to see if the responses have identical keys to both avoid only returning 1/2 of the data (ex: there are 2 objects in the cache and you query for 4 objects (which includes the 2 cached objects) only returning the 2 new objects from the server)
+          // we first check to see if the responses have identical keys to both avoid 
+          //only returning 1/2 of the data (ex: there are 2 objects in the cache and 
+          // you query for 4 objects (which includes the 2 cached objects) only returning 
+          // the 2 new objects from the server)
           // if the keys are identical, we can return a "simple" merge of both
           const cacheKeys = Object.keys(cacheResponse[key][0]);
           const serverKeys = Object.keys(serverResponse[key][0]);
