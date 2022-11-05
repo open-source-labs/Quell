@@ -1,8 +1,6 @@
 const { parse } = require('graphql/language/parser');
-const mapGenerator = require('./helpers/mapGenerator');
 const determineType = require('./helpers/determineType');
 
-// The Loki Zone - (Banished);
 const loki = require('lokijs');
 const lokidb = new loki('client-cache');
 let lokiCache = lokidb.addCollection('loki-client-cache');
@@ -18,14 +16,12 @@ i.e. {{JSONStringifiedQuery: $lokiID}}
  */
 let IDCache = {};
 
-// an object in memory used to hold our maps after they have been generated once to stop excessive API calls
-const mapCache = {};
 
 
 /**
  * Quellify replaces the need for front-end developers who are using GraphQL to communicate with their servers
  * to write fetch requests. Quell provides caching functionality that a normal fetch request would not provide.
- *  @param {string} endPoint - The address to where requests are sent and processed. E.g. '/graphql'. This is also used to generate the maps (via mapGenerator) needed to process the query.
+ *  @param {string} endPoint - The address to where requests are sent and processed. E.g. '/graphql'.
  *  @param {string} query - The graphQL query that is requested from the client
  */
 
@@ -52,19 +48,6 @@ async function Quellify(endPoint, query) {
     IDCache = {};
     console.log('Client cache has been cleared.');
   };
-
-  // we need maps for graphQL to query properly, but the maps only need to be generated once on client launch
-  // so, we check our mapCache to see if we have already created the maps and then pull from it if so
-  let [map, queryTypeMap, mutationMap] = [null, null, null];
-  if (!mapCache.hasOwnProperty('map')) {
-    const mapsMade = await mapGenerator(endPoint);
-    ({ map, queryTypeMap, mutationMap } = mapsMade);
-    mapCache['map'] = map;
-    mapCache['queryTypeMap'] = queryTypeMap;
-    mapCache['mutationMap'] = mutationMap;
-  } else {
-    ({ map, queryTypeMap, mutationMap } = mapCache);
-  }
 
   // Create AST based on the input query using the parse method available in the graphQL library (further reading: https://en.wikipedia.org/wiki/Abstract_syntax_tree)
   const AST = parse(query);

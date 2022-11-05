@@ -10,5 +10,3 @@ quell-client/package-lock.json
 quell-client/node_modules
 quell-extension/node_modules
 quell-extension/package-lock.json
-demo/package-lock.json
-demo/node_modules
