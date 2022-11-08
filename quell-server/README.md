@@ -33,12 +33,12 @@ Install the NPM package from your terminal: `npm i @quell/server`.
 2. Instantiate QuellCache once for each GraphQL endpoint, passing to it the following arguments:
 
 - schema - the GraphQL schema you've defined using the graphql-JS library (NOTE: see 'Schema' section below)
-- redisPort - the port on which your Redis server is listening
+- redisPort - the port on which your Redis server will be running
 - cacheExpiration - number of seconds you want data to persist in the Redis cache
 
 3. Add quell-server's controller function `quellCache.query` to the Express route that receives GraphQL queries:
 
-So, for example, to instantiate the middleware to satisfy GraphQL queries using the schema you've stored or imported as `myGraphQLSchema` and cache responses to the Redis database listening on `6379` for `3600` seconds, you would add to your server file:
+So, for example, to instantiate the middleware to satisfy GraphQL queries using the schema you've stored or imported as `myGraphQLSchema` and cache responses to a Redis database on port `6379` for `3600` seconds, you would add to your server file:
 `const quellCache = new QuellCache(myGraphQLSchema, 6379, 3600);`
 
 And your server file might look like this:
@@ -75,9 +75,9 @@ That's it! You now have a normalized cache for your GraphQL endpoint.
 
 ## Rate and Cost Limiting Implementation
 
-Quell-Server now offers optional cost- and rate-limiting of incoming GraphQL queries for additional endpoint security from malicious nested or costly queries.
+@quell/server now offers optional cost- and rate-limiting of incoming GraphQL queries for additional endpoint security from malicious nested or costly queries.
 
-Both of these middleware packages use an optional, fourth "Cost Object" parameter QuellCache constructor function. Below is an example of the default Cost Object.
+Both of these middleware packages use an optional, fourth "Cost Object" parameter in the QuellCache constructor. Below is an example of the default Cost Object.
 
 ```
   const defaultCostParams = {
@@ -90,7 +90,7 @@ Both of these middleware packages use an optional, fourth "Cost Object" paramete
   }
 ```
 
-When parsing an incoming query, Quell-Server will build a cost associated with the query relative to how laborious it is to retrieve by using the costs provided in the Cost Object. The costs listed above are the default costs given upon QuellCache instantiation, but these costs can be manually reassigned upon cache creation.
+When parsing an incoming query, @quell/server will build a cost associated with the query relative to how laborious it is to retrieve by using the costs provided in the Cost Object. The costs listed above are the default costs given upon QuellCache instantiation, but these costs can be manually reassigned upon cache creation.
 
 If the cost of a query ever exceeds the `maxCost` defined in our Cost Object, the query will be rejected and return Status 400 before the request is sent to the database. Additionally, if the depth of a query ever exceeds the `depthMax` defined in our Cost Object, the query will be similarly rejected.
 
@@ -159,11 +159,11 @@ module.exports = new GraphQLSchema({
 - Currently, Quell can cache 1) query-type requests without variables or directives and 2) mutation-type requests (add, update, and delete) with cache invalidation implemented. Quell will still process other requests, but will not cache the responses.
 
 ### Future Additions
-Goals for the future of Quell/server include:
+Goals for the future of @quell/server include:
   - The current caching logic depends on the GraphQL query put in, which depends on the shape and type of Schema used. The current implementation of Quell requires defining your schema using GraphQL Object Types, and as such will not work properly with many users Apollo Schemas.
     1) Implement alternative Parsing functions to identify and handle alternative schema creation, such as schemas made via makeExectuableSchema or BuildSchema from Apollo. These cases were not caught in previous implementations of GraphQL and were not known limitations. 
   - The current caching logic is all bound within a class, making it difficult to separate functionality and modularize and test individual pieces.
     1) Move functions out of the Quell.js file into their own helper functions to be called as needed. This will allow future functionality to be easier to test and implement.
     2) Re-write tests, move tests to be associated with each helper function rather than being a long middleware chain. 
 
-#### For information on @quell/client, please visit the corresponding [README file](https://github.com/open-source-labs/Quell/tree/main/quell-client).
+#### For information on @quell/client, please visit the corresponding [README file](../quell-client/README.md).

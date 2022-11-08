@@ -5,7 +5,7 @@
 
 # @quell/client
 
-@quell/client is an easy-to-implement JavaScript library providing a simple, client-side caching solution and cache invalidation for GraphQL. Quell's Quell's client-side cache implementation caches whole queries as keys and saves their results as values in LokiJS. 
+@quell/client is an easy-to-implement JavaScript library providing a simple, client-side caching solution and cache invalidation for GraphQL. Quell's client-side cache implementation caches whole queries as keys and saves their results as values in LokiJS. 
 
 @quell/client is an open-source NPM package accelerated by [OS Labs](https://github.com/open-source-labs) and developed by [Alex Martinez](https://github.com/alexmartinez123), [Cera Barrow](https://github.com/cerab), [Jackie He](https://github.com/Jckhe), [Zoe Harper](https://github.com/ContraireZoe), [David Lopez](https://github.com/DavidMPLopez), [Sercan Tuna](https://github.com/srcntuna), [Idan Michael](https://github.com/IdanMichael), [Tom Pryor](https://github.com/Turmbeoz), [Chang Cai](https://github.com/ccai89), [Robert Howton](https://github.com/roberthowton), [Joshua Jordan](https://github.com/jjordan-90), [Jinhee Choi](https://github.com/jcroadmovie), [Nayan Parmar](https://github.com/nparmar1), [Tashrif Sanil](https://github.com/tashrifsanil), [Tim Frenzel](https://github.com/TimFrenzel), [Robleh Farah](https://github.com/farahrobleh), [Angela Franco](https://github.com/ajfranco18), [Ken Litton](https://github.com/kenlitton), [Thomas Reeder](https://github.com/nomtomnom), [Andrei Cabrera](https://github.com/Andreicabrerao), [Dasha Kondratenko](https://github.com/dasha-k), [Derek Sirola](https://github.com/dsirola1), [Xiao Yu Omeara](https://github.com/xyomeara), [Nick Kruckenberg](https://github.com/kruckenberg), [Mike Lauri](https://github.com/MichaelLauri), [Rob Nobile](https://github.com/RobNobile) and [Justin Jaeger](https://github.com/justinjaeger).
 
@@ -42,10 +42,10 @@ fetch('/graphQL', {
 
 To make that same request with Quell:
 
-1. Import Quell with `import { Quell } from '@quell/client'`
-2. Instead of calling `fetch(endpoint)` and passing the query through the request body, replace with `Quell(endpoint, query)`
+1. Import Quell with `import { Quellify } from '@quell/client'`
+2. Instead of calling `fetch(endpoint)` and passing the query through the request body, replace with `Quellify(endpoint, query)`
 
-- The `Quell` method takes in two parameters
+- The `Quellify` method takes in two parameters
   1. **_endpoint_** - your GraphQL endpoint as a string (ex. '/graphQL')
   2. **_query_** - your GraphQL query as a string (ex. see sampleQuery, above)
 
@@ -53,13 +53,13 @@ To make that same request with Quell:
 And in the end , your Quell-powered GraphQL fetch would look like this:
 
 ```
-Quell('/graphQL', sampleQuery)
+Quellify('/graphQL', sampleQuery)
   .then( // use parsed response);
 ```
 
 Note: Quell will return a promise that resolves into a JS object containing your data in the same form as a typical GraphQL response `{ data: // response }`
 
-That's it! You're now caching your GraphQL queries and mutations in the LokiJS (client-side cache storage).
+That's it! You're now caching your GraphQL queries in the LokiJS client-side cache storage.
 
 ### Usage Notes
 
@@ -76,4 +76,4 @@ Goals for the future of Quell/client include:
     1) Create new testing suites for the current implementation of the client-side cache.
     2) Restart TDD from the ground up while re-writing the caching logic. 
 
-#### For information on @quell/server, please visit the corresponding [README file](https://github.com/open-source-labs/Quell/tree/main/quell-server).
+#### For information on @quell/server, please visit the corresponding [README file](../quell-server/README.md)).
