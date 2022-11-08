@@ -1,7 +1,6 @@
-<p align="center"><img src="./demo/client/src/images/quell_logos/QUELL-nested-LG@0.75x.png" width='500' style="margin-top: 10px; margin-bottom: -10px;"></p>
+<p align="center"><img src="./assets/quell.png" width='500' style="margin-top: 10px; margin-bottom: -10px;"></p>
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://github.com/open-source-labs/Quell/blob/master/LICENSE)
-![AppVeyor](https://img.shields.io/badge/build-passing-brightgreen.svg)
 [![contributions welcome](https://img.shields.io/badge/contributions-welcome-brightgreen.svg?style=flat)](https://github.com/open-source-labs/Quell/issues)
 <!-- ![AppVeyor](https://img.shields.io/badge/version-1.0.1-blue.svg) -->
 
@@ -9,13 +8,18 @@
 
 Quell is an easy-to-use, lightweight JavaScript library providing a client- and server-side caching solution and cache invalidation for GraphQL.
 
-Accelerated by [OS Labs](https://github.com/open-source-labs) and developed by [David Lopez](https://github.com/DavidMPLopez),[Sercan Tuna](https://github.com/srcntuna),[Idan Michael](https://github.com/IdanMichael),[Tom Pryor](https://github.com/Turmbeoz), [Chang Cai](https://github.com/ccai89), [Robert Howton](https://github.com/roberthowton), [Joshua Jordan](https://github.com/jjordan-90), [Jinhee Choi](https://github.com/jcroadmovie), [Nayan Parmar](https://github.com/nparmar1), [Tashrif Sanil](https://github.com/tashrifsanil), [Tim Frenzel](https://github.com/TimFrenzel), [Robleh Farah](https://github.com/farahrobleh), [Angela Franco](https://github.com/ajfranco18), [Ken Litton](https://github.com/kenlitton), [Thomas Reeder](https://github.com/nomtomnom), [Andrei Cabrera](https://github.com/Andreicabrerao), [Dasha Kondratenko](https://github.com/dasha-k), [Derek Sirola](https://github.com/dsirola1), [Xiao Yu Omeara](https://github.com/xyomeara), [Nick Kruckenberg](https://github.com/kruckenberg), [Mike Lauri](https://github.com/MichaelLauri), [Rob Nobile](https://github.com/RobNobile) and [Justin Jaeger](https://github.com/justinjaeger).
+Accelerated by [OS Labs](https://github.com/open-source-labs) and developed by [Alex Martinez](https://github.com/alexmartinez123), [Cera Barrow](https://github.com/cerab), [Jackie He](https://github.com/Jckhe), [Zoe Harper](https://github.com/ContraireZoe), [David Lopez](https://github.com/DavidMPLopez),[Sercan Tuna](https://github.com/srcntuna),[Idan Michael](https://github.com/IdanMichael),[Tom Pryor](https://github.com/Turmbeoz), [Chang Cai](https://github.com/ccai89), [Robert Howton](https://github.com/roberthowton), [Joshua Jordan](https://github.com/jjordan-90), [Jinhee Choi](https://github.com/jcroadmovie), [Nayan Parmar](https://github.com/nparmar1), [Tashrif Sanil](https://github.com/tashrifsanil), [Tim Frenzel](https://github.com/TimFrenzel), [Robleh Farah](https://github.com/farahrobleh), [Angela Franco](https://github.com/ajfranco18), [Ken Litton](https://github.com/kenlitton), [Thomas Reeder](https://github.com/nomtomnom), [Andrei Cabrera](https://github.com/Andreicabrerao), [Dasha Kondratenko](https://github.com/dasha-k), [Derek Sirola](https://github.com/dsirola1), [Xiao Yu Omeara](https://github.com/xyomeara), [Nick Kruckenberg](https://github.com/kruckenberg), [Mike Lauri](https://github.com/MichaelLauri), [Rob Nobile](https://github.com/RobNobile) and [Justin Jaeger](https://github.com/justinjaeger).
 
 ## Features
-- Cache Invalidation implemented in server-side for (add, update, and delete) mutation service newly implemented
+- (New!) Quell has now migrated from Node-Redis 3.0 to Node-Redis 4.4. This was a breaking change for how Quell stood-up the Redis cache but shouldn't change how Quell is implemented!
+- (New!) Quell has now migrated from GraphQL V14.x to GraphQL V16.x. This was a breaking change for Quell logic but shouldn't change how Quell is implemented!
+- (New!) Quell/server now offers optional depth and cost limiting middleware to protect your GraphQL endpoint! To use, please explore the [@quell/server readme](./quell-server/README.md).
+- (New!) Server-side caching now properly handles fragments and individually caches each datapoint. 
+- (New!) Server-side cache now caches entire query in instances where it is unable to cache inidividual datapoints. 
+- (New!) Server-side cache will properly join partial responses where the database and cache have different datapoints for the same query.
+- Cache Invalidation implemented in server-side for (add, update, and delete) mutations
 - Client-side caching utilizing LokiJS
 - Server-side caching utilizing a configurable Redis in-memory data store with batching
-- Automatic unique cache key generation
 - Partial and exact match query caching
 - Programmatic rebuilding of GraphQL queries to fetch only the minimum data necessary to complete the response based upon current cache contents
 - A easy-to-use Chrome Developer Tools extension designed for Quell users. With this extension, users can:
@@ -33,18 +37,6 @@ Quell is divided into two npm packages:
 - Download @quell/client from npm in your terminal with `npm i @quell/client`
 - Download @quell/server from npm in your terminal with `npm i @quell/server`
 
-#### Installing and Connecting a Redis Server
-
-If not already installed on your server, install Redis.
-
-- Mac-Homebrew:
-  - At the terminal, type `brew install redis`
-  - After installation completes, type `redis-server`
-  - Your server should now have a Redis database connection open (note the port on which it is listening)
-- Linux or non-Homebrew:
-  - Download appropriate version of Redis from [redis.io/download](http://redis.io/download)
-  - Follow installation instructions
-  - Once Redis is successfully installed, follow instructions to open a Redis database connection (note the port on which it is listening)
 
 #### Usage Notes
 
@@ -62,7 +54,7 @@ Quell Developer Tool is currently available as a Chrome Developer Tools extensio
 
 ### Contribute to Quell
 
-Interested in making a contribution to Quell? Find our open-source contribution guidelines [here](./CONTRIBUTING.md).
+Interested in making a contribution to Quell? Find our open-source contribution guidelines [here](./CONTRIBUTING.md). Please feel free to also review the larger future direction for Quell in the Client and Server readme's.
 
 Thank you for your interest and support!
-Team Quell
+- Team Quell

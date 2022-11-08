@@ -1,15 +1,13 @@
-<p align="center"><img src="./assets/QUELL-nested-LG@0.75x.png" width='500' style="margin-top: 10px; margin-bottom: -10px;"></p>
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://github.com/open-source-labs/Quell/blob/master/LICENSE)
-![AppVeyor](https://img.shields.io/badge/build-passing-brightgreen.svg)
-![AppVeyor](https://img.shields.io/badge/version-3.1.1-blue.svg)
+![AppVeyor](https://img.shields.io/badge/version-5.0.0-blue.svg)
 [![contributions welcome](https://img.shields.io/badge/contributions-welcome-brightgreen.svg?style=flat)](https://github.com/open-source-labs/Quell/issues)
 
 # @quell/client
 
-@quell/client is an easy-to-implement JavaScript library providing a client-side caching solution and cache invalidation for GraphQL. Quell's schema-governed, type-level normalization algorithm caches GraphQL query responses as flattened key-value representations of the graph's nodes, making it possible to partially satisfy queries from LokiJS (client-side cache storage), reformulate the query, and then fetch additional data from other APIs or databases.
+@quell/client is an easy-to-implement JavaScript library providing a simple, client-side caching solution and cache invalidation for GraphQL. Quell's Quell's client-side cache implementation caches whole queries as keys and saves their results as values in LokiJS. 
 
-@quell/client is an open-source NPM package accelerated by [OS Labs](https://github.com/open-source-labs) and developed by [David Lopez](https://github.com/DavidMPLopez), [Sercan Tuna](https://github.com/srcntuna), [Idan Michael](https://github.com/IdanMichael), [Tom Pryor](https://github.com/Turmbeoz), [Chang Cai](https://github.com/ccai89), [Robert Howton](https://github.com/roberthowton), [Joshua Jordan](https://github.com/jjordan-90), [Jinhee Choi](https://github.com/jcroadmovie), [Nayan Parmar](https://github.com/nparmar1), [Tashrif Sanil](https://github.com/tashrifsanil), [Tim Frenzel](https://github.com/TimFrenzel), [Robleh Farah](https://github.com/farahrobleh), [Angela Franco](https://github.com/ajfranco18), [Ken Litton](https://github.com/kenlitton), [Thomas Reeder](https://github.com/nomtomnom), [Andrei Cabrera](https://github.com/Andreicabrerao), [Dasha Kondratenko](https://github.com/dasha-k), [Derek Sirola](https://github.com/dsirola1), [Xiao Yu Omeara](https://github.com/xyomeara), [Nick Kruckenberg](https://github.com/kruckenberg), [Mike Lauri](https://github.com/MichaelLauri), [Rob Nobile](https://github.com/RobNobile) and [Justin Jaeger](https://github.com/justinjaeger).
+@quell/client is an open-source NPM package accelerated by [OS Labs](https://github.com/open-source-labs) and developed by [Alex Martinez](https://github.com/alexmartinez123), [Cera Barrow](https://github.com/cerab), [Jackie He](https://github.com/Jckhe), [Zoe Harper](https://github.com/ContraireZoe), [David Lopez](https://github.com/DavidMPLopez), [Sercan Tuna](https://github.com/srcntuna), [Idan Michael](https://github.com/IdanMichael), [Tom Pryor](https://github.com/Turmbeoz), [Chang Cai](https://github.com/ccai89), [Robert Howton](https://github.com/roberthowton), [Joshua Jordan](https://github.com/jjordan-90), [Jinhee Choi](https://github.com/jcroadmovie), [Nayan Parmar](https://github.com/nparmar1), [Tashrif Sanil](https://github.com/tashrifsanil), [Tim Frenzel](https://github.com/TimFrenzel), [Robleh Farah](https://github.com/farahrobleh), [Angela Franco](https://github.com/ajfranco18), [Ken Litton](https://github.com/kenlitton), [Thomas Reeder](https://github.com/nomtomnom), [Andrei Cabrera](https://github.com/Andreicabrerao), [Dasha Kondratenko](https://github.com/dasha-k), [Derek Sirola](https://github.com/dsirola1), [Xiao Yu Omeara](https://github.com/xyomeara), [Nick Kruckenberg](https://github.com/kruckenberg), [Mike Lauri](https://github.com/MichaelLauri), [Rob Nobile](https://github.com/RobNobile) and [Justin Jaeger](https://github.com/justinjaeger).
 
 ## Installation
 
@@ -35,72 +33,27 @@ const sampleQuery = `query {
     }
 }`
 
-function fetchMe(sampleQuery) {
-    let results;
-    fetch('/graphQL', {
-        method: "POST",
-        body: JSON.stringify(sampleQuery)
-    })
-    .then(res => res.json())
-    .then(parsedRes => {
-      // use parsed results
-     });
 
-fetchMe(sampleQuery)
+fetch('/graphQL', {
+    method: "POST",
+    body: JSON.stringify(sampleQuery)
+})
 ```
 
 To make that same request with Quell:
 
-1. Import Quell with `import {Quell , mapGenerator} from '@quell/client'`
-2. Call mapGenerator(endpoint) function to generate map objects to be used in Quell function and assign it to a variable
-    
-    const maps = await mapGenerator(endpoint)
+1. Import Quell with `import { Quell } from '@quell/client'`
+2. Instead of calling `fetch(endpoint)` and passing the query through the request body, replace with `Quell(endpoint, query)`
 
-3. Instead of calling `fetchMe(query)`, replace with `Quell(endpoint, query, maps)`
-
-- The `Quell` method takes in three parameters
+- The `Quell` method takes in two parameters
   1. **_endpoint_** - your GraphQL endpoint as a string (ex. '/graphQL')
   2. **_query_** - your GraphQL query as a string (ex. see sampleQuery, above)
-  3. **_maps_** - generates object that maps possible mutations (mutationMap) and
-     objects that maps named queries (map and queryTypeMap) . These objects will be used in Quell caching algorithm
 
-  //As an example, objects(`maps` object variable) generated by invoking mapGenerator function
-  
-```
-  const mutationMap = {
-    addBook: "Book",
-    changeBooksByAuthor: "Book",
-    changeBooksByName: "Book",
-    deleteBooksByName: "Book",
-    deleteBookByAuthor: "Book",
-    addBookShelf: "BookShelf",
-  };
-
-  const map = {
-    countries: 'Country',
-    country: 'Country',
-    citiesByCountryId: 'City',
-    cities: 'City',
-  }
-
-  const queryTypeMap = {
-    country: 'countries',
-    city: 'cities',
-    bookShelf: 'BookShelves',
-    Book: 'books',
-    Books: 'books', 
-    Attraction: 'attractions',
-    Attractions: 'attractions'
-  };
-  
-```
 
 And in the end , your Quell-powered GraphQL fetch would look like this:
 
 ```
-const maps = await mapGenerator(endpoint) // this can be called only once
-
-Quell('/graphQL', sampleQuery, maps)
+Quell('/graphQL', sampleQuery)
   .then( // use parsed response);
 ```
 
@@ -110,21 +63,17 @@ That's it! You're now caching your GraphQL queries and mutations in the LokiJS (
 
 ### Usage Notes
 
-- If you want to specify the headers sent on your GraphQL request, pass in an additional object to Quell like so:
-
-```
-const headersObject = {
-  'Content-Type': 'application/json',
-};
-
-Quell('/graphQL', sampleQuery, maps, { headers: headersObject })
-  .then( // use parsed response);
-```
-
 - @quell/client now client-side caching speed is 4-5 times faster than it used to be.
 
-- @quell/client can only cache items it can uniquely identify. It will will look for fields called `id`, `_id`, `Id`, or `ID` on the response. If a query lacks all four, it will execute the query without caching the response.
+- Currently, Quell can cache any non-mutative query. Quell will still process other requests, but all mutations will cause cache invalidate for the entire the client-side cache. Please report edge cases, issues, and other user stories to us, we would be grateful to expand on Quells use cases! 
 
-- Currently, Quell can cache 1) query-type requests without variables or directives and 2) mutation-type requests (add, update, and delete) with cache invalidation implemented. Quell will still process other requests, but will not cache the responses.
+# Future Additions
+Goals for the future of Quell/client include:
+  - The caching logic for the server-side is multi-faceted, allowing for each query to be broken down into parts and have each data point cached individually. The client-side logic was not working as intended and was iterating through each data-point in the cache. As the cache grew in size this became extremely slow, and as such, the most recent iteration of quell removes much of the functionality to trim the file size down and prevent this issue. Additionally, the client-side was querying the database with every call, removing the benefit of a client-side cache. 
+    1) Translate the server-side caching logic to the client-side, translating RedisDB functions to similar LokiDB functions.
+    2) Re-write much of the core logic, as LokiDB has significantly different functions and benefits than a Redis DB. Alternatively, as the logic is very simple right now, the DB could be transitioned from LokiDB to a newer DB technology that also offers in-memory storage for quick retrieval of data. 
+  - The previous testing suites created during the original implementation of Quell/client were very thorough, but as the project grew in complexity and versins these tests were not updated to test the new functionality. 
+    1) Create new testing suites for the current implementation of the client-side cache.
+    2) Restart TDD from the ground up while re-writing the caching logic. 
 
-#### For information on @quell/server, please visit the corresponding [README file](https://github.com/open-source-labs/Quell/tree/master/quell-server).
+#### For information on @quell/server, please visit the corresponding [README file](https://github.com/open-source-labs/Quell/tree/main/quell-server).
