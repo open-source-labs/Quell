@@ -2,7 +2,6 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://github.com/open-source-labs/Quell/blob/master/LICENSE)
 [![contributions welcome](https://img.shields.io/badge/contributions-welcome-brightgreen.svg?style=flat)](https://github.com/open-source-labs/Quell/issues)
-<!-- ![AppVeyor](https://img.shields.io/badge/version-1.0.1-blue.svg) -->
 
 # Quell
 
@@ -27,6 +26,8 @@ Accelerated by [OS Labs](https://github.com/open-source-labs) and developed by [
   - Make and monitor the latency of GraphQL/Quell requests to a specified server endpoint
   - View server-side cache data and contents, with the ability to manually clear the cache
   - Features require zero-to-minimal configuration and can work independently of `@quell/client` and `@quell/server`
+
+<p><img src="./assets/quell-diagram.png"></p>
 
 ## Installation
 
