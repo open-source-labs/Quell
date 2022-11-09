@@ -65,7 +65,7 @@ That's it! You're now caching your GraphQL queries in the LokiJS client-side cac
 
 - @quell/client now client-side caching speed is 4-5 times faster than it used to be.
 
-- Currently, Quell can cache any non-mutative query. Quell will still process other requests, but all mutations will cause cache invalidate for the entire the client-side cache. Please report edge cases, issues, and other user stories to us, we would be grateful to expand on Quells use cases! 
+- Currently, Quell can cache any non-mutative query. Quell will still process other requests, but all mutations will cause cache invalidate for the entire client-side cache. Please report edge cases, issues, and other user stories to us, we would be grateful to expand on Quells use cases! 
 
 # Future Additions
 Goals for the future of Quell/client include:
