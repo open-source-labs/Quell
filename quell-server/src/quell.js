@@ -866,7 +866,7 @@ class QuellCache {
   }
 
   /**
-   * joinresponses combines two objects containing results from separate sources and outputs a single object with information from both sources combined,
+   * joinResponses combines two objects containing results from separate sources and outputs a single object with information from both sources combined,
    * formatted to be delivered to the client, using the queryProto as a template for how to structure the final response object.
    * @param {Object} cacheResponse - response data from the cache
    * @param {Object} serverResponse - response data from the server or external API
@@ -1807,7 +1807,7 @@ class QuellCache {
     scalarCost: 1, // cost of retrieving a scalar
     depthCostFactor: 1.5, // multiplicative cost of each depth level
     depthMax: 10 //depth limit parameter
-  }
+  };
 
 
   
