@@ -5,6 +5,7 @@ const loki = require('lokijs');
 const lokidb = new loki('client-cache');
 let lokiCache = lokidb.addCollection('loki-client-cache');
 
+
 /*The IDCache is a psuedo-join table that is a JSON object in memory, 
 that uses cached queries to return their location ($loki (lokiID)) from LokiCache.
 i.e. {{JSONStringifiedQuery: $lokiID}} 
@@ -16,6 +17,12 @@ i.e. {{JSONStringifiedQuery: $lokiID}}
  */
 let IDCache = {};
 
+const clearCache = () => {
+  lokidb.removeCollection('loki-client-cache');
+  lokiCache = lokidb.addCollection('loki-client-cache');
+  IDCache = {};
+  console.log('Client cache has been cleared.');
+};
 
 
 /**
@@ -28,7 +35,6 @@ let IDCache = {};
 
 
 async function Quellify(endPoint, query) {
-
   const performFetch = async () => {
     const fetchOptions = {
       method: 'POST',
@@ -42,13 +48,7 @@ async function Quellify(endPoint, query) {
     return parsedData;
   };
 
-  const clearCache = () => {
-    lokidb.removeCollection('loki-client-cache');
-    lokiCache = lokidb.addCollection('loki-client-cache');
-    IDCache = {};
-    console.log('Client cache has been cleared.');
-  };
-
+  
   // Create AST based on the input query using the parse method available in the graphQL library (further reading: https://en.wikipedia.org/wiki/Abstract_syntax_tree)
   const AST = parse(query);
 
@@ -95,4 +95,5 @@ async function Quellify(endPoint, query) {
     }
   }
 }
-module.exports = { Quellify };
+
+module.exports = { Quellify , clearLokiCache: clearCache };
