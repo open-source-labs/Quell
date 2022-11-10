@@ -34,12 +34,14 @@ Install the NPM package from your terminal: `npm i @quell/server`.
 
 - schema - the GraphQL schema you've defined using the graphql-JS library (NOTE: see 'Schema' section below)
 - redisPort - the port on which your Redis server will be running
+- redisHost - the hostname of your Redis server (this defaults to localhost if unprovided, but can be modified as needed)
 - cacheExpiration - number of seconds you want data to persist in the Redis cache
+- costParameters (optional, see "Rate and Cost Limiting Implementation" section below) 
 
 3. Add quell-server's controller function `quellCache.query` to the Express route that receives GraphQL queries:
 
-So, for example, to instantiate the middleware to satisfy GraphQL queries using the schema you've stored or imported as `myGraphQLSchema` and cache responses to a Redis database on port `6379` for `3600` seconds, you would add to your server file:
-`const quellCache = new QuellCache(myGraphQLSchema, 6379, 3600);`
+So, for example, to instantiate the middleware to satisfy GraphQL queries using the schema you've stored or imported as `myGraphQLSchema` and cache responses to a Redis database on your local machine listening at port `6379` for `3600` seconds, you would add to your server file:
+`const quellCache = new QuellCache(myGraphQLSchema, 6379, 'localhost', 3600);`
 
 And your server file might look like this:
 
@@ -52,7 +54,7 @@ const { QuellCache } = require('@quell/server')
 const app = express();
 
 // instantiate quell-server
-const quellCache = new QuellCache(myGraphQLSchema, 6379, 3600);
+const quellCache = new QuellCache(myGraphQLSchema, 6379, 'localhost', 3600);
 
 // apply Express's JSON parser
 app.use(express.json());
@@ -98,7 +100,7 @@ Using the implementation described in our "Cache Implementation" section, we cou
 
 ```
 // instantiate quell-server
-const quellCache = new QuellCache(myGraphQLSchema, 6379, 3600, {maxCost: 100, depthMax: 5});
+const quellCache = new QuellCache(myGraphQLSchema, 6379, 'localhost', 3600, {maxCost: 100, depthMax: 5});
 
 // GraphQL route
 app.use('/graphql',
