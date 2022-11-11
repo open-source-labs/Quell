@@ -3,34 +3,33 @@ const schema = require('../../test-config/testSchema');
 const { parse } = require('graphql/language/parser');
 
 const redisPort = 6379;
-const timeout = 100;
+const timeout = 1000;
 
 describe('server tests for Quell.parseAST.js', () => {
   const Quell = new QuellCache(schema, redisPort, timeout);
-
   
   beforeAll(() => {
-    const promise1 = new Promise((resolve, reject) => {
+    const promise1 = ((resolve, reject) => {
       resolve(Quell.writeToCache('country--1', {id: "1", capitol: {id: "2", name: "DC"}}));
     });
-    const promise2 = new Promise((resolve, reject) => {
+    const promise2 = ((resolve, reject) => {
       resolve(Quell.writeToCache('country--2', {id: "2"}));
     }); 
-    const promise3 = new Promise((resolve, reject) => {
+    const promise3 = ((resolve, reject) => {
       resolve(Quell.writeToCache('country--3', {id: "3"}));
     });
-    const promise4 = new Promise((resolve, reject) => {
+    const promise4 = ((resolve, reject) => {
       resolve(Quell.writeToCache('countries', ['country--1', 'country--2', 'country--3']));
     });
-    return Promise.all([promise1, promise2, promise3, promise4]);
+    return ([promise1, promise2, promise3, promise4]);
   })
 
-  afterAll((done) => {
-    Quell.redisCache.flushall();
-    Quell.redisCache.quit(() => {
-      done();
-    });
-  });
+  // afterAll((done) => {
+  //   Quell.redisCache.flushAll();
+  //   Quell.redisCache.quit(() => {
+  //     done();
+  //   });
+  // });
 
 
   test('should traverse the abstract syntax tree and create a proto object', () => {
@@ -154,7 +153,7 @@ describe('server tests for Quell.parseAST.js', () => {
     expect(operationType).toEqual('query');
   });
 
-  xtest('should reject query without id for', () => {
+  test('should reject query without id for', () => {
     const query = `{
       countries { 
         id 
@@ -180,7 +179,7 @@ describe('server tests for Quell.parseAST.js', () => {
         capital: true,
       },
     });
-    expect(operationType).toEqual('unQuellable');
+    expect(operationType).toEqual('noID');
   });
 
   test('should create proto object for multiple queries', () => {
@@ -403,68 +402,6 @@ describe('server tests for Quell.parseAST.js', () => {
             }
           }
         }
-      }
-    });
-    expect(operationType).toBe('query');
-  });
-
-  test('should add type-specific options to proto when supplied', () => {
-    const query = `query {
-      country(id: 1, name: "USA", __cacheTime: 1000) {
-        id
-        name
-        capitol
-      }
-    }`;
-    const parsedQuery = parse(query);
-
-    const { proto, operationType } = Quell.parseAST(parsedQuery);
-    expect(proto).toEqual({
-      country: {
-        __type: 'country',
-        __args: { id: "1", name: "USA" },
-        __alias: null,
-        __cacheTime: "1000",
-        __id: "1",
-        id: true,
-        name: true,
-        capitol: true,
-      },
-    });
-    expect(operationType).toEqual('query');
-  });
-
-  test('should create proto for query with fragments', () => {
-    const query = `query { 
-      Canada: country {
-        id
-        name
-        ...CountryInfo
-      }
-    }
-    fragment CountryInfo on country {
-      capitol,
-      population
-    }`;
-
-    const parsedQuery = parse(query);
-    const { proto, operationType , frags } = Quell.parseAST(parsedQuery);
-
-    expect(proto).toEqual({
-      Canada: {
-        __id: null,
-        __type: 'country',
-        __args: null,
-        __alias: 'Canada',
-        id: true,
-        name: true,
-        CountryInfo: true
-      }
-    });
-    expect(frags).toEqual({
-      CountryInfo: {
-        capitol: true,
-        population: true
       }
     });
     expect(operationType).toBe('query');

@@ -9,10 +9,8 @@ describe('tests for joinResponses on the server side', () => {
   const Quell = new QuellCache(schema, redisPort, timeout);
 
   afterAll((done) => {
-    Quell.redisCache.flushall();
-    Quell.redisCache.quit(() => {
-      done();
-    });
+    Quell.redisCache.flushAll();
+    done();
   });
   
   const protoObj = {
@@ -186,32 +184,22 @@ describe('tests for joinResponses on the server side', () => {
   });
 
   
-  xtest('inputs a list retrieved from cache and a list retrieved from server and outputs combined List response', () => {
+  test('inputs a list retrieved from cache and a list retrieved from server and outputs combined List response', () => {
     const cacheResponse = {
       data: {
         albums: [
           { album_id: '1', id: '101', name: 'Blue Train', release_year: 1957 },
-          { album_id: '2', id: '201', name: 'Giant Steps', release_year: 1965 },
-        ],
+          { album_id: '2', id: '201', name: 'Giant Steps', release_year: 1965 }
+        ]
       }
     };
       
     const serverResponse = {
       data: {
         albums: [
-          {
-            album_id: '3',
-            id: '301',
-            name: 'Kind of Blue',
-            release_year: 1959,
-          },
-          {
-            album_id: '4',
-            id: '401',
-            name: 'In a Silent Way',
-            release_year: 1969,
-          },
-        ],
+          { album_id: '3', id: '301', name: 'Kind of Blue', release_year: 1959 },
+          { album_id: '4', id: '401', name: 'In a Silent Way', release_year: 1969 }
+        ]
       }
     };
     

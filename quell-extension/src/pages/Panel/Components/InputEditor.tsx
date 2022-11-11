@@ -47,6 +47,7 @@ const InputEditor = (props) => {
           theme: 'material-darker',
           lineNumbers: true,
           mode: 'graphql',
+          // ### DELETE ###
           // linting does not seem to work, and breaks app if no schema retrieved
           // lint: props.schema === {} ? false : { schema: props.schema },
           // hintOptions: props.schema === {} ? false : { schema: props.schema }

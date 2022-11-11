@@ -8,11 +8,8 @@ describe('server side tests for createQueryStr.js', () => {
   const Quell = new QuellCache(schema, redisPort, timeout);
 
   afterAll((done) => {
-    Quell.redisCache.flushall();
-    Quell.redisCache.quit(() => {
-      console.log('closing redis server');
-      done();
-    });
+    Quell.redisCache.flushAll();
+    done();
   });
   
   test('inputs query object w/ no values', () => {
@@ -112,10 +109,10 @@ describe('server side tests for createQueryStr.js', () => {
           population: false
         },
       }
-    };
+    }; 
 
     expect(Quell.createQueryStr(queryObject)).toEqual(
-      `{ country(id: 1) { id name capitol cities { id country_id name population } } }`
+      `{ country(id: \"1\") { id name capitol cities { id country_id name population } } }`
     );
   });
 
@@ -146,7 +143,7 @@ describe('server side tests for createQueryStr.js', () => {
     };
 
     expect(Quell.createQueryStr(queryObject)).toEqual(
-      `{ country(name: China, capitol: Beijing) { id name capital cities { id country_id name population } } }`
+      `{ country(name: \"China\", capitol: \"Beijing\") { id name capital cities { id country_id name population } } }`
     );
   });
 
@@ -170,7 +167,7 @@ describe('server side tests for createQueryStr.js', () => {
     };
 
     expect(Quell.createQueryStr(queryObject)).toEqual(
-      `{ Canada: country(id: 3) { id cities { id name } } }`
+      `{ Canada: country(id: \"3\") { id cities { id name } } }`
     );
   });
 
@@ -192,7 +189,7 @@ describe('server side tests for createQueryStr.js', () => {
     };
 
     expect(Quell.createQueryStr(queryObject)).toEqual(
-      `{ Canada: country(id: 3) { id Toronto: city(id: 5) { id name } } }`
+      `{ Canada: country(id: \"3\") { id Toronto: city(id: \"5\") { id name } } }`
     );
   });
 
@@ -233,7 +230,7 @@ describe('server side tests for createQueryStr.js', () => {
     };
 
     expect(Quell.createQueryStr(queryObject)).toEqual(
-      `{ country(id: 1) { id name cities { id name } } book(id: 2) { id title author { id name } } }`
+      `{ country(id: \"1\") { id name cities { id name } } book(id: \"2\") { id title author { id name } } }`
     );
   });
 
