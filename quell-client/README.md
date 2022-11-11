@@ -20,7 +20,7 @@ Let's take a look at a typical use case for @quell/client by re-writing a fetch 
 
 Sample code of fetch request without Quell:
 
-```
+```javascript
 const sampleQuery = `query {
     countries {
         id

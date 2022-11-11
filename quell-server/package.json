@@ -15,7 +15,7 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/open-source-labs/Quell/tree/master/quell-server"
+    "url": "https://github.com/open-source-labs/Quell/tree/main/quell-server"
   },
   "bugs": {
     "url": "https://github.com/open-source-labs/Quell/issues"

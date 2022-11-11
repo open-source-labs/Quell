@@ -7,14 +7,14 @@
     "start": "src/Quellify.js"
   },
   "engines": {
-    "node": "14.17.5",
-    "npm": "8.1.0"
+    "node": ">=14.17.5",
+    "npm": ">=8.1.0"
   },
   "author": "Quell",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/open-source-labs/Quell/tree/master/quell-client"
+    "url": "https://github.com/open-source-labs/Quell/tree/main/quell-client"
   },
   "bugs": {
     "url": "https://github.com/open-source-labs/Quell/issues"

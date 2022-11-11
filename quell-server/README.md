@@ -45,7 +45,7 @@ So, for example, to instantiate the middleware to satisfy GraphQL queries using 
 
 And your server file might look like this:
 
-```
+```javascript
 const express = require('express');
 const myGraphQLSchema = require('./schema/schema');
 const { QuellCache } = require('@quell/server')
@@ -81,7 +81,7 @@ That's it! You now have a normalized cache for your GraphQL endpoint.
 
 Both of these middleware packages use an optional, fourth "Cost Object" parameter in the QuellCache constructor. Below is an example of the default Cost Object.
 
-```
+```javascript
   const defaultCostParams = {
     maxCost: 5000, // maximum cost allowed before a request is rejected
     mutationCost: 5, // cost of a mutation
@@ -98,7 +98,7 @@ If the cost of a query ever exceeds the `maxCost` defined in our Cost Object, th
 
 Using the implementation described in our "Cache Implementation" section, we could implement depth- and cost-limiting like so:
 
-```
+```javascript
 // instantiate quell-server
 const quellCache = new QuellCache(myGraphQLSchema, 6379, 'localhost', 3600, {maxCost: 100, depthMax: 5});
 
@@ -123,7 +123,7 @@ Quell's current iteration requires all schemas passed in to match the schema str
 
 Below is an example of a Quell-compatible schema:
 
-```
+```javascript
 const UserType = new GraphQLObjectType({
   name: 'User',
   fields: () => {
