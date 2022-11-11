@@ -15,7 +15,7 @@ const defaultCostParams = {
 
 class QuellCache {
   // default host is localhost, default expiry time is 14 days in milliseconds
-  constructor(schema, redisPort, redisHost = '127.0.0.1', cacheExpiration = 1209600000, costParameters = defaultCostParams) {
+  constructor(schema, { redisPort, redisHost, redisPassword }, cacheExpiration = 1209600000, costParameters = defaultCostParams) {
     this.schema = schema;
     this.costParameters = Object.assign(defaultCostParams, costParameters);
     this.depthLimit = this.depthLimit.bind(this);
@@ -26,7 +26,7 @@ class QuellCache {
     this.idMap = this.getIdMap();
     this.cacheExpiration = cacheExpiration;
     this.redisReadBatchSize = 10;
-    this.redisCache = redis.createClient({socket: {host: redisHost, port: redisPort}});
+    this.redisCache = redis.createClient({socket: {host: redisHost, port: redisPort}, password: redisPassword});
     this.query = this.query.bind(this);
     this.parseAST = this.parseAST.bind(this);
     this.clearCache = this.clearCache.bind(this);
