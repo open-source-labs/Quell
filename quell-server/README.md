@@ -46,14 +46,17 @@ Install the NPM package from your terminal: `npm i @quell/server`.
 2. Instantiate QuellCache once for each GraphQL endpoint, passing to it the following arguments:
 
 - schema - the GraphQL schema you've defined using the graphql-JS library (NOTE: see 'Schema' section below)
-- Redis configuration object - an object with the keys `redisPort`, `redisHost`, and `redisPassword`, with the values mapping to your corresponding Redis server. 
+
+- Redis configuration object - an object with the keys `redisPort`, `redisHost`, and `redisPassword`, with the respective values mapping to your corresponding Redis server information
+
 - cacheExpiration - number of seconds you want data to persist in the Redis cache
+
 - costParameters (optional, see "Rate and Cost Limiting Implementation" section below) 
 
 3. Add quell-server's controller function `quellCache.query` to the Express route that receives GraphQL queries:
 
 So, for example, to instantiate the middleware to satisfy GraphQL queries using the schema you've stored or imported as `myGraphQLSchema` and cache responses to a Redis database on your local machine listening at port `6379` for `3600` seconds, you would add to your server file:
-`const quellCache = new QuellCache(myGraphQLSchema, 6379, 'localhost', 3600);`
+`const quellCache = new QuellCache(myGraphQLSchema, { redisPort: 6379, redisHost: '127.0.0.1', redisPassword: 'insertPasswordHere'} 'localhost', 3600);`
 
 And your server file might look like this:
 
@@ -61,12 +64,17 @@ And your server file might look like this:
 const express = require('express');
 const myGraphQLSchema = require('./schema/schema');
 const { QuellCache } = require('@quell/server')
+const REDIS_PORT = process.env.REDIS_PORT || 6379;
+const REDIS_HOST = process.env.REDIS_HOST || '127.0.0.1';
+const PASSWORD = process.env.PASSWORD;
 
 // create a new Express server
 const app = express();
 
 // instantiate quell-server
-const quellCache = new QuellCache(myGraphQLSchema, { redisPort: 6379, redisHost: '127.0.0.1', redisPassword: '...'}, 3600);
+const quellCache = new QuellCache(myGraphQLSchema, 
+  { redisPort: REDIS_PORT, redisHost: REDIS_HOST, redisPassword: PASSWORD}, 
+  3600);
 
 // apply Express's JSON parser
 app.use(express.json());
@@ -112,7 +120,10 @@ Using the implementation described in our "Cache Implementation" section, we cou
 
 ```javascript
 // instantiate quell-server
-const quellCache = new QuellCache(myGraphQLSchema, { redisPort: 6379, redisHost: '127.0.0.1', redisPassword: '...'}, 3600, {maxCost: 100, depthMax: 5});
+const quellCache = new QuellCache(myGraphQLSchema, 
+  { redisPort: REDIS_PORT, redisHost: REDIS_HOST, redisPassword: PASSWORD}, 
+  3600, 
+  {maxCost: 100, depthMax: 5});
 
 // GraphQL route
 app.use('/graphql',
