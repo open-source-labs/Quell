@@ -14,7 +14,7 @@ Accelerated by [OS Labs](https://github.com/open-source-labs) and developed by [
 - (New!) Quell has now migrated from GraphQL V14.x to GraphQL V16.x. This was a breaking change for Quell logic but shouldn't change how Quell is implemented!
 - (New!) Quell/server now offers optional depth and cost limiting middleware to protect your GraphQL endpoint! To use, please explore the [@quell/server readme](./quell-server/README.md).
 - (New!) Server-side caching now properly handles fragments and individually caches each datapoint. 
-- (New!) Server-side cache now caches entire query in instances where it is unable to cache inidividual datapoints. 
+- (New!) Server-side cache now caches entire queries in instances where it is unable to cache individual datapoints. 
 - (New!) Server-side cache will properly join partial responses where the database and cache have different datapoints for the same query.
 - Cache Invalidation implemented in server-side for (add, update, and delete) mutations
 - Client-side caching utilizing LokiJS
