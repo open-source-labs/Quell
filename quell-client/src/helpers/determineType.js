@@ -2,11 +2,14 @@ const { visit, BREAK } = require('graphql/language/visitor');
 
 
 const determineType = (AST) => {
+  console.log('Parsing Abstract Syntax Tree to determine type of operation');
 
   // initialize prototype as empty object
   // information from AST is distilled into the prototype for easy access during caching, rebuilding query strings, etc.
   const proto = {};
   const frags = {};
+  // argsObj will contain the values/fields
+  const argsObj = {};
   // target Object will be updated to point to prototype when iterating through Field and it will point to frags when iterating through Fragment Definition
   let targetObj;
 
@@ -73,7 +76,7 @@ const determineType = (AST) => {
       enter(node) {
         // populates argsObj from current node's arguments
         // generates uniqueID from arguments
-        const argsObj = {};
+
         // Introspection queries will not be cached
         if (node.name.value.includes('__')) {
           operationType = 'unQuellable';
@@ -90,9 +93,6 @@ const determineType = (AST) => {
           if (!key.includes('__')) {
             argsObj[key] = arg.value.value;
           };
-
-
-
           // // handle custom options passed in as arguments (ie customCache)
           // if (key.includes('__')) {
           //   auxObj[key] = arg.value.value;
@@ -154,7 +154,7 @@ const determineType = (AST) => {
       },
     },
   });
-  return { operationType };
+  return { operationType, proto };
 };
 
 module.exports = determineType;
