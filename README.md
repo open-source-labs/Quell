@@ -65,4 +65,5 @@ Quell Developer Tool is currently available as a Chrome Developer Tools extensio
 Interested in making a contribution to Quell? Find our open-source contribution guidelines [here](./CONTRIBUTING.md). Please feel free to also review the larger future direction for Quell in the Client and Server readme's.
 
 Thank you for your interest and support!
+
 -Team Quell
