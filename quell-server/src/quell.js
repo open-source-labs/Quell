@@ -9,17 +9,20 @@ const defaultCostParams = {
   objectCost: 2, // cost of retrieving an object
   scalarCost: 1, // cost of retrieving a scalar
   depthCostFactor: 1.5, // multiplicative cost of each depth level
-  depthMax: 10 //depth limit parameter
+  maxDepth: 10, //depth limit parameter
+  ipRate: 3 // requests allowed per second
 }
 
-
+let idCache = {};
 class QuellCache {
   // default host is localhost, default expiry time is 14 days in milliseconds
-  constructor(schema, { redisPort, redisHost, redisPassword }, cacheExpiration = 1209600000, costParameters = defaultCostParams) {
+  constructor(schema, { redisPort, redisHost, redisPassword }, cacheExpiration = 1209600000, costParameters = defaultCostParams, idCache) {
+    this.idCache = idCache
     this.schema = schema;
     this.costParameters = Object.assign(defaultCostParams, costParameters);
     this.depthLimit = this.depthLimit.bind(this);
     this.costLimit = this.costLimit.bind(this);
+    this.rateLimiter = this.rateLimiter.bind(this);
     this.queryMap = this.getQueryMap(schema);
     this.mutationMap = this.getMutationMap(schema);
     this.fieldsMap = this.getFieldsMap(schema);
@@ -44,6 +47,46 @@ class QuellCache {
         console.log('Connected to redisCache');
       });
   }
+   /**
+   * A redis-based IP rate limiter method. It:
+   *    - receives the ipRate in requests per second from the request object on the front-end,
+   *    - if there is no ipRate set on front-end, it'll default to the value in the defaultCostParameters,
+   *    - creates a key using the IP address and current time in seconds,
+   *    - increments the value at this key for each new call received,
+   *    - if the value of calls is greater than the ipRate limit, it will not process the query,
+   *    - keys are set to expire after 1 second
+   *  @param {Object} req - Express request object, including request body with GraphQL query string
+   *  @param {Object} res - Express response object, will carry query response to next middleware
+   *  @param {Function} next - Express next middleware function, invoked when QuellCache completes its work
+   */
+   async rateLimiter (req, res, next) {
+    let ipRates;
+     //ipRate can be reassigned to get ipRate limit from req.body if user selects requests limit
+     if (req.body.costOptions.ipRate) ipRates = req.body.costOptions.ipRate;
+     //  else ipRates = this.costParameters.ipRate;
+     //return error if no query in request.
+     if (!req.body.query) return next({log: 'Error: no GraphQL query found on request body'});
+     const ip = req.ip;
+     const now = Math.floor(Date.now() / 1000);
+     const ipKey = `${ip}:${now}`;
+
+     this.redisCache.incr(ipKey, (err, count) => {
+      if (err) {
+        console.error('Redis cache error: ', err);
+        return next({ log: 'Internal Server Error in redis :(' })
+      }
+
+      this.redisCache.expire(ipKey, 1);
+      console.error('Redis cache incremented:', ipKey, count);
+      return next();
+    });
+
+    const calls = await this.getFromRedis(ipKey);
+
+    if (calls > ipRates) return next({ log: `Express error handler caught too many requests from this IP address: ${ip}` });  
+    
+    return next();
+  } 
   /**
    * The class's controller method. It:
    *    - reads the query string from the request object,
@@ -60,7 +103,7 @@ class QuellCache {
   async query(req, res, next) {
     // handle request without query
     if (!req.body.query) {
-      return next({err: 'Error: no GraphQL query found on request body'});
+      return next({log: 'Error: no GraphQL query found on request body'});
     }
     // retrieve GraphQL query string from request object;
     const queryString = req.body.query;
@@ -95,7 +138,7 @@ class QuellCache {
         return next();
       })
       .catch((error) => {
-        return next('graphql library error: ', error);
+        return next({log: 'graphql library error'});
       });
       let redisValue = await this.getFromRedis(queryString);
       if(redisValue != null){
@@ -114,6 +157,10 @@ class QuellCache {
         });
       }   
     } else if (operationType === 'mutation') {
+      //clear cache on mutation because now cache data is stale 
+      this.redisCache.flushAll();
+      idCache={};
+      
       let mutationQueryObject;
       let mutationName;
       let mutationType;
@@ -185,25 +232,50 @@ class QuellCache {
                   prototype
                 )
               : databaseResponse;
-            const successfulCache = await this.normalizeForCache(
-              mergedResponse.data,
-              this.queryMap,
-              prototype
-            );
-            res.locals.queryResponse = { ...mergedResponse };
-            return next();
-          })
-          .catch((error) => {
-            return next('graphql library error: ', error);
-          });
+              let currName = 'string it should not be again';
+              const successfulCache = await this.normalizeForCache(
+                mergedResponse.data,
+                this.queryMap,
+                prototype, currName
+              );
+              mergedResponse.cached = false;
+              res.locals.queryResponse = { ...mergedResponse };
+              return next();
+            })
+            .catch((error) => {
+              return next({ log:'graphql library error line 318' });
+            });
       } else {
         // if queryObject is empty, there is nothing left to query, can directly send information from cache
+        cacheResponse.cached = true;
         res.locals.queryResponse = { ...cacheResponse };
         return next();
       }
     }
   }
+    /**
+   * UpdateIdCache:
+   *    - stores keys in a nested object under parent name
+   *    - if the key is a duplication, they are stored in an array
+   *  @param {String} objKey - Object key; key to be cached without ID string
+   *  @param {String} keyWithID - Key to be cached with ID string attatched; redis data is stored under this key
+   *  @param {String} currName - The parent object name
+   */
 
+    updateIdCache(objKey, keyWithID, currName) {
+      //if the parent object is not yet defined
+      if (!idCache[currName]) {
+        idCache[currName] = {};
+        idCache[currName][objKey] = keyWithID;
+        return;
+      } 
+      //if parent obj is defined, but this is the first child key
+      else if (!idCache[currName][objKey]) {
+        idCache[currName][objKey] = [];
+      }
+      idCache[currName][objKey].push(keyWithID)
+      //update ID cache under key of currName in an array
+    }
 
 /**
  * parseAST traverses the abstract syntax tree depth-first to create a template for future operations, such as
@@ -646,9 +718,18 @@ class QuellCache {
     for (let typeKey in prototype) {
       // if current key is a root query, check cache and set any results to itemFromCache
       if (prototypeKeys.includes(typeKey)) {
-        const cacheID = subID
+        let cacheID = subID
           ? subID
           : this.generateCacheID(prototype[typeKey]);
+        const keyName = prototype[typeKey].__args?.name;
+        if (idCache[keyName] && idCache[keyName][cacheID]) {
+          cacheID = idCache[keyName][cacheID];
+        }
+        //capitalize first letter of cache id just in case
+        const capitalized = cacheID.charAt(0).toUpperCase() + cacheID.slice(1);
+        if (idCache[keyName] && idCache[keyName][capitalized]) {
+          cacheID = idCache[keyName][capitalized];
+        }
         const cacheResponse = await this.getFromRedis(cacheID);
         itemFromCache[typeKey] = cacheResponse ? JSON.parse(cacheResponse) : {};
       }
@@ -726,12 +807,14 @@ class QuellCache {
           (itemFromCache === null || !itemFromCache.hasOwnProperty(typeKey)) &&
           typeof prototype[typeKey] !== 'object' &&
           !typeKey.includes('__')
+          && !itemFromCache[0]
         ) {
           prototype[typeKey] = false;
         }
         // if this field is a nested query, then recurse the buildFromCache function and iterate through the nested query
         if (
-          // (itemFromCache === null || itemFromCache.hasOwnProperty(typeKey)) &&
+          !Object.keys(itemFromCache).length > 0 &&
+          typeof(itemFromCache) == 'object' &&
           !typeKey.includes('__') &&
           typeof prototype[typeKey] === 'object'
         ) {
@@ -1222,9 +1305,9 @@ class QuellCache {
    * @param {Object} responseData - data we received from an external source of data such as a database or API
    * @param {Object} map - a map of queries to their desired data types, used to ensure accurate and consistent caching
    * @param {Object} protoField - a slice of the prototype currently being used as a template and reference for the responseData to send information to the cache
-   * @param {Object} fieldsMap - another map of queries to desired data types, deprecated but untested
+   * @param {String} currName - parent object name, used to pass into updateIDCache
    */
-  async normalizeForCache(responseData, map = {}, protoField, fieldsMap = {}) {
+  async normalizeForCache(responseData, map = {}, protoField, currName) {
 
     for (const resultName in responseData) {
       const currField = responseData[resultName];
@@ -1239,7 +1322,7 @@ class QuellCache {
           if (typeof el === 'object') {
             await this.normalizeForCache({ [dataType]: el }, map, {
               [dataType]: currProto,
-            });
+            }, currName);
           }
         }
       } else if (typeof currField === 'object') {
@@ -1262,15 +1345,26 @@ class QuellCache {
             !currProto.__id &&
             (key === 'id' || key === '_id' || key === 'ID' || key === 'Id')
           ) {
-            cacheID += `--${currField[key]}`;
+            //if currname is undefined, assign to responseData at cacheid to lower case at name
+            if (responseData[cacheID.toLowerCase()]) {
+              const responseDataAtCacheID = responseData[cacheID.toLowerCase()]
+              currName = responseDataAtCacheID.name;
           }
+          //if the responseData at cacheid to lower case at name is not undefined, store under name variable and copy logic of writing to cache, want to update cache with same things, all stored under name
+            //store objKey as cacheID without ID added
+            const cacheIDForIDCache = cacheID;
+            cacheID += `--${currField[key]}`;
+            //call idcache here idCache(cacheIDForIDCache, cacheID)
+            this.updateIdCache(cacheIDForIDCache, cacheID, currName);
+        }
+
           fieldStore[key] = currField[key];
 
           // if object, recurse normalizeForCache assign in that object
           if (typeof currField[key] === 'object') {
             await this.normalizeForCache({ [key]: currField[key] }, map, {
               [key]: protoField[resultName][key],
-            });
+            }, currName);
           }
         }
         // store "current object" on cache in JSON format
@@ -1680,12 +1774,15 @@ class QuellCache {
   //what parameters should they take? If middleware, good as is, has to take in query obj in request, limit set inside.
   // If function inside whole of Quell, (query, limit), so they are explicitly defined and passed in
   depthLimit(req, res, next) {
-    //get depth max limit from cost parameters
-    const { depthMax } = this.costParameters;
-    //return error if no query in request.
-    if (!req.body.query) return res.status(400);
-    //assign graphQL query string to variable queryString
-    const queryString = req.body.query;
+   //get depth max limit from cost parameters
+   let { maxDepth } = this.costParameters;
+   //maxDepth can be reassigned to get depth max limit from req.body if user selects depth limit
+   if (req.body.costOptions.maxDepth) maxDepth = req.body.costOptions.maxDepth;
+   //return error if no query in request.
+   if (!req.body.query) return res.status(400);
+   //assign graphQL query string to variable queryString
+   const queryString = req.body.query;
+
 
     //create AST
     const AST = parse(queryString);
@@ -1702,13 +1799,12 @@ class QuellCache {
     //helper function to determine the depth of the proto.
     //will be using this function to recursively go deeper into the nested query
     const determineDepth = (proto, currentDepth = 0) => {
-      if (currentDepth > depthMax) throw new GraphQLError(
-        `Your query exceeds maximum operation depth of ${depthMax}`,
-        {
-          code: "DEPTH_LIMIT_EXCEEDED",
-          http: {status: 400}
-        }
-      );
+      if (currentDepth > maxDepth) {
+      //add err to res.locals.queryRes obj as a new key
+      const err = { log: `Depth limit exceeded, tried to send query with the depth of ${currentDepth}.` };
+      res.locals.queryErr = err;
+      return next(err);//do we return with err?
+      }
       Object.keys(proto).forEach((key) => {
         if (typeof proto[key] === 'object' && !key.includes('__')) {
           determineDepth(proto[key], currentDepth + 1);
@@ -1734,11 +1830,14 @@ class QuellCache {
    */
 
   costLimit(req, res, next) {
-     const {maxCost, mutationCost, objectCost, depthCostFactor, scalarCost} = this.costParameters;
-     //return error if no query in request.
-     if (!req.body.query) return res.status(400);
-     //assign graphQL query string to variable queryString
-     const queryString = req.body.query;
+    //get default values for costParameters
+    let {maxCost, mutationCost, objectCost, depthCostFactor, scalarCost} = this.costParameters;
+    //maxCost can be reassigned to get maxcost limit from req.body if user selects cost limit
+    if (req.body.costOptions.maxCost) maxCost = req.body.costOptions.maxCost;
+    //return error if no query in request.
+    if (!req.body.query) return res.status(400);
+    //assign graphQL query string to variable queryString
+    const queryString = req.body.query;
      //create AST
      const AST = parse(queryString);
      
@@ -1758,13 +1857,9 @@ class QuellCache {
 
     const determineCost = (proto) => {
       if (cost > maxCost) {
-        throw new GraphQLError(
-          `Your query exceeds maximum operation cost of ${maxCost}`,
-          {
-            code: "COST_LIMIT_EXCEEDED",
-            http: {status: 400}
-          }
-        );
+        const err = { log: `Cost limit exceeded, tried to send query with a cost above ${maxCost}.` };
+      res.locals.queryErr = err;
+      return next(err);
       }
       Object.keys(proto).forEach((key) => {
         if (typeof proto[key] === 'object' && !key.includes('__')) {
@@ -1782,13 +1877,11 @@ class QuellCache {
   
     const determineDepthCost = (proto, totalCost = cost) => {
       if (totalCost > maxCost) {
-        throw new GraphQLError(
-          `Your query exceeds maximum operation depth of ${maxCost}`,
-          {
-            code: "COST_LIMIT_EXCEEDED",
-            http: {status: 400}
-          }
-        );
+        const err = { log: `Cost limit exceeded, tried to send query with a cost exceeding ${maxCost}.` };
+      res.locals.queryErr = err;
+
+      return next(err);
+
       }
 
       Object.keys(proto).forEach((key) => {

@@ -6,15 +6,16 @@
 
 @quell/server is an easy-to-implement Node.js/Express middleware that satisfies and caches GraphQL queries and mutations. Quell's schema-governed, type-level normalization algorithm caches GraphQL query and mutation responses as flattened key-value representations of the graph's nodes, making it possible to partially satisfy queries from the server's Redis cache, reformulate the query, and then fetch additional data from other APIs or databases.
 
-New with Quell 5.0! 
-- (New!) Quell has now migrated from Node-Redis 3.0 to Node-Revis 4.4. This was a breaking change for how Quell stood-up the Redis cache but shouldn't change how Quell is implemented!
-- (New!) Quell has now migrated from GraphQL V14.x to GraphQL V16.x. This was a breaking change for Quell logic but shouldn't change how Quell is implemented!
-- (New!) Quell/server now offers optional depth and cost limiting middleware to protect your GraphQL endpoint! To use, please explore the [@quell/server readme](./quell-server/README.md).
-- (New!) Server-side caching now properly handles fragments and individually caches each datapoint. 
-- (New!) Server-side cache now caches entire queries in instances where it is unable to cache individual datapoints. 
-- (New!) Server-side cache will properly join partial responses where the database and cache have different datapoints for the same query.
+New with Quell 6.0! 
+- (New!) Quell now handles add and delete mutations for server-side with new cache eviction policy. 
+- (New!) Quell server now successfully reads from the cache. 
+-  Quell has now migrated from Node-Redis 3.0 to Node-Revis 4.4. This was a breaking change for how Quell stood-up the Redis cache but shouldn't change how Quell is implemented!
+-  Quell has now migrated from GraphQL V14.x to GraphQL V16.x. This was a breaking change for Quell logic but shouldn't change how Quell is implemented!
+-  Quell/server now offers optional depth and cost limiting middleware to protect your GraphQL endpoint! To use, please explore the [@quell/server readme](./quell-server/README.md).
+-  Server-side cache now caches entire queries in instances where it is unable to cache individual datapoints. 
+-  Server-side cache will properly join partial responses where the database and cache have different datapoints for the same query.
 
-@quell/server is an open-source NPM package accelerated by [OS Labs](https://github.com/open-source-labs) and developed by [Alex Martinez](https://github.com/alexmartinez123), [Cera Barrow](https://github.com/cerab), [Jackie He](https://github.com/Jckhe), [Zoe Harper](https://github.com/ContraireZoe), [David Lopez](https://github.com/DavidMPLopez),[Sercan Tuna](https://github.com/srcntuna),[Idan Michael](https://github.com/IdanMichael),[Tom Pryor](https://github.com/Turmbeoz), [Chang Cai](https://github.com/ccai89), [Robert Howton](https://github.com/roberthowton), [Joshua Jordan](https://github.com/jjordan-90), [Jinhee Choi](https://github.com/jcroadmovie), [Nayan Parmar](https://github.com/nparmar1), [Tashrif Sanil](https://github.com/tashrifsanil), [Tim Frenzel](https://github.com/TimFrenzel), [Robleh Farah](https://github.com/farahrobleh), [Angela Franco](https://github.com/ajfranco18), [Ken Litton](https://github.com/kenlitton), [Thomas Reeder](https://github.com/nomtomnom), [Andrei Cabrera](https://github.com/Andreicabrerao), [Dasha Kondratenko](https://github.com/dasha-k), [Derek Sirola](https://github.com/dsirola1), [Xiao Yu Omeara](https://github.com/xyomeara), [Nick Kruckenberg](https://github.com/kruckenberg), [Mike Lauri](https://github.com/MichaelLauri), [Rob Nobile](https://github.com/RobNobile) and [Justin Jaeger](https://github.com/justinjaeger).
+@quell/server is an open-source NPM package accelerated by [OS Labs](https://github.com/open-source-labs) and developed by [Hannah Spencer](https://github.com/Hannahspen), [Garik Asplund](https://github.com/garikAsplund), [Katie Sandfort](https://github.com/katiesandfort), [Sarah Cynn](https://github.com/cynnsarah), [Rylan Wessel](https://github.com/XpIose), [Alex Martinez](https://github.com/alexmartinez123), [Cera Barrow](https://github.com/cerab), [Jackie He](https://github.com/Jckhe), [Zoe Harper](https://github.com/ContraireZoe), [David Lopez](https://github.com/DavidMPLopez),[Sercan Tuna](https://github.com/srcntuna),[Idan Michael](https://github.com/IdanMichael),[Tom Pryor](https://github.com/Turmbeoz), [Chang Cai](https://github.com/ccai89), [Robert Howton](https://github.com/roberthowton), [Joshua Jordan](https://github.com/jjordan-90), [Jinhee Choi](https://github.com/jcroadmovie), [Nayan Parmar](https://github.com/nparmar1), [Tashrif Sanil](https://github.com/tashrifsanil), [Tim Frenzel](https://github.com/TimFrenzel), [Robleh Farah](https://github.com/farahrobleh), [Angela Franco](https://github.com/ajfranco18), [Ken Litton](https://github.com/kenlitton), [Thomas Reeder](https://github.com/nomtomnom), [Andrei Cabrera](https://github.com/Andreicabrerao), [Dasha Kondratenko](https://github.com/dasha-k), [Derek Sirola](https://github.com/dsirola1), [Xiao Yu Omeara](https://github.com/xyomeara), [Nick Kruckenberg](https://github.com/kruckenberg), [Mike Lauri](https://github.com/MichaelLauri), [Rob Nobile](https://github.com/RobNobile) and [Justin Jaeger](https://github.com/justinjaeger).
 
 ## Installation
 
@@ -85,9 +86,20 @@ app.use('/graphql',
     (req, res) => {
     return res
         .status(200)
-        .send(res.locals.queryResponse);
+        .send(res.locals);
     }
 );
+// required global error handler
+app.use((err, req, res, next) => {
+  const defaultErr = {
+    log: 'Express error handler caught unknown middleware error',
+    status: 500,
+    message: { err: 'An error occurred' },
+  };
+  const errorObj = Object.assign({}, defaultErr, err);
+  console.log(errorObj.log);
+  return res.status(errorObj.status).json(errorObj.log);
+});
 
 // expose Express server on port 3000
 app.listen(3000);
@@ -99,7 +111,7 @@ That's it! You now have a normalized cache for your GraphQL endpoint.
 
 @quell/server now offers optional cost- and rate-limiting of incoming GraphQL queries for additional endpoint security from malicious nested or costly queries.
 
-Both of these middleware packages use an optional, fourth "Cost Object" parameter in the QuellCache constructor. Below is an example of the default Cost Object.
+Both of these middleware packages use an optional, fourth "Cost Object" parameter in the QuellCache constructor. Below is an example of the **default** Cost Object.
 
 ```javascript
   const defaultCostParams = {
@@ -108,13 +120,15 @@ Both of these middleware packages use an optional, fourth "Cost Object" paramete
     objectCost: 2, // cost of retrieving an object
     scalarCost: 1, // cost of retrieving a scalar
     depthCostFactor: 1.5, // multiplicative cost of each depth level
-    depthMax: 10 // maximum depth allowed before a request is rejected
+    depthMax: 10, // maximum depth allowed before a request is rejected
+    ipRate: 3 // maximum subsequent calls per second before a request is rejected
   }
 ```
 
 When parsing an incoming query, @quell/server will build a cost associated with the query relative to how laborious it is to retrieve by using the costs provided in the Cost Object. The costs listed above are the default costs given upon QuellCache instantiation, but these costs can be manually reassigned upon cache creation.
 
 If the cost of a query ever exceeds the `maxCost` defined in our Cost Object, the query will be rejected and return Status 400 before the request is sent to the database. Additionally, if the depth of a query ever exceeds the `depthMax` defined in our Cost Object, the query will be similarly rejected.
+The `ipRate` variable limits the ammount of requests a user can submit per second. Any requests above this threshold will be invalidated.
 
 Using the implementation described in our "Cache Implementation" section, we could implement depth- and cost-limiting like so:
 
@@ -123,17 +137,18 @@ Using the implementation described in our "Cache Implementation" section, we cou
 const quellCache = new QuellCache(myGraphQLSchema, 
   { redisPort: REDIS_PORT, redisHost: REDIS_HOST, redisPassword: PASSWORD}, 
   3600, 
-  {maxCost: 100, depthMax: 5});
+  { maxCost: 100, depthMax: 5, ipRate: 5 });
 
-// GraphQL route
+// GraphQL route and Quell middleware
 app.use('/graphql',
-    quellCache.costLimit,
-    quellCache.depthLimit,
+    quellCache.rateLimit, // optional middleware to include ip rate limiting
+    quellCache.costLimit, // optional middleware to include cost limiting
+    quellCache.depthLimit,// optional middleware to include depth limiting
     quellCache.query,
     (req, res) => {
     return res
         .status(200)
-        .send(res.locals.queryResponse);
+        .send(res.locals);
     }
 );
 ```
@@ -179,7 +194,7 @@ module.exports = new GraphQLSchema({
 
 ### Usage Notes
 
-- @quell/server reads queries from Express' request object at `request.body.query` and attaches the query response to Express' response object at `response.locals.queryResponse`.
+- @quell/server reads queries from Express' request object at `request.body.query` and attaches the query response to Express' response object at `response.locals`.
 - @quell/server can only cache items it can uniquely identify. It will will look for fields called `id`, `_id`, `Id`, or `ID`. If a query lacks all four, it will execute the query without caching the response.
 - Currently, Quell can cache 1) query-type requests without variables or directives and 2) mutation-type requests (add, update, and delete) with cache invalidation implemented. Quell will still process other requests, but will not cache the responses.
 
@@ -189,6 +204,9 @@ Goals for the future of @quell/server include:
     1) Implement alternative Parsing functions to identify and handle alternative schema creation, such as schemas made via makeExectuableSchema or BuildSchema from Apollo. These cases were not caught in previous implementations of GraphQL and were not known limitations. 
   - The current caching logic is all bound within a class, making it difficult to separate functionality and modularize and test individual pieces.
     1) Move functions out of the Quell.js file into their own helper functions to be called as needed. This will allow future functionality to be easier to test and implement.
-    2) Re-write tests, move tests to be associated with each helper function rather than being a long middleware chain. 
+    2) Re-write tests, move tests to be associated with each helper function rather than being a long middleware chain.
+  - Currently, Quell server cache stores data as nested objects
+    1) Impliment functionality that ensures Quell is writing to cache in pieces of data that it then builds the query response with
+    2) Update cache mutation cache eviction policy to modify cache pieces in place  
 
 #### For information on @quell/client, please visit the corresponding [README file](../quell-client/README.md).
