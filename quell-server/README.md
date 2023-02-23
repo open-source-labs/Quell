@@ -86,7 +86,7 @@ app.use('/graphql',
     (req, res) => {
     return res
         .status(200)
-        .send(res.locals.queryResponse);
+        .send(res.locals);
     }
 );
 
@@ -137,7 +137,7 @@ app.use('/graphql',
     (req, res) => {
     return res
         .status(200)
-        .send(res.locals.queryResponse);
+        .send(res.locals);
     }
 );
 ```
@@ -183,7 +183,7 @@ module.exports = new GraphQLSchema({
 
 ### Usage Notes
 
-- @quell/server reads queries from Express' request object at `request.body.query` and attaches the query response to Express' response object at `response.locals.queryResponse`.
+- @quell/server reads queries from Express' request object at `request.body.query` and attaches the query response to Express' response object at `response.locals`.
 - @quell/server can only cache items it can uniquely identify. It will will look for fields called `id`, `_id`, `Id`, or `ID`. If a query lacks all four, it will execute the query without caching the response.
 - Currently, Quell can cache 1) query-type requests without variables or directives and 2) mutation-type requests (add, update, and delete) with cache invalidation implemented. Quell will still process other requests, but will not cache the responses.
 
