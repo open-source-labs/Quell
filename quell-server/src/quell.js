@@ -157,7 +157,11 @@ class QuellCache {
         });
       }   
     } else if (operationType === 'mutation') {
-      //clear cache on mutation because now cache data is stale 
+      //clear cache on mutation because now cache data is stale
+      /*
+      NOTE: this is not the logic we should be using for mutations--rather than flushing the cache and resetting the idCache
+        we should instead be updating the cache following a mutation.
+      */
       this.redisCache.flushAll();
       idCache={};
       
@@ -243,7 +247,7 @@ class QuellCache {
               return next();
             })
             .catch((error) => {
-              return next({ log:'graphql library error line 318' });
+              return next({ log:'graphql library error' });
             });
       } else {
         // if queryObject is empty, there is nothing left to query, can directly send information from cache
@@ -1462,9 +1466,16 @@ class QuellCache {
     return middleware;
   }
 
+  /**
+   * getStatsFromRedis gets information and statistics about the server and adds them to the response.
+   * @param {Object} req - Express request object
+   * @param {Object} res - Express response object
+   * @param {Function} next - Express next middleware function
+   */
   getStatsFromRedis(req, res, next) {
     try {
       const getStats = () => {
+        // redisCache.info returns information and statistics about the server as an array of field:value
         this.redisCache.info()
           .then((response) => {
           const dataLines = response.split('\r\n');
@@ -1528,13 +1539,13 @@ class QuellCache {
                   .split(':')[1],
               },
               //path to server's executable
-              {
-                name: 'Path to executable',
-                value: dataLines
-                  .find((line) => line.match(/executable/))
-                  .split(':')[1],
-              },
-              //num of days since Redis server start
+              // {
+              //   name: 'Path to executable',
+              //   value: dataLines
+              //     .find((line) => line.match(/executable/))
+              //     .split(':')[1],
+              // },
+              //path to server's configuration file
               {
                 name: 'Path to configuration file',
                 value: dataLines
@@ -1566,12 +1577,12 @@ class QuellCache {
                   .split(':')[1],
               },
               //number of clients being tracked
-              {
-                name: 'Tracked clients',
-                value: dataLines
-                  .find((line) => line.match(/tracking_clients/))
-                  .split(':')[1],
-              },
+              // {
+              //   name: 'Tracked clients',
+              //   value: dataLines
+              //     .find((line) => line.match(/tracking_clients/))
+              //     .split(':')[1],
+              // },
               //blocked clients
               {
                 name: 'Blocked clients',
@@ -1597,40 +1608,40 @@ class QuellCache {
                   .split(':')[1],
               },
               // % of peak out of total
-              {
-                name: 'Peak memory used % total',
-                value: dataLines
-                  .find((line) => line.match(/used_memory_peak_perc/))
-                  .split(':')[1],
-              },
+              // {
+              //   name: 'Peak memory used % total',
+              //   value: dataLines
+              //     .find((line) => line.match(/used_memory_peak_perc/))
+              //     .split(':')[1],
+              // },
               //initial amount of memory consumed at startup
-              {
-                name: 'Memory consumed at startup',
-                value: dataLines
-                  .find((line) => line.match(/used_memory_startup/))
-                  .split(':')[1],
-              },
+              // {
+              //   name: 'Memory consumed at startup',
+              //   value: dataLines
+              //     .find((line) => line.match(/used_memory_startup/))
+              //     .split(':')[1],
+              // },
               //size of dataset
-              {
-                name: 'Dataset size (bytes)',
-                value: dataLines
-                  .find((line) => line.match(/used_memory_dataset/))
-                  .split(':')[1],
-              },
+              // {
+              //   name: 'Dataset size (bytes)',
+              //   value: dataLines
+              //     .find((line) => line.match(/used_memory_dataset/))
+              //     .split(':')[1],
+              // },
               //percent of data out of net mem usage
-              {
-                name: 'Dataset memory % total',
-                value: dataLines
-                  .find((line) => line.match(/used_memory_dataset_perc/))
-                  .split(':')[1],
-              },
+              // {
+              //   name: 'Dataset memory % total',
+              //   value: dataLines
+              //     .find((line) => line.match(/used_memory_dataset_perc/))
+              //     .split(':')[1],
+              // },
               //total system memory
-              {
-                name: 'Total system memory',
-                value: dataLines
-                  .find((line) => line.match(/total_system_memory_human/))
-                  .split(':')[1],
-              },
+              // {
+              //   name: 'Total system memory',
+              //   value: dataLines
+              //     .find((line) => line.match(/total_system_memory_human/))
+              //     .split(':')[1],
+              // },
             ],
             //STATS
             stats: [
@@ -1656,33 +1667,33 @@ class QuellCache {
                   .split(':')[1],
               },
               //total number of keys being tracked
-              {
-                name: 'Tracked keys',
-                value: dataLines
-                  .find((line) => line.match(/tracking_total_keys/))
-                  .split(':')[1],
-              },
+              // {
+              //   name: 'Tracked keys',
+              //   value: dataLines
+              //     .find((line) => line.match(/tracking_total_keys/))
+              //     .split(':')[1],
+              // },
               //total number of items being tracked(sum of clients number for each key)
-              {
-                name: 'Tracked items',
-                value: dataLines
-                  .find((line) => line.match(/tracking_total_items/))
-                  .split(':')[1],
-              },
+              // {
+              //   name: 'Tracked items',
+              //   value: dataLines
+              //     .find((line) => line.match(/tracking_total_items/))
+              //     .split(':')[1],
+              // },
               //total number of read events processed
-              {
-                name: 'Reads processed',
-                value: dataLines
-                  .find((line) => line.match(/total_reads_processed/))
-                  .split(':')[1],
-              },
+              // {
+              //   name: 'Reads processed',
+              //   value: dataLines
+              //     .find((line) => line.match(/total_reads_processed/))
+              //     .split(':')[1],
+              // },
               //total number of write events processed
-              {
-                name: 'Writes processed',
-                value: dataLines
-                  .find((line) => line.match(/total_writes_processed/))
-                  .split(':')[1],
-              },
+              // {
+              //   name: 'Writes processed',
+              //   value: dataLines
+              //     .find((line) => line.match(/total_writes_processed/))
+              //     .split(':')[1],
+              // },
               //total number of error replies
               {
                 name: 'Error replies',
@@ -1705,12 +1716,12 @@ class QuellCache {
                   .split(':')[1],
               },
               //total number of bytes written to network
-              {
-                name: 'Bytes written to network',
-                value: dataLines
-                  .find((line) => line.match(/total_net_output_bytes/))
-                  .split(':')[1],
-              },
+              // {
+              //   name: 'Bytes written to network',
+              //   value: dataLines
+              //     .find((line) => line.match(/total_net_output_bytes/))
+              //     .split(':')[1],
+              // },
               //networks write rate per second
               {
                 name: 'Network write rate (Kb/s)',
@@ -1734,7 +1745,12 @@ class QuellCache {
     }
   }
 
-
+  /**
+   * getRedisKeys gets the key names from the redis cache and adds them to the response.
+   * @param {Object} req - Express request object
+   * @param {Object} res - Express response object
+   * @param {Function} next - Express next middleware function
+   */
   getRedisKeys(req, res, next) {
     this.redisCache.keys('*')
       .then((response) => {
@@ -1746,6 +1762,12 @@ class QuellCache {
       });
     };
   
+  /**
+   * getRedisValues gets the values associated with the redis cache keys and adds them to the response.
+   * @param {Object} req - Express request object
+   * @param {Object} res - Express response object
+   * @param {Function} next - Express next middleware function
+  */
   getRedisValues(req, res, next) {
     if (res.locals.redisKeys.length !== 0) {
         this.redisCache.mGet(res.locals.redisKeys)
@@ -1763,25 +1785,26 @@ class QuellCache {
     }
   }
 
-   /**
+  /**
    * depthLimit takes in the query, parses it, and identifies the general shape of the request.
    * depthLimit then checks the depth limit set on server connection and compares it against the current queries depth.
    * In the instance of a malicious or overly nested query, depthLimit short-circuits the query before it goes to the database,
-   * sending a status code 400 (bad request) back to the client/requester. 
+   * sending a status code 400 (bad request) back to the client/requester.
+   * @param {Object} req - Express request object
+   * @param {Object} res - Express response object
+   * @param {Function} next - Express next middleware function
    */
-
-
   //what parameters should they take? If middleware, good as is, has to take in query obj in request, limit set inside.
   // If function inside whole of Quell, (query, limit), so they are explicitly defined and passed in
   depthLimit(req, res, next) {
-   //get depth max limit from cost parameters
-   let { maxDepth } = this.costParameters;
-   //maxDepth can be reassigned to get depth max limit from req.body if user selects depth limit
-   if (req.body.costOptions.maxDepth) maxDepth = req.body.costOptions.maxDepth;
-   //return error if no query in request.
-   if (!req.body.query) return res.status(400);
-   //assign graphQL query string to variable queryString
-   const queryString = req.body.query;
+    //get depth max limit from cost parameters
+    let { maxDepth } = this.costParameters;
+    //maxDepth can be reassigned to get depth max limit from req.body if user selects depth limit
+    if (req.body.costOptions.maxDepth) maxDepth = req.body.costOptions.maxDepth;
+    //return error if no query in request.
+    if (!req.body.query) return res.status(400);
+    //assign graphQL query string to variable queryString
+    const queryString = req.body.query;
 
 
     //create AST
@@ -1796,23 +1819,26 @@ class QuellCache {
       ? this.updateProtoWithFragment(proto, frags)
       : proto;
 
-    //helper function to determine the depth of the proto.
+    //helper function to pass an error if the depth of the proto is greater than the maxDepth.
     //will be using this function to recursively go deeper into the nested query
     const determineDepth = (proto, currentDepth = 0) => {
       if (currentDepth > maxDepth) {
-      //add err to res.locals.queryRes obj as a new key
-      const err = { log: `Depth limit exceeded, tried to send query with the depth of ${currentDepth}.` };
-      res.locals.queryErr = err;
-      return next(err);//do we return with err?
+        //add err to res.locals.queryRes obj as a new key
+        const err = { log: `Depth limit exceeded, tried to send query with the depth of ${currentDepth}.` };
+        res.locals.queryErr = err;
+        return next(err);//do we return with err?
       }
+
+      // for each field
       Object.keys(proto).forEach((key) => {
+        // if the field is nested, recurse, increasing currentDepth by 1
         if (typeof proto[key] === 'object' && !key.includes('__')) {
           determineDepth(proto[key], currentDepth + 1);
         }
-      })
+      });
     }
     //call helper function
-    determineDepth(prototype)
+    determineDepth(prototype);
     //attach to res.locals so query doesn't need to re run these functions again.
     res.locals.AST = AST;
     res.locals.parsedAST = { proto, operationType, frags };
@@ -1820,15 +1846,14 @@ class QuellCache {
     return next();
   }
 
-    /**
-   * costLimit checks the cost of the query and, n the instance of a malicious or overly nested query, 
+  /**
+   * costLimit checks the cost of the query and, in the instance of a malicious or overly nested query, 
    * costLimit short-circuits the query before it goes to the database,
    * sending a status code 400 (bad request) back to the client/requester. 
-   * @param 
-   * @param 
-   * @param 
+   * @param {Object} req - Express request object
+   * @param {Object} res - Express response object
+   * @param {Function} next - Express next middleware function
    */
-
   costLimit(req, res, next) {
     //get default values for costParameters
     let {maxCost, mutationCost, objectCost, depthCostFactor, scalarCost} = this.costParameters;
@@ -1838,60 +1863,68 @@ class QuellCache {
     if (!req.body.query) return res.status(400);
     //assign graphQL query string to variable queryString
     const queryString = req.body.query;
-     //create AST
-     const AST = parse(queryString);
-     
-     // create response prototype, and operation type, and fragments object
-     // the response prototype is used as a template for most operations in quell including caching, building modified requests, and more
-     const { proto, operationType, frags } = this.parseAST(AST);
-     //check for fragments
-     const prototype =
-     Object.keys(frags).length > 0
-       ? this.updateProtoWithFragment(proto, frags)
-       : proto;
+    //create AST
+    const AST = parse(queryString);
+
+    // create response prototype, and operation type, and fragments object
+    // the response prototype is used as a template for most operations in quell including caching, building modified requests, and more
+    const { proto, operationType, frags } = this.parseAST(AST);
+    //check for fragments
+    const prototype =
+    Object.keys(frags).length > 0
+      ? this.updateProtoWithFragment(proto, frags)
+      : proto;
 
     let cost = 0;
     
     //mutation check
     operationType === 'mutation' ? cost += (Object.keys(prototype).length * mutationCost) : null
 
+    //helper function to pass an error if the cost of the proto is greater than the maxCost
     const determineCost = (proto) => {
+      // create error if maxCost exceeded
       if (cost > maxCost) {
         const err = { log: `Cost limit exceeded, tried to send query with a cost above ${maxCost}.` };
-      res.locals.queryErr = err;
-      return next(err);
+        res.locals.queryErr = err;
+        return next(err);
       }
+
+      // for each field
       Object.keys(proto).forEach((key) => {
+        // if the field is nested, increase the total cost by objectCost and recurse
         if (typeof proto[key] === 'object' && !key.includes('__')) {
           cost += objectCost
           return determineCost(proto[key]);
         }
+        // if scalar, increase the total cost by scalarCost
         if (proto[key] === true && !key.includes('__')) {
           cost += scalarCost
         }
-      })
+      });
     }
       
-    determineCost(prototype)
+    determineCost(prototype);
 
-  
+    // helper function to pass an error if the cost of the proto, taking into account depth levels, is greater than the maxCost
+    // essentially multiplies the cost by a depth cost adjustment, which is equal to depthCostFactor raised to the power of the depth
     const determineDepthCost = (proto, totalCost = cost) => {
+      // create error if maxCost exceeded
       if (totalCost > maxCost) {
         const err = { log: `Cost limit exceeded, tried to send query with a cost exceeding ${maxCost}.` };
-      res.locals.queryErr = err;
-
-      return next(err);
-
+        res.locals.queryErr = err;
+        return next(err);
       }
 
+      // for each field
       Object.keys(proto).forEach((key) => {
+        // if the field is nested, recurse, multiplying the current total cost by the depthCostFactor
         if (typeof proto[key] === 'object' && !key.includes('__')) {
           determineDepthCost(proto[key], totalCost * depthCostFactor);
         }
-      })
+      });
     }
     
-    determineDepthCost(prototype)
+    determineDepthCost(prototype);
     //attach to res.locals so query doesn't need to re run these functions again.
     res.locals.AST = AST;
     res.locals.parsedAST = { proto, operationType, frags };
