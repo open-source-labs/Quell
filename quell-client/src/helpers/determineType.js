@@ -1,6 +1,5 @@
 const { visit, BREAK } = require('graphql/language/visitor');
 
-
 const determineType = (AST) => {
   console.log('Parsing Abstract Syntax Tree to determine type of operation');
 
@@ -24,7 +23,6 @@ const determineType = (AST) => {
   // tracks arguments, aliases, etc. for specific fields
   // eventually merged with prototype object
   const fieldArgs = {};
-
 
   /**
    * visit is a utility provided in the graphql-JS library. It performs a
@@ -54,7 +52,7 @@ const determineType = (AST) => {
     },
     FragmentDefinition: {
       enter(node) {
-        // update stack 
+        // update stack
         stack.push(node.name.value);
         // point the targetObj that we update to the frags object while inside the loop
         targetObj = frags;
@@ -64,7 +62,9 @@ const determineType = (AST) => {
         // iterate through selections in selectionSet
         for (let i = 0; i < node.selectionSet.selections.length; i++) {
           // create a property for this selection on the frags obj (aka target obj)
-          targetObj[fragName][node.selectionSet.selections[i].name.value] = true;
+          targetObj[fragName][
+            node.selectionSet.selections[i].name.value
+          ] = true;
         }
       },
       leave() {
@@ -83,7 +83,7 @@ const determineType = (AST) => {
           return BREAK;
         }
 
-        node.arguments.forEach(arg => {
+        node.arguments.forEach((arg) => {
           const key = arg.name.value;
           if (arg.value.kind === 'Variable' && operationType === 'query') {
             operationType = 'unQuellable';
@@ -92,7 +92,7 @@ const determineType = (AST) => {
           // assign args to argsObj, skipping type-specific options ('__')
           if (!key.includes('__')) {
             argsObj[key] = arg.value.value;
-          };
+          }
           // // handle custom options passed in as arguments (ie customCache)
           // if (key.includes('__')) {
           //   auxObj[key] = arg.value.value;
@@ -108,7 +108,7 @@ const determineType = (AST) => {
       leave() {
         // pop stacks to keep track of depth-first parsing path
         stack.pop();
-      },
+      }
     },
     SelectionSet: {
       // selection sets contain all of the sub-fields
@@ -116,43 +116,51 @@ const determineType = (AST) => {
       enter(node, key, parent, path, ancestors) {
         selectionSetDepth++;
 
-      /* Exclude SelectionSet nodes whose parents' are not of the kind
-       * 'Field' to exclude nodes that do not contain information about
-       *  queried fields.
-       */
+        /* Exclude SelectionSet nodes whose parents' are not of the kind
+         * 'Field' to exclude nodes that do not contain information about
+         *  queried fields.
+         */
         if (parent.kind === 'Field') {
           // loop through selections to collect fields
           const fieldsValues = {};
-          for (let field of node.selections) {
+          for (const field of node.selections) {
             // sets any fields values to true
             // UNLESS they are a nested object
             if (!field.selectionSet) fieldsValues[field.name.value] = true;
-          };
-          
+          }
+
           // if ID was not included on the request then the query will not be included in the cache, but the request will be processed
-          if (!fieldsValues.hasOwnProperty('id') && !fieldsValues.hasOwnProperty('_id') && !fieldsValues.hasOwnProperty('ID') && !fieldsValues.hasOwnProperty('Id')) {
+          if (
+            !Object.prototype.hasOwnProperty.call(fieldsValues, 'id') &&
+            !Object.prototype.hasOwnProperty.call(fieldsValues, '_id') &&
+            !Object.prototype.hasOwnProperty.call(fieldsValues, 'ID') &&
+            !Object.prototype.hasOwnProperty.call(fieldsValues, 'Id')
+          ) {
             operationType = 'unQuellable';
             return BREAK;
           }
           // place fieldArgs object onto fieldsObject so it gets passed along to prototype
           // fieldArgs contains arguments, aliases, etc.
-          const fieldsObject = { ...fieldsValues, ...fieldArgs[stack[stack.length - 1]] };
+          const fieldsObject = {
+            ...fieldsValues,
+            ...fieldArgs[stack[stack.length - 1]]
+          };
 
           // loop through stack to get correct path in proto for temp object;
           // mutates original prototype object WITH values from tempObject
           // "prev" is accumulator ie the prototype
           stack.reduce((prev, curr, index) => {
-            return index + 1 === stack.length // if last item in path
-              ? (prev[curr] = {...fieldsObject}) //set value
-              : (prev[curr] = prev[curr]); // otherwise, if index exists, keep value
+            // if last item in path, set value
+            if (index + 1 === stack.length) prev[curr] = { ...fieldsObject };
+            return prev[curr];
           }, targetObj);
         }
       },
       leave() {
         // tracking depth of selection set
         selectionSetDepth--;
-      },
-    },
+      }
+    }
   });
   return { operationType, proto };
 };
