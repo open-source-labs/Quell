@@ -14,13 +14,32 @@ const defaultCostParams = {
 };
 
 let idCache = {};
+/**
+ * Creates a QuellCache instance that provides middleware for caching between the graphQL endpoint and
+ * front-end requests, connects to redis cloud store via user-specified parameters.
+ *    - it takes in a schema, redis specifications grouped into an object, cache expiration time in seconds,
+ *    and cost parameters as an object
+ *    - if there is no cache expiration provided by the user, cacheExpiration defaults to 14 days in seconds,
+ *    - if there are no cost parameters provided by the user, costParameters is given the default values
+ *    found in defaultCostParameters
+ *  @param {Object} schema - GraphQL defined schema that is used to facilitate caching by providing valid queries,
+ * mutations, and fields
+ *  @param {Number} cacheExpiration - Time in seconds for redis values to be evicted from the cache
+ *  @param {Object} costParameters - An object with key-pair values for maxCost, mutationCost, objectCost,
+ * scalarCost, depthCostFactor, maxDepth, ipRate
+ * @param {Number} redisPort - Redis port that Quell uses to facilitate caching
+ * @param {String} redisHost - Redis host URI
+ * @param {String} redisPassword - Redis password to host URI
+ */
 class QuellCache {
   // default host is localhost, default expiry time is 14 days in milliseconds
   constructor(
     schema,
-    { redisPort, redisHost, redisPassword },
-    cacheExpiration = 1209600000,
+    cacheExpiration = 1209600,
     costParameters = defaultCostParams,
+    redisPort,
+    redisHost,
+    redisPassword,
     idCache
   ) {
     this.idCache = idCache;
@@ -282,7 +301,6 @@ class QuellCache {
    *  @param {String} keyWithID - Key to be cached with ID string attatched; redis data is stored under this key
    *  @param {String} currName - The parent object name
    */
-
   updateIdCache(objKey, keyWithID, currName) {
     // if the parent object is not yet defined
     if (!idCache[currName]) {
@@ -305,7 +323,6 @@ class QuellCache {
    * @param {Object} options - a field for user-supplied options, not fully integrated
    * RETURNS prototype, operationType, and frags object
    */
-
   parseAST(AST, options = { userDefinedID: null }) {
     // options = { userDefinedID: null }
     // initialize prototype as empty object
@@ -566,6 +583,10 @@ class QuellCache {
     }
   }
 
+  /**
+   * execRedisRunQueue executes all previously queued transactions in Redis cache
+   * @param {String} redisRunQueue - Redis queue of transactions awaiting execution
+   */
   async execRedisRunQueue(redisRunQueue) {
     try {
       const runQueueResult = await redisRunQueue.exec();
@@ -926,6 +947,12 @@ class QuellCache {
       }
     }
 
+    /**
+     * reducer takes in a fields object and returns only the values needed from the server
+     * @param {Object} fields - Object containing true or false values that determines what should be
+     * retrieved from the server.
+     * RETURNS Filtered object of only queries without a value or an empty object
+     */
     // filter fields object to contain only values needed from server
     function reducer(fields) {
       // filter stores values needed from server
@@ -1168,6 +1195,13 @@ class QuellCache {
     }
   }
 
+  /**
+   * updateCacheByMutation
+   * @param {Object} dbRespDataRaw
+   * @param {String} mutationName
+   * @param {String} mutationType
+   * @param {Object} mutationQueryObject
+   */
   async updateCacheByMutation(
     dbRespDataRaw,
     mutationName,
@@ -1327,10 +1361,9 @@ class QuellCache {
   }
 
   /**
-   * deleteCacheById removes key-value from the cache unless the key indicates that the item is not available. // Note: writeToCache will JSON.stringify the input item
+   * deleteCacheById removes key-value from the cache unless the key indicates that the item is not available.
    * @param {String} key - unique id under which the cached data is stored that needs to be removed
    */
-
   async deleteCacheById(key) {
     try {
       const deletedFromRedis = await this.redisCache.del(key);
@@ -1427,9 +1460,9 @@ class QuellCache {
   /**
    * clearCache flushes the Redis cache. To clear the cache from the client, establish an endpoint that
    * passes the request and response objects to an instance of QuellCache.clearCache.
-   * @param {Object} req
-   * @param {Object} res
-   * @param {Function} next
+   * @param {Object} req - Express request object
+   * @param {Object} res - Express response object
+   * @param {Function} next - Express next middleware function
    */
   clearCache(req, res, next) {
     console.log('Clearing Redis Cache');
@@ -1441,12 +1474,12 @@ class QuellCache {
    * The getRedisInfo returns a chain of middleware based on what information
    * (if any) the user would like to request from the specified redisCache. It
    * requires an appropriately configured Express route, for instance:
+   * @example
    *  app.use('/redis', ...quellCache.getRedisInfo({
    *    getStats: true,
    *    getKeys: true,
    *    getValues: true
-   *  }))
-   *
+   *  }));
    * @param {Object} options - three properties with boolean values:
    *                           getStats, getKeys, getValues
    */
@@ -1454,6 +1487,12 @@ class QuellCache {
     console.log('Getting Redis Info');
     let middleware;
 
+    /**
+     * getOptions is a helper function within the getRedisInfo function that returns
+     * what redis data should be retrieved based off the passed in options
+     * @param {Object} opts - Options object containing a boolean value for getStats, getKeys, and getValues
+     * RETURNS a string that indicates which data should be retrieved from redis instance
+     */
     const getOptions = (opts) => {
       const { getStats, getKeys, getValues } = opts;
       if (!getStats && getKeys && getValues) return 'dontGetStats';
@@ -1839,6 +1878,7 @@ class QuellCache {
   /**
    * depthLimit takes in the query, parses it, and identifies the general shape of the request.
    * depthLimit then checks the depth limit set on server connection and compares it against the current queries depth.
+   *
    * In the instance of a malicious or overly nested query, depthLimit short-circuits the query before it goes to the database,
    * sending a status code 400 (bad request) back to the client/requester.
    * @param {Object} req - Express request object
@@ -1869,16 +1909,19 @@ class QuellCache {
         ? this.updateProtoWithFragment(proto, frags)
         : proto;
 
-    // helper function to pass an error if the depth of the proto is greater than the maxDepth.
-    // will be using this function to recursively go deeper into the nested query
+    /**
+     * determineDepth is a helper function to pass an error if the depth of the proto is greater than the maxDepth.
+     * will be using this function to recursively go deeper into the nested query
+     * @param {Object} proto - the prototype
+     * @param {Number} currentDepth - initialized to 0, increases for each nested level within proto
+     */
     const determineDepth = (proto, currentDepth = 0) => {
       if (currentDepth > maxDepth) {
-        // add err to res.locals.queryRes obj as a new key
         const err = {
           log: `Depth limit exceeded, tried to send query with the depth of ${currentDepth}.`
         };
         res.locals.queryErr = err;
-        return next(err); // do we return with err?
+        return next(err);
       }
 
       // for each field
@@ -1936,7 +1979,10 @@ class QuellCache {
       ? (cost += Object.keys(prototype).length * mutationCost)
       : null;
 
-    // helper function to pass an error if the cost of the proto is greater than the maxCost
+    /**
+     * helper function to pass an error if the cost of the proto is greater than the maxCost
+     * @param {Object} proto - the prototype
+     */
     const determineCost = (proto) => {
       // create error if maxCost exceeded
       if (cost > maxCost) {
@@ -1963,8 +2009,12 @@ class QuellCache {
 
     determineCost(prototype);
 
-    // helper function to pass an error if the cost of the proto, taking into account depth levels, is greater than the maxCost
-    // essentially multiplies the cost by a depth cost adjustment, which is equal to depthCostFactor raised to the power of the depth
+    /**
+     * helper function to pass an error if the cost of the proto, taking into account depth levels, is greater than the maxCost
+     * essentially multiplies the cost by a depth cost adjustment, which is equal to depthCostFactor raised to the power of the depth
+     * @param {Object} proto - the prototype
+     * @param {Number} totalCost - cost of the proto
+     */
     const determineDepthCost = (proto, totalCost = cost) => {
       // create error if maxCost exceeded
       if (totalCost > maxCost) {
