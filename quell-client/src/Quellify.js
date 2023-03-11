@@ -18,6 +18,9 @@ i.e. {{JSONStringifiedQuery: $lokiID}}
  */
 let IDCache = {};
 
+/**
+ * clearCache clears existing cache and ID cache and resets to a new cache
+ */
 const clearCache = () => {
   lokidb.removeCollection('loki-client-cache');
   lokiCache = lokidb.addCollection('loki-client-cache', { disableMeta: true });
