@@ -1,9 +1,20 @@
-const redis = require('redis');
-const { parse } = require('graphql/language/parser');
-const { visit, BREAK } = require('graphql/language/visitor');
-const { graphql } = require('graphql');
+import { Response, Request, NextFunction, RequestHandler } from 'express';
+import { createClient } from 'redis';
+import { parse } from 'graphql/language/parser';
+import { visit, BREAK } from 'graphql/language/visitor';
+import { graphql } from 'graphql';
 
-const defaultCostParams = {
+import type { RedisClientType, RedisCommandRawReply } from 'redis';
+import type {
+  ASTNode,
+  DocumentNode,
+  Source,
+  GraphQLSchema,
+  ObjectTypeDefinitionNode
+} from 'graphql';
+import type { ConstructorOptions, IdCacheType, CostParamsType } from './types';
+
+const defaultCostParams: CostParamsType = {
   maxCost: 5000, // maximum cost allowed before a request is rejected
   mutationCost: 5, // cost of a mutation
   objectCost: 2, // cost of retrieving an object
@@ -13,7 +24,8 @@ const defaultCostParams = {
   ipRate: 3 // requests allowed per second
 };
 
-let idCache = {};
+let idCache: IdCacheType = {};
+
 /**
  * Creates a QuellCache instance that provides middleware for caching between the graphQL endpoint and
  * front-end requests, connects to redis cloud store via user-specified parameters.
@@ -30,18 +42,29 @@ let idCache = {};
  *  @param {Number} redisPort - Redis port that Quell uses to facilitate caching
  *  @param {String} redisHost - Redis host URI
  *  @param {String} redisPassword - Redis password to host URI
+ *  @param {Object} idCache - stores IDs under parent name
  */
-class QuellCache {
-  // default host is localhost, default expiry time is 14 days in milliseconds
-  constructor(
+// default host is localhost, default expiry time is 14 days in milliseconds
+class QuellCache implements QuellCache {
+  idCache: IdCacheType;
+  schema: GraphQLSchema;
+  costParameters: CostParamsType;
+  queryMap: any;
+  mutationMap: any;
+  fieldsMap: any;
+  idMap: any;
+  cacheExpiration: number;
+  redisReadBatchSize: number;
+  redisCache: RedisClientType;
+
+  constructor({
     schema,
-    cacheExpiration = 1209600,
+    cacheExpiration = 1209600, // default expiry time is 14 days in milliseconds;
     costParameters = defaultCostParams,
     redisPort,
     redisHost,
-    redisPassword,
-    idCache
-  ) {
+    redisPassword
+  }: ConstructorOptions) {
     this.idCache = idCache;
     this.schema = schema;
     this.costParameters = Object.assign(defaultCostParams, costParameters);
@@ -54,7 +77,7 @@ class QuellCache {
     this.idMap = this.getIdMap();
     this.cacheExpiration = cacheExpiration;
     this.redisReadBatchSize = 10;
-    this.redisCache = redis.createClient({
+    this.redisCache = createClient({
       socket: { host: redisHost, port: redisPort },
       password: redisPassword
     });
@@ -70,7 +93,7 @@ class QuellCache {
     this.getRedisKeys = this.getRedisKeys.bind(this);
     this.getRedisValues = this.getRedisValues.bind(this);
     this.joinResponses = this.joinResponses.bind(this);
-    this.redisCache.connect().then(() => {
+    this.redisCache.connect().then((): void => {
       console.log('Connected to redisCache');
     });
   }
@@ -87,38 +110,63 @@ class QuellCache {
    *  @param {Object} res - Express response object, will carry query response to next middleware
    *  @param {Function} next - Express next middleware function, invoked when QuellCache completes its work
    */
-  async rateLimiter(req, res, next) {
-    let ipRates;
-    // ipRate can be reassigned to get ipRate limit from req.body if user selects requests limit
-    if (req.body.costOptions.ipRate) ipRates = req.body.costOptions.ipRate;
-    //  else ipRates = this.costParameters.ipRate;
-    // return error if no query in request.
+  async rateLimiter(req: Request, res: Response, next: NextFunction) {
+    // Set ipRate to the ipRate limit from the request body or use default.
+    const ipRateLimit: number =
+      req.body.costOptions?.ipRate ?? this.costParameters.ipRate;
+    // Get the IP address from the request.
+    const ipAddress: string = req.ip;
+    // Get the current time in seconds.
+    const currentTimeSeconds: number = Math.floor(Date.now() / 1000);
+    // Create a Redis IP key using the IP address and current time.
+    const redisIpTimeKey = `${ipAddress}:${currentTimeSeconds}`;
+
+    // Return an error if no query is found in the request.
     if (!req.body.query) {
-      return next({ log: 'Error: no GraphQL query found on request body' });
-    }
-    const ip = req.ip;
-    const now = Math.floor(Date.now() / 1000);
-    const ipKey = `${ip}:${now}`;
-
-    this.redisCache.incr(ipKey, (err, count) => {
-      if (err) {
-        console.error('Redis cache error: ', err);
-        return next({ log: 'Internal Server Error in redis :(' });
-      }
-
-      this.redisCache.expire(ipKey, 1);
-      console.error('Redis cache incremented:', ipKey, count);
-      return next();
-    });
-
-    const calls = await this.getFromRedis(ipKey);
-
-    if (calls > ipRates) {
       return next({
-        log: `Express error handler caught too many requests from this IP address: ${ip}`
+        status: 400, // Bad Request
+        log: 'Error: no GraphQL query found on request body'
       });
     }
-    return next();
+
+    try {
+      // Create a Redis multi command queue.
+      const redisRunQueue: ReturnType<typeof this.redisCache.multi> =
+        this.redisCache.multi();
+
+      // Add to queue: increment the key associated with the current IP address and time in Redis.
+      redisRunQueue.incr(redisIpTimeKey);
+
+      // Add to queue: set the key to expire after 1 second.
+      redisRunQueue.expire(redisIpTimeKey, 1);
+
+      // Execute the Redis multi command queue.
+      const redisResponse: RedisCommandRawReply[] = await redisRunQueue.exec();
+
+      // Save result of increment command, which will be the number of requests made by the current IP address in the last second.
+      // Since the increment command was the first command in the queue, it will be the first result in the returned array.
+      const numRequestsString: string = redisResponse[0];
+      const numRequests: number = parseInt(numRequestsString ?? '0', 10);
+
+      // If the number of requests is greater than the IP rate limit, throw an error.
+      if (numRequests > ipRateLimit) {
+        return next({
+          status: 429, // Too Many Requests
+          log: `Redis cache error: Express error handler caught too many requests from this IP address (${ipAddress}): limit is: ${ipRateLimit} requests per second`
+        });
+      }
+
+      console.log(
+        `IP ${ipAddress} made a request. Limit is: ${ipRateLimit} requests per second. Result: OK.`
+      );
+
+      return next();
+    } catch (error) {
+      return next({
+        status: 500, // Internal Server Error
+        log: `Redis cache error: ${error}`
+      });
+    }
   }
 
   /**
@@ -134,22 +182,26 @@ class QuellCache {
    *  @param {Object} res - Express response object, will carry query response to next middleware
    *  @param {Function} next - Express next middleware function, invoked when QuellCache completes its work
    */
-  async query(req, res, next) {
-    // handle request without query
+  async query(req: Request, res: Response, next: NextFunction) {
+    // Return an error if no query is found in the request.
     if (!req.body.query) {
-      return next({ log: 'Error: no GraphQL query found on request body' });
+      return next({
+        status: 400, // Bad Request
+        log: 'Error: no GraphQL query found on request body'
+      });
     }
-    // retrieve GraphQL query string from request object;
-    const queryString = req.body.query;
 
-    // create abstract syntax tree with graphql-js parser
-    // if depth limit was implemented, then we don't need to run parse again and instead grab from res.locals.
-    const AST = res.locals.AST ? res.locals.AST : parse(queryString);
+    // Retrieve GraphQL query string from request body.
+    const queryString: string = req.body.query;
+
+    // Create abstract syntax tree with graphql-js parser.
+    // If depth limit was implemented, then we can get the parsed query from res.locals.
+    const AST: DocumentNode = res.locals.AST ?? parse(queryString);
+
     // create response prototype, and operation type, and fragments object
     // the response prototype is used as a template for most operations in quell including caching, building modified requests, and more
-    const { proto, operationType, frags } = res.locals.parsedAST
-      ? res.locals.parsedAST
-      : this.parseAST(AST);
+    const { proto, operationType, frags } =
+      res.locals.parsedAST ?? this.parseAST(AST);
 
     // pass-through for queries and operations that QuellCache cannot handle
     if (operationType === 'unQuellable') {
@@ -325,7 +377,7 @@ class QuellCache {
    * @returns {string} operationType
    * @returns {Object} frags object
    */
-  parseAST(AST, options = { userDefinedID: null }) {
+  parseAST(AST: ASTNode | DocumentNode, options = { userDefinedID: null }) {
     // options = { userDefinedID: null }
     // initialize prototype as empty object
     // information from AST is distilled into the prototype for easy access during caching, rebuilding query strings, etc.
@@ -355,7 +407,7 @@ class QuellCache {
      * https://graphql.org/graphql-js/language/#visit
      */
     visit(AST, {
-      enter(node) {
+      enter(node: ASTNode) {
         // cannot cache directives, return as unquellable
         if (node.directives) {
           if (node.directives.length > 0) {
