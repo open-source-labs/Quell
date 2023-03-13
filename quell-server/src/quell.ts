@@ -3,6 +3,9 @@ const { parse } = require('graphql/language/parser');
 const { visit, BREAK } = require('graphql/language/visitor');
 const { graphql } = require('graphql');
 
+import { Request, Response, NextFunction } from 'express'; 
+import { QueryObject, QueryMapType, QueryFields, Field, ItemToBeCached, DatabaseResponseDataRaw } from './types'
+
 const defaultCostParams = {
   maxCost: 5000, // maximum cost allowed before a request is rejected
   mutationCost: 5, // cost of a mutation
@@ -197,7 +200,7 @@ class QuellCache {
       NOTE: this is not the logic we should be using for mutations--rather than flushing the cache and resetting the idCache
         we should instead be updating the cache following a mutation.
       */
-      this.redisCache.flushAll();
+      // this.redisCache.flushAll();
       idCache = {};
 
       let mutationQueryObject;
@@ -1007,6 +1010,8 @@ class QuellCache {
     return output;
   }
 
+
+
   /**
    * createQueryStr traverses over a supplied query Object and uses the fields on there to create a query string reflecting the data,
    * this query string is a modified version of the query string received by Quell that has references to data found within the cache removed
@@ -1014,21 +1019,23 @@ class QuellCache {
    * @param {Object} queryObject - a modified version of the prototype with only values we want to pass onto the queryString
    * @param {String} operationType - a string indicating the GraphQL operation type- 'query', 'mutation', etc.
    */
-  createQueryStr(queryObject, operationType) {
+   createQueryStr(queryObject: QueryObject, operationType: string):string {
     if (Object.keys(queryObject).length === 0) return '';
     const openCurly = '{';
     const closeCurly = '}';
     const openParen = '(';
     const closeParen = ')';
 
-    let mainStr = '';
+    let mainStr: string = '';
 
     // iterate over every key in queryObject
     // place key into query object
-    for (const key in queryObject) {
+    for (const key:string in queryObject) {
       mainStr += ` ${key}${getAliasType(queryObject[key])}${getArgs(
         queryObject[key]
       )} ${openCurly} ${stringify(queryObject[key])}${closeCurly}`;
+          // mainStr += `${key}${getAliasType(queryObject[key])}${getArgs(queryObject[key])}{${stringify(queryObject[key])}}`;
+
     }
 
     /**
@@ -1039,11 +1046,11 @@ class QuellCache {
      */
     // recurse to build nested query strings
     // ignore all __values (ie __alias and __args)
-    function stringify(fields) {
+    function stringify(fields: QueryFields): string {
       // initialize inner string
-      let innerStr = '';
+      let innerStr: string = '';
       // iterate over KEYS in OBJECT
-      for (const key in fields) {
+      for (const key:string in fields) {
         // is fields[key] string? concat with inner string & empty space
         if (typeof fields[key] === 'boolean') {
           innerStr += key + ' ';
@@ -1059,8 +1066,8 @@ class QuellCache {
       return innerStr;
     }
     // iterates through arguments object for current field and creates arg string to attach to query string
-    function getArgs(fields) {
-      let argString = '';
+    function getArgs(fields:QueryFields):string {
+      let argString:string = '';
       if (!fields.__args) return '';
 
       Object.keys(fields.__args).forEach((key) => {
@@ -1074,12 +1081,12 @@ class QuellCache {
     }
 
     // if Alias exists, formats alias for query string
-    function getAliasType(fields) {
+    function getAliasType(fields: QueryFields):string {
       return fields.__alias ? `: ${fields.__type}` : '';
     }
 
     // create final query string
-    const queryStr = openCurly + mainStr + ' ' + closeCurly;
+    const queryStr:string = openCurly + mainStr + ' ' + closeCurly;
     return operationType ? operationType + ' ' + queryStr : queryStr;
   }
 
@@ -1091,7 +1098,7 @@ class QuellCache {
    * @param {Object} queryProto - current slice of the prototype being used as a template for final response object structure
    * @param {Boolean} fromArray - whether or not the current recursive loop came from within an array, should NOT be supplied to function call
    */
-  joinResponses(cacheResponse, serverResponse, queryProto, fromArray = false) {
+  function joinResponses(cacheResponse, serverResponse, queryProto, fromArray:boolean=false) {
     let mergedResponse = {};
 
     // loop through fields object keys, the "source of truth" for structure
@@ -1205,8 +1212,8 @@ class QuellCache {
    * @param {String} key - unique id under which the cached data will be stored
    * @param {Object} item - item to be cached
    */
-  writeToCache(key, item) {
-    const lowerKey = key.toLowerCase();
+  function writeToCache(key: string, item: ItemToBeCached): void {
+    const lowerKey: string = key.toLowerCase();
     if (!key.includes('uncacheable')) {
       this.redisCache.set(lowerKey, JSON.stringify(item));
       this.redisCache.EXPIRE(lowerKey, this.cacheExpiration);
@@ -1222,22 +1229,22 @@ class QuellCache {
    * @param {String} mutationType - type of mutation (add, update, delete)
    * @param {Object} mutationQueryObject - arguments and values for the mutation
    */
-  async updateCacheByMutation(
-    dbRespDataRaw,
-    mutationName,
-    mutationType,
-    mutationQueryObject
+  async function updateCacheByMutation(
+    dbRespDataRaw: DatabaseResponseDataRaw,
+    mutationName: string,
+    mutationType: string,
+    mutationQueryObject: QueryFields
   ) {
     let fieldsListKey;
-    const dbRespId = dbRespDataRaw.data[mutationName]?.id;
+    const dbRespId:string = dbRespDataRaw.data[mutationName]?.id;
     let dbRespData = JSON.parse(
       JSON.stringify(dbRespDataRaw.data[mutationName])
     );
 
     if (!dbRespData) dbRespData = {};
 
-    for (const queryKey in this.queryMap) {
-      const queryKeyType = this.queryMap[queryKey];
+    for (const queryKey:string in this.queryMap) {
+      const queryKeyType:string = this.queryMap[queryKey];
 
       if (JSON.stringify(queryKeyType) === JSON.stringify([mutationType])) {
         fieldsListKey = queryKey;
@@ -1284,7 +1291,7 @@ class QuellCache {
           );
           const fieldKeyValue = JSON.parse(fieldKeyValueRaw);
 
-          let remove = true;
+          let remove: boolean = true;
           for (const arg in mutationQueryObject.__args) {
             if (Object.prototype.hasOwnProperty.call(fieldKeyValue, arg)) {
               const argValue = mutationQueryObject.__args[arg];
@@ -1349,7 +1356,7 @@ class QuellCache {
       });
     };
 
-    const hypotheticalRedisKey = `${mutationType.toLowerCase()}--${dbRespId}`;
+    const hypotheticalRedisKey: string = `${mutationType.toLowerCase()}--${dbRespId}`;
     const redisKey = await this.getFromRedis(hypotheticalRedisKey);
 
     if (redisKey) {
@@ -1396,7 +1403,7 @@ class QuellCache {
    * deleteCacheById removes key-value from the cache unless the key indicates that the item is not available.
    * @param {String} key - unique id under which the cached data is stored that needs to be removed
    */
-  async deleteCacheById(key) {
+  async function deleteCacheById(key: string) {
     try {
       await this.redisCache.del(key);
     } catch (err) {
@@ -1495,7 +1502,7 @@ class QuellCache {
    * @param {Object} res - Express response object
    * @param {Function} next - Express next middleware function
    */
-  clearCache(req, res, next) {
+  clearCache: (req: Request, res: Response, next: NextFunction) => {
     console.log('Clearing Redis Cache');
     this.redisCache.flushAll();
     return next();
