@@ -1,11 +1,4 @@
-import type { RedisClientType, RedisCommandRawReply } from 'redis';
-import type {
-  ASTNode,
-  DocumentNode,
-  Source,
-  GraphQLSchema,
-  ObjectTypeDefinitionNode
-} from 'graphql';
+import type { GraphQLSchema } from 'graphql';
 
 // QuellCache constructor parameters
 export interface ConstructorOptions {
@@ -18,7 +11,9 @@ export interface ConstructorOptions {
 }
 
 export interface IdCacheType {
-  [key: any]: any;
+  [typeName: string]: {
+    [fieldName: string]: string | string[];
+  };
 }
 
 export interface CostParamsType {
@@ -35,4 +30,33 @@ export interface CustomError extends Error {
   log?: string;
   status?: number;
   msg?: string;
+}
+
+export interface ProtoObjType {
+  [key: string]: unknown | ProtoObjType;
+}
+
+export interface FragsType {
+  [fragName: string]: {
+    [fieldName: string]: boolean;
+  };
+}
+
+export interface MutationMapType {
+  [mutationName: string]: string;
+}
+
+export interface QueryMapType {
+  [queryName: string]: string | string[];
+}
+
+export interface FieldsMapType {
+  [typeName: string]: {
+    [fieldName: string]: string;
+  };
+}
+
+// Incomplete because not being used
+export interface IdMapType {
+  [key: string]: unknown;
 }
