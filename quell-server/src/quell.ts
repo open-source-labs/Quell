@@ -6,10 +6,15 @@ import { graphql } from 'graphql';
 
 import type { RedisClientType, RedisCommandRawReply } from 'redis';
 import type {
+  GraphQLSchema,
+  ExecutionResult,
   ASTNode,
   DocumentNode,
-  GraphQLSchema,
-  ExecutionResult
+  OperationDefinitionNode,
+  FragmentDefinitionNode,
+  FieldNode,
+  SelectionSetNode,
+  DirectiveNode
 } from 'graphql';
 import type {
   ConstructorOptions,
@@ -20,7 +25,10 @@ import type {
   MutationMapType,
   QueryMapType,
   FieldsMapType,
-  IdMapType
+  IdMapType,
+  ParseASTOptions,
+  ArgsObjType,
+  FieldArgsType
 } from './types';
 
 const defaultCostParams: CostParamsType = {
@@ -343,6 +351,8 @@ class QuellCache implements QuellCache {
 
       // If the query object is empty, there is nothing left to query and we can send the information from cache.
       if (Object.keys(queryObject).length === 0) {
+        // The response is given a cached key equal to true to indicate to the front end of the demo site that the
+        // information was entirely found in the cache.
         cacheResponse.cached = true;
         res.locals.queryResponse = { ...cacheResponse };
         return next();
@@ -396,6 +406,8 @@ class QuellCache implements QuellCache {
         currName
       );
 
+      // The response is given a cached key equal to false to indicate to the front end of the demo site that the
+      // information was *NOT* entirely found in the cache.
       mergedResponse.cached = false;
       res.locals.queryResponse = { ...mergedResponse };
       return next();
@@ -416,6 +428,10 @@ class QuellCache implements QuellCache {
    *  @param {String} currName - The parent object name
    */
   updateIdCache(objKey: string, keyWithID: string, currName: string): void {
+    // BUG: Add check - If any of the arguments are missing, return immediately.
+    // Currently, if currName is undefined, this function is adding 'undefined' as a
+    // key in the idCache.
+
     // if the parent object is not yet defined
     if (!idCache[currName]) {
       idCache[currName] = {};
@@ -439,25 +455,30 @@ class QuellCache implements QuellCache {
    * @returns {string} operationType
    * @returns {Object} frags object
    */
-  parseAST(AST: ASTNode | DocumentNode, options = { userDefinedID: null }) {
+  parseAST(
+    AST: ASTNode,
+    options: ParseASTOptions = { userDefinedID: null }
+  ): { proto: ProtoObjType; operationType: string; frags: FragsType } {
     // Initialize prototype and frags as empty objects.
     // Information from the AST is distilled into the prototype for easy
     // access during caching, rebuilding query strings, etc.
     const proto: ProtoObjType = {};
+    // The frags object will contain the fragments defined in the query in a format
+    // similar to the proto.
     const frags: FragsType = {};
 
-    // Create operation type variable. This will be query, mutation, subscription, or unQuellable.
+    // Create operation type variable. This will be 'query', 'mutation', 'subscription', 'noID', or 'unQuellable'.
     let operationType = '';
 
     // Initialize a stack to keep track of depth first parsing path.
-    const stack = [];
+    const stack: string[] = [];
 
-    // tracks arguments, aliases, etc. for specific fields
-    // eventually merged with prototype object
-    const fieldArgs = {};
+    // Create field arguments object, which will track the id, type, alias, and args for the fields.
+    // The field arguments object will eventually be merged with the prototype object.
+    const fieldArgs: FieldArgsType = {};
 
-    // extract userDefinedID from options object, if provided
-    const userDefinedID = options.userDefinedID;
+    // Extract the userDefinedID from the options object, if provided.
+    const userDefinedID: string | null | undefined = options.userDefinedID;
 
     /**
      * visit is a utility provided in the graphql-JS library. It performs a
@@ -470,7 +491,7 @@ class QuellCache implements QuellCache {
      */
     visit(AST, {
       enter(node: ASTNode) {
-        // cannot cache directives, return as unquellable
+        // Quell cannot cache directives, so we need to return as unQuellable if the node has directives.
         if (node.directives) {
           if (node.directives.length > 0) {
             operationType = 'unQuellable';
@@ -478,8 +499,8 @@ class QuellCache implements QuellCache {
           }
         }
       },
-      OperationDefinition(node) {
-        // cannot cache subscriptions, return as unquellable
+      OperationDefinition(node: OperationDefinitionNode) {
+        // Cannot cache subscriptions, return as unquellable
         operationType = node.operation;
         if (node.operation === 'subscription') {
           operationType = 'unQuellable';
@@ -487,12 +508,12 @@ class QuellCache implements QuellCache {
         }
       },
       // set-up for fragment definition traversal
-      FragmentDefinition(node) {
+      FragmentDefinition(node: FragmentDefinitionNode) {
         // update stack for path tracking
         stack.push(node.name.value);
 
         // extract base-level fields in the fragment into frags object
-        const fragName = node.name.value;
+        const fragName: string = node.name.value;
 
         frags[fragName] = {}; // adding fragName to frags object as an empty object
         for (let i = 0; i < node.selectionSet.selections.length; i++) {
@@ -500,7 +521,7 @@ class QuellCache implements QuellCache {
         }
       },
       Field: {
-        enter(node) {
+        enter(node: FieldNode) {
           // return introspection queries as unQuellable to not cache them
           // "__keyname" syntax is later used for Quell's field-specific options, though this does not create collision with introspection
           if (node.name.value.includes('__')) {
@@ -510,7 +531,7 @@ class QuellCache implements QuellCache {
 
           // populates argsObj from current node's arguments
           // generates uniqueID
-          const argsObj = {};
+          const argsObj: ArgsObjType = {};
 
           // auxillary object for storing arguments, aliases, field-specific options, and more
           // query-wide options should be handled on Quell's options object
@@ -571,7 +592,7 @@ class QuellCache implements QuellCache {
       SelectionSet: {
         // selection sets contain all of the sub-fields
         // iterate through the sub-fields to construct fieldsObject
-        enter(node, key, parent, path, ancestors) {
+        enter(node: SelectionSetNode, key, parent, path, ancestors) {
           /* Exclude SelectionSet nodes whose parents' are not of the kind
            * 'Field' to exclude nodes that do not contain information about
            *  queried fields.
@@ -629,21 +650,32 @@ class QuellCache implements QuellCache {
    * @param {Object} frags - fragments object to update prototype with
    * @returns {Object} updated prototype object
    */
-  updateProtoWithFragment(protoObj, frags) {
+  updateProtoWithFragment(
+    protoObj: ProtoObjType,
+    frags: FragsType
+  ): ProtoObjType {
+    // If the proto object is null/undefined, return undefined.
     if (!protoObj) return;
-    for (const key in protoObj) {
-      // if nested field, recurse
-      if (typeof protoObj[key] === 'object' && !key.includes('__')) {
-        protoObj[key] = this.updateProtoWithFragment(protoObj[key], frags);
+
+    // Loop through the fields in the proto object.
+    for (const field in protoObj) {
+      // If the field is a nested object and not an introspection field (fields starting with '__'
+      // that provide information about the underlying schema)
+      if (typeof protoObj[field] === 'object' && !field.includes('__')) {
+        // Update the field to the result of recursively calling updateprotoWithFragment,
+        // passing the field and fragments.
+        protoObj[field] = this.updateProtoWithFragment(protoObj[field], frags);
       }
 
-      // if field is a reference to a fragment, add fragment to field in place of the reference to the fragment
-      if (Object.prototype.hasOwnProperty.call(frags, key)) {
-        protoObj = { ...protoObj, ...frags[key] };
-        delete protoObj[key];
+      // If the field is a reference to a fragment, replace the reference to the fragment with
+      // the actual fragment.
+      if (Object.prototype.hasOwnProperty.call(frags, field)) {
+        protoObj = { ...protoObj, ...frags[field] };
+        delete protoObj[field];
       }
     }
 
+    // Return the updated proto
     return protoObj;
   }
 

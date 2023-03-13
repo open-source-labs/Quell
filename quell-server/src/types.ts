@@ -1,4 +1,4 @@
-import type { GraphQLSchema } from 'graphql';
+import type { GraphQLSchema, ASTNode, DirectiveNode } from 'graphql';
 
 // QuellCache constructor parameters
 export interface ConstructorOptions {
@@ -11,7 +11,7 @@ export interface ConstructorOptions {
 }
 
 export interface IdCacheType {
-  [typeName: string]: {
+  [queryName: string]: {
     [fieldName: string]: string | string[];
   };
 }
@@ -58,5 +58,24 @@ export interface FieldsMapType {
 
 // Incomplete because not being used
 export interface IdMapType {
-  [key: string]: unknown;
+  [fieldType: string]: unknown;
+}
+
+export interface ParseASTOptions {
+  userDefinedID?: string | null;
+}
+
+export interface ArgsObjType {
+  [fieldName: string]: [argument: unknown];
+}
+
+export interface FieldArgsType {
+  [fieldType: string]: {
+    [fieldName: string]: {
+      __type?: string;
+      __alias?: string;
+      __args?: Record<string, ArgsObjType> | null;
+      __id?: string | null;
+    };
+  };
 }
