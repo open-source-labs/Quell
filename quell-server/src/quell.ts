@@ -8,9 +8,8 @@ import {
   QueryObject,
   QueryMapType,
   QueryFields,
-  Fields,
-  Field,
   ItemToBeCached,
+  MapType,
   DatabaseResponseDataRaw,
   TypeData,
   Type,
@@ -1063,9 +1062,13 @@ class QuellCache {
         }
         // is key object? && !key.includes('__'), recurse stringify
         if (typeof fields[key] === 'object' && !key.includes('__')) {
-          innerStr += `${key}${getAliasType(fields[key])}${getArgs(
-            fields[key]
-          )} ${openCurly} ${stringify(fields[key])}${closeCurly} `;
+          const fieldsObj: QueryFields = fields[key];
+          // TODO try to fix this error
+          const type: string = getAliasType(fieldsObj);
+          const args: string = getArgs(fieldsObj);
+          innerStr += `${key}${type}${args} ${openCurly} ${stringify(
+            fieldsObj
+          )}${closeCurly} `;
         }
       }
 
@@ -1134,15 +1137,12 @@ class QuellCache {
           // you query for 4 objects (which includes the 2 cached objects) only returning
           // the 2 new objects from the server)
           // if the keys are identical, we can return a "simple" merge of both
-          const cacheKeys = Object.keys(cacheResponse[key][0]);
-          //TODO
-          const serverKeys = Object.keys(serverResponse[key][0]);
-          //TODO
+          const cacheKeys: string[] = Object.keys(cacheResponse[key][0]);
+          const serverKeys: string[] = Object.keys(serverResponse[key][0]);
           let keysSame = true;
           for (let n = 0; n < cacheKeys.length; n++) {
             if (cacheKeys[n] !== serverKeys[n]) keysSame = false;
           }
-
           if (keysSame) {
             mergedResponse[key] = [
               ...cacheResponse[key],
@@ -1248,7 +1248,7 @@ class QuellCache {
     mutationType: string,
     mutationQueryObject: QueryFields
   ) {
-    let fieldsListKey;
+    let fieldsListKey: string;
     const dbRespId: string = dbRespDataRaw.data[mutationName]?.id;
     let dbRespData: Type = JSON.parse(
       JSON.stringify(dbRespDataRaw.data[mutationName])
@@ -1437,13 +1437,13 @@ class QuellCache {
    */
   async normalizeForCache(
     responseData: TypeData,
-    map = {},
+    map: MapType = {},
     protoField: QueryFields,
     currName: string
   ) {
     for (const resultName in responseData) {
       const currField: Type = responseData[resultName];
-      const currProto: QueryFields = protoField[resultName];
+      const currProto = protoField[resultName];
       if (Array.isArray(currField)) {
         for (let i = 0; i < currField.length; i++) {
           const el = currField[i];
