@@ -8,7 +8,6 @@ import {
   QueryObject,
   QueryMapType,
   QueryFields,
-  ItemToBeCached,
   MapType,
   DatabaseResponseDataRaw,
   TypeData,
@@ -1225,7 +1224,7 @@ class QuellCache {
    * @param {String} key - unique id under which the cached data will be stored
    * @param {Object} item - item to be cached
    */
-  writeToCache(key: string, item: ItemToBeCached): void {
+  writeToCache(key: string, item: Type): void {
     const lowerKey: string = key.toLowerCase();
     if (!key.includes('uncacheable')) {
       this.redisCache.set(lowerKey, JSON.stringify(item));
@@ -1276,9 +1275,10 @@ class QuellCache {
         const cachedFieldKeysListRaw = await this.getFromRedis(fieldsListKey);
         const cachedFieldKeysList = JSON.parse(cachedFieldKeysListRaw);
 
-        await fieldKeysToRemove.forEach((fieldKey) => {
+        await fieldKeysToRemove.forEach((fieldKey: string) => {
           // index position of field key to remove from list of field keys
-          const removalFieldKeyIdx = cachedFieldKeysList.indexOf(fieldKey);
+          const removalFieldKeyIdx: number =
+            cachedFieldKeysList.indexOf(fieldKey);
 
           if (removalFieldKeyIdx !== -1) {
             cachedFieldKeysList.splice(removalFieldKeyIdx, 1);
@@ -1295,11 +1295,13 @@ class QuellCache {
     const deleteApprFieldKeys = async () => {
       if (fieldsListKey) {
         const cachedFieldKeysListRaw = await this.getFromRedis(fieldsListKey);
-        const cachedFieldKeysList = JSON.parse(cachedFieldKeysListRaw);
+        const cachedFieldKeysList: string[] = JSON.parse(
+          cachedFieldKeysListRaw
+        );
 
-        const fieldKeysToRemove = new Set();
+        const fieldKeysToRemove: Set<string> = new Set();
         for (let i = 0; i < cachedFieldKeysList.length; i++) {
-          const fieldKey = cachedFieldKeysList[i];
+          const fieldKey: string = cachedFieldKeysList[i];
 
           const fieldKeyValueRaw = await this.getFromRedis(
             fieldKey.toLowerCase()
@@ -1309,7 +1311,8 @@ class QuellCache {
           let remove = true;
           for (const arg in mutationQueryObject.__args) {
             if (Object.prototype.hasOwnProperty.call(fieldKeyValue, arg)) {
-              const argValue = mutationQueryObject.__args[arg];
+              const argValue: string | boolean =
+                mutationQueryObject.__args[arg];
               if (fieldKeyValue[arg] !== argValue) {
                 remove = false;
                 break;
@@ -1338,7 +1341,7 @@ class QuellCache {
       // conditional just in case the resolver wants to throw an error. instead of making quellCache invoke it's caching functions, we break here.
       if (cachedFieldKeysListRaw === undefined) return;
       // list of field keys stored on redis
-      const cachedFieldKeysList = JSON.parse(cachedFieldKeysListRaw);
+      const cachedFieldKeysList: string[] = JSON.parse(cachedFieldKeysListRaw);
 
       // iterate through field key field key values in redis, and compare to user
       // specified mutation args to determine which fields are used to update by
