@@ -1,4 +1,17 @@
-import type { GraphQLSchema, ASTNode, DirectiveNode } from 'graphql';
+import type {
+  GraphQLSchema,
+  ASTNode,
+  DirectiveNode,
+  VariableNode,
+  IntValueNode,
+  FloatValueNode,
+  StringValueNode,
+  BooleanValueNode,
+  NullValueNode,
+  EnumValueNode,
+  ListValueNode,
+  ObjectValueNode
+} from 'graphql';
 
 // QuellCache constructor parameters
 export interface ConstructorOptions {
@@ -66,16 +79,29 @@ export interface ParseASTOptions {
 }
 
 export interface ArgsObjType {
-  [fieldName: string]: [argument: unknown];
+  [fieldName: string]: string | boolean | null;
+}
+
+export interface AuxObjType {
+  __type?: string | boolean | null;
+  __alias?: string | boolean | null;
+  // __args?: Record<string, ArgsObjType> | null;
+  __args?: ArgsObjType | null;
+  __id?: string | boolean | null;
 }
 
 export interface FieldArgsType {
-  [fieldType: string]: {
-    [fieldName: string]: {
-      __type?: string;
-      __alias?: string;
-      __args?: Record<string, ArgsObjType> | null;
-      __id?: string | null;
-    };
-  };
+  [fieldName: string]: AuxObjType;
 }
+
+export declare type ValidValueNodeType =
+  | IntValueNode
+  | FloatValueNode
+  | StringValueNode
+  | BooleanValueNode
+  | EnumValueNode;
+// Excludes the following types:
+// | VariableNode
+// | NullValueNode
+// | ListValueNode
+// | ObjectValueNode

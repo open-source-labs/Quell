@@ -14,7 +14,11 @@ import type {
   FragmentDefinitionNode,
   FieldNode,
   SelectionSetNode,
-  DirectiveNode
+  DirectiveNode,
+  SelectionNode,
+  ArgumentNode,
+  InlineFragmentNode,
+  ValueNode
 } from 'graphql';
 import type {
   ConstructorOptions,
@@ -28,7 +32,9 @@ import type {
   IdMapType,
   ParseASTOptions,
   ArgsObjType,
-  FieldArgsType
+  FieldArgsType,
+  AuxObjType,
+  ValidValueNodeType
 } from './types';
 
 const defaultCostParams: CostParamsType = {
@@ -490,85 +496,128 @@ class QuellCache implements QuellCache {
      * https://graphql.org/graphql-js/language/#visit
      */
     visit(AST, {
+      // The enter function will be triggered upon entering each node in the traversal.
       enter(node: ASTNode) {
         // Quell cannot cache directives, so we need to return as unQuellable if the node has directives.
         if (node.directives) {
           if (node.directives.length > 0) {
             operationType = 'unQuellable';
+            // Return BREAK to break out of the visit() AST traversal.
             return BREAK;
           }
         }
       },
+
+      // If the current node is of type OperationDefinition, this function will be triggered upon entering it.
+      // It checks the type of operation being performed.
       OperationDefinition(node: OperationDefinitionNode) {
-        // Cannot cache subscriptions, return as unquellable
         operationType = node.operation;
+        // Quell cannot cache subscriptions, so we need to return as unQuellable if the type is subscription.
         if (node.operation === 'subscription') {
           operationType = 'unQuellable';
+          // Return BREAK to break out of the visit() AST traversal.
           return BREAK;
         }
       },
-      // set-up for fragment definition traversal
-      FragmentDefinition(node: FragmentDefinitionNode) {
-        // update stack for path tracking
-        stack.push(node.name.value);
 
-        // extract base-level fields in the fragment into frags object
+      // If the current node is of type FragmentDefinition, this function will be triggered upon entering it.
+      FragmentDefinition(node: FragmentDefinitionNode) {
+        // Get the name of the fragment.
         const fragName: string = node.name.value;
 
-        frags[fragName] = {}; // adding fragName to frags object as an empty object
+        // Add the fragment name to the stack.
+        stack.push(fragName);
+
+        // Add the fragment name as a key in the frags object, initialized to an empty object.
+        frags[fragName] = {};
+        // Loop through the selections in the selection set for the current FragmentDefinition node.
         for (let i = 0; i < node.selectionSet.selections.length; i++) {
+          // Add base-level field names in the fragment to the frags object.
           frags[fragName][node.selectionSet.selections[i].name.value] = true;
         }
       },
+
       Field: {
+        // If the current node is of type Field, this function will be triggered upon entering it.
         enter(node: FieldNode) {
-          // return introspection queries as unQuellable to not cache them
-          // "__keyname" syntax is later used for Quell's field-specific options, though this does not create collision with introspection
+          // Return introspection queries as unQuellable so that we do not cache them.
+          // "__keyname" syntax is later used for Quell's field-specific options, though this does not create collision with introspection.
           if (node.name.value.includes('__')) {
             operationType = 'unQuellable';
+            // Return BREAK to break out of the visit() AST traversal.
             return BREAK;
           }
 
-          // populates argsObj from current node's arguments
-          // generates uniqueID
+          // Create an args object that will be populated with the current node's arguments.
           const argsObj: ArgsObjType = {};
 
           // auxillary object for storing arguments, aliases, field-specific options, and more
           // query-wide options should be handled on Quell's options object
-          const auxObj = {
+          const auxObj: AuxObjType = {
             __id: null
           };
-          node.arguments.forEach((arg) => {
-            const key = arg.name.value;
-            // pass variables through
-            if (arg.value.kind === 'Variable' && operationType === 'query') {
-              operationType = 'unQuellable';
-              return BREAK;
-            }
 
-            // assign args to argsObj, skipping field-specific options ('__') provided as arguments
-            if (!key.includes('__')) {
-              argsObj[key] = arg.value.value;
-            }
+          // Loop through the field's arguments.
+          if (node.arguments) {
+            node.arguments.forEach((arg: ArgumentNode) => {
+              const key: string = arg.name.value;
 
-            // identify uniqueID from args, options
-            // assigns ID as userDefinedID if one is supplied on options object
-            // note: do not use key.includes('id') to avoid assigning fields such as "idea" or "idiom" as uniqueID
-            if (userDefinedID ? key === userDefinedID : false) {
-              auxObj.__id = arg.value.value;
-            } else if (
-              key === 'id' ||
-              key === '_id' ||
-              key === 'ID' ||
-              key === 'Id'
-            ) {
-              auxObj.__id = arg.value.value;
-            }
-          });
+              // Quell cannot cache queries with variables, so we need to return unQuellable if the query has variables.
+              if (arg.value.kind === 'Variable' && operationType === 'query') {
+                operationType = 'unQuellable';
+                // Return BREAK to break out of the visit() AST traversal.
+                return BREAK;
+              }
+
+              /*
+               * In the next step, we get the value from the argument node's value node.
+               * This assumes that the value node has a 'value' property.
+               * If the 'kind' of the value node is ObjectValue, ListValue, NullValue, or ListValue
+               * then the value node will not have a 'value' property, so we must first check that
+               * the 'kind' does not match any of those types.
+               */
+              // TODO: Combine this check with the 'Variable' check above.
+              // In that check, they checked if the operationType is query - should that be done here as well?
+              if (
+                arg.value.kind === 'NullValue' ||
+                arg.value.kind === 'ObjectValue' ||
+                arg.value.kind === 'ListValue'
+              ) {
+                operationType = 'unQuellable';
+                // Return BREAK to break out of the visit() AST traversal.
+                return BREAK;
+              }
+
+              // Assign args to argsObj, skipping field-specific options ('__') provided as arguments.
+              if (!key.includes('__')) {
+                // Get the value from the argument node's value node.
+                argsObj[key] = (arg.value as ValidValueNodeType).value;
+              }
+
+              // identify uniqueID from args, options
+              // assigns ID as userDefinedID if one is supplied on options object
+              // note: do not use key.includes('id') to avoid assigning fields such as "idea" or "idiom" as uniqueID
+
+              // If a userDefinedID was included in the options object and the current key matches
+              // that ID, update the auxillary object's id.
+              if (userDefinedID ? key === userDefinedID : false) {
+                auxObj.__id = (arg.value as ValidValueNodeType).value;
+              } else if (
+                key === 'id' ||
+                key === '_id' ||
+                key === 'ID' ||
+                key === 'Id'
+              ) {
+                auxObj.__id = (arg.value as ValidValueNodeType).value;
+              }
+            });
+          }
 
           // gather auxillary data such as aliases, arguments, query type, and more to append to the prototype for future reference
 
-          const fieldType = node.alias ? node.alias.value : node.name.value;
+          const fieldType: string = node.alias
+            ? node.alias.value
+            : node.name.value;
 
           auxObj.__type = node.name.value.toLowerCase();
 
@@ -584,20 +633,31 @@ class QuellCache implements QuellCache {
           // add value to stacks to keep track of depth-first parsing path
           stack.push(fieldType);
         },
+
+        // If the current node is of type Field, this function will be triggered after visiting it and all of its children.
         leave() {
           // pop stacks to keep track of depth-first parsing path
           stack.pop();
         }
       },
+
       SelectionSet: {
+        // If the current node is of type SelectionSet, this function will be triggered upon entering it.
         // selection sets contain all of the sub-fields
         // iterate through the sub-fields to construct fieldsObject
-        enter(node: SelectionSetNode, key, parent, path, ancestors) {
-          /* Exclude SelectionSet nodes whose parents' are not of the kind
+        enter(
+          node: SelectionSetNode,
+          key: string | number | undefined,
+          parent: ASTNode | readonly ASTNode[] | undefined,
+          path: readonly (string | number)[],
+          ancestors: readonly (ASTNode | readonly ASTNode[])[]
+        ) {
+          /*
+           * Exclude SelectionSet nodes whose parents' are not of the kind
            * 'Field' to exclude nodes that do not contain information about
            *  queried fields.
            */
-          if (parent.kind === 'Field') {
+          if (parent && parent.kind === 'Field') {
             const fieldsValues = {};
 
             // this fragment variable keeps track of whether or not the current node is a FragmentSpread.
@@ -618,6 +678,7 @@ class QuellCache implements QuellCache {
               !fragment
             ) {
               operationType = 'noID';
+              // Return BREAK to break out of the visit() AST traversal.
               return BREAK;
             }
 
@@ -635,12 +696,15 @@ class QuellCache implements QuellCache {
             }, proto);
           }
         },
+
+        // If the current node is of type SelectionSet, this function will be triggered upon entering it.
         leave() {
           // pop stacks to keep track of depth-first parsing path
           stack.pop();
         }
       }
     });
+
     return { proto, operationType, frags };
   }
 
@@ -654,8 +718,8 @@ class QuellCache implements QuellCache {
     protoObj: ProtoObjType,
     frags: FragsType
   ): ProtoObjType {
-    // If the proto object is null/undefined, return undefined.
-    if (!protoObj) return;
+    // If the proto or frags objects are null/undefined, return the protoObj.
+    if (!protoObj || !frags) return protoObj;
 
     // Loop through the fields in the proto object.
     for (const field in protoObj) {
@@ -664,7 +728,10 @@ class QuellCache implements QuellCache {
       if (typeof protoObj[field] === 'object' && !field.includes('__')) {
         // Update the field to the result of recursively calling updateprotoWithFragment,
         // passing the field and fragments.
-        protoObj[field] = this.updateProtoWithFragment(protoObj[field], frags);
+        protoObj[field] = this.updateProtoWithFragment(
+          protoObj[field] as ProtoObjType,
+          frags
+        );
       }
 
       // If the field is a reference to a fragment, replace the reference to the fragment with
