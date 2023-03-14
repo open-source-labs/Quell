@@ -1,4 +1,5 @@
 import { Response, Request, NextFunction, RequestHandler } from 'express';
+import { DocumentNode } from 'graphql';
 const redis = require('redis');
 const { parse } = require('graphql/language/parser');
 const { visit, BREAK } = require('graphql/language/visitor');
@@ -39,6 +40,9 @@ type QuellCache = {
   getRedisValues: RequestHandler;
   depthLimit: RequestHandler;
   costLimit: RequestHandler;
+};
+type ResponseDataType = {
+  [k: string]: string | ResponseDataType | ResponseDataType[];
 };
 /**
  * Creates a QuellCache instance that provides middleware for caching between the graphQL endpoint and
@@ -1437,15 +1441,22 @@ class QuellCache {
    * @param {Object} protoField - a slice of the prototype currently being used as a template and reference for the responseData to send information to the cache
    * @param {String} currName - parent object name, used to pass into updateIDCache
    */
-  async normalizeForCache(responseData, map = {}, protoField, currName) {
+  async normalizeForCache(
+    responseData: ResponseDataType,
+    map: QueryMapType = {},
+    protoField: ProtoObjType,
+    currName: string
+  ) {
+    // loop through each resultName in response data
     for (const resultName in responseData) {
+      // currField is assigned to the nestedObject on responseData
       const currField = responseData[resultName];
-      const currProto = protoField[resultName];
+      const currProto: ProtoObjType = protoField[resultName];
       if (Array.isArray(currField)) {
         for (let i = 0; i < currField.length; i++) {
-          const el = currField[i];
+          const el: ResponseDataType = currField[i];
 
-          const dataType = map[resultName];
+          const dataType: QueryMapType = map[resultName];
 
           if (typeof el === 'object') {
             await this.normalizeForCache(
@@ -1462,10 +1473,10 @@ class QuellCache {
         // need to get non-Alias ID for cache
 
         // temporary store for field properties
-        const fieldStore = {};
+        const fieldStore: ResponseDataType = {};
 
         // create a cacheID based on __type and __id from the prototype
-        let cacheID = Object.prototype.hasOwnProperty.call(
+        let cacheID: string = Object.prototype.hasOwnProperty.call(
           map,
           currProto.__type
         )
@@ -1484,11 +1495,18 @@ class QuellCache {
             // if currname is undefined, assign to responseData at cacheid to lower case at name
             if (responseData[cacheID.toLowerCase()]) {
               const responseDataAtCacheID = responseData[cacheID.toLowerCase()];
-              currName = responseDataAtCacheID.name;
+              if (
+                typeof responseDataAtCacheID !== 'string' &&
+                !Array.isArray(responseDataAtCacheID)
+              ) {
+                if (typeof responseDataAtCacheID.name === 'string') {
+                  currName = responseDataAtCacheID.name;
+                }
+              }
             }
             // if the responseData at cacheid to lower case at name is not undefined, store under name variable and copy logic of writing to cache, want to update cache with same things, all stored under name
             // store objKey as cacheID without ID added
-            const cacheIDForIDCache = cacheID;
+            const cacheIDForIDCache: string = cacheID;
             cacheID += `--${currField[key]}`;
             // call idcache here idCache(cacheIDForIDCache, cacheID)
             this.updateIdCache(cacheIDForIDCache, cacheID, currName);
@@ -1946,7 +1964,7 @@ class QuellCache {
     const queryString: string = req.body.query;
 
     // create AST
-    const AST: Document = parse(queryString);
+    const AST: DocumentNode = parse(queryString);
 
     // create response prototype, and operation type, and fragments object
     // the response prototype is used as a template for most operations in quell including caching, building modified requests, and more
