@@ -512,7 +512,7 @@ class QuellCache implements QuellCache {
             0 > 0
           ) {
             operationType = 'unQuellable';
-            // Return BREAK to break out of the visit() AST traversal.
+            // Return BREAK to break out of the current traversal branch.
             return BREAK;
           }
         }
@@ -525,7 +525,7 @@ class QuellCache implements QuellCache {
         // Quell cannot cache subscriptions, so we need to return as unQuellable if the type is subscription.
         if (node.operation === 'subscription') {
           operationType = 'unQuellable';
-          // Return BREAK to break out of the visit() AST traversal.
+          // Return BREAK to break out of the current traversal branch.
           return BREAK;
         }
       },
@@ -565,7 +565,7 @@ class QuellCache implements QuellCache {
           // "__keyname" syntax is later used for Quell's field-specific options, though this does not create collision with introspection.
           if (node.name.value.includes('__')) {
             operationType = 'unQuellable';
-            // Return BREAK to break out of the visit() AST traversal.
+            // Return BREAK to break out of the current traversal branch.
             return BREAK;
           }
 
@@ -586,7 +586,7 @@ class QuellCache implements QuellCache {
               // Quell cannot cache queries with variables, so we need to return unQuellable if the query has variables.
               if (arg.value.kind === 'Variable' && operationType === 'query') {
                 operationType = 'unQuellable';
-                // Return BREAK to break out of the visit() AST traversal.
+                // Return BREAK to break out of the current traversal branch.
                 return BREAK;
               }
 
@@ -605,7 +605,7 @@ class QuellCache implements QuellCache {
                 arg.value.kind === 'ListValue'
               ) {
                 operationType = 'unQuellable';
-                // Return BREAK to break out of the visit() AST traversal.
+                // Return BREAK to break out of the current traversal branch.
                 return BREAK;
               }
 
@@ -725,7 +725,7 @@ class QuellCache implements QuellCache {
               !fragment
             ) {
               operationType = 'noID';
-              // Return BREAK to break out of the visit() AST traversal.
+              // Return BREAK to break out of the current traversal branch.
               return BREAK;
             }
 
