@@ -6,14 +6,14 @@ const { graphql } = require('graphql');
 import { Request, Response, NextFunction } from 'express';
 import {
   QueryObject,
-  QueryMapType,
   QueryFields,
   MapType,
   DatabaseResponseDataRaw,
   TypeData,
-  MergedResponseObject,
   Type,
+  MergedResponse,
   DataResponse,
+  Data,
 } from './types';
 
 const defaultCostParams = {
@@ -1113,8 +1113,8 @@ class QuellCache {
     serverResponse: DataResponse,
     queryProto: QueryObject,
     fromArray = false
-  ): TypeData {
-    let mergedResponse: DataResponse = {};
+  ): MergedResponse {
+    let mergedResponse: MergedResponse = {};
 
     // loop through fields object keys, the "source of truth" for structure
     // store combined responses in mergedResponse
@@ -1135,26 +1135,30 @@ class QuellCache {
           // you query for 4 objects (which includes the 2 cached objects) only returning
           // the 2 new objects from the server)
           // if the keys are identical, we can return a "simple" merge of both
-          const cacheKeys: string[] = Object.keys(cacheResponse[key][0]);
-          const serverKeys: string[] = Object.keys(serverResponse[key][0]);
+          const cacheKeys: string[] = Object.keys(
+            (cacheResponse[key] as Data)[0]
+          );
+          const serverKeys: string[] = Object.keys(
+            (serverResponse[key] as Data)[0]
+          );
           let keysSame = true;
           for (let n = 0; n < cacheKeys.length; n++) {
             if (cacheKeys[n] !== serverKeys[n]) keysSame = false;
           }
           if (keysSame) {
             mergedResponse[key] = [
-              ...cacheResponse[key],
-              ...serverResponse[key],
+              ...(cacheResponse[key] as Data[]),
+              ...(serverResponse[key] as Data[]),
             ];
           }
           // otherwise, we need to combine the responses at the object level
           else {
             const mergedArray = [];
-            for (let i = 0; i < cacheResponse[key].length; i++) {
+            for (let i = 0; i < (cacheResponse[key] as Data[]).length; i++) {
               // for each index of array, combine cache and server response objects
-              const joinedResponse: TypeData = this.joinResponses(
-                { [key]: cacheResponse[key][i] },
-                { [key]: serverResponse[key][i] },
+              const joinedResponse: MergedResponse = this.joinResponses(
+                { [key]: (cacheResponse[key] as Data[])[i] },
+                { [key]: (serverResponse[key] as Data[])[i] },
                 { [key]: queryProto[key] },
                 true
               );
@@ -1177,7 +1181,10 @@ class QuellCache {
           };
         } else {
           // if the object comes from an array, we do not want to assign to a key as per GQL spec
-          mergedResponse = { ...cacheResponse[key], ...serverResponse[key] };
+          (mergedResponse as object) = {
+            ...cacheResponse[key],
+            ...serverResponse[key],
+          };
         }
 
         for (const fieldName in queryProto[key]) {
@@ -1187,20 +1194,32 @@ class QuellCache {
             !fieldName.includes('__')
           ) {
             // recurse joinResponses on that object to create deeply nested copy on mergedResponse
-            let mergedRecursion: MergedResponseObject = {};
+            let mergedRecursion: MergedResponse = {};
             if (
-              cacheResponse[key][fieldName] &&
-              serverResponse[key][fieldName]
+              (cacheResponse[key] as Data)[fieldName] &&
+              (serverResponse[key] as Data)[fieldName]
             ) {
               mergedRecursion = this.joinResponses(
-                { [fieldName]: cacheResponse[key][fieldName] },
-                { [fieldName]: serverResponse[key][fieldName] },
-                { [fieldName]: queryProto[key][fieldName] }
+                {
+                  [fieldName]: (cacheResponse[key] as MergedResponse)[
+                    fieldName
+                  ],
+                },
+                {
+                  [fieldName]: (serverResponse[key] as MergedResponse)[
+                    fieldName
+                  ],
+                },
+                { [fieldName]: (queryProto[key] as QueryObject)[fieldName] }
               );
-            } else if (cacheResponse[key][fieldName]) {
-              mergedRecursion[fieldName] = cacheResponse[key][fieldName];
+            } else if ((cacheResponse[key] as Data)[fieldName]) {
+              mergedRecursion[fieldName] = (
+                cacheResponse[key] as MergedResponse
+              )[fieldName];
             } else {
-              mergedRecursion[fieldName] = serverResponse[key][fieldName];
+              mergedRecursion[fieldName] = (
+                serverResponse[key] as MergedResponse
+              )[fieldName];
             }
 
             // place on merged response

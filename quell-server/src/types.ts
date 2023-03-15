@@ -17,15 +17,6 @@ interface Argument {
   [arg: string]: string | boolean;
 }
 
-export interface ItemToBeCached {
-  id: string;
-  [field: string]: string | ItemToBeCached[];
-}
-
-export interface QueryMapType {
-  [query: string]: string;
-}
-
 export interface MapType {
   [query: string]: string | undefined;
 }
@@ -51,16 +42,16 @@ export interface Type {
   [index: number]: Type | Type[] | string | undefined;
 }
 
-export interface MergedResponseObject {
-  [key: string]: Type | Type[];
+export interface MergedResponse {
+  [key: string]: Data | Data[];
 }
 
 export interface DataResponse {
-  [key: string]: Data;
+  [key: string]: Data | Data[];
 }
 
-interface Data {
-  [key: string]: DataField[] | string;
+export interface Data {
+  [key: string]: DataField[] | string | Data | Data[];
 }
 
 interface DataField {
