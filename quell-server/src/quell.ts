@@ -1,10 +1,10 @@
-import { Response, Request, NextFunction, RequestHandler } from 'express';
+import { Response, Request, NextFunction } from 'express';
 import { createClient } from 'redis';
 import { parse } from 'graphql/language/parser';
 import { visit, BREAK } from 'graphql/language/visitor';
 import { graphql } from 'graphql';
 
-import type { RedisClientType, RedisCommandRawReply } from 'redis';
+import type { RedisClientType } from 'redis';
 import type {
   GraphQLSchema,
   ExecutionResult,
@@ -14,11 +14,8 @@ import type {
   FragmentDefinitionNode,
   FieldNode,
   SelectionSetNode,
-  DirectiveNode,
-  SelectionNode,
   ArgumentNode,
-  InlineFragmentNode,
-  ValueNode
+  FragmentSpreadNode
 } from 'graphql';
 import type {
   ConstructorOptions,
@@ -34,7 +31,11 @@ import type {
   ArgsObjType,
   FieldArgsType,
   AuxObjType,
-  ValidValueNodeType
+  ValidArgumentNodeType,
+  FieldsObjectType,
+  FieldsValuesType,
+  GQLResponseType,
+  GQLNodeWithDirectivesType
 } from './types';
 
 const defaultCostParams: CostParamsType = {
@@ -170,12 +171,16 @@ class QuellCache implements QuellCache {
       redisRunQueue.expire(redisIpTimeKey, 1);
 
       // Execute the Redis multi command queue.
-      const redisResponse: RedisCommandRawReply[] = await redisRunQueue.exec();
+      // FIXME: Currently using map as a workaround so that response is uniform
+      // type. Revisit to determine if this is the best approach.
+      const redisResponse: string[] = (await redisRunQueue.exec()).map(
+        (result) => JSON.stringify(result)
+      );
 
       // Save result of increment command, which will be the number of requests made by the current IP address in the last second.
       // Since the increment command was the first command in the queue, it will be the first result in the returned array.
-      const numRequestsString: string = redisResponse[0];
-      const numRequests: number = parseInt(numRequestsString ?? '0', 10);
+      const numRequestsString: string = redisResponse[0] ?? '0';
+      const numRequests: number = parseInt(numRequestsString, 10);
 
       // If the number of requests is greater than the IP rate limit, throw an error.
       if (numRequests > ipRateLimit) {
@@ -346,14 +351,14 @@ class QuellCache implements QuellCache {
       // Check the cache for the requested values.
       // buildFromCache will modify the prototype to mark any values not found in the cache
       // so that they may later be retrieved from the database.
-      const cacheResponse: any = await this.buildFromCache(
-        prototype,
-        prototypeKeys
-      );
+      const cacheResponse: {
+        data: itemFromCache;
+        cached?: boolean;
+      } = await this.buildFromCache(prototype, prototypeKeys);
 
       // Create query object containing the fields that were not found in the cache.
       // This will be used to create a new GraphQL string.
-      const queryObject: any = this.createQueryObj(prototype);
+      const queryObject: ProtoObjType = this.createQueryObj(prototype);
 
       // If the query object is empty, there is nothing left to query and we can send the information from cache.
       if (Object.keys(queryObject).length === 0) {
@@ -382,7 +387,9 @@ class QuellCache implements QuellCache {
 
       // The GraphQL must be parsed in order to join with it with the data retrieved from
       // the cache before sending back to user.
-      const gqlResponseParsed: any = JSON.parse(JSON.stringify(gqlResponse));
+      const gqlResponseParsed: GQLResponseType = JSON.parse(
+        JSON.stringify(gqlResponse)
+      );
 
       // Check if the cache response has any data by iterating over the keys in cache response.
       let cacheHasData = false;
@@ -462,7 +469,7 @@ class QuellCache implements QuellCache {
    * @returns {Object} frags object
    */
   parseAST(
-    AST: ASTNode,
+    AST: DocumentNode,
     options: ParseASTOptions = { userDefinedID: null }
   ): { proto: ProtoObjType; operationType: string; frags: FragsType } {
     // Initialize prototype and frags as empty objects.
@@ -499,8 +506,11 @@ class QuellCache implements QuellCache {
       // The enter function will be triggered upon entering each node in the traversal.
       enter(node: ASTNode) {
         // Quell cannot cache directives, so we need to return as unQuellable if the node has directives.
-        if (node.directives) {
-          if (node.directives.length > 0) {
+        if ((node as GQLNodeWithDirectivesType)?.directives) {
+          if (
+            (node as GQLNodeWithDirectivesType)?.directives?.length ??
+            0 > 0
+          ) {
             operationType = 'unQuellable';
             // Return BREAK to break out of the visit() AST traversal.
             return BREAK;
@@ -532,8 +542,19 @@ class QuellCache implements QuellCache {
         frags[fragName] = {};
         // Loop through the selections in the selection set for the current FragmentDefinition node.
         for (let i = 0; i < node.selectionSet.selections.length; i++) {
-          // Add base-level field names in the fragment to the frags object.
-          frags[fragName][node.selectionSet.selections[i].name.value] = true;
+          // Below, we get the 'name' property from the SelectionNode.
+          // However, InlineFragmentNode (one of the possible types for SelectionNode) does
+          // not have a 'name' property, so we will want to skip nodes with that type.
+          if (node.selectionSet.selections[i].kind !== 'InlineFragment') {
+            // Add base-level field names in the fragment to the frags object.
+            frags[fragName][
+              (
+                node.selectionSet.selections[i] as
+                  | FieldNode
+                  | FragmentSpreadNode
+              ).name.value
+            ] = true;
+          }
         }
       },
 
@@ -551,7 +572,7 @@ class QuellCache implements QuellCache {
           // Create an args object that will be populated with the current node's arguments.
           const argsObj: ArgsObjType = {};
 
-          // auxillary object for storing arguments, aliases, field-specific options, and more
+          // auxiliary object for storing arguments, aliases, field-specific options, and more
           // query-wide options should be handled on Quell's options object
           const auxObj: AuxObjType = {
             __id: null
@@ -560,7 +581,7 @@ class QuellCache implements QuellCache {
           // Loop through the field's arguments.
           if (node.arguments) {
             node.arguments.forEach((arg: ArgumentNode) => {
-              const key: string = arg.name.value;
+              const argName: string = arg.name.value;
 
               // Quell cannot cache queries with variables, so we need to return unQuellable if the query has variables.
               if (arg.value.kind === 'Variable' && operationType === 'query') {
@@ -589,62 +610,66 @@ class QuellCache implements QuellCache {
               }
 
               // Assign args to argsObj, skipping field-specific options ('__') provided as arguments.
-              if (!key.includes('__')) {
+              if (!argName.includes('__')) {
                 // Get the value from the argument node's value node.
-                argsObj[key] = (arg.value as ValidValueNodeType).value;
+                argsObj[argName] = (arg.value as ValidArgumentNodeType).value;
               }
 
-              // identify uniqueID from args, options
-              // assigns ID as userDefinedID if one is supplied on options object
-              // note: do not use key.includes('id') to avoid assigning fields such as "idea" or "idiom" as uniqueID
-
-              // If a userDefinedID was included in the options object and the current key matches
-              // that ID, update the auxillary object's id.
-              if (userDefinedID ? key === userDefinedID : false) {
-                auxObj.__id = (arg.value as ValidValueNodeType).value;
+              // If a userDefinedID was included in the options object and the current argument name matches
+              // that ID, update the auxiliary object's id.
+              if (userDefinedID ? argName === userDefinedID : false) {
+                auxObj.__id = (arg.value as ValidArgumentNodeType).value;
               } else if (
-                key === 'id' ||
-                key === '_id' ||
-                key === 'ID' ||
-                key === 'Id'
+                // If a userDefinedID was not provided, determine the uniqueID from the args.
+                // Note: do not use key.includes('id') to avoid assigning fields such as "idea" or "idiom" as uniqueID.
+                argName === 'id' ||
+                argName === '_id' ||
+                argName === 'ID' ||
+                argName === 'Id'
               ) {
-                auxObj.__id = (arg.value as ValidValueNodeType).value;
+                // If the name of the argument is 'id', '_id', 'ID', or 'Id',
+                // set the '__id' field on the auxObj equal to value of that argument.
+                auxObj.__id = (arg.value as ValidArgumentNodeType).value;
               }
             });
           }
 
-          // gather auxillary data such as aliases, arguments, query type, and more to append to the prototype for future reference
+          // Gather other auxiliary data such as aliases, arguments, query type, and more to append to the prototype for future reference.
 
+          // Set the fieldType (which will be the key in the fieldArgs object) equal to either the field's alias or the field's name.
           const fieldType: string = node.alias
             ? node.alias.value
             : node.name.value;
 
+          // Set the '__type' property of the auxiliary object equal to the field's name, converted to lower case.
           auxObj.__type = node.name.value.toLowerCase();
 
+          // Set the '__alias' property of the auxiliary object equal to the field's alias if it has one.
           auxObj.__alias = node.alias ? node.alias.value : null;
 
+          // Set the '__args' property of the auxiliary object equal to the args
           auxObj.__args = Object.keys(argsObj).length > 0 ? argsObj : null;
 
-          // adds auxObj fields to prototype, allowing future access to type, alias, args, etc.
+          // Add auxObj fields to prototype, allowing future access to type, alias, args, etc.
           fieldArgs[fieldType] = {
             ...argsObj[fieldType],
             ...auxObj
           };
-          // add value to stacks to keep track of depth-first parsing path
+          // Add the field type to stacks to keep track of depth-first parsing path.
           stack.push(fieldType);
         },
 
         // If the current node is of type Field, this function will be triggered after visiting it and all of its children.
         leave() {
-          // pop stacks to keep track of depth-first parsing path
+          // Pop stacks to keep track of depth-first parsing path
           stack.pop();
         }
       },
 
       SelectionSet: {
         // If the current node is of type SelectionSet, this function will be triggered upon entering it.
-        // selection sets contain all of the sub-fields
-        // iterate through the sub-fields to construct fieldsObject
+        // The selection sets contain all of the sub-fields.
+        // Iterate through the sub-fields to construct fieldsObject
         enter(
           node: SelectionSetNode,
           key: string | number | undefined,
@@ -657,16 +682,38 @@ class QuellCache implements QuellCache {
            * 'Field' to exclude nodes that do not contain information about
            *  queried fields.
            */
-          if (parent && parent.kind === 'Field') {
-            const fieldsValues = {};
+          // FIXME: It is possible for the parent to be an array. This happens when the selection set
+          // is a fragment spread. In that case, the parent will not have a 'kind' property. For now,
+          // add a check that parent is not an array.
+          if (
+            parent && // parent is not undefined
+            !Array.isArray(parent) && // parent is not readonly ASTNode[]
+            (parent as ASTNode).kind === 'Field' // can now safely cast parent to ASTNode
+          ) {
+            const fieldsValues: FieldsValuesType = {};
 
-            // this fragment variable keeps track of whether or not the current node is a FragmentSpread.
-            // it should reset back to false when traversing a new node.
+            /*
+             * Create a variable called fragment, initialized to false, to indicate whether the selection set includes a fragment spread.
+             * Loop through the current selection set's selections array.
+             * If the array contains a FragmentSpread node, set the fragment variable to true.
+             * This is reset to false upon entering each new selection set.
+             */
             let fragment = false;
             for (const field of node.selections) {
               if (field.kind === 'FragmentSpread') fragment = true;
-              // sets any fields values to true, unless it is a nested object (ie has selectionSet)
-              if (!field.selectionSet) fieldsValues[field.name.value] = true;
+              /*
+               * If the current selection in the selections array is not a nested object
+               * (i.e. does not have a SelectionSet), set its value in fieldsValues to true.
+               * Typescript note: below, we get the 'name' property from the SelectionNode.
+               * However, InlineFragmentNode (one of the possible types for SelectionNode) does
+               * not have a 'name' property, so we will want to skip nodes with that type.
+               * Furthermore, FragmentSpreadNodes never have a selection set property.
+               */
+              if (
+                field.kind !== 'InlineFragment' &&
+                (field.kind === 'FragmentSpread' || !field.selectionSet)
+              )
+                fieldsValues[field.name.value] = true;
             }
             // if ID was not included on the request then the query will not be included in the cache, but the request will be processed
             // AND if current node is NOT a fragment.
@@ -684,16 +731,24 @@ class QuellCache implements QuellCache {
 
             // place current fieldArgs object onto fieldsObject so it gets passed along to prototype
             // fieldArgs contains arguments, aliases, etc.
-            const fieldsObject = {
+            const fieldsObject: FieldsObjectType = {
               ...fieldsValues,
               ...fieldArgs[stack[stack.length - 1]]
             };
             // loop through stack to get correct path in proto for temp object;
-            stack.reduce((prev, curr, index) => {
-              // if last item in path, set value
-              if (index + 1 === stack.length) prev[curr] = { ...fieldsObject };
-              return prev[curr];
-            }, proto);
+            stack.reduce(
+              (
+                prev: ProtoObjType,
+                curr: string,
+                index: number
+              ): ProtoObjType => {
+                // if last item in path, set value
+                if (index + 1 === stack.length)
+                  prev[curr] = { ...fieldsObject };
+                return prev[curr] as ProtoObjType;
+              },
+              proto
+            );
           }
         },
 

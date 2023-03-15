@@ -1,16 +1,33 @@
 import type {
   GraphQLSchema,
-  ASTNode,
-  DirectiveNode,
-  VariableNode,
   IntValueNode,
   FloatValueNode,
   StringValueNode,
   BooleanValueNode,
-  NullValueNode,
   EnumValueNode,
-  ListValueNode,
-  ObjectValueNode
+  OperationDefinitionNode,
+  VariableDefinitionNode,
+  FieldNode,
+  FragmentSpreadNode,
+  InlineFragmentNode,
+  FragmentDefinitionNode,
+  SchemaDefinitionNode,
+  ScalarTypeDefinitionNode,
+  ObjectTypeDefinitionNode,
+  FieldDefinitionNode,
+  InputValueDefinitionNode,
+  InterfaceTypeDefinitionNode,
+  UnionTypeDefinitionNode,
+  EnumTypeDefinitionNode,
+  EnumValueDefinitionNode,
+  InputObjectTypeDefinitionNode,
+  SchemaExtensionNode,
+  ScalarTypeExtensionNode,
+  ObjectTypeExtensionNode,
+  InterfaceTypeExtensionNode,
+  UnionTypeExtensionNode,
+  EnumTypeExtensionNode,
+  InputObjectTypeExtensionNode
 } from 'graphql';
 
 // QuellCache constructor parameters
@@ -46,7 +63,8 @@ export interface CustomError extends Error {
 }
 
 export interface ProtoObjType {
-  [key: string]: unknown | ProtoObjType;
+  [key: string]: unknown;
+  // [key: string]: string | boolean | null | ArgsObjType | ProtoObjType;
 }
 
 export interface FragsType {
@@ -78,6 +96,12 @@ export interface ParseASTOptions {
   userDefinedID?: string | null;
 }
 
+/*
+ * The argsObj is used to store arguments. It is only used if the argument node is one of the
+ * valid nodes included in the ValidArgumentNodeType interface. It key will be the field name (string)
+ * and value will be the 'value' property of the argument node. For the valid argument nodes, the
+ * 'value' property will be a string, boolean, or null.
+ */
 export interface ArgsObjType {
   [fieldName: string]: string | boolean | null;
 }
@@ -85,7 +109,6 @@ export interface ArgsObjType {
 export interface AuxObjType {
   __type?: string | boolean | null;
   __alias?: string | boolean | null;
-  // __args?: Record<string, ArgsObjType> | null;
   __args?: ArgsObjType | null;
   __id?: string | boolean | null;
 }
@@ -94,7 +117,10 @@ export interface FieldArgsType {
   [fieldName: string]: AuxObjType;
 }
 
-export declare type ValidValueNodeType =
+/*
+ * Types of arguments that Quell is able to cache
+ */
+export type ValidArgumentNodeType =
   | IntValueNode
   | FloatValueNode
   | StringValueNode
@@ -105,3 +131,40 @@ export declare type ValidValueNodeType =
 // | NullValueNode
 // | ListValueNode
 // | ObjectValueNode
+
+export interface FieldsObjectType {
+  [fieldName: string]: string | boolean | null | ArgsObjType | null;
+}
+
+export interface FieldsValuesType {
+  [fieldName: string]: boolean;
+}
+
+export interface GQLResponseType {
+  [key: string]: unknown;
+}
+
+export type GQLNodeWithDirectivesType =
+  | OperationDefinitionNode
+  | VariableDefinitionNode
+  | FieldNode
+  | FragmentSpreadNode
+  | InlineFragmentNode
+  | FragmentDefinitionNode
+  | SchemaDefinitionNode
+  | ScalarTypeDefinitionNode
+  | ObjectTypeDefinitionNode
+  | FieldDefinitionNode
+  | InputValueDefinitionNode
+  | InterfaceTypeDefinitionNode
+  | UnionTypeDefinitionNode
+  | EnumTypeDefinitionNode
+  | EnumValueDefinitionNode
+  | InputObjectTypeDefinitionNode
+  | SchemaExtensionNode
+  | ScalarTypeExtensionNode
+  | ObjectTypeExtensionNode
+  | InterfaceTypeExtensionNode
+  | UnionTypeExtensionNode
+  | EnumTypeExtensionNode
+  | InputObjectTypeExtensionNode;
