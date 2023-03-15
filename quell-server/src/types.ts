@@ -13,12 +13,6 @@ export interface QueryFields {
   [key: string]: QueryFields | string | null | Argument | boolean;
 }
 
-// export interface Field {
-//   [field: string]: boolean;
-// }
-
-// export type QueryFields = Fields & Field;
-
 interface Argument {
   [arg: string]: string | boolean;
 }
@@ -45,15 +39,77 @@ export interface DatabaseResponseDataRaw {
 /* TypeData for a Query is {"city":{"id":"636afe808c11797007e7e49f","name":"New York","country":"United States"}} */
 /* TypeData for a Mutation is {"addCountry":{"id":"640e8298346ed37d0d33a132","name":"Brazil"}} */
 export interface TypeData {
-  [type: string]: Type | Type[];
-  [index: number]: Type | Type[];
+  [type: string]: string | Type | Type[];
 }
 
 /* Type for a Query is {"id":"636afe808c11797007e7e49f","name":"New York","country":"United States"} */
 /* Type for a Mutation is {"id":"640e8298346ed37d0d33a132","name":"Brazil"} */
 export interface Type {
-  id?: string | undefined;
-  name?: string | undefined;
-  [field: string]: string | Type | Type[] | undefined;
-  [index: number]: string | Type | Type[] | undefined;
+  id?: string;
+  name?: string;
+  [type: string]: Type | Type[] | string | undefined;
+  [index: number]: Type | Type[] | string | undefined;
 }
+
+export interface MergedResponseObject {
+  [key: string]: Type | Type[];
+}
+
+export interface DataResponse {
+  [key: string]: Data;
+}
+
+interface Data {
+  [key: string]: DataField[] | string;
+}
+
+interface DataField {
+  [key: string]: string;
+}
+
+/*
+query {
+    attractions(name: "Statue of Liberty") {
+        id
+        name
+    }
+    country(name: "Japan") {
+        id
+        name
+        cities {
+            id
+            name
+        }
+    }
+    city(name: "Seattle") {
+        id
+        name
+        attractions {
+            id
+            name
+            }
+        }
+    }
+
+
+ mergedResponse = {
+  attractions: { id: '636b005e8c11797007e7e4a6', name: 'Statue of Liberty' },
+  country: {
+    id: '636afe2f8c11797007e7e49c',
+    name: 'Japan',
+    cities: [
+      { id: '636afef18c11797007e7e4a3', name: 'Tokyo' },
+      { id: '640f428665fcc5cf42fc9bb1', name: 'Kyoto' },
+      { id: '640f42f765fcc5cf42fc9bb8', name: 'Osaka' },
+    ],
+  },
+  city: {
+    id: '636afe598c11797007e7e49d',
+    name: 'Seattle',
+    attractions: [
+      { id: '636b01fa8c11797007e7e4ae', name: 'Pike Place Market' },
+      { id: '636b01df8c11797007e7e4ad', name: 'Space Needle' },
+    ],
+  },
+};
+    */
