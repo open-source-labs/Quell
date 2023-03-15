@@ -609,7 +609,8 @@ class QuellCache implements QuellCache {
                 return BREAK;
               }
 
-              // Assign args to argsObj, skipping field-specific options ('__') provided as arguments.
+              // Assign argument values to argsObj (key will be argument name, value will be argument value),
+              // skipping field-specific options ('__') provided as arguments.
               if (!argName.includes('__')) {
                 // Get the value from the argument node's value node.
                 argsObj[argName] = (arg.value as ValidArgumentNodeType).value;
@@ -651,6 +652,11 @@ class QuellCache implements QuellCache {
           auxObj.__args = Object.keys(argsObj).length > 0 ? argsObj : null;
 
           // Add auxObj fields to prototype, allowing future access to type, alias, args, etc.
+          /*
+           * BUG: "...argsObj[fieldType]" should be removed. Because we verified above that all the values in
+           * argsObj will be string/boolean/null, argsObj[fieldType] will never be an object, so spreading it will
+           * not result in key-value pairs.
+           */
           fieldArgs[fieldType] = {
             ...argsObj[fieldType],
             ...auxObj
