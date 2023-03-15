@@ -219,10 +219,10 @@ class QuellCache implements QuellCache {
   async query(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       // Retrieve GraphQL query string from request body.
-      const { queryString }: { queryString: string } = req.body;
+      const { query }: { query: string } = req.body;
 
       // Return an error if no query is found in the request.
-      if (!queryString) {
+      if (!query) {
         return next({
           status: 400, // Bad Request
           log: 'Error: no GraphQL query found on request body'
@@ -231,7 +231,7 @@ class QuellCache implements QuellCache {
 
       // Create abstract syntax tree with graphql-js parser.
       // If depth limit was implemented, then we can get the parsed query from res.locals.
-      const AST: DocumentNode = res.locals.AST ?? parse(queryString);
+      const AST: DocumentNode = res.locals.AST ?? parse(query);
 
       // create response prototype, and operation type, and fragments object
       // the response prototype is used as a template for most operations in quell including caching, building modified requests, and more
@@ -252,7 +252,7 @@ class QuellCache implements QuellCache {
       if (operationType === 'unQuellable') {
         const gqlResponse: ExecutionResult = await graphql({
           schema: this.schema,
-          source: queryString
+          source: query
         });
         res.locals.queryResponse = gqlResponse;
         return next();
@@ -267,7 +267,7 @@ class QuellCache implements QuellCache {
       if (operationType === 'noID') {
         // Check Redis for the query string.
         const redisValue: string | null | undefined = await this.getFromRedis(
-          queryString
+          query
         );
 
         // If the query string is found in Redis, add the result to the response and return.
@@ -280,10 +280,10 @@ class QuellCache implements QuellCache {
         // write the query string and result to cache, and return.
         const gqlResponse: ExecutionResult = await graphql({
           schema: this.schema,
-          source: queryString
+          source: query
         });
         res.locals.queryResponse = gqlResponse;
-        this.writeToCache(queryString, gqlResponse);
+        this.writeToCache(query, gqlResponse);
         return next();
       }
 
@@ -318,7 +318,7 @@ class QuellCache implements QuellCache {
         // Execute the operation and add the result to the response.
         const gqlResponse: ExecutionResult = await graphql({
           schema: this.schema,
-          source: queryString
+          source: query
         });
         res.locals.queryResponse = gqlResponse;
 
@@ -352,7 +352,7 @@ class QuellCache implements QuellCache {
       // buildFromCache will modify the prototype to mark any values not found in the cache
       // so that they may later be retrieved from the database.
       const cacheResponse: {
-        data: itemFromCache;
+        data: ItemFromCacheType;
         cached?: boolean;
       } = await this.buildFromCache(prototype, prototypeKeys);
 
