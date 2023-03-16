@@ -161,7 +161,6 @@
     "eslint-plugin-n": "^15.6.1",
     "eslint-plugin-prettier": "^4.2.1",
     "eslint-plugin-promise": "^6.1.1",
-    "express": "^4.17.1",
     "jest": "^27.0.5",
     "pg": "^8.7.1",
     "prettier": "^2.8.4",
