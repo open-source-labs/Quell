@@ -1,9 +1,10 @@
-const { parse } = require('graphql/language/parser');
-const determineType = require('./helpers/determineType');
-
-const Loki = require('lokijs');
-const lokidb = new Loki('client-cache');
-let lokiCache = lokidb.addCollection('loki-client-cache', {
+import { DocumentNode } from 'graphql';
+import { Collection } from 'lokijs';
+import { parse } from 'graphql/language/parser';
+import determineType from './helpers/determineType';
+import Loki from 'lokijs';
+const lokidb: Loki = new Loki('client-cache');
+let lokiCache: Collection = lokidb.addCollection('loki-client-cache', {
   disableMeta: true
 });
 
@@ -16,14 +17,35 @@ i.e. {{JSONStringifiedQuery: $lokiID}}
   query3: $loki3
  };
  */
-let IDCache = {};
+
+// types to add to type file
+type IDLokiCacheType = {
+  [k: string]: number;
+};
+type LokiGetType = {
+  $loki: number;
+  [k: string]: JSONValue;
+};
+type FetchObjType = {
+  method?: string;
+  headers: { 'Content-Type': string };
+  body: string;
+};
+type JSONObject = { [k: string]: JSONValue };
+type JSONValue = JSONObject | JSONArray | JSONPrimitive;
+type JSONPrimitive = number | string | boolean | null;
+type JSONArray = JSONValue[];
+
+let IDCache: IDLokiCacheType = {};
 
 /**
  * clearCache clears existing cache and ID cache and resets to a new cache
  */
-const clearCache = () => {
+const clearCache = (): void => {
   lokidb.removeCollection('loki-client-cache');
-  lokiCache = lokidb.addCollection('loki-client-cache', { disableMeta: true });
+  lokiCache = lokidb.addCollection('loki-client-cache', {
+    disableMeta: true
+  });
   IDCache = {};
   console.log('Client cache has been cleared.');
 };
@@ -47,23 +69,48 @@ const clearCache = () => {
  *
  */
 
-async function Quellify(endPoint, query, costOptions) {
-  const performFetch = async () => {
-    const fetchOptions = {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({ query, costOptions })
-    };
-    const serverResponse = await fetch(endPoint, fetchOptions);
-    const parsedData = await serverResponse.json();
-    const result = parsedData.queryResponse;
-    return result;
+async function Quellify(
+  endPoint: string,
+  query: string,
+  costOptions: CostParamsType
+) {
+  // const performFetch = async (): Promise<JSONValue> => {
+  //   const fetchOptions: FetchObjType = {
+  //     method: 'POST',
+  //     headers: {
+  //       'Content-Type': 'application/json'
+  //     },
+  //     body: JSON.stringify({ query, costOptions })
+  //   };
+  //   const serverResponse: Response = await fetch(endPoint, fetchOptions);
+  //   const parsedData: JSONObject = await serverResponse.json();
+  //   const result: JSONValue = parsedData.queryResponse;
+  //   return result;
+  // };
+
+  const postFetch: FetchObjType = {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({ query, costOptions })
+  };
+  const deleteFetch: FetchObjType = {
+    method: 'DELETE',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({ query, costOptions })
+  };
+
+  const performFetch = async <T>(fetchConfig?: FetchObjType): Promise<T> => {
+    return fetch(endPoint, fetchConfig).then<T>((response) => {
+      return response.json();
+    });
   };
 
   // Create AST based on the input query using the parse method available in the graphQL library (further reading: https://en.wikipedia.org/wiki/Abstract_syntax_tree)
-  const AST = parse(query);
+  const AST: DocumentNode = parse(query);
 
   // find operationType, proto using determineType
   const { operationType, proto } = determineType(AST);
@@ -71,11 +118,11 @@ async function Quellify(endPoint, query, costOptions) {
   // pass-through for queries and operations that QuellCache cannot handle
   if (operationType === 'unQuellable') {
     // All returns in an async function return promises by default, therefore we are returning a promise that will resolve from perFormFetch
-    const parsedData = await performFetch();
+    const parsedData: JSONValue = await performFetch(postFetch);
     return parsedData;
   } else if (operationType === 'mutation') {
     // assign mutationType
-    const mutationType = Object.keys(proto)[0];
+    const mutationType: string = Object.keys(proto)[0];
     // check for key words in the type
     if (
       // add mutation
@@ -85,7 +132,7 @@ async function Quellify(endPoint, query, costOptions) {
       mutationType.includes('make')
     ) {
       // execute initial query
-      const parsedData = await performFetch();
+      const parsedData: JSONValue = await performFetch(postFetch);
       // clear cache so the next query will include mutation
       clearCache();
       // return data
@@ -96,18 +143,20 @@ async function Quellify(endPoint, query, costOptions) {
       mutationType.includes('remove')
     ) {
       // assign delete request method
-      const fetchOptions = {
-        method: 'DELETE',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ query, costOptions })
-      };
+      // const fetchOptions: FetchObjType = {
+      //   method: 'DELETE',
+      //   headers: {
+      //     'Content-Type': 'application/json'
+      //   },
+      //   body: JSON.stringify({ query, costOptions })
+      // };
       // execute initial query
-      const serverResponse = await fetch(endPoint, fetchOptions);
-      const parsedData = await serverResponse.json();
-      const result = parsedData.queryResponse;
+      // const serverResponse: Response = await fetch(endPoint, fetchOptions);
+      // const parsedData: JSONObject = await serverResponse.json();
+      // const result: JSONValue = parsedData.queryResponse;
       // clear caches
+      const parsedData: JSONObject = await performFetch(deleteFetch);
+      const result: JSONValue = parsedData.queryResponse;
       clearCache();
       // return data
       return result;
@@ -116,7 +165,7 @@ async function Quellify(endPoint, query, costOptions) {
       mutationType.includes('update')
     ) {
       // execute initial query
-      const parsedData = await performFetch();
+      const parsedData: JSONValue = await performFetch();
       // clear caches
       clearCache();
       // return data
@@ -128,20 +177,25 @@ async function Quellify(endPoint, query, costOptions) {
     // lokiCache to see if this call has a $loki associated with it. if so, retrieve and return it
     if (IDCache[query]) {
       // grab the $loki ID from the IDCache
-      const queryID = IDCache[query];
+
+      const queryID: number = IDCache[query];
+
       // grab results from lokiCache by $loki ID
-      const results = lokiCache.get(queryID);
+      const results: LokiGetType = lokiCache.get(queryID);
+
       // second element is boolean for whether data can be found in lokiCache
       return results;
     } else {
       // if this query has not been made already, execute fetch request with query
-      const parsedData = await performFetch();
+      const parsedData: JSONObject = await performFetch(postFetch);
       // add new data to lokiCache
-      const addedEntry = lokiCache.insert(parsedData.data);
-      // add query $loki ID to IDcache at query key
-      IDCache[query] = addedEntry.$loki;
-      // return data
-      return addedEntry;
+      if (parsedData && parsedData.data) {
+        const addedEntry = lokiCache.insert(parsedData.data);
+        // add query $loki ID to IDcache at query key
+        IDCache[query] = addedEntry.$loki;
+        // return data
+        return addedEntry;
+      }
     }
   }
 }

@@ -1,14 +1,13 @@
-import { Response, Request, NextFunction, RequestHandler } from 'express';
+import { DocumentNode } from 'graphql';
+import { Request, Response, NextFunction, RequestHandler } from 'express';
 import {
   QueryObject,
   QueryFields,
-  MapType,
   DatabaseResponseDataRaw,
-  TypeData,
   Type,
   MergedResponse,
   DataResponse,
-  Data,
+  Data
 } from './types';
 const redis = require('redis');
 const Multi = require('redis').Multi;
@@ -17,21 +16,21 @@ const { visit, BREAK } = require('graphql/language/visitor');
 const { graphql } = require('graphql');
 
 type MutationTypeFieldsType = {
-  [key: string]: string | MutationTypeFieldsType | MutationTypeFieldsType[]
-}
+  [key: string]: string | MutationTypeFieldsType | MutationTypeFieldsType[];
+};
 type QueryTypeFieldsType = {
-  [key: string]: string | QueryTypeFieldsType | QueryTypeFieldsType[]
-}
+  [key: string]: string | QueryTypeFieldsType | QueryTypeFieldsType[];
+};
 type TypeMapFieldsType = {
-  [key: string]: string | TypeMapFieldsType | TypeMapFieldsType[]
-}
+  [key: string]: string | TypeMapFieldsType | TypeMapFieldsType[];
+};
 type ItemFromCacheType = {
-  [key: string ]: any
-}
+  [key: string]: any;
+};
 // type PropsFilterType = Pick<ProtoObjType, "__id" | "__type" | "__alias" | "__args">;
 type PropsFilterType = {
-  [k: string]: null | string | PropsFilterType
-}
+  [k: string]: null | string | PropsFilterType;
+};
 const defaultCostParams = {
   maxCost: 5000, // maximum cost allowed before a request is rejected
   mutationCost: 5, // cost of a mutation
@@ -39,7 +38,7 @@ const defaultCostParams = {
   scalarCost: 1, // cost of retrieving a scalar
   depthCostFactor: 1.5, // multiplicative cost of each depth level
   maxDepth: 10, // depth limit parameter
-  ipRate: 3, // requests allowed per second
+  ipRate: 3 // requests allowed per second
 };
 
 let idCache: IdCacheType = {};
@@ -61,12 +60,9 @@ type ServerErrorType = {
   status: number;
   message: { err: string };
 };
-type QuellCache = {
-  clearCache: RequestHandler;
-  getRedisKeys: RequestHandler;
-  getRedisValues: RequestHandler;
-  depthLimit: RequestHandler;
-  costLimit: RequestHandler;
+
+type ResponseDataType = {
+  [k: string]: string | ResponseDataType | ResponseDataType[];
 };
 /**
  * Creates a QuellCache instance that provides middleware for caching between the graphQL endpoint and
@@ -110,7 +106,7 @@ class QuellCache {
     this.redisReadBatchSize = 10;
     this.redisCache = redis.createClient({
       socket: { host: redisHost, port: redisPort },
-      password: redisPassword,
+      password: redisPassword
     });
     this.query = this.query.bind(this);
     this.parseAST = this.parseAST.bind(this);
@@ -169,7 +165,7 @@ class QuellCache {
 
     if (calls > ipRates) {
       return next({
-        log: `Express error handler caught too many requests from this IP address: ${ip}`,
+        log: `Express error handler caught too many requests from this IP address: ${ip}`
       });
     }
     return next();
@@ -455,7 +451,7 @@ class QuellCache {
           // auxillary object for storing arguments, aliases, field-specific options, and more
           // query-wide options should be handled on Quell's options object
           const auxObj = {
-            __id: null,
+            __id: null
           };
           node.arguments.forEach((arg) => {
             const key = arg.name.value;
@@ -498,7 +494,7 @@ class QuellCache {
           // adds auxObj fields to prototype, allowing future access to type, alias, args, etc.
           fieldArgs[fieldType] = {
             ...argsObj[fieldType],
-            ...auxObj,
+            ...auxObj
           };
           // add value to stacks to keep track of depth-first parsing path
           stack.push(fieldType);
@@ -506,7 +502,7 @@ class QuellCache {
         leave() {
           // pop stacks to keep track of depth-first parsing path
           stack.pop();
-        },
+        }
       },
       SelectionSet: {
         // selection sets contain all of the sub-fields
@@ -544,7 +540,7 @@ class QuellCache {
             // fieldArgs contains arguments, aliases, etc.
             const fieldsObject = {
               ...fieldsValues,
-              ...fieldArgs[stack[stack.length - 1]],
+              ...fieldArgs[stack[stack.length - 1]]
             };
             // loop through stack to get correct path in proto for temp object;
             stack.reduce((prev, curr, index) => {
@@ -557,8 +553,8 @@ class QuellCache {
         leave() {
           // pop stacks to keep track of depth-first parsing path
           stack.pop();
-        },
-      },
+        }
+      }
     });
     return { proto, operationType, frags };
   }
@@ -677,13 +673,17 @@ class QuellCache {
    *  mutations, and fields
    *  @returns {Object} mutationMap - map of mutations to GraphQL types
    */
-  
+
   getMutationMap(schema: GraphQLSchema): MutationMapType {
     const mutationMap: MutationMapType = {};
     // get object containing all root mutations defined in the schema
-    const mutationTypeFields: MutationTypeFieldsType | (() => MutationTypeFieldsType) = schema._mutationType._fields;
+    const mutationTypeFields:
+      | MutationTypeFieldsType
+      | (() => MutationTypeFieldsType) = schema._mutationType._fields;
     // if queryTypeFields is a function, invoke it to get object with queries
-    const mutationsObj: MutationTypeFieldsType | (() => MutationTypeFieldsType) =
+    const mutationsObj:
+      | MutationTypeFieldsType
+      | (() => MutationTypeFieldsType) =
       typeof mutationTypeFields === 'function'
         ? mutationTypeFields()
         : mutationTypeFields;
@@ -703,12 +703,11 @@ class QuellCache {
           }
         }
         if (obj1.name) {
-          if (obj1.name === typeof "string")
-          returnedType = obj1.name;
+          if (obj1.name === typeof 'string') returnedType = obj1.name;
         }
         mutationMap[mutation] = returnedType;
       }
-  }
+    }
     return mutationMap;
   }
 
@@ -722,7 +721,8 @@ class QuellCache {
   getQueryMap(schema: GraphQLSchema): QueryMapType {
     const queryMap: QueryMapType = {};
     // get object containing all root queries defined in the schema
-    const queryTypeFields: QueryTypeFieldsType | (() => QueryTypeFieldsType) = schema._queryType._fields;
+    const queryTypeFields: QueryTypeFieldsType | (() => QueryTypeFieldsType) =
+      schema._queryType._fields;
     // if queryTypeFields is a function, invoke it to get object with queries
     const queriesObj: QueryTypeFieldsType | (() => QueryTypeFieldsType) =
       typeof queryTypeFields === 'function'
@@ -743,8 +743,7 @@ class QuellCache {
           }
         }
         if (obj1.name) {
-          if (obj1.name === typeof "string")
-          returnedType = obj1.name;
+          if (obj1.name === typeof 'string') returnedType = obj1.name;
         }
         queryMap[query] = returnedType;
       }
@@ -759,9 +758,9 @@ class QuellCache {
    *  mutations, and fields
    *  @returns {Object} fieldsMap - map of fields to GraphQL types
    */
-  getFieldsMap(schema: GraphQLSchema): FieldsMapType  {
+  getFieldsMap(schema: GraphQLSchema): FieldsMapType {
     const fieldsMap: FieldsMapType = {};
-    const typesList: GraphQLSchema["_typeMap"] = schema._typeMap;
+    const typesList: GraphQLSchema['_typeMap'] = schema._typeMap;
     const builtInTypes: string[] = [
       'String',
       'Int',
@@ -776,7 +775,7 @@ class QuellCache {
       '__Schema',
       '__TypeKind',
       '__InputValue',
-      '__Directive',
+      '__Directive'
     ];
     // exclude built-in types
     const customTypes: string[] = Object.keys(typesList).filter(
@@ -785,7 +784,8 @@ class QuellCache {
     // loop through types
     for (const type of customTypes) {
       const fieldsObj: { [key: string]: string } = {};
-      let fields: TypeMapFieldsType | (() => TypeMapFieldsType) = typesList[type]._fields;
+      let fields: TypeMapFieldsType | (() => TypeMapFieldsType) =
+        typesList[type]._fields;
       if (typeof fields === 'function') fields = fields();
       for (const field in fields) {
         // if (typeof fields[field] === "object") {
@@ -796,10 +796,8 @@ class QuellCache {
         const obj2 = obj1.typeof as TypeMapFieldsType;
         if (typeof obj.name === 'string') {
           const key: string = obj.name;
-          if (typeof obj1.name === "string" && typeof obj2.name === "string") {
-            const value: string = obj1.ofType
-            ? obj2.name
-            : obj1.name;
+          if (typeof obj1.name === 'string' && typeof obj2.name === 'string') {
+            const value: string = obj1.ofType ? obj2.name : obj1.name;
             fieldsObj[key] = value;
           }
         }
@@ -858,7 +856,7 @@ class QuellCache {
       if (prototypeKeys.includes(typeKey)) {
         let cacheID: string = this.generateCacheID(prototype[typeKey]);
         if (typeof subID === 'string') {
-          cacheID = subID
+          cacheID = subID;
         }
         // let cacheID: string = subID || this.generateCacheID(prototype[typeKey]);
         const keyName: string = prototype[typeKey].__args?.name;
@@ -867,82 +865,86 @@ class QuellCache {
           cacheID = idCache[keyName][cacheID];
         }
         // capitalize first letter of cache id just in case
-        const capitalized: string = cacheID.charAt(0).toUpperCase() + cacheID.slice(1);
+        const capitalized: string =
+          cacheID.charAt(0).toUpperCase() + cacheID.slice(1);
         if (idCache[keyName] && idCache[keyName][capitalized]) {
           cacheID = idCache[keyName][capitalized];
         }
-        const cacheResponse: string | null | void = await this.getFromRedis(cacheID);
+        const cacheResponse: string | null | void = await this.getFromRedis(
+          cacheID
+        );
         itemFromCache[typeKey] = cacheResponse ? JSON.parse(cacheResponse) : {};
       }
 
       // if itemFromCache at the current key is an array, iterate through and gather data
       if (Array.isArray(itemFromCache[typeKey])) {
         let redisRunQueue: typeof Multi = this.redisCache.multi();
-        
-        
-
 
         for (let i = 0; i < itemFromCache[typeKey].length; i++) {
           if (typeof itemFromCache[typeKey] === 'string') {
             const currTypeKey: string = itemFromCache[typeKey][i];
 
-            if (i !== 0 && i % this.redisReadBatchSize === 0) { 
+            if (i !== 0 && i % this.redisReadBatchSize === 0) {
               this.execRedisRunQueue(redisRunQueue);
               redisRunQueue = this.redisCache.multi();
             }
-            redisRunQueue.get(currTypeKey.toLowerCase(), (err: Error, cacheResponse: string) => {
-              const tempObj: ItemFromCacheType = {};
+            redisRunQueue.get(
+              currTypeKey.toLowerCase(),
+              (err: Error, cacheResponse: string) => {
+                const tempObj: ItemFromCacheType = {};
 
-              if (cacheResponse) {
-                const interimCache: ItemFromCacheType = JSON.parse(cacheResponse);
+                if (cacheResponse) {
+                  const interimCache: ItemFromCacheType =
+                    JSON.parse(cacheResponse);
 
-                for (const property in prototype[typeKey]) {
-                  // if property exists, set on tempObj
-                  if (
-                    Object.prototype.hasOwnProperty.call(
-                      interimCache,
-                      property
-                    ) &&
-                    !property.includes('__')
-                  ) {
-                    tempObj[property] = interimCache[property];
+                  for (const property in prototype[typeKey]) {
+                    // if property exists, set on tempObj
+                    if (
+                      Object.prototype.hasOwnProperty.call(
+                        interimCache,
+                        property
+                      ) &&
+                      !property.includes('__')
+                    ) {
+                      tempObj[property] = interimCache[property];
+                    }
+                    // if prototype is nested at this field, recurse
+                    else if (
+                      !property.includes('__') &&
+                      typeof prototype[typeKey][property] === 'object'
+                    ) {
+                      // same as return type for buildfromcache
+                      this.buildFromCache(
+                        prototype[typeKey][property],
+                        prototypeKeys,
+                        {},
+                        false,
+                        `${currTypeKey}--${property}`
+                      ).then((tempData) => (tempObj[property] = tempData.data));
+                    }
+                    // if cache does not have property, set to false on prototype so that it is sent to graphQL
+                    else if (
+                      !property.includes('__') &&
+                      typeof prototype[typeKey][property] !== 'object'
+                    ) {
+                      prototype[typeKey][property] = false;
+                    }
                   }
-                  // if prototype is nested at this field, recurse
-                  else if (
-                    !property.includes('__') &&
-                    typeof prototype[typeKey][property] === 'object'
-                  ) {
-                    // same as return type for buildfromcache
-                    this.buildFromCache(
-                      prototype[typeKey][property],
-                      prototypeKeys,
-                      {},
-                      false,
-                      `${currTypeKey}--${property}`
-                    ).then(tempData => tempObj[property] = tempData.data);
-                  }
-                  // if cache does not have property, set to false on prototype so that it is sent to graphQL
-                  else if (
-                    !property.includes('__') &&
-                    typeof prototype[typeKey][property] !== 'object'
-                  ) {
-                    prototype[typeKey][property] = false;
+                  itemFromCache[typeKey][i] = tempObj;
+                }
+                // if there is nothing in the cache for this key, then toggle all fields to false so it is fetched later
+                else {
+                  for (const property in prototype[typeKey]) {
+                    if (
+                      !property.includes('__') &&
+                      typeof prototype[typeKey][property] !== 'object'
+                    ) {
+                      prototype[typeKey][property] = false;
+                    }
                   }
                 }
-                itemFromCache[typeKey][i] = tempObj;
               }
-              // if there is nothing in the cache for this key, then toggle all fields to false so it is fetched later
-              else {
-                for (const property in prototype[typeKey]) {
-                  if (
-                    !property.includes('__') &&
-                    typeof prototype[typeKey][property] !== 'object'
-                  ) {
-                    prototype[typeKey][property] = false;
-                  }
-                }
-              }
-            });
+            );
             // execute any remnants in redis run queue
             await this.execRedisRunQueue(redisRunQueue);
           }
@@ -970,7 +972,9 @@ class QuellCache {
           typeof prototype[typeKey] === 'object'
         ) {
           const cacheID: string = await this.generateCacheID(prototype);
-          const cacheResponse: string | null| void = await this.getFromRedis(cacheID);
+          const cacheResponse: string | null | void = await this.getFromRedis(
+            cacheID
+          );
           if (cacheResponse) itemFromCache[typeKey] = JSON.parse(cacheResponse);
           await this.buildFromCache(
             prototype[typeKey],
@@ -979,7 +983,6 @@ class QuellCache {
             false
           );
         }
-
       }
       // if not an array and not a recursive call, handle normally
       else {
@@ -1049,7 +1052,7 @@ class QuellCache {
     // iterate over every key in map
     // true values are filtered out, false values are placed on output
     for (const key in map) {
-      const reduced: ProtoObjType | {} = reducer(map[key]);
+      const reduced: ProtoObjType = reducer(map[key]);
       if (Object.keys(reduced).length > 0) {
         output[key] = reduced;
       }
@@ -1231,7 +1234,7 @@ class QuellCache {
           if (keysSame) {
             mergedResponse[key] = [
               ...(cacheResponse[key] as Data[]),
-              ...(serverResponse[key] as Data[]),
+              ...(serverResponse[key] as Data[])
             ];
           }
           // otherwise, we need to combine the responses at the object level
@@ -1260,13 +1263,13 @@ class QuellCache {
           // if object doesn't come from an array, we must assign on the object at the given key
           mergedResponse[key] = {
             ...cacheResponse[key],
-            ...serverResponse[key],
+            ...serverResponse[key]
           };
         } else {
           // if the object comes from an array, we do not want to assign to a key as per GQL spec
           (mergedResponse as object) = {
             ...cacheResponse[key],
-            ...serverResponse[key],
+            ...serverResponse[key]
           };
         }
 
@@ -1284,14 +1287,12 @@ class QuellCache {
             ) {
               mergedRecursion = this.joinResponses(
                 {
-                  [fieldName]: (cacheResponse[key] as MergedResponse)[
-                    fieldName
-                  ],
+                  [fieldName]: (cacheResponse[key] as MergedResponse)[fieldName]
                 },
                 {
                   [fieldName]: (serverResponse[key] as MergedResponse)[
                     fieldName
-                  ],
+                  ]
                 },
                 { [fieldName]: (queryProto[key] as QueryObject)[fieldName] }
               );
@@ -1308,7 +1309,7 @@ class QuellCache {
             // place on merged response
             mergedResponse[key] = {
               ...mergedResponse[key],
-              ...mergedRecursion,
+              ...mergedRecursion
             };
           }
         }
@@ -1441,27 +1442,28 @@ class QuellCache {
      * field key values and writes the updated values to the redis cache
      */
     const updateApprFieldKeys = async () => {
-      const cachedFieldKeysListRaw = await this.getFromRedis(fieldsListKey);
+      const cachedFieldKeysListRaw: string = await this.getFromRedis(
+        fieldsListKey
+      );
       // conditional just in case the resolver wants to throw an error. instead of making quellCache invoke it's caching functions, we break here.
       if (cachedFieldKeysListRaw === undefined) return;
       // list of field keys stored on redis
-      const cachedFieldKeysList: { [key: string]: string } = JSON.parse(
-        cachedFieldKeysListRaw
-      );
+      const cachedFieldKeysList: string[] = JSON.parse(cachedFieldKeysListRaw);
 
       // iterate through field key field key values in redis, and compare to user
       // specified mutation args to determine which fields are used to update by
       // and which fields need to be updated.
 
       cachedFieldKeysList.forEach(async (fieldKey) => {
-        const fieldKeyValueRaw = await this.getFromRedis(
+        const fieldKeyValueRaw: string = await this.getFromRedis(
           fieldKey.toLowerCase()
         );
-        const fieldKeyValue = JSON.parse(fieldKeyValueRaw);
+        const fieldKeyValue: ResponseDataType = JSON.parse(fieldKeyValueRaw);
 
-        const fieldsToUpdateBy = [];
-        const updatedFieldKeyValue = fieldKeyValue;
-
+        const fieldsToUpdateBy: string[] = [];
+        const updatedFieldKeyValue: ResponseDataType = fieldKeyValue;
+        // arg in forEach method is a string such as name
+        // argVal is the actual value 'San Diego'
         Object.entries(mutationQueryObject.__args).forEach(([arg, argVal]) => {
           if (arg in fieldKeyValue && fieldKeyValue[arg] === argVal) {
             // foreign keys are not fields to update by
@@ -1470,7 +1472,7 @@ class QuellCache {
               fieldsToUpdateBy.push(arg);
             }
           } else {
-            updatedFieldKeyValue[arg] = argVal;
+            if (typeof argVal === 'string') updatedFieldKeyValue[arg] = argVal;
           }
         });
 
@@ -1545,24 +1547,28 @@ class QuellCache {
    * @param {String} currName - parent object name, used to pass into updateIDCache
    */
   async normalizeForCache(
-    responseData: TypeData,
-    map: MapType = {},
-    protoField: QueryFields,
+    responseData: ResponseDataType,
+    map: QueryMapType = {},
+    protoField: ProtoObjType,
     currName: string
   ) {
+    // loop through each resultName in response data
     for (const resultName in responseData) {
-      const currField: Type = responseData[resultName];
-      const currProto = protoField[resultName];
+      // currField is assigned to the nestedObject on responseData
+      const currField = responseData[resultName];
+      const currProto: ProtoObjType = protoField[resultName];
       if (Array.isArray(currField)) {
         for (let i = 0; i < currField.length; i++) {
-          const el = currField[i];
-          const dataType = map[resultName];
+          const el: ResponseDataType = currField[i];
+
+          const dataType: QueryMapType = map[resultName];
+
           if (typeof el === 'object') {
             await this.normalizeForCache(
               { [dataType]: el },
               map,
               {
-                [dataType]: currProto,
+                [dataType]: currProto
               },
               currName
             );
@@ -1572,10 +1578,10 @@ class QuellCache {
         // need to get non-Alias ID for cache
 
         // temporary store for field properties
-        const fieldStore = {};
+        const fieldStore: ResponseDataType = {};
 
         // create a cacheID based on __type and __id from the prototype
-        let cacheID = Object.prototype.hasOwnProperty.call(
+        let cacheID: string = Object.prototype.hasOwnProperty.call(
           map,
           currProto.__type
         )
@@ -1594,11 +1600,18 @@ class QuellCache {
             // if currname is undefined, assign to responseData at cacheid to lower case at name
             if (responseData[cacheID.toLowerCase()]) {
               const responseDataAtCacheID = responseData[cacheID.toLowerCase()];
-              currName = responseDataAtCacheID.name;
+              if (
+                typeof responseDataAtCacheID !== 'string' &&
+                !Array.isArray(responseDataAtCacheID)
+              ) {
+                if (typeof responseDataAtCacheID.name === 'string') {
+                  currName = responseDataAtCacheID.name;
+                }
+              }
             }
             // if the responseData at cacheid to lower case at name is not undefined, store under name variable and copy logic of writing to cache, want to update cache with same things, all stored under name
             // store objKey as cacheID without ID added
-            const cacheIDForIDCache = cacheID;
+            const cacheIDForIDCache: string = cacheID;
             cacheID += `--${currField[key]}`;
             // call idcache here idCache(cacheIDForIDCache, cacheID)
             this.updateIdCache(cacheIDForIDCache, cacheID, currName);
@@ -1612,7 +1625,7 @@ class QuellCache {
               { [key]: currField[key] },
               map,
               {
-                [key]: protoField[resultName][key],
+                [key]: protoField[resultName][key]
               },
               currName
             );
@@ -1631,7 +1644,7 @@ class QuellCache {
    * @param {Object} res - Express response object
    * @param {Function} next - Express next middleware function
    */
-  clearCache(req: Request, res: Response, next: NextFunction) {
+
   clearCache(req: Request, res: Response, next: NextFunction) {
     console.log('Clearing Redis Cache');
     this.redisCache.flushAll();
@@ -2057,7 +2070,7 @@ class QuellCache {
     const queryString: string = req.body.query;
 
     // create AST
-    const AST: Document = parse(queryString);
+    const AST: DocumentNode = parse(queryString);
 
     // create response prototype, and operation type, and fragments object
     // the response prototype is used as a template for most operations in quell including caching, building modified requests, and more
