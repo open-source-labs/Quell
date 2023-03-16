@@ -30,7 +30,7 @@
         "singleQuote": true,
         "tabWidth": 2,
         "bracketSpacing": true,
-        "trailingComma": "es5"
+        "trailingComma": "none"
       }
     ],
     "space-before-function-paren": 0
