@@ -79,7 +79,6 @@ interface QuellCache {
  *  @param {Number} redisPort - Redis port that Quell uses to facilitate caching
  *  @param {String} redisHost - Redis host URI
  *  @param {String} redisPassword - Redis password to host URI
- *  @param {Object} idCache - stores IDs under parent name
  */
 // default host is localhost, default expiry time is 14 days in milliseconds
 class QuellCache implements QuellCache {
@@ -171,8 +170,6 @@ class QuellCache implements QuellCache {
       redisRunQueue.expire(redisIpTimeKey, 1);
 
       // Execute the Redis multi command queue.
-      // FIXME: Currently using map as a workaround so that response is uniform
-      // type. Revisit to determine if this is the best approach.
       const redisResponse: string[] = (await redisRunQueue.exec()).map(
         (result) => JSON.stringify(result)
       );
@@ -217,136 +214,141 @@ class QuellCache implements QuellCache {
    *  @param {Function} next - Express next middleware function, invoked when QuellCache completes its work
    */
   async query(req: Request, res: Response, next: NextFunction): Promise<void> {
-    try {
-      // Retrieve GraphQL query string from request body.
-      const { query }: { query: string } = req.body;
+    // handle request without query
+    if (!req.body.query) {
+      return next({ log: 'Error: no GraphQL query found on request body' });
+    }
 
-      // Return an error if no query is found in the request.
-      if (!query) {
-        return next({
-          status: 400, // Bad Request
-          log: 'Error: no GraphQL query found on request body'
-        });
-      }
+    // Retrieve GraphQL query string from request body.
+    const queryString: string = req.body.query;
 
-      // Create abstract syntax tree with graphql-js parser.
-      // If depth limit was implemented, then we can get the parsed query from res.locals.
-      const AST: DocumentNode = res.locals.AST ?? parse(query);
+    // Create abstract syntax tree with graphql-js parser.
+    // If depth limit was implemented, then we can get the parsed query from res.locals.
+    const AST: DocumentNode = res.locals.AST
+      ? res.locals.AST
+      : parse(queryString);
 
-      // create response prototype, and operation type, and fragments object
-      // the response prototype is used as a template for most operations in quell including caching, building modified requests, and more
-      const {
-        proto,
-        operationType,
-        frags
-      }: { proto: ProtoObjType; operationType: string; frags: FragsType } =
-        res.locals.parsedAST ?? this.parseAST(AST);
+    // create response prototype, and operation type, and fragments object
+    // the response prototype is used as a template for most operations in quell including caching, building modified requests, and more
+    const {
+      proto,
+      operationType,
+      frags
+    }: { proto: ProtoObjType; operationType: string; frags: FragsType } =
+      res.locals.parsedAST ?? this.parseAST(AST);
 
-      // Determine if Quell is able to handle the operation.
-      // Quell can handle mutations and queries.
+    // Determine if Quell is able to handle the operation.
+    // Quell can handle mutations and queries.
 
-      /*
-       * If the operation is unQuellable (cannot be cached), execute the operation,
-       * add the result to the response, and return.
-       */
-      if (operationType === 'unQuellable') {
-        const gqlResponse: ExecutionResult = await graphql({
-          schema: this.schema,
-          source: query
-        });
-        res.locals.queryResponse = gqlResponse;
-        return next();
-      }
-
-      /*
-       * If the ID is not included, check to see if the query string is in the Redis cache.
-       * If it is, add the result to the response and return.
-       * If it is not, execute the operation, add the query string + operation result to cache,
-       * add the result to response, and return.
-       */
-      if (operationType === 'noID') {
-        // Check Redis for the query string.
-        const redisValue: string | null | undefined = await this.getFromRedis(
-          query
-        );
-
-        // If the query string is found in Redis, add the result to the response and return.
-        if (typeof redisValue === 'string') {
-          res.locals.queryResponse = JSON.parse(redisValue);
+    /*
+     * If the operation is unQuellable (cannot be cached), execute the operation,
+     * add the result to the response, and return.
+     */
+    if (operationType === 'unQuellable') {
+      graphql({ schema: this.schema, source: queryString })
+        .then((queryResult: ExecutionResult) => {
+          res.locals.queryResponse = queryResult;
           return next();
-        }
-
-        // If the query string is not in Redis, execute the operation, add the result to the response,
-        // write the query string and result to cache, and return.
-        const gqlResponse: ExecutionResult = await graphql({
-          schema: this.schema,
-          source: query
+        })
+        .catch((error) => {
+          return next(`graphql library error: ${error}`);
         });
-        res.locals.queryResponse = gqlResponse;
-        this.writeToCache(query, gqlResponse);
-        return next();
-      }
 
+      /*
+       * we can have two types of operation to take care of
+       * MUTATION OR QUERY
+       */
+    } else if (operationType === 'noID') {
+      graphql({ schema: this.schema, source: queryString })
+        .then((queryResult: ExecutionResult) => {
+          res.locals.queryResponse = queryResult;
+          return next();
+        })
+        .catch((error) => {
+          return next({ log: 'graphql library error: ', error });
+        });
+
+      // Check Redis for the query string.
+      let redisValue: string | null | undefined = await this.getFromRedis(
+        queryString
+      );
+
+      // If the query string is found in Redis, add the result to the response and return.
+      if (redisValue != null) {
+        redisValue = JSON.parse(redisValue);
+        res.locals.queriesResponse = redisValue;
+        return next();
+      } else {
+        // Execute the operation, add the result to the response, write the query string and result to cache, and return.
+        graphql({ schema: this.schema, source: queryString })
+          .then((queryResult: ExecutionResult) => {
+            res.locals.queryResponse = queryResult;
+            this.writeToCache(queryString, queryResult);
+            return next();
+          })
+          .catch((error: Error) => {
+            return next(`graphql library error: ${error}`);
+          });
+      }
       /*
        * If the operation is a mutation
        */
-      if (operationType === 'mutation') {
-        /*
-         * Currently clearing the cache on mutation because it is stale.
-         * We should instead be updating the cache following a mutation.
-         */
-        this.redisCache.flushAll();
-        idCache = {};
+    } else if (operationType === 'mutation') {
+      /*
+       * Currently clearing the cache on mutation because it is stale.
+       * We should instead be updating the cache following a mutation.
+       */
+      this.redisCache.flushAll();
+      idCache = {};
 
-        // Determine if the query string is a valid mutation in the schema.
-        // Declare variables to store the mutation proto, mutation name, and mutation type.
-        let mutationQueryObject: unknown | ProtoObjType;
-        let mutationName = '';
-        let mutationType = '';
-        // Loop through the mutations in the mutationMap.
-        for (const mutation in this.mutationMap) {
-          // If any mutation from the mutationMap is found on the proto, the query string includes
-          // a valid mutation. Update the mutation query object, name, type variables.
-          if (Object.prototype.hasOwnProperty.call(proto, mutation)) {
-            mutationQueryObject = proto[mutation];
-            mutationName = mutation;
-            mutationType = this.mutationMap[mutation];
-            break;
-          }
+      // Determine if the query string is a valid mutation in the schema.
+      // Declare variables to store the mutation proto, mutation name, and mutation type.
+      let mutationQueryObject: unknown | ProtoObjType;
+      let mutationName = '';
+      let mutationType = '';
+      // Loop through the mutations in the mutationMap.
+      for (const mutation in this.mutationMap) {
+        // If any mutation from the mutationMap is found on the proto, the query string includes
+        // a valid mutation. Update the mutation query object, name, type variables.
+        if (Object.prototype.hasOwnProperty.call(proto, mutation)) {
+          mutationName = mutation;
+          mutationType = this.mutationMap[mutation];
+          mutationQueryObject = proto[mutation];
+          break;
         }
-
-        // Execute the operation and add the result to the response.
-        const gqlResponse: ExecutionResult = await graphql({
-          schema: this.schema,
-          source: query
-        });
-        res.locals.queryResponse = gqlResponse;
-
-        // If there is a mutation, update the cache with the response.
-        // We don't need to wait until writeToCache is finished.
-        if (mutationName && mutationType && mutationQueryObject) {
-          this.updateCacheByMutation(
-            gqlResponse,
-            mutationName,
-            mutationType,
-            mutationQueryObject
-          );
-        }
-        return next();
       }
 
+      // Execute the operation and add the result to the response.
+      graphql({ schema: this.schema, source: queryString })
+        .then((databaseResponse: ExecutionResult) => {
+          res.locals.queryResponse = databaseResponse;
+
+          // If there is a mutation, update the cache with the response.
+          // We don't need to wait until writeToCache is finished.
+          if (mutationQueryObject) {
+            this.updateCacheByMutation(
+              databaseResponse,
+              mutationName,
+              mutationType,
+              mutationQueryObject
+            );
+          }
+          return next();
+        })
+        .catch((error) => {
+          return next(`graphql library error: ${error}`);
+        });
+    } else {
       /*
        * Otherwise, the operation type is a query.
        */
-
       // Combine fragments on prototype so we can access fragment values in cache.
       const prototype: ProtoObjType =
         Object.keys(frags).length > 0
           ? this.updateProtoWithFragment(proto, frags)
           : proto;
-
       // Create a list of the keys on prototype that will be passed to buildFromCache.
-      const prototypeKeys: string[] = Object.keys(prototype);
+      const prototypeKeys = Object.keys(prototype);
 
       // Check the cache for the requested values.
       // buildFromCache will modify the prototype to mark any values not found in the cache
@@ -355,6 +357,9 @@ class QuellCache implements QuellCache {
         data: ItemFromCacheType;
         cached?: boolean;
       } = await this.buildFromCache(prototype, prototypeKeys);
+
+      // Create merged response object to merge the data from the cache and the data from the database.
+      let mergedResponse: MergedResponse;
 
       // Create query object containing the fields that were not found in the cache.
       // This will be used to create a new GraphQL string.
@@ -371,50 +376,49 @@ class QuellCache implements QuellCache {
         );
 
         // Execute the query using the new query string.
-        const gqlResponse: ExecutionResult = await graphql({
-          schema: this.schema,
-          source: newQueryString
-        });
+        graphql({ schema: this.schema, source: newQueryString })
+          .then(async (databaseResponseRaw: ExecutionResult) => {
+            // The GraphQL must be parsed in order to join with it with the data retrieved from
+            // the cache before sending back to user.
+            const databaseResponse: GQLResponseType = JSON.parse(
+              JSON.stringify(databaseResponseRaw)
+            );
 
-        // The GraphQL must be parsed in order to join with it with the data retrieved from
-        // the cache before sending back to user.
-        const gqlResponseParsed: GQLResponseType = JSON.parse(
-          JSON.stringify(gqlResponse)
-        );
+            // Check if the cache response has any data by iterating over the keys in cache response.
+            let cacheHasData = false;
+            for (const key in cacheResponse.data) {
+              if (Object.keys(cacheResponse.data[key]).length > 0) {
+                cacheHasData = true;
+              }
+            }
 
-        // Check if the cache response has any data by iterating over the keys in cache response.
-        let cacheHasData = false;
-        for (const key in cacheResponse.data) {
-          if (Object.keys(cacheResponse.data[key]).length > 0) {
-            cacheHasData = true;
-            break;
-          }
-        }
+            // Create merged response object to merge the data from the cache and the data from the database.
+            // If the cache response does not have data then just use the database response.
+            mergedResponse = cacheHasData
+              ? this.joinResponses(
+                  cacheResponse.data,
+                  databaseResponse.data,
+                  prototype
+                )
+              : databaseResponse;
 
-        // Create merged response object to merge the data from the cache and the data from the database.
-        // If the cache response does not have data then just use the database response.
-        const mergedResponse: any = cacheHasData
-          ? this.joinResponses(
-              cacheResponse.data,
-              gqlResponseParsed.data,
-              prototype
-            )
-          : gqlResponseParsed;
+            const currName = 'string it should not be again';
+            await this.normalizeForCache(
+              mergedResponse.data,
+              this.queryMap,
+              prototype,
+              currName
+            );
 
-        // TODO Add explanation for how the normalizeForCache is being used here.
-        const currName = 'string it should not be again';
-        await this.normalizeForCache(
-          mergedResponse.data,
-          this.queryMap,
-          prototype,
-          currName
-        );
-
-        // The response is given a cached key equal to false to indicate to the front end of the demo site that the
-        // information was *NOT* entirely found in the cache.
-        mergedResponse.cached = false;
-        res.locals.queryResponse = { ...mergedResponse };
-        return next();
+            // The response is given a cached key equal to false to indicate to the front end of the demo site that the
+            // information was *NOT* entirely found in the cache.
+            mergedResponse.cached = false;
+            res.locals.queryResponse = { ...mergedResponse };
+            return next();
+          })
+          .catch((error) => {
+            return next({ log: 'graphql library error: ', error });
+          });
       } else {
         // If the query object is empty, there is nothing left to query and we can send the information from cache.
         // The response is given a cached key equal to true to indicate to the front end of the demo site that the
@@ -423,20 +427,14 @@ class QuellCache implements QuellCache {
         res.locals.queryResponse = { ...cacheResponse };
         return next();
       }
-    } catch (error) {
-      return next({
-        status: 500, // Internal Server Error
-        log: `Redis cache error: ${error}`
-      });
     }
   }
-
   /**
    * UpdateIdCache:
    *    - stores keys in a nested object under parent name
    *    - if the key is a duplication, they are stored in an array
    *  @param {String} objKey - Object key; key to be cached without ID string
-   *  @param {String} keyWithID - Key to be cached with ID string attached; redis data is stored under this key
+   *  @param {String} keyWithID - Key to be cached with ID string attatched; redis data is stored under this key
    *  @param {String} currName - The parent object name
    */
   updateIdCache(objKey: string, keyWithID: string, currName: string): void {
@@ -475,6 +473,7 @@ class QuellCache implements QuellCache {
     // Information from the AST is distilled into the prototype for easy
     // access during caching, rebuilding query strings, etc.
     const proto: ProtoObjType = {};
+
     // The frags object will contain the fragments defined in the query in a format
     // similar to the proto.
     const frags: FragsType = {};
@@ -520,8 +519,8 @@ class QuellCache implements QuellCache {
       // If the current node is of type OperationDefinition, this function will be triggered upon entering it.
       // It checks the type of operation being performed.
       OperationDefinition(node: OperationDefinitionNode) {
-        operationType = node.operation;
         // Quell cannot cache subscriptions, so we need to return as unQuellable if the type is subscription.
+        operationType = node.operation;
         if (node.operation === 'subscription') {
           operationType = 'unQuellable';
           // Return BREAK to break out of the current traversal branch.
@@ -531,11 +530,11 @@ class QuellCache implements QuellCache {
 
       // If the current node is of type FragmentDefinition, this function will be triggered upon entering it.
       FragmentDefinition(node: FragmentDefinitionNode) {
-        // Get the name of the fragment.
-        const fragName: string = node.name.value;
-
         // Add the fragment name to the stack.
-        stack.push(fragName);
+        stack.push(node.name.value);
+
+        // Get the name of the fragment.
+        const fragName = node.name.value;
 
         // Add the fragment name as a key in the frags object, initialized to an empty object.
         frags[fragName] = {};
@@ -571,7 +570,7 @@ class QuellCache implements QuellCache {
           // Create an args object that will be populated with the current node's arguments.
           const argsObj: ArgsObjType = {};
 
-          // auxiliary object for storing arguments, aliases, field-specific options, and more
+          // auxillary object for storing arguments, aliases, field-specific options, and more
           // query-wide options should be handled on Quell's options object
           const auxObj: AuxObjType = {
             __id: null
@@ -580,7 +579,7 @@ class QuellCache implements QuellCache {
           // Loop through the field's arguments.
           if (node.arguments) {
             node.arguments.forEach((arg: ArgumentNode) => {
-              const argName: string = arg.name.value;
+              const key = arg.name.value;
 
               // Quell cannot cache queries with variables, so we need to return unQuellable if the query has variables.
               if (arg.value.kind === 'Variable' && operationType === 'query') {
@@ -596,8 +595,6 @@ class QuellCache implements QuellCache {
                * then the value node will not have a 'value' property, so we must first check that
                * the 'kind' does not match any of those types.
                */
-              // TODO: Combine this check with the 'Variable' check above.
-              // In that check, they checked if the operationType is query - should that be done here as well?
               if (
                 arg.value.kind === 'NullValue' ||
                 arg.value.kind === 'ObjectValue' ||
@@ -610,22 +607,22 @@ class QuellCache implements QuellCache {
 
               // Assign argument values to argsObj (key will be argument name, value will be argument value),
               // skipping field-specific options ('__') provided as arguments.
-              if (!argName.includes('__')) {
+              if (!key.includes('__')) {
                 // Get the value from the argument node's value node.
-                argsObj[argName] = (arg.value as ValidArgumentNodeType).value;
+                argsObj[key] = (arg.value as ValidArgumentNodeType).value;
               }
 
               // If a userDefinedID was included in the options object and the current argument name matches
               // that ID, update the auxiliary object's id.
-              if (userDefinedID ? argName === userDefinedID : false) {
+              if (userDefinedID ? key === userDefinedID : false) {
                 auxObj.__id = (arg.value as ValidArgumentNodeType).value;
               } else if (
                 // If a userDefinedID was not provided, determine the uniqueID from the args.
                 // Note: do not use key.includes('id') to avoid assigning fields such as "idea" or "idiom" as uniqueID.
-                argName === 'id' ||
-                argName === '_id' ||
-                argName === 'ID' ||
-                argName === 'Id'
+                key === 'id' ||
+                key === '_id' ||
+                key === 'ID' ||
+                key === 'Id'
               ) {
                 // If the name of the argument is 'id', '_id', 'ID', or 'Id',
                 // set the '__id' field on the auxObj equal to value of that argument.
@@ -652,7 +649,7 @@ class QuellCache implements QuellCache {
 
           // Add auxObj fields to prototype, allowing future access to type, alias, args, etc.
           /*
-           * BUG: "...argsObj[fieldType]" should be removed. Because we verified above that all the values in
+           * BUG: Should "...argsObj[fieldType]" be removed? Because we verified above that all the values in
            * argsObj will be string/boolean/null, argsObj[fieldType] will never be an object, so spreading it will
            * not result in key-value pairs.
            */
@@ -709,7 +706,7 @@ class QuellCache implements QuellCache {
               /*
                * If the current selection in the selections array is not a nested object
                * (i.e. does not have a SelectionSet), set its value in fieldsValues to true.
-               * Typescript note: below, we get the 'name' property from the SelectionNode.
+               * Below, we get the 'name' property from the SelectionNode.
                * However, InlineFragmentNode (one of the possible types for SelectionNode) does
                * not have a 'name' property, so we will want to skip nodes with that type.
                * Furthermore, FragmentSpreadNodes never have a selection set property.
@@ -764,7 +761,6 @@ class QuellCache implements QuellCache {
         }
       }
     });
-
     return { proto, operationType, frags };
   }
 
@@ -782,23 +778,23 @@ class QuellCache implements QuellCache {
     if (!protoObj || !frags) return protoObj;
 
     // Loop through the fields in the proto object.
-    for (const field in protoObj) {
+    for (const key in protoObj) {
       // If the field is a nested object and not an introspection field (fields starting with '__'
       // that provide information about the underlying schema)
-      if (typeof protoObj[field] === 'object' && !field.includes('__')) {
+      if (typeof protoObj[key] === 'object' && !key.includes('__')) {
         // Update the field to the result of recursively calling updateprotoWithFragment,
         // passing the field and fragments.
-        protoObj[field] = this.updateProtoWithFragment(
-          protoObj[field] as ProtoObjType,
+        protoObj[key] = this.updateProtoWithFragment(
+          protoObj[key] as ProtoObjType,
           frags
         );
       }
 
       // If the field is a reference to a fragment, replace the reference to the fragment with
       // the actual fragment.
-      if (Object.prototype.hasOwnProperty.call(frags, field)) {
-        protoObj = { ...protoObj, ...frags[field] };
-        delete protoObj[field];
+      if (Object.prototype.hasOwnProperty.call(frags, key)) {
+        protoObj = { ...protoObj, ...frags[key] };
+        delete protoObj[key];
       }
     }
 
