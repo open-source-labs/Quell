@@ -1,4 +1,4 @@
-import { Response, Request, NextFunction } from 'express';
+import { Response, Request, NextFunction, RequestHandler } from 'express';
 import { createClient } from 'redis';
 import { parse } from 'graphql/language/parser';
 import { visit, BREAK } from 'graphql/language/visitor';
@@ -35,7 +35,23 @@ import type {
   FieldsObjectType,
   FieldsValuesType,
   GQLResponseType,
-  GQLNodeWithDirectivesType
+  GQLNodeWithDirectivesType,
+  MutationTypeFieldsType,
+  QueryTypeFieldsType,
+  TypeMapFieldsType,
+  ItemFromCacheType,
+  PropsFilterType,
+  RedisOptionsType,
+  RedisStatsType,
+  ServerErrorType,
+  ResponseDataType,
+  QueryObject,
+  QueryFields,
+  DatabaseResponseDataRaw,
+  Type,
+  MergedResponse,
+  DataResponse,
+  Data
 } from './types';
 
 const defaultCostParams: CostParamsType = {
@@ -811,6 +827,7 @@ class QuellCache implements QuellCache {
    * and isExist if we have this key in redis
    *
    */
+  // not used
   async createRedisKey(mutationMap, proto, protoArgs) {
     let isExist = false;
     let redisKey;
@@ -846,12 +863,13 @@ class QuellCache implements QuellCache {
    * @param {String} key - the key for Redis lookup
    * @returns {Promise} A promise that represents if the key was found in the redisCache
    */
-  async checkFromRedis(key) {
+  async checkFromRedis(key: string): Promise<boolean> {
     try {
-      const existsInRedis = await this.redisCache.exists(key);
+      const existsInRedis: boolean = await this.redisCache.exists(key);
       return existsInRedis;
     } catch (err) {
       console.log('err in checkFromRedis: ', err);
+      return false;
     }
   }
 
@@ -859,7 +877,9 @@ class QuellCache implements QuellCache {
    * execRedisRunQueue executes all previously queued transactions in Redis cache
    * @param {String} redisRunQueue - Redis queue of transactions awaiting execution
    */
-  async execRedisRunQueue(redisRunQueue) {
+  async execRedisRunQueue(
+    redisRunQueue: ReturnType<typeof this.redisCache.multi>
+  ): Promise<void> {
     try {
       await redisRunQueue.exec();
     } catch (err) {
@@ -872,11 +892,11 @@ class QuellCache implements QuellCache {
    * @param {String} key - the key for Redis lookup
    * @returns {Promise} A promise representing the value from the redis cache with the provided key
    */
-  async getFromRedis(key) {
+  async getFromRedis(key: string): Promise<string | null | void> {
     try {
       if (typeof key !== 'string' || key === undefined) return;
-      const lowerKey = key.toLowerCase();
-      const redisResult = await this.redisCache.get(lowerKey);
+      const lowerKey: string = key.toLowerCase();
+      const redisResult: string | null = await this.redisCache.get(lowerKey);
       return redisResult;
     } catch (err) {
       console.log('err in getFromRedis: ', err);
@@ -890,29 +910,41 @@ class QuellCache implements QuellCache {
    *  mutations, and fields
    *  @returns {Object} mutationMap - map of mutations to GraphQL types
    */
-  getMutationMap(schema) {
-    const mutationMap = {};
+
+  getMutationMap(schema: GraphQLSchema): MutationMapType {
+    const mutationMap: MutationMapType = {};
     // get object containing all root mutations defined in the schema
-    const mutationTypeFields = schema._mutationType._fields;
+    const mutationTypeFields:
+      | MutationTypeFieldsType
+      | (() => MutationTypeFieldsType) = schema._mutationType._fields;
     // if queryTypeFields is a function, invoke it to get object with queries
-    const mutationsObj =
+    const mutationsObj:
+      | MutationTypeFieldsType
+      | (() => MutationTypeFieldsType) =
       typeof mutationTypeFields === 'function'
         ? mutationTypeFields()
         : mutationTypeFields;
+
     for (const mutation in mutationsObj) {
       // get name of GraphQL type returned by query
       // if ofType --> this is collection, else not collection
-      let returnedType;
-      if (mutationsObj[mutation].type.ofType) {
-        returnedType = [];
-        returnedType.push(mutationsObj[mutation].type.ofType.name);
+      let returnedType: string | string[] | void;
+      const obj = mutationsObj[mutation] as MutationTypeFieldsType;
+      const obj1 = obj.type as MutationTypeFieldsType;
+      const obj2 = obj1.typeof as MutationTypeFieldsType;
+      if (obj.type) {
+        if (obj1.ofType) {
+          returnedType = [];
+          if (typeof obj2.name === 'string') {
+            returnedType.push(obj2.name);
+          }
+        }
+        if (obj1.name) {
+          if (obj1.name === typeof 'string') returnedType = obj1.name;
+        }
+        mutationMap[mutation] = returnedType;
       }
-      if (mutationsObj[mutation].type.name) {
-        returnedType = mutationsObj[mutation].type.name;
-      }
-      mutationMap[mutation] = returnedType;
     }
-
     return mutationMap;
   }
 
@@ -923,27 +955,35 @@ class QuellCache implements QuellCache {
    *  mutations, and fields
    *  @returns {Object} queryMap - map of queries to GraphQL types
    */
-  getQueryMap(schema) {
-    const queryMap = {};
+  getQueryMap(schema: GraphQLSchema): QueryMapType {
+    const queryMap: QueryMapType = {};
     // get object containing all root queries defined in the schema
-    const queryTypeFields = schema._queryType._fields;
+    const queryTypeFields: QueryTypeFieldsType | (() => QueryTypeFieldsType) =
+      schema._queryType._fields;
     // if queryTypeFields is a function, invoke it to get object with queries
-    const queriesObj =
+    const queriesObj: QueryTypeFieldsType | (() => QueryTypeFieldsType) =
       typeof queryTypeFields === 'function'
         ? queryTypeFields()
         : queryTypeFields;
     for (const query in queriesObj) {
       // get name of GraphQL type returned by query
       // if ofType --> this is collection, else not collection
-      let returnedType;
-      if (queriesObj[query].type.ofType) {
-        returnedType = [];
-        returnedType.push(queriesObj[query].type.ofType.name);
+      let returnedType: string | string[] | void;
+      const obj = queriesObj[query] as QueryTypeFieldsType;
+      const obj1 = obj.type as QueryTypeFieldsType;
+      const obj2 = obj1.typeof as QueryTypeFieldsType;
+      if (obj.type) {
+        if (obj1.ofType) {
+          returnedType = [];
+          if (typeof obj2.name === 'string') {
+            returnedType.push(obj2.name);
+          }
+        }
+        if (obj1.name) {
+          if (obj1.name === typeof 'string') returnedType = obj1.name;
+        }
+        queryMap[query] = returnedType;
       }
-      if (queriesObj[query].type.name) {
-        returnedType = queriesObj[query].type.name;
-      }
-      queryMap[query] = returnedType;
     }
     return queryMap;
   }
@@ -955,10 +995,10 @@ class QuellCache implements QuellCache {
    *  mutations, and fields
    *  @returns {Object} fieldsMap - map of fields to GraphQL types
    */
-  getFieldsMap(schema) {
-    const fieldsMap = {};
-    const typesList = schema._typeMap;
-    const builtInTypes = [
+  getFieldsMap(schema: GraphQLSchema): FieldsMapType {
+    const fieldsMap: FieldsMapType = {};
+    const typesList: GraphQLSchema['_typeMap'] = schema._typeMap;
+    const builtInTypes: string[] = [
       'String',
       'Int',
       'Float',
@@ -975,27 +1015,36 @@ class QuellCache implements QuellCache {
       '__Directive'
     ];
     // exclude built-in types
-    const customTypes = Object.keys(typesList).filter(
+    const customTypes: string[] = Object.keys(typesList).filter(
       (type) => !builtInTypes.includes(type) && type !== schema._queryType.name
     );
     // loop through types
     for (const type of customTypes) {
-      const fieldsObj = {};
-      let fields = typesList[type]._fields;
+      const fieldsObj: { [key: string]: string } = {};
+      let fields: TypeMapFieldsType | (() => TypeMapFieldsType) =
+        typesList[type]._fields;
       if (typeof fields === 'function') fields = fields();
       for (const field in fields) {
-        const key = fields[field].name;
-        const value = fields[field].type.ofType
-          ? fields[field].type.ofType.name
-          : fields[field].type.name;
-        fieldsObj[key] = value;
+        // if (typeof fields[field] === "object") {
+        //   const key: string = fields[field].name;
+        // }
+        const obj = fields[field] as TypeMapFieldsType;
+        const obj1 = obj.type as TypeMapFieldsType;
+        const obj2 = obj1.typeof as TypeMapFieldsType;
+        if (typeof obj.name === 'string') {
+          const key: string = obj.name;
+          if (typeof obj1.name === 'string' && typeof obj2.name === 'string') {
+            const value: string = obj1.ofType ? obj2.name : obj1.name;
+            fieldsObj[key] = value;
+          }
+        }
       }
       // place assembled types on fieldsMap
       fieldsMap[type] = fieldsObj;
     }
     return fieldsMap;
   }
-
+  // not used
   getIdMap() {
     const idMap = {};
     for (const type in this.fieldsMap) {
@@ -1015,6 +1064,7 @@ class QuellCache implements QuellCache {
    * @param {Object} proto - The prototype or a nested field within the prototype
    * @returns {Object} proto - updated proto with false values for fields not present in cache
    */
+  // not used
   toggleProto(proto) {
     if (proto === undefined) return proto;
     for (const key in proto) {
@@ -1027,100 +1077,116 @@ class QuellCache implements QuellCache {
   /**
    * buildFromCache finds any requested information in the cache and assembles it on the cacheResponse
    * uses the prototype as a template for cacheResponse, marks any data not found in the cache on the prototype for future retrieval from database
-   * @param {String} key - unique id under which the cached data will be stored
-   * @param {Object} item - item to be cached
+   * @param {Object} prototype - unique id under which the cached data will be stored
+   * @param {Array} prototypeKeys - item to be cached
    * @returns {Object} cacheResponse, mutates prototype
    */
   async buildFromCache(
-    prototype,
-    prototypeKeys,
-    itemFromCache = {},
-    firstRun = true,
-    subID = false
-  ) {
+    prototype: ProtoObjType,
+    prototypeKeys: string[],
+    itemFromCache: ItemFromCacheType = {},
+    firstRun: boolean = true,
+    subID: boolean | string = false
+  ): Promise<{ data: ItemFromCacheType }> {
     for (const typeKey in prototype) {
       // if current key is a root query, check cache and set any results to itemFromCache
       if (prototypeKeys.includes(typeKey)) {
-        let cacheID = subID || this.generateCacheID(prototype[typeKey]);
-        const keyName = prototype[typeKey].__args?.name;
+        let cacheID: string = this.generateCacheID(prototype[typeKey]);
+        if (typeof subID === 'string') {
+          cacheID = subID;
+        }
+        // let cacheID: string = subID || this.generateCacheID(prototype[typeKey]);
+        const keyName: string = prototype[typeKey].__args?.name;
+        // is this also redundent
         if (idCache[keyName] && idCache[keyName][cacheID]) {
           cacheID = idCache[keyName][cacheID];
         }
         // capitalize first letter of cache id just in case
-        const capitalized = cacheID.charAt(0).toUpperCase() + cacheID.slice(1);
+        const capitalized: string =
+          cacheID.charAt(0).toUpperCase() + cacheID.slice(1);
         if (idCache[keyName] && idCache[keyName][capitalized]) {
           cacheID = idCache[keyName][capitalized];
         }
-        const cacheResponse = await this.getFromRedis(cacheID);
+        const cacheResponse: string | null | void = await this.getFromRedis(
+          cacheID
+        );
         itemFromCache[typeKey] = cacheResponse ? JSON.parse(cacheResponse) : {};
       }
 
       // if itemFromCache at the current key is an array, iterate through and gather data
       if (Array.isArray(itemFromCache[typeKey])) {
-        let redisRunQueue = this.redisCache.multi();
-        const cachedTypeKeyArrLength = itemFromCache[typeKey].length;
-        for (let i = 0; i < cachedTypeKeyArrLength; i++) {
-          const currTypeKey = itemFromCache[typeKey][i];
+        let redisRunQueue: ReturnType<typeof this.redisCache.multi> =
+          this.redisCache.multi();
 
-          if (i !== 0 && i % this.redisReadBatchSize === 0) {
-            this.execRedisRunQueue(redisRunQueue);
-            redisRunQueue = this.redisCache.multi();
+        for (let i = 0; i < itemFromCache[typeKey].length; i++) {
+          if (typeof itemFromCache[typeKey] === 'string') {
+            const currTypeKey: string = itemFromCache[typeKey][i];
+
+            if (i !== 0 && i % this.redisReadBatchSize === 0) {
+              this.execRedisRunQueue(redisRunQueue);
+              redisRunQueue = this.redisCache.multi();
+            }
+            redisRunQueue.get(
+              currTypeKey.toLowerCase(),
+              (err: Error, cacheResponse: string) => {
+                const tempObj: ItemFromCacheType = {};
+
+                if (cacheResponse) {
+                  const interimCache: ItemFromCacheType =
+                    JSON.parse(cacheResponse);
+
+                  for (const property in prototype[typeKey]) {
+                    // if property exists, set on tempObj
+                    if (
+                      Object.prototype.hasOwnProperty.call(
+                        interimCache,
+                        property
+                      ) &&
+                      !property.includes('__')
+                    ) {
+                      tempObj[property] = interimCache[property];
+                    }
+                    // if prototype is nested at this field, recurse
+                    else if (
+                      !property.includes('__') &&
+                      typeof prototype[typeKey][property] === 'object'
+                    ) {
+                      // same as return type for buildfromcache
+                      this.buildFromCache(
+                        prototype[typeKey][property],
+                        prototypeKeys,
+                        {},
+                        false,
+                        `${currTypeKey}--${property}`
+                      ).then((tempData) => (tempObj[property] = tempData.data));
+                    }
+                    // if cache does not have property, set to false on prototype so that it is sent to graphQL
+                    else if (
+                      !property.includes('__') &&
+                      typeof prototype[typeKey][property] !== 'object'
+                    ) {
+                      prototype[typeKey][property] = false;
+                    }
+                  }
+                  itemFromCache[typeKey][i] = tempObj;
+                }
+                // if there is nothing in the cache for this key, then toggle all fields to false so it is fetched later
+                else {
+                  for (const property in prototype[typeKey]) {
+                    if (
+                      !property.includes('__') &&
+                      typeof prototype[typeKey][property] !== 'object'
+                    ) {
+                      prototype[typeKey][property] = false;
+                    }
+                  }
+                }
+              }
+            );
+            // execute any remnants in redis run queue
+            await this.execRedisRunQueue(redisRunQueue);
           }
-          redisRunQueue.get(currTypeKey.toLowerCase(), (err, cacheResponse) => {
-            const tempObj = {};
-
-            if (cacheResponse) {
-              const interimCache = JSON.parse(cacheResponse);
-              for (const property in prototype[typeKey]) {
-                // if property exists, set on tempObj
-                if (
-                  Object.prototype.hasOwnProperty.call(
-                    interimCache,
-                    property
-                  ) &&
-                  !property.includes('__')
-                ) {
-                  tempObj[property] = interimCache[property];
-                }
-                // if prototype is nested at this field, recurse
-                else if (
-                  !property.includes('__') &&
-                  typeof prototype[typeKey][property] === 'object'
-                ) {
-                  const tempData = this.buildFromCache(
-                    prototype[typeKey][property],
-                    prototypeKeys,
-                    {},
-                    false,
-                    `${currTypeKey}--${property}`
-                  );
-                  tempObj[property] = tempData.data;
-                }
-                // if cache does not have property, set to false on prototype so that it is sent to graphQL
-                else if (
-                  !property.includes('__') &&
-                  typeof prototype[typeKey][property] !== 'object'
-                ) {
-                  prototype[typeKey][property] = false;
-                }
-              }
-              itemFromCache[typeKey][i] = tempObj;
-            }
-            // if there is nothing in the cache for this key, then toggle all fields to false so it is fetched later
-            else {
-              for (const property in prototype[typeKey]) {
-                if (
-                  !property.includes('__') &&
-                  typeof prototype[typeKey][property] !== 'object'
-                ) {
-                  prototype[typeKey][property] = false;
-                }
-              }
-            }
-          });
         }
-        // execute any remnants in redis run queue
-        await this.execRedisRunQueue(redisRunQueue);
       }
       // recurse through buildFromCache using typeKey, prototype
       // if itemFromCache is empty, then check the cache for data, else, persist itemFromCache
@@ -1138,18 +1204,20 @@ class QuellCache implements QuellCache {
         }
         // if this field is a nested query, then recurse the buildFromCache function and iterate through the nested query
         if (
-          !Object.keys(itemFromCache).length > 0 &&
+          !(Object.keys(itemFromCache).length > 0) &&
           typeof itemFromCache === 'object' &&
           !typeKey.includes('__') &&
           typeof prototype[typeKey] === 'object'
         ) {
-          const cacheID = await this.generateCacheID(prototype);
-          const cacheResponse = await this.getFromRedis(cacheID);
+          const cacheID: string = await this.generateCacheID(prototype);
+          const cacheResponse: string | null | void = await this.getFromRedis(
+            cacheID
+          );
           if (cacheResponse) itemFromCache[typeKey] = JSON.parse(cacheResponse);
           await this.buildFromCache(
             prototype[typeKey],
             prototypeKeys,
-            itemFromCache[typeKey] || {},
+            itemFromCache[typeKey],
             false
           );
         }
@@ -1204,8 +1272,8 @@ class QuellCache implements QuellCache {
    * @param {String} key - unique id under which the cached data will be stored
    * @param {Object} item - item to be cached
    */
-  generateCacheID(queryProto) {
-    const cacheID = queryProto.__id
+  generateCacheID(queryProto: ProtoObjType): string {
+    const cacheID: string = queryProto.__id
       ? `${queryProto.__type}--${queryProto.__id}`
       : queryProto.__type;
     return cacheID;
@@ -1217,12 +1285,12 @@ class QuellCache implements QuellCache {
    * @param {String} map - map of fields and true/false values from initial request, should be the prototype
    * @returns {Object} queryObject with only values to be requested from GraphQL endpoint
    */
-  createQueryObj(map) {
-    const output = {};
+  createQueryObj(map: ProtoObjType): ProtoObjType {
+    const output: ProtoObjType = {};
     // iterate over every key in map
     // true values are filtered out, false values are placed on output
     for (const key in map) {
-      const reduced = reducer(map[key]);
+      const reduced: ProtoObjType = reducer(map[key]);
       if (Object.keys(reduced).length > 0) {
         output[key] = reduced;
       }
@@ -1235,11 +1303,11 @@ class QuellCache implements QuellCache {
      * @returns {Object} Filtered object of only queries without a value or an empty object
      */
     // filter fields object to contain only values needed from server
-    function reducer(fields) {
+    function reducer(fields: ProtoObjType): ProtoObjType | {} {
       // filter stores values needed from server
-      const filter = {};
+      const filter: { [key: string]: boolean | {} } = {};
       // propsFilter for properties such as args, aliases, etc.
-      const propsFilter = {};
+      const propsFilter: PropsFilterType = {};
 
       for (const key in fields) {
         // if value is false, place directly on filter
@@ -1266,7 +1334,7 @@ class QuellCache implements QuellCache {
         }
       }
 
-      const numFields = Object.keys(fields).length;
+      const numFields: number = Object.keys(fields).length;
 
       // if the filter has any values to pass, return filter & propsFilter, otherwise return empty object
       return Object.keys(filter).length > 1 && numFields > 5
@@ -1283,7 +1351,7 @@ class QuellCache implements QuellCache {
    * @param {Object} queryObject - a modified version of the prototype with only values we want to pass onto the queryString
    * @param {String} operationType - a string indicating the GraphQL operation type- 'query', 'mutation', etc.
    */
-  createQueryStr(queryObject, operationType) {
+  createQueryStr(queryObject: QueryObject, operationType: string): string {
     if (Object.keys(queryObject).length === 0) return '';
     const openCurly = '{';
     const closeCurly = '}';
@@ -1308,7 +1376,7 @@ class QuellCache implements QuellCache {
      */
     // recurse to build nested query strings
     // ignore all __values (ie __alias and __args)
-    function stringify(fields) {
+    function stringify(fields: QueryFields): string {
       // initialize inner string
       let innerStr = '';
       // iterate over KEYS in OBJECT
@@ -1319,16 +1387,20 @@ class QuellCache implements QuellCache {
         }
         // is key object? && !key.includes('__'), recurse stringify
         if (typeof fields[key] === 'object' && !key.includes('__')) {
-          innerStr += `${key}${getAliasType(fields[key])}${getArgs(
-            fields[key]
-          )} ${openCurly} ${stringify(fields[key])}${closeCurly} `;
+          const fieldsObj: QueryFields = fields[key];
+          // TODO try to fix this error
+          const type: string = getAliasType(fieldsObj);
+          const args: string = getArgs(fieldsObj);
+          innerStr += `${key}${type}${args} ${openCurly} ${stringify(
+            fieldsObj
+          )}${closeCurly} `;
         }
       }
 
       return innerStr;
     }
     // iterates through arguments object for current field and creates arg string to attach to query string
-    function getArgs(fields) {
+    function getArgs(fields: QueryFields): string {
       let argString = '';
       if (!fields.__args) return '';
 
@@ -1343,12 +1415,12 @@ class QuellCache implements QuellCache {
     }
 
     // if Alias exists, formats alias for query string
-    function getAliasType(fields) {
+    function getAliasType(fields: QueryFields): string {
       return fields.__alias ? `: ${fields.__type}` : '';
     }
 
     // create final query string
-    const queryStr = openCurly + mainStr + ' ' + closeCurly;
+    const queryStr: string = openCurly + mainStr + ' ' + closeCurly;
     return operationType ? operationType + ' ' + queryStr : queryStr;
   }
 
@@ -1360,14 +1432,19 @@ class QuellCache implements QuellCache {
    * @param {Object} queryProto - current slice of the prototype being used as a template for final response object structure
    * @param {Boolean} fromArray - whether or not the current recursive loop came from within an array, should NOT be supplied to function call
    */
-  joinResponses(cacheResponse, serverResponse, queryProto, fromArray = false) {
-    let mergedResponse = {};
+  joinResponses(
+    cacheResponse: DataResponse,
+    serverResponse: DataResponse,
+    queryProto: QueryObject,
+    fromArray = false
+  ): MergedResponse {
+    let mergedResponse: MergedResponse = {};
 
     // loop through fields object keys, the "source of truth" for structure
     // store combined responses in mergedResponse
     for (const key in queryProto) {
       // for each key, check whether data stored at that key is an array or an object
-      const checkResponse = Object.prototype.hasOwnProperty.call(
+      const checkResponse: DataResponse = Object.prototype.hasOwnProperty.call(
         serverResponse,
         key
       )
@@ -1376,36 +1453,36 @@ class QuellCache implements QuellCache {
       if (Array.isArray(checkResponse[key])) {
         // merging logic depends on whether the data is on the cacheResponse, serverResponse, or both
         // if both of the caches contain the same keys...
-        if (
-          Object.prototype.hasOwnProperty.call(cacheResponse, key) &&
-          Object.prototype.hasOwnProperty.call(serverResponse, key)
-        ) {
+        if (cacheResponse[key] && serverResponse[key]) {
           // we first check to see if the responses have identical keys to both avoid
           // only returning 1/2 of the data (ex: there are 2 objects in the cache and
           // you query for 4 objects (which includes the 2 cached objects) only returning
           // the 2 new objects from the server)
           // if the keys are identical, we can return a "simple" merge of both
-          const cacheKeys = Object.keys(cacheResponse[key][0]);
-          const serverKeys = Object.keys(serverResponse[key][0]);
+          const cacheKeys: string[] = Object.keys(
+            (cacheResponse[key] as Data)[0]
+          );
+          const serverKeys: string[] = Object.keys(
+            (serverResponse[key] as Data)[0]
+          );
           let keysSame = true;
           for (let n = 0; n < cacheKeys.length; n++) {
             if (cacheKeys[n] !== serverKeys[n]) keysSame = false;
           }
-
           if (keysSame) {
             mergedResponse[key] = [
-              ...cacheResponse[key],
-              ...serverResponse[key]
+              ...(cacheResponse[key] as Data[]),
+              ...(serverResponse[key] as Data[])
             ];
           }
           // otherwise, we need to combine the responses at the object level
           else {
             const mergedArray = [];
-            for (let i = 0; i < cacheResponse[key].length; i++) {
+            for (let i = 0; i < (cacheResponse[key] as Data[]).length; i++) {
               // for each index of array, combine cache and server response objects
-              const joinedResponse = this.joinResponses(
-                { [key]: cacheResponse[key][i] },
-                { [key]: serverResponse[key][i] },
+              const joinedResponse: MergedResponse = this.joinResponses(
+                { [key]: (cacheResponse[key] as Data[])[i] },
+                { [key]: (serverResponse[key] as Data[])[i] },
                 { [key]: queryProto[key] },
                 true
               );
@@ -1414,7 +1491,7 @@ class QuellCache implements QuellCache {
             }
             mergedResponse[key] = mergedArray;
           }
-        } else if (Object.prototype.hasOwnProperty.call(cacheResponse, key)) {
+        } else if (cacheResponse[key]) {
           mergedResponse[key] = cacheResponse[key];
         } else {
           mergedResponse[key] = serverResponse[key];
@@ -1428,7 +1505,10 @@ class QuellCache implements QuellCache {
           };
         } else {
           // if the object comes from an array, we do not want to assign to a key as per GQL spec
-          mergedResponse = { ...cacheResponse[key], ...serverResponse[key] };
+          (mergedResponse as object) = {
+            ...cacheResponse[key],
+            ...serverResponse[key]
+          };
         }
 
         for (const fieldName in queryProto[key]) {
@@ -1438,22 +1518,30 @@ class QuellCache implements QuellCache {
             !fieldName.includes('__')
           ) {
             // recurse joinResponses on that object to create deeply nested copy on mergedResponse
-            let mergedRecursion = {};
+            let mergedRecursion: MergedResponse = {};
             if (
-              Object.prototype.hasOwnProperty.call(cacheResponse, key) &&
-              Object.prototype.hasOwnProperty.call(serverResponse, key)
+              (cacheResponse[key] as Data)[fieldName] &&
+              (serverResponse[key] as Data)[fieldName]
             ) {
               mergedRecursion = this.joinResponses(
-                { [fieldName]: cacheResponse[key][fieldName] },
-                { [fieldName]: serverResponse[key][fieldName] },
-                { [fieldName]: queryProto[key][fieldName] }
+                {
+                  [fieldName]: (cacheResponse[key] as MergedResponse)[fieldName]
+                },
+                {
+                  [fieldName]: (serverResponse[key] as MergedResponse)[
+                    fieldName
+                  ]
+                },
+                { [fieldName]: (queryProto[key] as QueryObject)[fieldName] }
               );
-            } else if (
-              Object.prototype.hasOwnProperty.call(cacheResponse, key)
-            ) {
-              mergedRecursion[fieldName] = cacheResponse[key][fieldName];
+            } else if ((cacheResponse[key] as Data)[fieldName]) {
+              mergedRecursion[fieldName] = (
+                cacheResponse[key] as MergedResponse
+              )[fieldName];
             } else {
-              mergedRecursion[fieldName] = serverResponse[key][fieldName];
+              mergedRecursion[fieldName] = (
+                serverResponse[key] as MergedResponse
+              )[fieldName];
             }
 
             // place on merged response
@@ -1465,6 +1553,7 @@ class QuellCache implements QuellCache {
         }
       }
     }
+
     return mergedResponse;
   }
 
@@ -1474,8 +1563,8 @@ class QuellCache implements QuellCache {
    * @param {String} key - unique id under which the cached data will be stored
    * @param {Object} item - item to be cached
    */
-  writeToCache(key, item) {
-    const lowerKey = key.toLowerCase();
+  writeToCache(key: string, item: Type | string[]): void {
+    const lowerKey: string = key.toLowerCase();
     if (!key.includes('uncacheable')) {
       this.redisCache.set(lowerKey, JSON.stringify(item));
       this.redisCache.EXPIRE(lowerKey, this.cacheExpiration);
@@ -1492,21 +1581,21 @@ class QuellCache implements QuellCache {
    * @param {Object} mutationQueryObject - arguments and values for the mutation
    */
   async updateCacheByMutation(
-    dbRespDataRaw,
-    mutationName,
-    mutationType,
-    mutationQueryObject
+    dbRespDataRaw: DatabaseResponseDataRaw,
+    mutationName: string,
+    mutationType: string,
+    mutationQueryObject: QueryFields
   ) {
-    let fieldsListKey;
-    const dbRespId = dbRespDataRaw.data[mutationName]?.id;
-    let dbRespData = JSON.parse(
+    let fieldsListKey: string;
+    const dbRespId: string = dbRespDataRaw.data[mutationName]?.id;
+    let dbRespData: Type = JSON.parse(
       JSON.stringify(dbRespDataRaw.data[mutationName])
     );
 
     if (!dbRespData) dbRespData = {};
 
     for (const queryKey in this.queryMap) {
-      const queryKeyType = this.queryMap[queryKey];
+      const queryKeyType: string = this.queryMap[queryKey];
 
       if (JSON.stringify(queryKeyType) === JSON.stringify([mutationType])) {
         fieldsListKey = queryKey;
@@ -1516,16 +1605,21 @@ class QuellCache implements QuellCache {
 
     /**
      * Helper function that takes in a list of fields to remove from the
-     * @param {Set<String> | Array} fieldKeysToRemove - field keys to be removed from the cached field list
+     * @param {Set<string> | Array<string>} fieldKeysToRemove - field keys to be removed from the cached field list
      */
-    const removeFromFieldKeysList = async (fieldKeysToRemove) => {
+    const removeFromFieldKeysList = async (
+      fieldKeysToRemove: Set<string> | Array<string>
+    ) => {
       if (fieldsListKey) {
         const cachedFieldKeysListRaw = await this.getFromRedis(fieldsListKey);
-        const cachedFieldKeysList = JSON.parse(cachedFieldKeysListRaw);
+        const cachedFieldKeysList: string[] = JSON.parse(
+          cachedFieldKeysListRaw
+        );
 
-        await fieldKeysToRemove.forEach((fieldKey) => {
+        await fieldKeysToRemove.forEach((fieldKey: string) => {
           // index position of field key to remove from list of field keys
-          const removalFieldKeyIdx = cachedFieldKeysList.indexOf(fieldKey);
+          const removalFieldKeyIdx: number =
+            cachedFieldKeysList.indexOf(fieldKey);
 
           if (removalFieldKeyIdx !== -1) {
             cachedFieldKeysList.splice(removalFieldKeyIdx, 1);
@@ -1541,14 +1635,18 @@ class QuellCache implements QuellCache {
      */
     const deleteApprFieldKeys = async () => {
       if (fieldsListKey) {
-        const cachedFieldKeysListRaw = await this.getFromRedis(fieldsListKey);
-        const cachedFieldKeysList = JSON.parse(cachedFieldKeysListRaw);
+        const cachedFieldKeysListRaw: string = await this.getFromRedis(
+          fieldsListKey
+        );
+        const cachedFieldKeysList: string[] = JSON.parse(
+          cachedFieldKeysListRaw
+        );
 
-        const fieldKeysToRemove = new Set();
+        const fieldKeysToRemove: Set<string> = new Set();
         for (let i = 0; i < cachedFieldKeysList.length; i++) {
-          const fieldKey = cachedFieldKeysList[i];
+          const fieldKey: string = cachedFieldKeysList[i];
 
-          const fieldKeyValueRaw = await this.getFromRedis(
+          const fieldKeyValueRaw: string = await this.getFromRedis(
             fieldKey.toLowerCase()
           );
           const fieldKeyValue = JSON.parse(fieldKeyValueRaw);
@@ -1556,7 +1654,8 @@ class QuellCache implements QuellCache {
           let remove = true;
           for (const arg in mutationQueryObject.__args) {
             if (Object.prototype.hasOwnProperty.call(fieldKeyValue, arg)) {
-              const argValue = mutationQueryObject.__args[arg];
+              const argValue: string | boolean =
+                mutationQueryObject.__args[arg];
               if (fieldKeyValue[arg] !== argValue) {
                 remove = false;
                 break;
@@ -1581,25 +1680,28 @@ class QuellCache implements QuellCache {
      * field key values and writes the updated values to the redis cache
      */
     const updateApprFieldKeys = async () => {
-      const cachedFieldKeysListRaw = await this.getFromRedis(fieldsListKey);
+      const cachedFieldKeysListRaw: string = await this.getFromRedis(
+        fieldsListKey
+      );
       // conditional just in case the resolver wants to throw an error. instead of making quellCache invoke it's caching functions, we break here.
       if (cachedFieldKeysListRaw === undefined) return;
       // list of field keys stored on redis
-      const cachedFieldKeysList = JSON.parse(cachedFieldKeysListRaw);
+      const cachedFieldKeysList: string[] = JSON.parse(cachedFieldKeysListRaw);
 
       // iterate through field key field key values in redis, and compare to user
       // specified mutation args to determine which fields are used to update by
       // and which fields need to be updated.
 
       cachedFieldKeysList.forEach(async (fieldKey) => {
-        const fieldKeyValueRaw = await this.getFromRedis(
+        const fieldKeyValueRaw: string = await this.getFromRedis(
           fieldKey.toLowerCase()
         );
-        const fieldKeyValue = JSON.parse(fieldKeyValueRaw);
+        const fieldKeyValue: ResponseDataType = JSON.parse(fieldKeyValueRaw);
 
-        const fieldsToUpdateBy = [];
-        const updatedFieldKeyValue = fieldKeyValue;
-
+        const fieldsToUpdateBy: string[] = [];
+        const updatedFieldKeyValue: ResponseDataType = fieldKeyValue;
+        // arg in forEach method is a string such as name
+        // argVal is the actual value 'San Diego'
         Object.entries(mutationQueryObject.__args).forEach(([arg, argVal]) => {
           if (arg in fieldKeyValue && fieldKeyValue[arg] === argVal) {
             // foreign keys are not fields to update by
@@ -1608,7 +1710,7 @@ class QuellCache implements QuellCache {
               fieldsToUpdateBy.push(arg);
             }
           } else {
-            updatedFieldKeyValue[arg] = argVal;
+            if (typeof argVal === 'string') updatedFieldKeyValue[arg] = argVal;
           }
         });
 
@@ -1619,7 +1721,9 @@ class QuellCache implements QuellCache {
     };
 
     const hypotheticalRedisKey = `${mutationType.toLowerCase()}--${dbRespId}`;
-    const redisKey = await this.getFromRedis(hypotheticalRedisKey);
+    const redisKey: string | null = await this.getFromRedis(
+      hypotheticalRedisKey
+    );
 
     if (redisKey) {
       // key was found in redis server cache so mutation is either update or delete mutation
@@ -1647,7 +1751,7 @@ class QuellCache implements QuellCache {
         // if (!fieldsListKey) throw 'error: schema must have a GraphQLList';
 
         const removalFieldKeysList = [];
-
+        // TODO - look into what this is being used for if anything
         if (mutationName.substring(0, 3) === 'del') {
           // mutation is delete mutation
           deleteApprFieldKeys();
@@ -1665,7 +1769,7 @@ class QuellCache implements QuellCache {
    * deleteCacheById removes key-value from the cache unless the key indicates that the item is not available.
    * @param {String} key - unique id under which the cached data is stored that needs to be removed
    */
-  async deleteCacheById(key) {
+  async deleteCacheById(key: string) {
     try {
       await this.redisCache.del(key);
     } catch (err) {
@@ -1680,15 +1784,22 @@ class QuellCache implements QuellCache {
    * @param {Object} protoField - a slice of the prototype currently being used as a template and reference for the responseData to send information to the cache
    * @param {String} currName - parent object name, used to pass into updateIDCache
    */
-  async normalizeForCache(responseData, map = {}, protoField, currName) {
+  async normalizeForCache(
+    responseData: ResponseDataType,
+    map: QueryMapType = {},
+    protoField: ProtoObjType,
+    currName: string
+  ) {
+    // loop through each resultName in response data
     for (const resultName in responseData) {
+      // currField is assigned to the nestedObject on responseData
       const currField = responseData[resultName];
-      const currProto = protoField[resultName];
+      const currProto: ProtoObjType = protoField[resultName];
       if (Array.isArray(currField)) {
         for (let i = 0; i < currField.length; i++) {
-          const el = currField[i];
+          const el: ResponseDataType = currField[i];
 
-          const dataType = map[resultName];
+          const dataType: QueryMapType = map[resultName];
 
           if (typeof el === 'object') {
             await this.normalizeForCache(
@@ -1705,10 +1816,10 @@ class QuellCache implements QuellCache {
         // need to get non-Alias ID for cache
 
         // temporary store for field properties
-        const fieldStore = {};
+        const fieldStore: ResponseDataType = {};
 
         // create a cacheID based on __type and __id from the prototype
-        let cacheID = Object.prototype.hasOwnProperty.call(
+        let cacheID: string = Object.prototype.hasOwnProperty.call(
           map,
           currProto.__type
         )
@@ -1727,11 +1838,18 @@ class QuellCache implements QuellCache {
             // if currname is undefined, assign to responseData at cacheid to lower case at name
             if (responseData[cacheID.toLowerCase()]) {
               const responseDataAtCacheID = responseData[cacheID.toLowerCase()];
-              currName = responseDataAtCacheID.name;
+              if (
+                typeof responseDataAtCacheID !== 'string' &&
+                !Array.isArray(responseDataAtCacheID)
+              ) {
+                if (typeof responseDataAtCacheID.name === 'string') {
+                  currName = responseDataAtCacheID.name;
+                }
+              }
             }
             // if the responseData at cacheid to lower case at name is not undefined, store under name variable and copy logic of writing to cache, want to update cache with same things, all stored under name
             // store objKey as cacheID without ID added
-            const cacheIDForIDCache = cacheID;
+            const cacheIDForIDCache: string = cacheID;
             cacheID += `--${currField[key]}`;
             // call idcache here idCache(cacheIDForIDCache, cacheID)
             this.updateIdCache(cacheIDForIDCache, cacheID, currName);
@@ -1764,7 +1882,8 @@ class QuellCache implements QuellCache {
    * @param {Object} res - Express response object
    * @param {Function} next - Express next middleware function
    */
-  clearCache(req, res, next) {
+
+  clearCache(req: Request, res: Response, next: NextFunction) {
     console.log('Clearing Redis Cache');
     this.redisCache.flushAll();
     return next();
@@ -1773,7 +1892,8 @@ class QuellCache implements QuellCache {
   /**
    * The getRedisInfo returns a chain of middleware based on what information
    * (if any) the user would like to request from the specified redisCache. It
-   * requires an appropriately configured Express route, for instance:
+   * requires an appropriately configured Express route and saves the specified stats
+   * to res.locals, for instance:
    * @example
    *  app.use('/redis', ...quellCache.getRedisInfo({
    *    getStats: true,
@@ -1784,9 +1904,15 @@ class QuellCache implements QuellCache {
    *                           getStats, getKeys, getValues
    * @returns {Array} An array of middleware functions that retrieves specified Redis info
    */
-  getRedisInfo(options = { getStats: true, getKeys: true, getValues: true }) {
+  getRedisInfo(
+    options: RedisOptionsType = {
+      getStats: true,
+      getKeys: true,
+      getValues: true
+    }
+  ): RequestHandler[] {
     console.log('Getting Redis Info');
-    let middleware;
+    const middleware: RequestHandler[] = [];
 
     /**
      * getOptions is a helper function within the getRedisInfo function that returns
@@ -1794,7 +1920,7 @@ class QuellCache implements QuellCache {
      * @param {Object} opts - Options object containing a boolean value for getStats, getKeys, and getValues
      * @returns {string} a string that indicates which data should be retrieved from redis instance
      */
-    const getOptions = (opts) => {
+    const getOptions = (opts: RedisOptionsType): string => {
       const { getStats, getKeys, getValues } = opts;
       if (!getStats && getKeys && getValues) return 'dontGetStats';
       else if (getStats && getKeys && !getValues) return 'dontGetValues';
@@ -1805,48 +1931,23 @@ class QuellCache implements QuellCache {
 
     switch (getOptions(options)) {
       case 'dontGetStats':
-        middleware = [
-          this.getRedisKeys,
-          this.getRedisValues,
-          (req, res) => {
-            return res.status(200).send(res.locals);
-          }
-        ];
+        middleware.push(this.getRedisKeys, this.getRedisValues);
         break;
       case 'dontGetValues':
-        middleware = [
-          this.getStatsFromRedis,
-          this.getRedisKeys,
-          (req, res) => {
-            return res.status(200).send(res.locals);
-          }
-        ];
+        middleware.push(this.getStatsFromRedis, this.getRedisKeys);
         break;
       case 'getKeysOnly':
-        middleware = [
-          this.getRedisKeys,
-          (req, res) => {
-            return res.status(200).send(res.locals);
-          }
-        ];
+        middleware.push(this.getRedisKeys);
         break;
       case 'getStatsOnly':
-        middleware = [
-          this.getStatsFromRedis,
-          (req, res) => {
-            return res.status(200).send(res.locals);
-          }
-        ];
+        middleware.push(this.getStatsFromRedis);
         break;
       case 'getAll':
-        middleware = [
+        middleware.push(
           this.getStatsFromRedis,
           this.getRedisKeys,
-          this.getRedisValues,
-          (req, res) => {
-            return res.status(200).send(res.locals);
-          }
-        ];
+          this.getRedisValues
+        );
         break;
     }
 
@@ -1859,17 +1960,16 @@ class QuellCache implements QuellCache {
    * @param {Object} res - Express response object
    * @param {Function} next - Express next middleware function
    */
-  getStatsFromRedis(req, res, next) {
+  getStatsFromRedis(req: Request, res: Response, next: NextFunction): void {
     try {
       const getStats = () => {
         // redisCache.info returns information and statistics about the server as an array of field:value
         this.redisCache
           .info()
-          .then((response) => {
-            const dataLines = response.split('\r\n');
+          .then((response: string) => {
+            const dataLines: string[] = response.split('\r\n');
             // dataLines is an array of strings
-
-            const output = {
+            const output: RedisStatsType = {
               // SERVER
               server: [
                 // redis version
@@ -1877,35 +1977,35 @@ class QuellCache implements QuellCache {
                   name: 'Redis version',
                   value: dataLines
                     .find((line) => line.match(/redis_version/))
-                    .split(':')[1]
+                    ?.split(':')[1]
                 },
                 // redis build id
                 {
                   name: 'Redis build id',
                   value: dataLines
                     .find((line) => line.match(/redis_build_id/))
-                    .split(':')[1]
+                    ?.split(':')[1]
                 },
                 // redis mode
                 {
                   name: 'Redis mode',
                   value: dataLines
                     .find((line) => line.match(/redis_mode/))
-                    .split(':')[1]
+                    ?.split(':')[1]
                 },
                 // os hosting redis system
                 {
                   name: 'Host operating system',
                   value: dataLines
                     .find((line) => line.match(/os/))
-                    .split(':')[1]
+                    ?.split(':')[1]
                 },
                 // TCP/IP listen port
                 {
                   name: 'TCP/IP port',
                   value: dataLines
                     .find((line) => line.match(/tcp_port/))
-                    .split(':')[1]
+                    ?.split(':')[1]
                 },
                 // server time
                 // {
@@ -1919,14 +2019,14 @@ class QuellCache implements QuellCache {
                   name: 'Server uptime (seconds)',
                   value: dataLines
                     .find((line) => line.match(/uptime_in_seconds/))
-                    .split(':')[1]
+                    ?.split(':')[1]
                 },
                 // num of days since Redis server start
                 {
                   name: 'Server uptime (days)',
                   value: dataLines
                     .find((line) => line.match(/uptime_in_days/))
-                    .split(':')[1]
+                    ?.split(':')[1]
                 },
                 // path to server's executable
                 // {
@@ -1940,7 +2040,7 @@ class QuellCache implements QuellCache {
                   name: 'Path to configuration file',
                   value: dataLines
                     .find((line) => line.match(/config_file/))
-                    .split(':')[1]
+                    ?.split(':')[1]
                 }
               ],
               // CLIENT
@@ -1950,21 +2050,21 @@ class QuellCache implements QuellCache {
                   name: 'Connected clients',
                   value: dataLines
                     .find((line) => line.match(/connected_clients/))
-                    .split(':')[1]
+                    ?.split(':')[1]
                 },
                 // number of sockets used by cluster bus
                 {
                   name: 'Cluster connections',
                   value: dataLines
                     .find((line) => line.match(/cluster_connections/))
-                    .split(':')[1]
+                    ?.split(':')[1]
                 },
                 // max clients
                 {
                   name: 'Max clients',
                   value: dataLines
                     .find((line) => line.match(/maxclients/))
-                    .split(':')[1]
+                    ?.split(':')[1]
                 },
                 // number of clients being tracked
                 // {
@@ -1978,7 +2078,7 @@ class QuellCache implements QuellCache {
                   name: 'Blocked clients',
                   value: dataLines
                     .find((line) => line.match(/blocked_clients/))
-                    .split(':')[1]
+                    ?.split(':')[1]
                 }
               ],
               // MEMORY
@@ -1988,14 +2088,14 @@ class QuellCache implements QuellCache {
                   name: 'Total allocated memory',
                   value: dataLines
                     .find((line) => line.match(/used_memory_human/))
-                    .split(':')[1]
+                    ?.split(':')[1]
                 },
                 // peak memory consumed
                 {
                   name: 'Peak memory consumed',
                   value: dataLines
                     .find((line) => line.match(/used_memory_peak_human/))
-                    .split(':')[1]
+                    ?.split(':')[1]
                 }
                 // % of peak out of total
                 // {
@@ -2040,21 +2140,21 @@ class QuellCache implements QuellCache {
                   name: 'Total connections',
                   value: dataLines
                     .find((line) => line.match(/total_connections_received/))
-                    .split(':')[1]
+                    ?.split(':')[1]
                 },
                 // total number of commands processed by server
                 {
                   name: 'Total commands',
                   value: dataLines
                     .find((line) => line.match(/total_commands_processed/))
-                    .split(':')[1]
+                    ?.split(':')[1]
                 },
                 // number of commands processed per second
                 {
                   name: 'Commands processed per second',
                   value: dataLines
                     .find((line) => line.match(/instantaneous_ops_per_sec/))
-                    .split(':')[1]
+                    ?.split(':')[1]
                 },
                 // total number of keys being tracked
                 // {
@@ -2089,21 +2189,21 @@ class QuellCache implements QuellCache {
                   name: 'Error replies',
                   value: dataLines
                     .find((line) => line.match(/total_error_replies/))
-                    .split(':')[1]
+                    ?.split(':')[1]
                 },
                 // total number of bytes read from network
                 {
                   name: 'Bytes read from network',
                   value: dataLines
                     .find((line) => line.match(/total_net_input_bytes/))
-                    .split(':')[1]
+                    ?.split(':')[1]
                 },
                 // networks read rate per second
                 {
                   name: 'Network read rate (Kb/s)',
                   value: dataLines
                     .find((line) => line.match(/instantaneous_input_kbps/))
-                    .split(':')[1]
+                    ?.split(':')[1]
                 },
                 // total number of bytes written to network
                 // {
@@ -2117,14 +2217,14 @@ class QuellCache implements QuellCache {
                   name: 'Network write rate (Kb/s)',
                   value: dataLines
                     .find((line) => line.match(/instantaneous_output_kbps/))
-                    .split(':')[1]
+                    ?.split(':')[1]
                 }
               ]
             };
             res.locals.redisStats = output;
             return next();
           })
-          .catch((err) => {
+          .catch((err: ServerErrorType) => {
             return next(err);
           });
       };
@@ -2141,14 +2241,14 @@ class QuellCache implements QuellCache {
    * @param {Object} res - Express response object
    * @param {Function} next - Express next middleware function
    */
-  getRedisKeys(req, res, next) {
+  getRedisKeys(req: Request, res: Response, next: NextFunction): void {
     this.redisCache
       .keys('*')
-      .then((response) => {
+      .then((response: string[]) => {
         res.locals.redisKeys = response;
         return next();
       })
-      .catch((err) => {
+      .catch((err: ServerErrorType) => {
         return next(err);
       });
   }
@@ -2159,15 +2259,15 @@ class QuellCache implements QuellCache {
    * @param {Object} res - Express response object
    * @param {Function} next - Express next middleware function
    */
-  getRedisValues(req, res, next) {
+  getRedisValues(req: Request, res: Response, next: NextFunction): void {
     if (res.locals.redisKeys.length !== 0) {
       this.redisCache
         .mGet(res.locals.redisKeys)
-        .then((response) => {
+        .then((response: string[]) => {
           res.locals.redisValues = response;
           return next();
         })
-        .catch((err) => {
+        .catch((err: ServerErrorType) => {
           return next(err);
         });
     } else {
@@ -2188,18 +2288,27 @@ class QuellCache implements QuellCache {
    */
   // what parameters should they take? If middleware, good as is, has to take in query obj in request, limit set inside.
   // If function inside whole of Quell, (query, limit), so they are explicitly defined and passed in
-  depthLimit(req, res, next) {
+  depthLimit(req: Request, res: Response, next: NextFunction): void {
     // get depth max limit from cost parameters
     let { maxDepth } = this.costParameters;
     // maxDepth can be reassigned to get depth max limit from req.body if user selects depth limit
     if (req.body.costOptions.maxDepth) maxDepth = req.body.costOptions.maxDepth;
     // return error if no query in request.
-    if (!req.body.query) return res.status(400);
+    if (!req.body.query) {
+      {
+        const err: ServerErrorType = {
+          log: 'Invalid request, no query found in req.body',
+          status: 400,
+          message: { err: 'Error in depthLimit' }
+        };
+        return next(err);
+      }
+    }
     // assign graphQL query string to variable queryString
-    const queryString = req.body.query;
+    const queryString: string = req.body.query;
 
     // create AST
-    const AST = parse(queryString);
+    const AST: DocumentNode = parse(queryString);
 
     // create response prototype, and operation type, and fragments object
     // the response prototype is used as a template for most operations in quell including caching, building modified requests, and more
@@ -2216,10 +2325,12 @@ class QuellCache implements QuellCache {
      * @param {Object} proto - the prototype
      * @param {Number} currentDepth - initialized to 0, increases for each nested level within proto
      */
-    const determineDepth = (proto, currentDepth = 0) => {
+    const determineDepth = (proto: ProtoObjType, currentDepth = 0): void => {
       if (currentDepth > maxDepth) {
-        const err = {
-          log: `Depth limit exceeded, tried to send query with the depth of ${currentDepth}.`
+        const err: ServerErrorType = {
+          log: `Depth limit exceeded, tried to send query with the depth of ${currentDepth}.`,
+          status: 413,
+          message: { err: 'Error in determineDepth' }
         };
         res.locals.queryErr = err;
         return next(err);
@@ -2250,7 +2361,7 @@ class QuellCache implements QuellCache {
    * @param {Object} res - Express response object
    * @param {Function} next - Express next middleware function
    */
-  costLimit(req, res, next) {
+  costLimit(req: Request, res: Response, next: NextFunction): void {
     // get default values for costParameters
     let { maxCost } = this.costParameters;
     const { mutationCost, objectCost, depthCostFactor, scalarCost } =
@@ -2258,11 +2369,18 @@ class QuellCache implements QuellCache {
     // maxCost can be reassigned to get maxcost limit from req.body if user selects cost limit
     if (req.body.costOptions.maxCost) maxCost = req.body.costOptions.maxCost;
     // return error if no query in request.
-    if (!req.body.query) return res.status(400);
+    if (!req.body.query) {
+      const err: ServerErrorType = {
+        log: 'Invalid request, no query found in req.body',
+        status: 400,
+        message: { err: 'Error in costLimit' }
+      };
+      return next(err);
+    }
     // assign graphQL query string to variable queryString
-    const queryString = req.body.query;
+    const queryString: string = req.body.query;
     // create AST
-    const AST = parse(queryString);
+    const AST: Document = parse(queryString);
 
     // create response prototype, and operation type, and fragments object
     // the response prototype is used as a template for most operations in quell including caching, building modified requests, and more
@@ -2284,11 +2402,13 @@ class QuellCache implements QuellCache {
      * helper function to pass an error if the cost of the proto is greater than the maxCost
      * @param {Object} proto - the prototype
      */
-    const determineCost = (proto) => {
+    const determineCost = (proto: ProtoObjType): void => {
       // create error if maxCost exceeded
       if (cost > maxCost) {
-        const err = {
-          log: `Cost limit exceeded, tried to send query with a cost above ${maxCost}.`
+        const err: ServerErrorType = {
+          log: `Cost limit exceeded, tried to send query with a cost exceeding ${maxCost}.`,
+          status: 413,
+          message: { err: 'Error in determineCost' }
         };
         res.locals.queryErr = err;
         return next(err);
@@ -2316,11 +2436,16 @@ class QuellCache implements QuellCache {
      * @param {Object} proto - the prototype
      * @param {Number} totalCost - cost of the proto
      */
-    const determineDepthCost = (proto, totalCost = cost) => {
+    const determineDepthCost = (
+      proto: ProtoObjType,
+      totalCost = cost
+    ): void => {
       // create error if maxCost exceeded
       if (totalCost > maxCost) {
-        const err = {
-          log: `Cost limit exceeded, tried to send query with a cost exceeding ${maxCost}.`
+        const err: ServerErrorType = {
+          log: `Cost limit exceeded, tried to send query with a cost exceeding ${maxCost}.`,
+          status: 413,
+          message: { err: 'Error in determineDepthCost' }
         };
         res.locals.queryErr = err;
         return next(err);
