@@ -1,5 +1,5 @@
-import { Response, Request, NextFunction, RequestHandler } from 'express';
 import { DocumentNode } from 'graphql';
+const { Response, Request, NextFunction, RequestHandler } = require('express');
 const redis = require('redis');
 const { parse } = require('graphql/language/parser');
 const { visit, BREAK } = require('graphql/language/visitor');
@@ -664,6 +664,7 @@ class QuellCache {
       // get name of GraphQL type returned by query
       // if ofType --> this is collection, else not collection
       let returnedType;
+
       if (mutationsObj[mutation].type.ofType) {
         returnedType = [];
         returnedType.push(mutationsObj[mutation].type.ofType.name);
@@ -1342,25 +1343,28 @@ class QuellCache {
      * field key values and writes the updated values to the redis cache
      */
     const updateApprFieldKeys = async () => {
-      const cachedFieldKeysListRaw = await this.getFromRedis(fieldsListKey);
+      const cachedFieldKeysListRaw: string = await this.getFromRedis(
+        fieldsListKey
+      );
       // conditional just in case the resolver wants to throw an error. instead of making quellCache invoke it's caching functions, we break here.
       if (cachedFieldKeysListRaw === undefined) return;
       // list of field keys stored on redis
-      const cachedFieldKeysList = JSON.parse(cachedFieldKeysListRaw);
+      const cachedFieldKeysList: string[] = JSON.parse(cachedFieldKeysListRaw);
 
       // iterate through field key field key values in redis, and compare to user
       // specified mutation args to determine which fields are used to update by
       // and which fields need to be updated.
 
       cachedFieldKeysList.forEach(async (fieldKey) => {
-        const fieldKeyValueRaw = await this.getFromRedis(
+        const fieldKeyValueRaw: string = await this.getFromRedis(
           fieldKey.toLowerCase()
         );
-        const fieldKeyValue = JSON.parse(fieldKeyValueRaw);
+        const fieldKeyValue: ResponseDataType = JSON.parse(fieldKeyValueRaw);
 
-        const fieldsToUpdateBy = [];
-        const updatedFieldKeyValue = fieldKeyValue;
-
+        const fieldsToUpdateBy: string[] = [];
+        const updatedFieldKeyValue: ResponseDataType = fieldKeyValue;
+        // arg in forEach method is a string such as name
+        // argVal is the actual value 'San Diego'
         Object.entries(mutationQueryObject.__args).forEach(([arg, argVal]) => {
           if (arg in fieldKeyValue && fieldKeyValue[arg] === argVal) {
             // foreign keys are not fields to update by
@@ -1369,7 +1373,7 @@ class QuellCache {
               fieldsToUpdateBy.push(arg);
             }
           } else {
-            updatedFieldKeyValue[arg] = argVal;
+            if (typeof argVal === 'string') updatedFieldKeyValue[arg] = argVal;
           }
         });
 
@@ -1380,7 +1384,7 @@ class QuellCache {
     };
 
     const hypotheticalRedisKey = `${mutationType.toLowerCase()}--${dbRespId}`;
-    const redisKey = await this.getFromRedis(hypotheticalRedisKey);
+    const redisKey: string = await this.getFromRedis(hypotheticalRedisKey);
 
     if (redisKey) {
       // key was found in redis server cache so mutation is either update or delete mutation

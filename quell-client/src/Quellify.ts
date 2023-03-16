@@ -1,9 +1,9 @@
 import { DocumentNode } from 'graphql';
 import { Collection } from 'lokijs';
-const { parse } = require('graphql/language/parser');
-const determineType = require('./helpers/determineType');
-const Loki = require('lokijs');
-const lokidb = new Loki('client-cache');
+import { parse } from 'graphql/language/parser';
+import determineType from './helpers/determineType';
+import Loki from 'lokijs';
+const lokidb: Loki = new Loki('client-cache');
 let lokiCache: Collection = lokidb.addCollection('loki-client-cache', {
   disableMeta: true
 });
