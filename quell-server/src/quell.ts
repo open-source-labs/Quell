@@ -262,11 +262,11 @@ class QuellCache implements QuellCache {
      */
     if (operationType === 'unQuellable') {
       graphql({ schema: this.schema, source: queryString })
-        .then((queryResult: ExecutionResult) => {
+        .then((queryResult: ExecutionResult): void => {
           res.locals.queryResponse = queryResult;
           return next();
         })
-        .catch((error) => {
+        .catch((error: Error): void => {
           return next(`graphql library error: ${error}`);
         });
 
@@ -276,11 +276,11 @@ class QuellCache implements QuellCache {
        */
     } else if (operationType === 'noID') {
       graphql({ schema: this.schema, source: queryString })
-        .then((queryResult: ExecutionResult) => {
+        .then((queryResult: ExecutionResult): void => {
           res.locals.queryResponse = queryResult;
           return next();
         })
-        .catch((error) => {
+        .catch((error: Error): void => {
           return next({ log: 'graphql library error: ', error });
         });
 
@@ -297,12 +297,12 @@ class QuellCache implements QuellCache {
       } else {
         // Execute the operation, add the result to the response, write the query string and result to cache, and return.
         graphql({ schema: this.schema, source: queryString })
-          .then((queryResult: ExecutionResult) => {
+          .then((queryResult: ExecutionResult): void => {
             res.locals.queryResponse = queryResult;
             this.writeToCache(queryString, queryResult);
             return next();
           })
-          .catch((error: Error) => {
+          .catch((error: Error): void => {
             return next(`graphql library error: ${error}`);
           });
       }
@@ -336,7 +336,7 @@ class QuellCache implements QuellCache {
 
       // Execute the operation and add the result to the response.
       graphql({ schema: this.schema, source: queryString })
-        .then((databaseResponse: ExecutionResult) => {
+        .then((databaseResponse: ExecutionResult): void => {
           res.locals.queryResponse = databaseResponse;
 
           // If there is a mutation, update the cache with the response.
@@ -351,7 +351,7 @@ class QuellCache implements QuellCache {
           }
           return next();
         })
-        .catch((error) => {
+        .catch((error: Error): void => {
           return next(`graphql library error: ${error}`);
         });
     } else {
@@ -393,7 +393,7 @@ class QuellCache implements QuellCache {
 
         // Execute the query using the new query string.
         graphql({ schema: this.schema, source: newQueryString })
-          .then(async (databaseResponseRaw: ExecutionResult) => {
+          .then(async (databaseResponseRaw: ExecutionResult): Promise<void> => {
             // The GraphQL must be parsed in order to join with it with the data retrieved from
             // the cache before sending back to user.
             const databaseResponse: GQLResponseType = JSON.parse(
@@ -432,7 +432,7 @@ class QuellCache implements QuellCache {
             res.locals.queryResponse = { ...mergedResponse };
             return next();
           })
-          .catch((error) => {
+          .catch((error: Error): void => {
             return next({ log: 'graphql library error: ', error });
           });
       } else {
