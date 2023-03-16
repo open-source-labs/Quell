@@ -1,3 +1,4 @@
+import { Response, Request, NextFunction, RequestHandler } from 'express';
 const redis = require('redis');
 const { parse } = require('graphql/language/parser');
 const { visit, BREAK } = require('graphql/language/visitor');
@@ -27,6 +28,30 @@ const defaultCostParams = {
 };
 
 let idCache = {};
+type RedisOptionsType = {
+  getStats: boolean;
+  getKeys: boolean;
+  getValues: boolean;
+};
+
+type RedisStatsType = {
+  server: { name: string; value?: string }[];
+  client: { name: string; value?: string }[];
+  memory: { name: string; value?: string }[];
+  stats: { name: string; value?: string }[];
+};
+type ServerErrorType = {
+  log: string;
+  status: number;
+  message: { err: string };
+};
+type QuellCache = {
+  clearCache: RequestHandler;
+  getRedisKeys: RequestHandler;
+  getRedisValues: RequestHandler;
+  depthLimit: RequestHandler;
+  costLimit: RequestHandler;
+};
 /**
  * Creates a QuellCache instance that provides middleware for caching between the graphQL endpoint and
  * front-end requests, connects to redis cloud store via user-specified parameters.
@@ -1549,6 +1574,7 @@ class QuellCache {
    * @param {Function} next - Express next middleware function
    */
   clearCache(req: Request, res: Response, next: NextFunction) {
+  clearCache(req: Request, res: Response, next: NextFunction) {
     console.log('Clearing Redis Cache');
     this.redisCache.flushAll();
     return next();
@@ -1557,7 +1583,8 @@ class QuellCache {
   /**
    * The getRedisInfo returns a chain of middleware based on what information
    * (if any) the user would like to request from the specified redisCache. It
-   * requires an appropriately configured Express route, for instance:
+   * requires an appropriately configured Express route and saves the specified stats
+   * to res.locals, for instance:
    * @example
    *  app.use('/redis', ...quellCache.getRedisInfo({
    *    getStats: true,
@@ -1568,9 +1595,15 @@ class QuellCache {
    *                           getStats, getKeys, getValues
    * @returns {Array} An array of middleware functions that retrieves specified Redis info
    */
-  getRedisInfo(options = { getStats: true, getKeys: true, getValues: true }) {
+  getRedisInfo(
+    options: RedisOptionsType = {
+      getStats: true,
+      getKeys: true,
+      getValues: true
+    }
+  ): RequestHandler[] {
     console.log('Getting Redis Info');
-    let middleware;
+    const middleware: RequestHandler[] = [];
 
     /**
      * getOptions is a helper function within the getRedisInfo function that returns
@@ -1578,7 +1611,7 @@ class QuellCache {
      * @param {Object} opts - Options object containing a boolean value for getStats, getKeys, and getValues
      * @returns {string} a string that indicates which data should be retrieved from redis instance
      */
-    const getOptions = (opts) => {
+    const getOptions = (opts: RedisOptionsType): string => {
       const { getStats, getKeys, getValues } = opts;
       if (!getStats && getKeys && getValues) return 'dontGetStats';
       else if (getStats && getKeys && !getValues) return 'dontGetValues';
@@ -1589,48 +1622,23 @@ class QuellCache {
 
     switch (getOptions(options)) {
       case 'dontGetStats':
-        middleware = [
-          this.getRedisKeys,
-          this.getRedisValues,
-          (req, res) => {
-            return res.status(200).send(res.locals);
-          },
-        ];
+        middleware.push(this.getRedisKeys, this.getRedisValues);
         break;
       case 'dontGetValues':
-        middleware = [
-          this.getStatsFromRedis,
-          this.getRedisKeys,
-          (req, res) => {
-            return res.status(200).send(res.locals);
-          },
-        ];
+        middleware.push(this.getStatsFromRedis, this.getRedisKeys);
         break;
       case 'getKeysOnly':
-        middleware = [
-          this.getRedisKeys,
-          (req, res) => {
-            return res.status(200).send(res.locals);
-          },
-        ];
+        middleware.push(this.getRedisKeys);
         break;
       case 'getStatsOnly':
-        middleware = [
-          this.getStatsFromRedis,
-          (req, res) => {
-            return res.status(200).send(res.locals);
-          },
-        ];
+        middleware.push(this.getStatsFromRedis);
         break;
       case 'getAll':
-        middleware = [
+        middleware.push(
           this.getStatsFromRedis,
           this.getRedisKeys,
-          this.getRedisValues,
-          (req, res) => {
-            return res.status(200).send(res.locals);
-          },
-        ];
+          this.getRedisValues
+        );
         break;
     }
 
@@ -1643,17 +1651,16 @@ class QuellCache {
    * @param {Object} res - Express response object
    * @param {Function} next - Express next middleware function
    */
-  getStatsFromRedis(req, res, next) {
+  getStatsFromRedis(req: Request, res: Response, next: NextFunction): void {
     try {
       const getStats = () => {
         // redisCache.info returns information and statistics about the server as an array of field:value
         this.redisCache
           .info()
-          .then((response) => {
-            const dataLines = response.split('\r\n');
+          .then((response: string) => {
+            const dataLines: string[] = response.split('\r\n');
             // dataLines is an array of strings
-
-            const output = {
+            const output: RedisStatsType = {
               // SERVER
               server: [
                 // redis version
@@ -1661,35 +1668,35 @@ class QuellCache {
                   name: 'Redis version',
                   value: dataLines
                     .find((line) => line.match(/redis_version/))
-                    .split(':')[1],
+                    ?.split(':')[1]
                 },
                 // redis build id
                 {
                   name: 'Redis build id',
                   value: dataLines
                     .find((line) => line.match(/redis_build_id/))
-                    .split(':')[1],
+                    ?.split(':')[1]
                 },
                 // redis mode
                 {
                   name: 'Redis mode',
                   value: dataLines
                     .find((line) => line.match(/redis_mode/))
-                    .split(':')[1],
+                    ?.split(':')[1]
                 },
                 // os hosting redis system
                 {
                   name: 'Host operating system',
                   value: dataLines
                     .find((line) => line.match(/os/))
-                    .split(':')[1],
+                    ?.split(':')[1]
                 },
                 // TCP/IP listen port
                 {
                   name: 'TCP/IP port',
                   value: dataLines
                     .find((line) => line.match(/tcp_port/))
-                    .split(':')[1],
+                    ?.split(':')[1]
                 },
                 // server time
                 // {
@@ -1703,14 +1710,14 @@ class QuellCache {
                   name: 'Server uptime (seconds)',
                   value: dataLines
                     .find((line) => line.match(/uptime_in_seconds/))
-                    .split(':')[1],
+                    ?.split(':')[1]
                 },
                 // num of days since Redis server start
                 {
                   name: 'Server uptime (days)',
                   value: dataLines
                     .find((line) => line.match(/uptime_in_days/))
-                    .split(':')[1],
+                    ?.split(':')[1]
                 },
                 // path to server's executable
                 // {
@@ -1724,8 +1731,8 @@ class QuellCache {
                   name: 'Path to configuration file',
                   value: dataLines
                     .find((line) => line.match(/config_file/))
-                    .split(':')[1],
-                },
+                    ?.split(':')[1]
+                }
               ],
               // CLIENT
               client: [
@@ -1734,21 +1741,21 @@ class QuellCache {
                   name: 'Connected clients',
                   value: dataLines
                     .find((line) => line.match(/connected_clients/))
-                    .split(':')[1],
+                    ?.split(':')[1]
                 },
                 // number of sockets used by cluster bus
                 {
                   name: 'Cluster connections',
                   value: dataLines
                     .find((line) => line.match(/cluster_connections/))
-                    .split(':')[1],
+                    ?.split(':')[1]
                 },
                 // max clients
                 {
                   name: 'Max clients',
                   value: dataLines
                     .find((line) => line.match(/maxclients/))
-                    .split(':')[1],
+                    ?.split(':')[1]
                 },
                 // number of clients being tracked
                 // {
@@ -1762,8 +1769,8 @@ class QuellCache {
                   name: 'Blocked clients',
                   value: dataLines
                     .find((line) => line.match(/blocked_clients/))
-                    .split(':')[1],
-                },
+                    ?.split(':')[1]
+                }
               ],
               // MEMORY
               memory: [
@@ -1772,15 +1779,15 @@ class QuellCache {
                   name: 'Total allocated memory',
                   value: dataLines
                     .find((line) => line.match(/used_memory_human/))
-                    .split(':')[1],
+                    ?.split(':')[1]
                 },
                 // peak memory consumed
                 {
                   name: 'Peak memory consumed',
                   value: dataLines
                     .find((line) => line.match(/used_memory_peak_human/))
-                    .split(':')[1],
-                },
+                    ?.split(':')[1]
+                }
                 // % of peak out of total
                 // {
                 //   name: 'Peak memory used % total',
@@ -1824,21 +1831,21 @@ class QuellCache {
                   name: 'Total connections',
                   value: dataLines
                     .find((line) => line.match(/total_connections_received/))
-                    .split(':')[1],
+                    ?.split(':')[1]
                 },
                 // total number of commands processed by server
                 {
                   name: 'Total commands',
                   value: dataLines
                     .find((line) => line.match(/total_commands_processed/))
-                    .split(':')[1],
+                    ?.split(':')[1]
                 },
                 // number of commands processed per second
                 {
                   name: 'Commands processed per second',
                   value: dataLines
                     .find((line) => line.match(/instantaneous_ops_per_sec/))
-                    .split(':')[1],
+                    ?.split(':')[1]
                 },
                 // total number of keys being tracked
                 // {
@@ -1873,21 +1880,21 @@ class QuellCache {
                   name: 'Error replies',
                   value: dataLines
                     .find((line) => line.match(/total_error_replies/))
-                    .split(':')[1],
+                    ?.split(':')[1]
                 },
                 // total number of bytes read from network
                 {
                   name: 'Bytes read from network',
                   value: dataLines
                     .find((line) => line.match(/total_net_input_bytes/))
-                    .split(':')[1],
+                    ?.split(':')[1]
                 },
                 // networks read rate per second
                 {
                   name: 'Network read rate (Kb/s)',
                   value: dataLines
                     .find((line) => line.match(/instantaneous_input_kbps/))
-                    .split(':')[1],
+                    ?.split(':')[1]
                 },
                 // total number of bytes written to network
                 // {
@@ -1901,14 +1908,14 @@ class QuellCache {
                   name: 'Network write rate (Kb/s)',
                   value: dataLines
                     .find((line) => line.match(/instantaneous_output_kbps/))
-                    .split(':')[1],
-                },
-              ],
+                    ?.split(':')[1]
+                }
+              ]
             };
             res.locals.redisStats = output;
             return next();
           })
-          .catch((err) => {
+          .catch((err: ServerErrorType) => {
             return next(err);
           });
       };
@@ -1925,14 +1932,14 @@ class QuellCache {
    * @param {Object} res - Express response object
    * @param {Function} next - Express next middleware function
    */
-  getRedisKeys(req, res, next) {
+  getRedisKeys(req: Request, res: Response, next: NextFunction): void {
     this.redisCache
       .keys('*')
-      .then((response) => {
+      .then((response: string[]) => {
         res.locals.redisKeys = response;
         return next();
       })
-      .catch((err) => {
+      .catch((err: ServerErrorType) => {
         return next(err);
       });
   }
@@ -1943,15 +1950,15 @@ class QuellCache {
    * @param {Object} res - Express response object
    * @param {Function} next - Express next middleware function
    */
-  getRedisValues(req, res, next) {
+  getRedisValues(req: Request, res: Response, next: NextFunction): void {
     if (res.locals.redisKeys.length !== 0) {
       this.redisCache
         .mGet(res.locals.redisKeys)
-        .then((response) => {
+        .then((response: string[]) => {
           res.locals.redisValues = response;
           return next();
         })
-        .catch((err) => {
+        .catch((err: ServerErrorType) => {
           return next(err);
         });
     } else {
@@ -1972,18 +1979,27 @@ class QuellCache {
    */
   // what parameters should they take? If middleware, good as is, has to take in query obj in request, limit set inside.
   // If function inside whole of Quell, (query, limit), so they are explicitly defined and passed in
-  depthLimit(req, res, next) {
+  depthLimit(req: Request, res: Response, next: NextFunction): void {
     // get depth max limit from cost parameters
     let { maxDepth } = this.costParameters;
     // maxDepth can be reassigned to get depth max limit from req.body if user selects depth limit
     if (req.body.costOptions.maxDepth) maxDepth = req.body.costOptions.maxDepth;
     // return error if no query in request.
-    if (!req.body.query) return res.status(400);
+    if (!req.body.query) {
+      {
+        const err: ServerErrorType = {
+          log: 'Invalid request, no query found in req.body',
+          status: 400,
+          message: { err: 'Error in depthLimit' }
+        };
+        return next(err);
+      }
+    }
     // assign graphQL query string to variable queryString
-    const queryString = req.body.query;
+    const queryString: string = req.body.query;
 
     // create AST
-    const AST = parse(queryString);
+    const AST: Document = parse(queryString);
 
     // create response prototype, and operation type, and fragments object
     // the response prototype is used as a template for most operations in quell including caching, building modified requests, and more
@@ -2000,10 +2016,12 @@ class QuellCache {
      * @param {Object} proto - the prototype
      * @param {Number} currentDepth - initialized to 0, increases for each nested level within proto
      */
-    const determineDepth = (proto, currentDepth = 0) => {
+    const determineDepth = (proto: ProtoObjType, currentDepth = 0): void => {
       if (currentDepth > maxDepth) {
-        const err = {
+        const err: ServerErrorType = {
           log: `Depth limit exceeded, tried to send query with the depth of ${currentDepth}.`,
+          status: 413,
+          message: { err: 'Error in determineDepth' }
         };
         res.locals.queryErr = err;
         return next(err);
@@ -2034,7 +2052,7 @@ class QuellCache {
    * @param {Object} res - Express response object
    * @param {Function} next - Express next middleware function
    */
-  costLimit(req, res, next) {
+  costLimit(req: Request, res: Response, next: NextFunction): void {
     // get default values for costParameters
     let { maxCost } = this.costParameters;
     const { mutationCost, objectCost, depthCostFactor, scalarCost } =
@@ -2042,11 +2060,18 @@ class QuellCache {
     // maxCost can be reassigned to get maxcost limit from req.body if user selects cost limit
     if (req.body.costOptions.maxCost) maxCost = req.body.costOptions.maxCost;
     // return error if no query in request.
-    if (!req.body.query) return res.status(400);
+    if (!req.body.query) {
+      const err: ServerErrorType = {
+        log: 'Invalid request, no query found in req.body',
+        status: 400,
+        message: { err: 'Error in costLimit' }
+      };
+      return next(err);
+    }
     // assign graphQL query string to variable queryString
-    const queryString = req.body.query;
+    const queryString: string = req.body.query;
     // create AST
-    const AST = parse(queryString);
+    const AST: Document = parse(queryString);
 
     // create response prototype, and operation type, and fragments object
     // the response prototype is used as a template for most operations in quell including caching, building modified requests, and more
@@ -2068,11 +2093,13 @@ class QuellCache {
      * helper function to pass an error if the cost of the proto is greater than the maxCost
      * @param {Object} proto - the prototype
      */
-    const determineCost = (proto) => {
+    const determineCost = (proto: ProtoObjType): void => {
       // create error if maxCost exceeded
       if (cost > maxCost) {
-        const err = {
-          log: `Cost limit exceeded, tried to send query with a cost above ${maxCost}.`,
+        const err: ServerErrorType = {
+          log: `Cost limit exceeded, tried to send query with a cost exceeding ${maxCost}.`,
+          status: 413,
+          message: { err: 'Error in determineCost' }
         };
         res.locals.queryErr = err;
         return next(err);
@@ -2100,11 +2127,16 @@ class QuellCache {
      * @param {Object} proto - the prototype
      * @param {Number} totalCost - cost of the proto
      */
-    const determineDepthCost = (proto, totalCost = cost) => {
+    const determineDepthCost = (
+      proto: ProtoObjType,
+      totalCost = cost
+    ): void => {
       // create error if maxCost exceeded
       if (totalCost > maxCost) {
-        const err = {
+        const err: ServerErrorType = {
           log: `Cost limit exceeded, tried to send query with a cost exceeding ${maxCost}.`,
+          status: 413,
+          message: { err: 'Error in determineDepthCost' }
         };
         res.locals.queryErr = err;
         return next(err);
