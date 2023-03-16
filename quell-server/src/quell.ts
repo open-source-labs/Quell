@@ -360,70 +360,69 @@ class QuellCache implements QuellCache {
       // This will be used to create a new GraphQL string.
       const queryObject: ProtoObjType = this.createQueryObj(prototype);
 
-      // If the query object is empty, there is nothing left to query and we can send the information from cache.
-      if (Object.keys(queryObject).length === 0) {
+      // If the cached response is incomplete, reformulate query,
+      // handoff query, join responses, and cache joined responses.
+      if (Object.keys(queryObject).length > 0) {
+        // Create a new query string that contains only the fields not found in the cache so that we can
+        // request only that information from the database.
+        const newQueryString: string = this.createQueryStr(
+          queryObject,
+          operationType
+        );
+
+        // Execute the query using the new query string.
+        const gqlResponse: ExecutionResult = await graphql({
+          schema: this.schema,
+          source: newQueryString
+        });
+
+        // The GraphQL must be parsed in order to join with it with the data retrieved from
+        // the cache before sending back to user.
+        const gqlResponseParsed: GQLResponseType = JSON.parse(
+          JSON.stringify(gqlResponse)
+        );
+
+        // Check if the cache response has any data by iterating over the keys in cache response.
+        let cacheHasData = false;
+        for (const key in cacheResponse.data) {
+          if (Object.keys(cacheResponse.data[key]).length > 0) {
+            cacheHasData = true;
+            break;
+          }
+        }
+
+        // Create merged response object to merge the data from the cache and the data from the database.
+        // If the cache response does not have data then just use the database response.
+        const mergedResponse: any = cacheHasData
+          ? this.joinResponses(
+              cacheResponse.data,
+              gqlResponseParsed.data,
+              prototype
+            )
+          : gqlResponseParsed;
+
+        // TODO Add explanation for how the normalizeForCache is being used here.
+        const currName = 'string it should not be again';
+        await this.normalizeForCache(
+          mergedResponse.data,
+          this.queryMap,
+          prototype,
+          currName
+        );
+
+        // The response is given a cached key equal to false to indicate to the front end of the demo site that the
+        // information was *NOT* entirely found in the cache.
+        mergedResponse.cached = false;
+        res.locals.queryResponse = { ...mergedResponse };
+        return next();
+      } else {
+        // If the query object is empty, there is nothing left to query and we can send the information from cache.
         // The response is given a cached key equal to true to indicate to the front end of the demo site that the
         // information was entirely found in the cache.
         cacheResponse.cached = true;
         res.locals.queryResponse = { ...cacheResponse };
         return next();
       }
-
-      // Otherwise, if the cached response is incomplete, reformulate query,
-      // handoff query, join responses, and cache joined responses.
-
-      // Create a new query string that contains only the fields not found in the cache so that we can
-      // request only that information from the database.
-      const newQueryString: string = this.createQueryStr(
-        queryObject,
-        operationType
-      );
-
-      // Execute the query using the new query string.
-      const gqlResponse: ExecutionResult = await graphql({
-        schema: this.schema,
-        source: newQueryString
-      });
-
-      // The GraphQL must be parsed in order to join with it with the data retrieved from
-      // the cache before sending back to user.
-      const gqlResponseParsed: GQLResponseType = JSON.parse(
-        JSON.stringify(gqlResponse)
-      );
-
-      // Check if the cache response has any data by iterating over the keys in cache response.
-      let cacheHasData = false;
-      for (const key in cacheResponse.data) {
-        if (Object.keys(cacheResponse.data[key]).length > 0) {
-          cacheHasData = true;
-          break;
-        }
-      }
-
-      // Create merged response object to merge the data from the cache and the data from the database.
-      // If the cache response does not have data then just use the database response.
-      const mergedResponse: any = cacheHasData
-        ? this.joinResponses(
-            cacheResponse.data,
-            gqlResponseParsed.data,
-            prototype
-          )
-        : gqlResponseParsed;
-
-      // TODO Add explanation for how the normalizeForCache is being used here.
-      const currName = 'string it should not be again';
-      await this.normalizeForCache(
-        mergedResponse.data,
-        this.queryMap,
-        prototype,
-        currName
-      );
-
-      // The response is given a cached key equal to false to indicate to the front end of the demo site that the
-      // information was *NOT* entirely found in the cache.
-      mergedResponse.cached = false;
-      res.locals.queryResponse = { ...mergedResponse };
-      return next();
     } catch (error) {
       return next({
         status: 500, // Internal Server Error
