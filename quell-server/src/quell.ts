@@ -4,7 +4,19 @@ const redis = require('redis');
 const { parse } = require('graphql/language/parser');
 const { visit, BREAK } = require('graphql/language/visitor');
 const { graphql } = require('graphql');
-const { NextFunction } = require('express');
+
+import { Request, Response, NextFunction } from 'express';
+import {
+  QueryObject,
+  QueryFields,
+  MapType,
+  DatabaseResponseDataRaw,
+  TypeData,
+  Type,
+  MergedResponse,
+  DataResponse,
+  Data,
+} from './types';
 
 const defaultCostParams = {
   maxCost: 5000, // maximum cost allowed before a request is rejected
@@ -13,7 +25,7 @@ const defaultCostParams = {
   scalarCost: 1, // cost of retrieving a scalar
   depthCostFactor: 1.5, // multiplicative cost of each depth level
   maxDepth: 10, // depth limit parameter
-  ipRate: 3 // requests allowed per second
+  ipRate: 3, // requests allowed per second
 };
 
 let idCache = {};
@@ -86,7 +98,7 @@ class QuellCache {
     this.redisReadBatchSize = 10;
     this.redisCache = redis.createClient({
       socket: { host: redisHost, port: redisPort },
-      password: redisPassword
+      password: redisPassword,
     });
     this.query = this.query.bind(this);
     this.parseAST = this.parseAST.bind(this);
@@ -145,7 +157,7 @@ class QuellCache {
 
     if (calls > ipRates) {
       return next({
-        log: `Express error handler caught too many requests from this IP address: ${ip}`
+        log: `Express error handler caught too many requests from this IP address: ${ip}`,
       });
     }
     return next();
@@ -227,7 +239,7 @@ class QuellCache {
       NOTE: this is not the logic we should be using for mutations--rather than flushing the cache and resetting the idCache
         we should instead be updating the cache following a mutation.
       */
-      this.redisCache.flushAll();
+      // this.redisCache.flushAll();
       idCache = {};
 
       let mutationQueryObject;
@@ -431,7 +443,7 @@ class QuellCache {
           // auxillary object for storing arguments, aliases, field-specific options, and more
           // query-wide options should be handled on Quell's options object
           const auxObj = {
-            __id: null
+            __id: null,
           };
           node.arguments.forEach((arg) => {
             const key = arg.name.value;
@@ -474,7 +486,7 @@ class QuellCache {
           // adds auxObj fields to prototype, allowing future access to type, alias, args, etc.
           fieldArgs[fieldType] = {
             ...argsObj[fieldType],
-            ...auxObj
+            ...auxObj,
           };
           // add value to stacks to keep track of depth-first parsing path
           stack.push(fieldType);
@@ -482,7 +494,7 @@ class QuellCache {
         leave() {
           // pop stacks to keep track of depth-first parsing path
           stack.pop();
-        }
+        },
       },
       SelectionSet: {
         // selection sets contain all of the sub-fields
@@ -520,7 +532,7 @@ class QuellCache {
             // fieldArgs contains arguments, aliases, etc.
             const fieldsObject = {
               ...fieldsValues,
-              ...fieldArgs[stack[stack.length - 1]]
+              ...fieldArgs[stack[stack.length - 1]],
             };
             // loop through stack to get correct path in proto for temp object;
             stack.reduce((prev, curr, index) => {
@@ -533,8 +545,8 @@ class QuellCache {
         leave() {
           // pop stacks to keep track of depth-first parsing path
           stack.pop();
-        }
-      }
+        },
+      },
     });
     return { proto, operationType, frags };
   }
@@ -734,7 +746,7 @@ class QuellCache {
       '__Schema',
       '__TypeKind',
       '__InputValue',
-      '__Directive'
+      '__Directive',
     ];
     // exclude built-in types
     const customTypes = Object.keys(typesList).filter(
@@ -1045,7 +1057,7 @@ class QuellCache {
    * @param {Object} queryObject - a modified version of the prototype with only values we want to pass onto the queryString
    * @param {String} operationType - a string indicating the GraphQL operation type- 'query', 'mutation', etc.
    */
-  createQueryStr(queryObject, operationType) {
+  createQueryStr(queryObject: QueryObject, operationType: string): string {
     if (Object.keys(queryObject).length === 0) return '';
     const openCurly = '{';
     const closeCurly = '}';
@@ -1070,7 +1082,7 @@ class QuellCache {
      */
     // recurse to build nested query strings
     // ignore all __values (ie __alias and __args)
-    function stringify(fields) {
+    function stringify(fields: QueryFields): string {
       // initialize inner string
       let innerStr = '';
       // iterate over KEYS in OBJECT
@@ -1081,16 +1093,20 @@ class QuellCache {
         }
         // is key object? && !key.includes('__'), recurse stringify
         if (typeof fields[key] === 'object' && !key.includes('__')) {
-          innerStr += `${key}${getAliasType(fields[key])}${getArgs(
-            fields[key]
-          )} ${openCurly} ${stringify(fields[key])}${closeCurly} `;
+          const fieldsObj: QueryFields = fields[key];
+          // TODO try to fix this error
+          const type: string = getAliasType(fieldsObj);
+          const args: string = getArgs(fieldsObj);
+          innerStr += `${key}${type}${args} ${openCurly} ${stringify(
+            fieldsObj
+          )}${closeCurly} `;
         }
       }
 
       return innerStr;
     }
     // iterates through arguments object for current field and creates arg string to attach to query string
-    function getArgs(fields) {
+    function getArgs(fields: QueryFields): string {
       let argString = '';
       if (!fields.__args) return '';
 
@@ -1105,12 +1121,12 @@ class QuellCache {
     }
 
     // if Alias exists, formats alias for query string
-    function getAliasType(fields) {
+    function getAliasType(fields: QueryFields): string {
       return fields.__alias ? `: ${fields.__type}` : '';
     }
 
     // create final query string
-    const queryStr = openCurly + mainStr + ' ' + closeCurly;
+    const queryStr: string = openCurly + mainStr + ' ' + closeCurly;
     return operationType ? operationType + ' ' + queryStr : queryStr;
   }
 
@@ -1122,14 +1138,19 @@ class QuellCache {
    * @param {Object} queryProto - current slice of the prototype being used as a template for final response object structure
    * @param {Boolean} fromArray - whether or not the current recursive loop came from within an array, should NOT be supplied to function call
    */
-  joinResponses(cacheResponse, serverResponse, queryProto, fromArray = false) {
-    let mergedResponse = {};
+  joinResponses(
+    cacheResponse: DataResponse,
+    serverResponse: DataResponse,
+    queryProto: QueryObject,
+    fromArray = false
+  ): MergedResponse {
+    let mergedResponse: MergedResponse = {};
 
     // loop through fields object keys, the "source of truth" for structure
     // store combined responses in mergedResponse
     for (const key in queryProto) {
       // for each key, check whether data stored at that key is an array or an object
-      const checkResponse = Object.prototype.hasOwnProperty.call(
+      const checkResponse: DataResponse = Object.prototype.hasOwnProperty.call(
         serverResponse,
         key
       )
@@ -1138,36 +1159,36 @@ class QuellCache {
       if (Array.isArray(checkResponse[key])) {
         // merging logic depends on whether the data is on the cacheResponse, serverResponse, or both
         // if both of the caches contain the same keys...
-        if (
-          Object.prototype.hasOwnProperty.call(cacheResponse, key) &&
-          Object.prototype.hasOwnProperty.call(serverResponse, key)
-        ) {
+        if (cacheResponse[key] && serverResponse[key]) {
           // we first check to see if the responses have identical keys to both avoid
           // only returning 1/2 of the data (ex: there are 2 objects in the cache and
           // you query for 4 objects (which includes the 2 cached objects) only returning
           // the 2 new objects from the server)
           // if the keys are identical, we can return a "simple" merge of both
-          const cacheKeys = Object.keys(cacheResponse[key][0]);
-          const serverKeys = Object.keys(serverResponse[key][0]);
+          const cacheKeys: string[] = Object.keys(
+            (cacheResponse[key] as Data)[0]
+          );
+          const serverKeys: string[] = Object.keys(
+            (serverResponse[key] as Data)[0]
+          );
           let keysSame = true;
           for (let n = 0; n < cacheKeys.length; n++) {
             if (cacheKeys[n] !== serverKeys[n]) keysSame = false;
           }
-
           if (keysSame) {
             mergedResponse[key] = [
-              ...cacheResponse[key],
-              ...serverResponse[key]
+              ...(cacheResponse[key] as Data[]),
+              ...(serverResponse[key] as Data[]),
             ];
           }
           // otherwise, we need to combine the responses at the object level
           else {
             const mergedArray = [];
-            for (let i = 0; i < cacheResponse[key].length; i++) {
+            for (let i = 0; i < (cacheResponse[key] as Data[]).length; i++) {
               // for each index of array, combine cache and server response objects
-              const joinedResponse = this.joinResponses(
-                { [key]: cacheResponse[key][i] },
-                { [key]: serverResponse[key][i] },
+              const joinedResponse: MergedResponse = this.joinResponses(
+                { [key]: (cacheResponse[key] as Data[])[i] },
+                { [key]: (serverResponse[key] as Data[])[i] },
                 { [key]: queryProto[key] },
                 true
               );
@@ -1176,7 +1197,7 @@ class QuellCache {
             }
             mergedResponse[key] = mergedArray;
           }
-        } else if (Object.prototype.hasOwnProperty.call(cacheResponse, key)) {
+        } else if (cacheResponse[key]) {
           mergedResponse[key] = cacheResponse[key];
         } else {
           mergedResponse[key] = serverResponse[key];
@@ -1186,11 +1207,14 @@ class QuellCache {
           // if object doesn't come from an array, we must assign on the object at the given key
           mergedResponse[key] = {
             ...cacheResponse[key],
-            ...serverResponse[key]
+            ...serverResponse[key],
           };
         } else {
           // if the object comes from an array, we do not want to assign to a key as per GQL spec
-          mergedResponse = { ...cacheResponse[key], ...serverResponse[key] };
+          (mergedResponse as object) = {
+            ...cacheResponse[key],
+            ...serverResponse[key],
+          };
         }
 
         for (const fieldName in queryProto[key]) {
@@ -1200,33 +1224,44 @@ class QuellCache {
             !fieldName.includes('__')
           ) {
             // recurse joinResponses on that object to create deeply nested copy on mergedResponse
-            let mergedRecursion = {};
+            let mergedRecursion: MergedResponse = {};
             if (
-              Object.prototype.hasOwnProperty.call(cacheResponse, key) &&
-              Object.prototype.hasOwnProperty.call(serverResponse, key)
+              (cacheResponse[key] as Data)[fieldName] &&
+              (serverResponse[key] as Data)[fieldName]
             ) {
               mergedRecursion = this.joinResponses(
-                { [fieldName]: cacheResponse[key][fieldName] },
-                { [fieldName]: serverResponse[key][fieldName] },
-                { [fieldName]: queryProto[key][fieldName] }
+                {
+                  [fieldName]: (cacheResponse[key] as MergedResponse)[
+                    fieldName
+                  ],
+                },
+                {
+                  [fieldName]: (serverResponse[key] as MergedResponse)[
+                    fieldName
+                  ],
+                },
+                { [fieldName]: (queryProto[key] as QueryObject)[fieldName] }
               );
-            } else if (
-              Object.prototype.hasOwnProperty.call(cacheResponse, key)
-            ) {
-              mergedRecursion[fieldName] = cacheResponse[key][fieldName];
+            } else if ((cacheResponse[key] as Data)[fieldName]) {
+              mergedRecursion[fieldName] = (
+                cacheResponse[key] as MergedResponse
+              )[fieldName];
             } else {
-              mergedRecursion[fieldName] = serverResponse[key][fieldName];
+              mergedRecursion[fieldName] = (
+                serverResponse[key] as MergedResponse
+              )[fieldName];
             }
 
             // place on merged response
             mergedResponse[key] = {
               ...mergedResponse[key],
-              ...mergedRecursion
+              ...mergedRecursion,
             };
           }
         }
       }
     }
+
     return mergedResponse;
   }
 
@@ -1236,8 +1271,8 @@ class QuellCache {
    * @param {String} key - unique id under which the cached data will be stored
    * @param {Object} item - item to be cached
    */
-  writeToCache(key, item) {
-    const lowerKey = key.toLowerCase();
+  writeToCache(key: string, item: Type | string[]): void {
+    const lowerKey: string = key.toLowerCase();
     if (!key.includes('uncacheable')) {
       this.redisCache.set(lowerKey, JSON.stringify(item));
       this.redisCache.EXPIRE(lowerKey, this.cacheExpiration);
@@ -1254,21 +1289,21 @@ class QuellCache {
    * @param {Object} mutationQueryObject - arguments and values for the mutation
    */
   async updateCacheByMutation(
-    dbRespDataRaw,
-    mutationName,
-    mutationType,
-    mutationQueryObject
+    dbRespDataRaw: DatabaseResponseDataRaw,
+    mutationName: string,
+    mutationType: string,
+    mutationQueryObject: QueryFields
   ) {
-    let fieldsListKey;
-    const dbRespId = dbRespDataRaw.data[mutationName]?.id;
-    let dbRespData = JSON.parse(
+    let fieldsListKey: string;
+    const dbRespId: string = dbRespDataRaw.data[mutationName]?.id;
+    let dbRespData: Type = JSON.parse(
       JSON.stringify(dbRespDataRaw.data[mutationName])
     );
 
     if (!dbRespData) dbRespData = {};
 
     for (const queryKey in this.queryMap) {
-      const queryKeyType = this.queryMap[queryKey];
+      const queryKeyType: string = this.queryMap[queryKey];
 
       if (JSON.stringify(queryKeyType) === JSON.stringify([mutationType])) {
         fieldsListKey = queryKey;
@@ -1278,16 +1313,21 @@ class QuellCache {
 
     /**
      * Helper function that takes in a list of fields to remove from the
-     * @param {Set<String> | Array} fieldKeysToRemove - field keys to be removed from the cached field list
+     * @param {Set<string> | Array<string>} fieldKeysToRemove - field keys to be removed from the cached field list
      */
-    const removeFromFieldKeysList = async (fieldKeysToRemove) => {
+    const removeFromFieldKeysList = async (
+      fieldKeysToRemove: Set<string> | Array<string>
+    ) => {
       if (fieldsListKey) {
         const cachedFieldKeysListRaw = await this.getFromRedis(fieldsListKey);
-        const cachedFieldKeysList = JSON.parse(cachedFieldKeysListRaw);
+        const cachedFieldKeysList: string[] = JSON.parse(
+          cachedFieldKeysListRaw
+        );
 
-        await fieldKeysToRemove.forEach((fieldKey) => {
+        await fieldKeysToRemove.forEach((fieldKey: string) => {
           // index position of field key to remove from list of field keys
-          const removalFieldKeyIdx = cachedFieldKeysList.indexOf(fieldKey);
+          const removalFieldKeyIdx: number =
+            cachedFieldKeysList.indexOf(fieldKey);
 
           if (removalFieldKeyIdx !== -1) {
             cachedFieldKeysList.splice(removalFieldKeyIdx, 1);
@@ -1303,14 +1343,18 @@ class QuellCache {
      */
     const deleteApprFieldKeys = async () => {
       if (fieldsListKey) {
-        const cachedFieldKeysListRaw = await this.getFromRedis(fieldsListKey);
-        const cachedFieldKeysList = JSON.parse(cachedFieldKeysListRaw);
+        const cachedFieldKeysListRaw: string = await this.getFromRedis(
+          fieldsListKey
+        );
+        const cachedFieldKeysList: string[] = JSON.parse(
+          cachedFieldKeysListRaw
+        );
 
-        const fieldKeysToRemove = new Set();
+        const fieldKeysToRemove: Set<string> = new Set();
         for (let i = 0; i < cachedFieldKeysList.length; i++) {
-          const fieldKey = cachedFieldKeysList[i];
+          const fieldKey: string = cachedFieldKeysList[i];
 
-          const fieldKeyValueRaw = await this.getFromRedis(
+          const fieldKeyValueRaw: string = await this.getFromRedis(
             fieldKey.toLowerCase()
           );
           const fieldKeyValue = JSON.parse(fieldKeyValueRaw);
@@ -1318,7 +1362,8 @@ class QuellCache {
           let remove = true;
           for (const arg in mutationQueryObject.__args) {
             if (Object.prototype.hasOwnProperty.call(fieldKeyValue, arg)) {
-              const argValue = mutationQueryObject.__args[arg];
+              const argValue: string | boolean =
+                mutationQueryObject.__args[arg];
               if (fieldKeyValue[arg] !== argValue) {
                 remove = false;
                 break;
@@ -1384,7 +1429,7 @@ class QuellCache {
     };
 
     const hypotheticalRedisKey = `${mutationType.toLowerCase()}--${dbRespId}`;
-    const redisKey: string = await this.getFromRedis(hypotheticalRedisKey);
+    const redisKey: string | null = await this.getFromRedis(hypotheticalRedisKey);
 
     if (redisKey) {
       // key was found in redis server cache so mutation is either update or delete mutation
@@ -1412,7 +1457,7 @@ class QuellCache {
         // if (!fieldsListKey) throw 'error: schema must have a GraphQLList';
 
         const removalFieldKeysList = [];
-
+        // TODO - look into what this is being used for if anything
         if (mutationName.substring(0, 3) === 'del') {
           // mutation is delete mutation
           deleteApprFieldKeys();
@@ -1430,7 +1475,7 @@ class QuellCache {
    * deleteCacheById removes key-value from the cache unless the key indicates that the item is not available.
    * @param {String} key - unique id under which the cached data is stored that needs to be removed
    */
-  async deleteCacheById(key) {
+  async deleteCacheById(key: string) {
     try {
       await this.redisCache.del(key);
     } catch (err) {
@@ -1467,7 +1512,7 @@ class QuellCache {
               { [dataType]: el },
               map,
               {
-                [dataType]: currProto
+                [dataType]: currProto,
               },
               currName
             );
@@ -1524,7 +1569,7 @@ class QuellCache {
               { [key]: currField[key] },
               map,
               {
-                [key]: protoField[resultName][key]
+                [key]: protoField[resultName][key],
               },
               currName
             );
@@ -1543,6 +1588,7 @@ class QuellCache {
    * @param {Object} res - Express response object
    * @param {Function} next - Express next middleware function
    */
+  clearCache(req: Request, res: Response, next: NextFunction) {
   clearCache(req: Request, res: Response, next: NextFunction) {
     console.log('Clearing Redis Cache');
     this.redisCache.flushAll();
