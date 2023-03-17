@@ -74,11 +74,11 @@ export interface FragsType {
 }
 
 export interface MutationMapType {
-  [mutationName: string]: string;
+  [mutationName: string]: string | undefined;
 }
 
 export interface QueryMapType {
-  [queryName: string]: string | string[];
+  [queryName: string]: string | string[] | undefined;
 }
 
 export interface FieldsMapType {
@@ -233,7 +233,11 @@ export type MutationTypeFieldsType = {
 };
 
 export type QueryTypeFieldsType = {
-  [key: string]: string | QueryTypeFieldsType | QueryTypeFieldsType[];
+  [key: string]:
+    | string
+    | QueryTypeFieldsType
+    | QueryTypeFieldsType[]
+    | undefined;
 };
 
 export type TypeMapFieldsType = {

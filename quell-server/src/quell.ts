@@ -43,7 +43,6 @@ import type {
   QueryTypeFieldsType,
   TypeMapFieldsType,
   ItemFromCacheType,
-  PropsFilterType,
   RedisOptionsType,
   RedisStatsType,
   ServerErrorType,
@@ -883,9 +882,7 @@ class QuellCache implements QuellCache {
       | GraphQLSchema['_mutationType']
       | (() => MutationTypeFieldsType) = schema.getMutationType()?.getFields();
     // if queryTypeFields is a function, invoke it to get object with queries
-    const mutationsObj:
-      | MutationTypeFieldsType
-      | (() => MutationTypeFieldsType) =
+    const mutationsObj: MutationTypeFieldsType =
       typeof mutationTypeFields === 'function'
         ? mutationTypeFields()
         : mutationTypeFields;
@@ -893,7 +890,7 @@ class QuellCache implements QuellCache {
     for (const mutation in mutationsObj) {
       // get name of GraphQL type returned by query
       // if ofType --> this is collection, else not collection
-      let returnedType: string | string[] | void;
+      let returnedType: string | string[] | undefined;
       const obj = mutationsObj[mutation] as MutationTypeFieldsType;
       const obj1 = obj.type as MutationTypeFieldsType;
       const obj2 = obj1.typeof as MutationTypeFieldsType;
@@ -907,7 +904,8 @@ class QuellCache implements QuellCache {
         if (obj1.name) {
           if (obj1.name === typeof 'string') returnedType = obj1.name;
         }
-        mutationMap[mutation] = returnedType;
+        mutationMap[mutation] =
+          returnedType !== undefined ? (returnedType as string) : undefined;
       }
     }
     return mutationMap;
@@ -928,14 +926,14 @@ class QuellCache implements QuellCache {
       | (() => QueryTypeFieldsType) = schema.getQueryType()?.getFields();
 
     // if queryTypeFields is a function, invoke it to get object with queries
-    const queriesObj: QueryTypeFieldsType | (() => QueryTypeFieldsType) =
+    const queriesObj: QueryTypeFieldsType =
       typeof queryTypeFields === 'function'
         ? queryTypeFields()
         : queryTypeFields;
     for (const query in queriesObj) {
       // get name of GraphQL type returned by query
       // if ofType --> this is collection, else not collection
-      let returnedType: string | string[] | void;
+      let returnedType: string | string[] | undefined;
       const obj = queriesObj[query] as QueryTypeFieldsType;
       const obj1 = obj.type as QueryTypeFieldsType;
       const obj2 = obj1.typeof as QueryTypeFieldsType;
@@ -949,7 +947,10 @@ class QuellCache implements QuellCache {
         if (obj1.name) {
           if (obj1.name === typeof 'string') returnedType = obj1.name;
         }
-        queryMap[query] = returnedType;
+        queryMap[query] =
+          returnedType !== undefined
+            ? (returnedType as string | string[])
+            : undefined;
       }
     }
     return queryMap;
@@ -1030,21 +1031,34 @@ class QuellCache implements QuellCache {
     for (const typeKey in prototype) {
       // if current key is a root query, check cache and set any results to itemFromCache
       if (prototypeKeys.includes(typeKey)) {
-        let cacheID: string = this.generateCacheID(prototype[typeKey]);
+        let cacheID: string = this.generateCacheID(
+          prototype[typeKey] as ProtoObjType
+        );
+        let keyName: string | undefined;
         if (typeof subID === 'string') {
           cacheID = subID;
         }
         // let cacheID: string = subID || this.generateCacheID(prototype[typeKey]);
-        const keyName: string = prototype[typeKey].__args?.name;
+        // value won't always be at .name on the args object
+        if ((prototype[typeKey] as ProtoObjType)?.__args === null) {
+          keyName = undefined;
+        } else {
+          keyName = Object.values(
+            (prototype[typeKey] as ProtoObjType)?.__args as object
+          )[0];
+        }
         // is this also redundent
-        if (idCache[keyName] && idCache[keyName][cacheID]) {
-          cacheID = idCache[keyName][cacheID];
+        if (idCache[keyName as string] && idCache[keyName as string][cacheID]) {
+          cacheID = idCache[keyName as string][cacheID] as string;
         }
         // capitalize first letter of cache id just in case
         const capitalized: string =
-          cacheID.charAt(0).toUpperCase() + cacheID.slice(1);
-        if (idCache[keyName] && idCache[keyName][capitalized]) {
-          cacheID = idCache[keyName][capitalized];
+          (cacheID as string).charAt(0).toUpperCase() + cacheID.slice(1);
+        if (
+          idCache[keyName as string] &&
+          idCache[keyName as string][capitalized]
+        ) {
+          cacheID = idCache[keyName as string][capitalized] as string;
         }
         const cacheResponse: string | null | void = await this.getFromRedis(
           cacheID
@@ -1123,7 +1137,7 @@ class QuellCache implements QuellCache {
             );
             // execute any remnants in redis run queue
             await this.execRedisRunQueue(redisRunQueue);
-          } 
+          }
         }
       }
       // recurse through buildFromCache using typeKey, prototype
@@ -1153,7 +1167,7 @@ class QuellCache implements QuellCache {
           );
           if (cacheResponse) itemFromCache[typeKey] = JSON.parse(cacheResponse);
           await this.buildFromCache(
-            prototype[typeKey],
+            prototype[typeKey] as ProtoObjType,
             prototypeKeys,
             itemFromCache[typeKey],
             false
@@ -1162,7 +1176,7 @@ class QuellCache implements QuellCache {
       }
       // if not an array and not a recursive call, handle normally
       else {
-        for (const field in prototype[typeKey]) {
+        for (const field in prototype[typeKey] as ProtoObjType) {
           // if field is not found in cache then toggle to false
           if (
             itemFromCache[typeKey] &&
@@ -1171,18 +1185,18 @@ class QuellCache implements QuellCache {
               field
             ) &&
             !field.includes('__') &&
-            typeof prototype[typeKey][field] !== 'object'
+            typeof (prototype[typeKey] as ProtoObjType)[field] !== 'object'
           ) {
-            prototype[typeKey][field] = false;
+            (prototype[typeKey] as ProtoObjType)[field] = false;
           }
 
           // if field contains a nested query, then recurse the function and iterate through the nested query
           if (
             !field.includes('__') &&
-            typeof prototype[typeKey][field] === 'object'
+            typeof (prototype[typeKey] as ProtoObjType)[field] === 'object'
           ) {
             await this.buildFromCache(
-              prototype[typeKey][field],
+              (prototype[typeKey] as ProtoObjType)[field] as ProtoObjType,
               prototypeKeys,
               itemFromCache[typeKey][field] || {},
               false
@@ -1192,9 +1206,9 @@ class QuellCache implements QuellCache {
           else if (
             !itemFromCache[typeKey] &&
             !field.includes('__') &&
-            typeof prototype[typeKey][field] !== 'object'
+            typeof (prototype[typeKey] as ProtoObjType)[field] !== 'object'
           ) {
-            prototype[typeKey][field] = false;
+            (prototype[typeKey] as ProtoObjType)[field] = false;
           }
         }
       }
@@ -1213,7 +1227,7 @@ class QuellCache implements QuellCache {
   generateCacheID(queryProto: ProtoObjType): string {
     const cacheID: string = queryProto.__id
       ? `${queryProto.__type}--${queryProto.__id}`
-      : queryProto.__type;
+      : (queryProto.__type as string);
     return cacheID;
   }
 
@@ -1228,7 +1242,7 @@ class QuellCache implements QuellCache {
     // iterate over every key in map
     // true values are filtered out, false values are placed on output
     for (const key in map) {
-      const reduced: ProtoObjType = reducer(map[key]);
+      const reduced: ProtoObjType = reducer(map[key] as ProtoObjType);
       if (Object.keys(reduced).length > 0) {
         output[key] = reduced;
       }
@@ -1241,11 +1255,11 @@ class QuellCache implements QuellCache {
      * @returns {Object} Filtered object of only queries without a value or an empty object
      */
     // filter fields object to contain only values needed from server
-    function reducer(fields: ProtoObjType): ProtoObjType | {} {
+    function reducer(fields: ProtoObjType): ProtoObjType {
       // filter stores values needed from server
-      const filter: { [key: string]: boolean | {} } = {};
+      const filter: ProtoObjType = {};
       // propsFilter for properties such as args, aliases, etc.
-      const propsFilter: PropsFilterType = {};
+      const propsFilter: ProtoObjType = {};
 
       for (const key in fields) {
         // if value is false, place directly on filter
@@ -1259,7 +1273,7 @@ class QuellCache implements QuellCache {
 
         // if value is an object, recurse to determine nested values
         if (typeof fields[key] === 'object' && !key.includes('__')) {
-          const reduced = reducer(fields[key]);
+          const reduced: ProtoObjType = reducer(fields[key] as ProtoObjType);
           // if reduced object has any values to pass, place on filter
           if (Object.keys(reduced).length > 1) {
             filter[key] = reduced;
