@@ -213,7 +213,7 @@ export interface Type {
 }
 
 export interface MergedResponse {
-  [key: string]: Data | Data[] | boolean;
+  [key: string]: Data | Data[] | boolean | MergedResponse[] | MergedResponse;
 }
 
 export interface DataResponse {

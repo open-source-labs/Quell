@@ -330,7 +330,7 @@ class QuellCache implements QuellCache {
         // a valid mutation. Update the mutation query object, name, type variables.
         if (Object.prototype.hasOwnProperty.call(proto, mutation)) {
           mutationName = mutation;
-          mutationType = this.mutationMap[mutation];
+          mutationType = this.mutationMap[mutation] as string;
           mutationQueryObject = proto[mutation] as ProtoObjType;
           break;
         }
@@ -1318,9 +1318,11 @@ class QuellCache implements QuellCache {
     // iterate over every key in queryObject
     // place key into query object
     for (const key in queryObject) {
-      mainStr += ` ${key}${getAliasType(queryObject[key])}${getArgs(
-        queryObject[key]
-      )} ${openCurly} ${stringify(queryObject[key])}${closeCurly}`;
+      mainStr += ` ${key}${getAliasType(
+        queryObject[key] as QueryFields
+      )}${getArgs(queryObject[key] as QueryFields)} ${openCurly} ${stringify(
+        queryObject[key] as QueryFields
+      )}${closeCurly}`;
     }
 
     /**
@@ -1342,7 +1344,7 @@ class QuellCache implements QuellCache {
         }
         // is key object? && !key.includes('__'), recurse stringify
         if (typeof fields[key] === 'object' && !key.includes('__')) {
-          const fieldsObj: QueryFields = fields[key];
+          const fieldsObj: QueryFields = fields[key] as QueryFields;
           // TODO try to fix this error
           const type: string = getAliasType(fieldsObj);
           const args: string = getArgs(fieldsObj);
@@ -1361,8 +1363,8 @@ class QuellCache implements QuellCache {
 
       Object.keys(fields.__args).forEach((key) => {
         argString
-          ? (argString += `, ${key}: "${fields.__args[key]}"`)
-          : (argString += `${key}: "${fields.__args[key]}"`);
+          ? (argString += `, ${key}: "${(fields.__args as QueryFields)[key]}"`)
+          : (argString += `${key}: "${(fields.__args as QueryFields)[key]}"`);
       });
 
       // return arg string in parentheses, or if no arguments, return an empty string
@@ -1441,7 +1443,6 @@ class QuellCache implements QuellCache {
                 { [key]: queryProto[key] },
                 true
               );
-
               mergedArray.push(joinedResponse);
             }
             mergedResponse[key] = mergedArray;
@@ -1466,10 +1467,10 @@ class QuellCache implements QuellCache {
           };
         }
 
-        for (const fieldName in queryProto[key]) {
+        for (const fieldName in queryProto[key] as ProtoObjType) {
           // check for nested objects
           if (
-            typeof queryProto[key][fieldName] === 'object' &&
+            typeof (queryProto[key] as ProtoObjType)[fieldName] === 'object' &&
             !fieldName.includes('__')
           ) {
             // recurse joinResponses on that object to create deeply nested copy on mergedResponse
@@ -1480,12 +1481,10 @@ class QuellCache implements QuellCache {
             ) {
               mergedRecursion = this.joinResponses(
                 {
-                  [fieldName]: (cacheResponse[key] as MergedResponse)[fieldName]
+                  [fieldName]: (cacheResponse[key] as DataResponse)[fieldName]
                 },
                 {
-                  [fieldName]: (serverResponse[key] as MergedResponse)[
-                    fieldName
-                  ]
+                  [fieldName]: (serverResponse[key] as DataResponse)[fieldName]
                 },
                 { [fieldName]: (queryProto[key] as QueryObject)[fieldName] }
               );
@@ -1498,12 +1497,23 @@ class QuellCache implements QuellCache {
                 serverResponse[key] as MergedResponse
               )[fieldName];
             }
-
+            if (
+              typeof mergedResponse[key] === 'object' ||
+              Array.isArray(mergedResponse[key])
+            ) {
+              mergedResponse[key] = {
+                ...(mergedResponse[key] as MergedResponse | MergedResponse[]),
+                ...mergedRecursion
+              };
+            } else {
+              // case for when mergedResponse[key] is not an object or array and possibly
+              // boolean or a string
+              mergedResponse[key] = {
+                key: mergedResponse[key] as Data | boolean,
+                ...mergedRecursion
+              };
+            }
             // place on merged response
-            mergedResponse[key] = {
-              ...mergedResponse[key],
-              ...mergedRecursion
-            };
           }
         }
       }
@@ -1550,7 +1560,9 @@ class QuellCache implements QuellCache {
     if (!dbRespData) dbRespData = {};
 
     for (const queryKey in this.queryMap) {
-      const queryKeyType: string = this.queryMap[queryKey];
+      const queryKeyType: string | string[] = this.queryMap[queryKey] as
+        | string
+        | string[];
 
       if (JSON.stringify(queryKeyType) === JSON.stringify([mutationType])) {
         fieldsListKey = queryKey;
