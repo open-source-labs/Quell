@@ -53,7 +53,8 @@ import type {
   Type,
   MergedResponse,
   DataResponse,
-  Data
+  Data,
+  TypeData
 } from './types';
 
 const defaultCostParams: CostParamsType = {
@@ -335,7 +336,8 @@ class QuellCache implements QuellCache {
           break;
         }
       }
-
+      //Can possibly modify query to ALWAYS have an ID but not necessarily return it back to client
+      // unless they also queried for it.
       // Execute the operation and add the result to the response.
       graphql({ schema: this.schema, source: queryString })
         .then((databaseResponse: ExecutionResult): void => {
@@ -1552,12 +1554,16 @@ class QuellCache implements QuellCache {
     mutationQueryObject: QueryFields | ProtoObjType
   ) {
     let fieldsListKey: string;
-    const dbRespId: string = dbRespDataRaw.data[mutationName]?.id;
-    let dbRespData: Type = JSON.parse(
-      JSON.stringify(dbRespDataRaw.data[mutationName])
-    );
-
-    if (!dbRespData) dbRespData = {};
+    let dbRespId = '';
+    let dbRespData: Type = {};
+    if (dbRespDataRaw.data) {
+      // TODO: Need to modify this logic if ID is not being requested back during
+      // mutation query.
+      // dbRespDataRaw.data[mutationName] will always return the value at the mutationName
+      // in the form of an object
+      dbRespId = (dbRespDataRaw.data[mutationName] as TypeData)?.id as string;
+      dbRespData = JSON.parse(JSON.stringify(dbRespDataRaw.data[mutationName]));
+    }
 
     for (const queryKey in this.queryMap) {
       const queryKeyType: string | string[] = this.queryMap[queryKey] as
@@ -1579,20 +1585,25 @@ class QuellCache implements QuellCache {
     ) => {
       if (fieldsListKey) {
         const cachedFieldKeysListRaw = await this.getFromRedis(fieldsListKey);
-        const cachedFieldKeysList: string[] = JSON.parse(
-          cachedFieldKeysListRaw
-        );
+        if (
+          cachedFieldKeysListRaw !== null &&
+          cachedFieldKeysListRaw !== undefined
+        ) {
+          const cachedFieldKeysList: string[] = JSON.parse(
+            cachedFieldKeysListRaw
+          );
 
-        await fieldKeysToRemove.forEach((fieldKey: string) => {
-          // index position of field key to remove from list of field keys
-          const removalFieldKeyIdx: number =
-            cachedFieldKeysList.indexOf(fieldKey);
+          fieldKeysToRemove.forEach((fieldKey: string) => {
+            // index position of field key to remove from list of field keys
+            const removalFieldKeyIdx: number =
+              cachedFieldKeysList.indexOf(fieldKey);
 
-          if (removalFieldKeyIdx !== -1) {
-            cachedFieldKeysList.splice(removalFieldKeyIdx, 1);
-          }
-        });
-        this.writeToCache(fieldsListKey, cachedFieldKeysList);
+            if (removalFieldKeyIdx !== -1) {
+              cachedFieldKeysList.splice(removalFieldKeyIdx, 1);
+            }
+          });
+          this.writeToCache(fieldsListKey, cachedFieldKeysList);
+        }
       }
     };
 
@@ -1602,43 +1613,53 @@ class QuellCache implements QuellCache {
      */
     const deleteApprFieldKeys = async () => {
       if (fieldsListKey) {
-        const cachedFieldKeysListRaw: string = await this.getFromRedis(
-          fieldsListKey
-        );
-        const cachedFieldKeysList: string[] = JSON.parse(
-          cachedFieldKeysListRaw
-        );
-
-        const fieldKeysToRemove: Set<string> = new Set();
-        for (let i = 0; i < cachedFieldKeysList.length; i++) {
-          const fieldKey: string = cachedFieldKeysList[i];
-
-          const fieldKeyValueRaw: string = await this.getFromRedis(
-            fieldKey.toLowerCase()
+        const cachedFieldKeysListRaw = await this.getFromRedis(fieldsListKey);
+        if (
+          cachedFieldKeysListRaw !== null &&
+          cachedFieldKeysListRaw !== undefined
+        ) {
+          const cachedFieldKeysList: string[] = JSON.parse(
+            cachedFieldKeysListRaw
           );
-          const fieldKeyValue = JSON.parse(fieldKeyValueRaw);
 
-          let remove = true;
-          for (const arg in mutationQueryObject.__args) {
-            if (Object.prototype.hasOwnProperty.call(fieldKeyValue, arg)) {
-              const argValue: string | boolean =
-                mutationQueryObject.__args[arg];
-              if (fieldKeyValue[arg] !== argValue) {
-                remove = false;
-                break;
+          const fieldKeysToRemove: Set<string> = new Set();
+          for (let i = 0; i < cachedFieldKeysList.length; i++) {
+            const fieldKey: string = cachedFieldKeysList[i];
+
+            const fieldKeyValueRaw = await this.getFromRedis(
+              fieldKey.toLowerCase()
+            );
+            if (fieldKeyValueRaw !== null && fieldKeyValueRaw !== undefined) {
+              const fieldKeyValue = JSON.parse(fieldKeyValueRaw);
+
+              let remove = true;
+              for (const arg in mutationQueryObject.__args as ProtoObjType) {
+                if (Object.prototype.hasOwnProperty.call(fieldKeyValue, arg)) {
+                  // how can argValue ever be a boolean?
+                  // argValue is the value at each argument of the query
+                  // and that is typically a string/value you are adding/removing
+                  // with the mutation query
+                  const argValue: string = (
+                    mutationQueryObject.__args as ProtoObjType
+                  )[arg] as string;
+                  if (fieldKeyValue[arg] !== argValue) {
+                    remove = false;
+                    break;
+                  }
+                } else {
+                  remove = false;
+                  break;
+                }
               }
-            } else {
-              remove = false;
-              break;
+
+              if (remove === true) {
+                fieldKeysToRemove.add(fieldKey);
+                this.deleteCacheById(fieldKey.toLowerCase());
+              }
             }
           }
-
-          if (remove === true) {
-            fieldKeysToRemove.add(fieldKey);
-            this.deleteCacheById(fieldKey.toLowerCase());
-          }
+          removeFromFieldKeysList(fieldKeysToRemove);
         }
-        removeFromFieldKeysList(fieldKeysToRemove);
       }
     };
 
@@ -1647,46 +1668,56 @@ class QuellCache implements QuellCache {
      * field key values and writes the updated values to the redis cache
      */
     const updateApprFieldKeys = async () => {
-      const cachedFieldKeysListRaw: string = await this.getFromRedis(
-        fieldsListKey
-      );
+      const cachedFieldKeysListRaw = await this.getFromRedis(fieldsListKey);
       // conditional just in case the resolver wants to throw an error. instead of making quellCache invoke it's caching functions, we break here.
       if (cachedFieldKeysListRaw === undefined) return;
       // list of field keys stored on redis
-      const cachedFieldKeysList: string[] = JSON.parse(cachedFieldKeysListRaw);
-
-      // iterate through field key field key values in redis, and compare to user
-      // specified mutation args to determine which fields are used to update by
-      // and which fields need to be updated.
-
-      cachedFieldKeysList.forEach(async (fieldKey) => {
-        const fieldKeyValueRaw: string = await this.getFromRedis(
-          fieldKey.toLowerCase()
+      if (cachedFieldKeysListRaw !== null) {
+        const cachedFieldKeysList: string[] = JSON.parse(
+          cachedFieldKeysListRaw
         );
-        const fieldKeyValue: ResponseDataType = JSON.parse(fieldKeyValueRaw);
 
-        const fieldsToUpdateBy: string[] = [];
-        const updatedFieldKeyValue: ResponseDataType = fieldKeyValue;
-        // arg in forEach method is a string such as name
-        // argVal is the actual value 'San Diego'
-        Object.entries(mutationQueryObject.__args).forEach(([arg, argVal]) => {
-          if (arg in fieldKeyValue && fieldKeyValue[arg] === argVal) {
-            // foreign keys are not fields to update by
-            if (arg.toLowerCase().includes('id') === false) {
-              // arg.toLowerCase
-              fieldsToUpdateBy.push(arg);
+        // iterate through field key field key values in redis, and compare to user
+        // specified mutation args to determine which fields are used to update by
+        // and which fields need to be updated.
+
+        cachedFieldKeysList.forEach(async (fieldKey) => {
+          const fieldKeyValueRaw = await this.getFromRedis(
+            fieldKey.toLowerCase()
+          );
+          if (fieldKeyValueRaw !== null && fieldKeyValueRaw !== undefined) {
+            const fieldKeyValue: ResponseDataType =
+              JSON.parse(fieldKeyValueRaw);
+
+            const fieldsToUpdateBy: string[] = [];
+            const updatedFieldKeyValue: ResponseDataType = fieldKeyValue;
+            // arg in forEach method is a string such as name
+            // argVal is the actual value 'San Diego'
+            // how would this work if it's a mutation query with arguments?
+            Object.entries(mutationQueryObject.__args as ProtoObjType).forEach(
+              ([arg, argVal]) => {
+                if (arg in fieldKeyValue && fieldKeyValue[arg] === argVal) {
+                  // foreign keys are not fields to update by
+                  if (arg.toLowerCase().includes('id') === false) {
+                    // arg.toLowerCase
+                    fieldsToUpdateBy.push(arg);
+                  }
+                } else {
+                  if (typeof argVal === 'string')
+                    updatedFieldKeyValue[arg] = argVal;
+                }
+              }
+            );
+
+            if (fieldsToUpdateBy.length > 0) {
+              this.writeToCache(fieldKey, updatedFieldKeyValue);
             }
-          } else {
-            if (typeof argVal === 'string') updatedFieldKeyValue[arg] = argVal;
           }
         });
-
-        if (fieldsToUpdateBy.length > 0) {
-          this.writeToCache(fieldKey, updatedFieldKeyValue);
-        }
-      });
+      }
     };
-
+    // if there is no id property on dbRespDataRaw.data[mutationName]
+    // dbRespId defaults to an empty string and no redisKey will be found
     const hypotheticalRedisKey = `${mutationType.toLowerCase()}--${dbRespId}`;
     const redisKey: string | void | null = await this.getFromRedis(
       hypotheticalRedisKey
@@ -1717,6 +1748,7 @@ class QuellCache implements QuellCache {
         // might have edge case here if there are no queries that have type GraphQLList
         // if (!fieldsListKey) throw 'error: schema must have a GraphQLList';
 
+        // unused variable
         const removalFieldKeysList = [];
         // TODO - look into what this is being used for if anything
         if (mutationName.substring(0, 3) === 'del') {
@@ -1761,14 +1793,14 @@ class QuellCache implements QuellCache {
     for (const resultName in responseData) {
       // currField is assigned to the nestedObject on responseData
       const currField = responseData[resultName];
-      const currProto: ProtoObjType = protoField[resultName];
+      const currProto: ProtoObjType = protoField[resultName] as ProtoObjType;
       if (Array.isArray(currField)) {
         for (let i = 0; i < currField.length; i++) {
           const el: ResponseDataType = currField[i];
 
-          const dataType: QueryMapType = map[resultName];
+          const dataType: string | undefined | string[] = map[resultName];
 
-          if (typeof el === 'object') {
+          if (typeof el === 'object' && typeof dataType === 'string') {
             await this.normalizeForCache(
               { [dataType]: el },
               map,
@@ -1785,13 +1817,12 @@ class QuellCache implements QuellCache {
         // temporary store for field properties
         const fieldStore: ResponseDataType = {};
 
+        const obj1 = currProto.__type as string;
+
         // create a cacheID based on __type and __id from the prototype
-        let cacheID: string = Object.prototype.hasOwnProperty.call(
-          map,
-          currProto.__type
-        )
-          ? map[currProto.__type]
-          : currProto.__type;
+        let cacheID: string = Object.prototype.hasOwnProperty.call(map, obj1)
+          ? (map[obj1] as string)
+          : (currProto.__type as string);
 
         cacheID += currProto.__id ? `--${currProto.__id}` : '';
 
@@ -1826,12 +1857,13 @@ class QuellCache implements QuellCache {
 
           // if object, recurse normalizeForCache assign in that object
           if (typeof currField[key] === 'object') {
-            if (protoField[resultName][key] !== null) {
+            if (protoField[resultName] !== null) {
+              const obj = protoField[resultName] as ProtoObjType;
               await this.normalizeForCache(
                 { [key]: currField[key] },
                 map,
                 {
-                  [key]: protoField[resultName][key]
+                  [key]: obj[key]
                 },
                 currName
               );
