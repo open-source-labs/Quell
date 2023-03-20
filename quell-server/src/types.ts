@@ -82,9 +82,7 @@ export interface QueryMapType {
 }
 
 export interface FieldsMapType {
-  [typeName: string]: {
-    [fieldName: string]: string;
-  };
+  [typeName: string]: FieldsObjectType;
 }
 
 // Incomplete because not being used

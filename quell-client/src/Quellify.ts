@@ -3,6 +3,14 @@ import { Collection } from 'lokijs';
 import { parse } from 'graphql/language/parser';
 import determineType from './helpers/determineType';
 import Loki from 'lokijs';
+import type {
+  CostParamsType,
+  IDLokiCacheType,
+  LokiGetType,
+  FetchObjType,
+  JSONObject,
+  JSONValue
+} from './types';
 const lokidb: Loki = new Loki('client-cache');
 let lokiCache: Collection = lokidb.addCollection('loki-client-cache', {
   disableMeta: true
@@ -17,24 +25,6 @@ i.e. {{JSONStringifiedQuery: $lokiID}}
   query3: $loki3
  };
  */
-
-// types to add to type file
-type IDLokiCacheType = {
-  [k: string]: number;
-};
-type LokiGetType = {
-  $loki: number;
-  [k: string]: JSONValue;
-};
-type FetchObjType = {
-  method?: string;
-  headers: { 'Content-Type': string };
-  body: string;
-};
-type JSONObject = { [k: string]: JSONValue };
-type JSONValue = JSONObject | JSONArray | JSONPrimitive;
-type JSONPrimitive = number | string | boolean | null;
-type JSONArray = JSONValue[];
 
 let IDCache: IDLokiCacheType = {};
 

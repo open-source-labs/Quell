@@ -1,13 +1,9 @@
 import { Response, Request, NextFunction, RequestHandler } from 'express';
-// import createClient from 'redis';
 import { parse } from 'graphql/language/parser';
 import { visit, BREAK } from 'graphql/language/visitor';
 import { graphql } from 'graphql';
-// import { Multi } from 'redis';
 import type { RedisClientType } from 'redis';
-import * as redis from 'redis';
-const client: RedisClientType = redis.createClient();
-const Multi = client.multi();
+import { createClient } from 'redis';
 
 import type {
   GraphQLSchema,
@@ -39,9 +35,6 @@ import type {
   FieldsObjectType,
   FieldsValuesType,
   GQLNodeWithDirectivesType,
-  MutationTypeFieldsType,
-  QueryTypeFieldsType,
-  TypeMapFieldsType,
   ItemFromCacheType,
   RedisOptionsType,
   RedisStatsType,
@@ -876,40 +869,31 @@ class QuellCache implements QuellCache {
    *  mutations, and fields
    *  @returns {Object} mutationMap - map of mutations to GraphQL types
    */
-
   getMutationMap(schema: GraphQLSchema): MutationMapType {
     const mutationMap: MutationMapType = {};
     // get object containing all root mutations defined in the schema
-    const mutationTypeFields:
-      | GraphQLSchema['_mutationType']
-      | (() => MutationTypeFieldsType) = schema.getMutationType()?.getFields();
+    const mutationTypeFields: GraphQLSchema['_mutationType'] = schema
+      .getMutationType()
+      ?.getFields();
     // if queryTypeFields is a function, invoke it to get object with queries
-    const mutationsObj: MutationTypeFieldsType =
+    const mutationsObj =
       typeof mutationTypeFields === 'function'
         ? mutationTypeFields()
         : mutationTypeFields;
-
     for (const mutation in mutationsObj) {
       // get name of GraphQL type returned by query
       // if ofType --> this is collection, else not collection
-      let returnedType: string | string[] | undefined;
-      const obj = mutationsObj[mutation] as MutationTypeFieldsType;
-      const obj1 = obj.type as MutationTypeFieldsType;
-      const obj2 = obj1.typeof as MutationTypeFieldsType;
-      if (obj.type) {
-        if (obj1.ofType) {
-          returnedType = [];
-          if (typeof obj2.name === 'string') {
-            returnedType.push(obj2.name);
-          }
-        }
-        if (obj1.name) {
-          if (obj1.name === typeof 'string') returnedType = obj1.name;
-        }
-        mutationMap[mutation] =
-          returnedType !== undefined ? (returnedType as string) : undefined;
+      let returnedType;
+      if (mutationsObj[mutation].type.ofType) {
+        returnedType = [];
+        returnedType.push(mutationsObj[mutation].type.ofType.name);
       }
+      if (mutationsObj[mutation].type.name) {
+        returnedType = mutationsObj[mutation].type.name;
+      }
+      mutationMap[mutation] = returnedType;
     }
+
     return mutationMap;
   }
 
@@ -923,37 +907,26 @@ class QuellCache implements QuellCache {
   getQueryMap(schema: GraphQLSchema): QueryMapType {
     const queryMap: QueryMapType = {};
     // get object containing all root queries defined in the schema
-    const queryTypeFields:
-      | GraphQLSchema['_queryType']
-      | (() => QueryTypeFieldsType) = schema.getQueryType()?.getFields();
-
+    const queryTypeFields: GraphQLSchema['_queryType'] = schema
+      .getQueryType()
+      ?.getFields();
     // if queryTypeFields is a function, invoke it to get object with queries
-    const queriesObj: QueryTypeFieldsType =
+    const queriesObj =
       typeof queryTypeFields === 'function'
         ? queryTypeFields()
         : queryTypeFields;
     for (const query in queriesObj) {
       // get name of GraphQL type returned by query
       // if ofType --> this is collection, else not collection
-      let returnedType: string | string[] | undefined;
-      const obj = queriesObj[query] as QueryTypeFieldsType;
-      const obj1 = obj.type as QueryTypeFieldsType;
-      const obj2 = obj1.typeof as QueryTypeFieldsType;
-      if (obj.type) {
-        if (obj1.ofType) {
-          returnedType = [];
-          if (typeof obj2.name === 'string') {
-            returnedType.push(obj2.name);
-          }
-        }
-        if (obj1.name) {
-          if (obj1.name === typeof 'string') returnedType = obj1.name;
-        }
-        queryMap[query] =
-          returnedType !== undefined
-            ? (returnedType as string | string[])
-            : undefined;
+      let returnedType;
+      if (queriesObj[query].type.ofType) {
+        returnedType = [];
+        returnedType.push(queriesObj[query].type.ofType.name);
       }
+      if (queriesObj[query].type.name) {
+        returnedType = queriesObj[query].type.name;
+      }
+      queryMap[query] = returnedType;
     }
     return queryMap;
   }
@@ -965,9 +938,13 @@ class QuellCache implements QuellCache {
    *  mutations, and fields
    *  @returns {Object} fieldsMap - map of fields to GraphQL types
    */
+
   getFieldsMap(schema: GraphQLSchema): FieldsMapType {
+    // console.log('inside getFieldsMap');
     const fieldsMap: FieldsMapType = {};
     const typesList: GraphQLSchema['_typeMap'] = schema.getTypeMap();
+
+    // console.log('this is typeList:', typesList);
     const builtInTypes: string[] = [
       'String',
       'Int',
@@ -985,30 +962,23 @@ class QuellCache implements QuellCache {
       '__Directive'
     ];
     // exclude built-in types
-    const customTypes: string[] = Object.keys(typesList).filter(
+    const customTypes = Object.keys(typesList).filter(
       (type) =>
         !builtInTypes.includes(type) && type !== schema.getQueryType()?.name
     );
     // loop through types
     for (const type of customTypes) {
-      const fieldsObj: { [key: string]: string } = {};
-      let fields: TypeMapFieldsType | (() => TypeMapFieldsType) =
-        typesList[type]._fields;
+      const fieldsObj: FieldsObjectType = {};
+      let fields = typesList[type]._fields;
+      // console.log('fields: ', fields);
+
       if (typeof fields === 'function') fields = fields();
       for (const field in fields) {
-        // if (typeof fields[field] === "object") {
-        //   const key: string = fields[field].name;
-        // }
-        const obj = fields[field] as TypeMapFieldsType;
-        const obj1 = obj.type as TypeMapFieldsType;
-        const obj2 = obj1.typeof as TypeMapFieldsType;
-        if (typeof obj.name === 'string') {
-          const key: string = obj.name;
-          if (typeof obj1.name === 'string' && typeof obj2.name === 'string') {
-            const value: string = obj1.ofType ? obj2.name : obj1.name;
-            fieldsObj[key] = value;
-          }
-        }
+        const key: string = fields[field].name;
+        const value: string = fields[field].type.ofType
+          ? fields[field].type.ofType.name
+          : fields[field].type.name;
+        fieldsObj[key] = value;
       }
       // place assembled types on fieldsMap
       fieldsMap[type] = fieldsObj;
@@ -1020,7 +990,10 @@ class QuellCache implements QuellCache {
    * buildFromCache finds any requested information in the cache and assembles it on the cacheResponse
    * uses the prototype as a template for cacheResponse, marks any data not found in the cache on the prototype for future retrieval from database
    * @param {Object} prototype - unique id under which the cached data will be stored
-   * @param {Array} prototypeKeys - item to be cached
+   * @param {Array} prototypeKeys - keys in the prototype
+   * @param {Object} itemFromCache - item to be cached
+   * @param {boolean} firstRun - boolean indicated if this is the first run
+   * @param {boolean|string} subID - used to pass id to recursive calls
    * @returns {Object} cacheResponse, mutates prototype
    */
   async buildFromCache(
@@ -1070,75 +1043,105 @@ class QuellCache implements QuellCache {
 
       // if itemFromCache at the current key is an array, iterate through and gather data
       if (Array.isArray(itemFromCache[typeKey])) {
-        let redisRunQueue: typeof Multi = this.redisCache.multi();
+        // Create a new Redis run queue.
+        let redisRunQueue: ReturnType<typeof this.redisCache.multi> =
+          this.redisCache.multi();
 
         for (let i = 0; i < itemFromCache[typeKey].length; i++) {
           if (typeof itemFromCache[typeKey] === 'string') {
-            const currTypeKey: string = itemFromCache[typeKey][i];
+            /**
+             * getCommandCallback is a helper function that will be called for each response in the
+             * array of responses returned by Redis' exec() command within buildFromCache.
+             * @param {String} cacheResponse - response from one of the get commands in the Redis queue
+             */
+            const getCommandCallback = (cacheResponse: string): void => {
+              const tempObj: ItemFromCacheType = {};
 
-            if (i !== 0 && i % this.redisReadBatchSize === 0) {
-              this.execRedisRunQueue(redisRunQueue);
-              redisRunQueue = this.redisCache.multi();
-            }
-            redisRunQueue.get(
-              currTypeKey.toLowerCase(),
-              (err: Error, cacheResponse: string) => {
-                const tempObj: ItemFromCacheType = {};
+              if (cacheResponse) {
+                const interimCache: ItemFromCacheType =
+                  JSON.parse(cacheResponse);
 
-                if (cacheResponse) {
-                  const interimCache: ItemFromCacheType =
-                    JSON.parse(cacheResponse);
-
-                  for (const property in prototype[typeKey]) {
-                    // if property exists, set on tempObj
-                    if (
-                      Object.prototype.hasOwnProperty.call(
-                        interimCache,
-                        property
-                      ) &&
-                      !property.includes('__')
-                    ) {
-                      tempObj[property] = interimCache[property];
-                    }
-                    // if prototype is nested at this field, recurse
-                    else if (
-                      !property.includes('__') &&
-                      typeof prototype[typeKey][property] === 'object'
-                    ) {
-                      // same as return type for buildfromcache
-                      this.buildFromCache(
-                        prototype[typeKey][property],
-                        prototypeKeys,
-                        {},
-                        false,
-                        `${currTypeKey}--${property}`
-                      ).then((tempData) => (tempObj[property] = tempData.data));
-                    }
-                    // if cache does not have property, set to false on prototype so that it is sent to graphQL
-                    else if (
-                      !property.includes('__') &&
-                      typeof prototype[typeKey][property] !== 'object'
-                    ) {
-                      prototype[typeKey][property] = false;
-                    }
+                for (const property in prototype[typeKey] as ProtoObjType) {
+                  // if property exists, set on tempObj
+                  if (
+                    Object.prototype.hasOwnProperty.call(
+                      interimCache,
+                      property
+                    ) &&
+                    !property.includes('__')
+                  ) {
+                    tempObj[property] = interimCache[property];
                   }
-                  itemFromCache[typeKey][i] = tempObj;
+                  // if prototype is nested at this field, recurse
+                  else if (
+                    !property.includes('__') &&
+                    typeof (prototype[typeKey] as ProtoObjType)[property] ===
+                      'object'
+                  ) {
+                    // same as return type for buildfromcache
+                    this.buildFromCache(
+                      (prototype[typeKey] as ProtoObjType)[
+                        property
+                      ] as ProtoObjType,
+                      prototypeKeys,
+                      {},
+                      false,
+                      `${currTypeKey}--${property}`
+                    ).then((tempData) => (tempObj[property] = tempData.data));
+                  }
+                  // if cache does not have property, set to false on prototype so that it is sent to graphQL
+                  else if (
+                    !property.includes('__') &&
+                    typeof (prototype[typeKey] as ProtoObjType)[property] !==
+                      'object'
+                  ) {
+                    (prototype[typeKey] as ProtoObjType)[property] = false;
+                  }
                 }
-                // if there is nothing in the cache for this key, then toggle all fields to false so it is fetched later
-                else {
-                  for (const property in prototype[typeKey]) {
-                    if (
-                      !property.includes('__') &&
-                      typeof prototype[typeKey][property] !== 'object'
-                    ) {
-                      prototype[typeKey][property] = false;
-                    }
+                itemFromCache[typeKey][i] = tempObj;
+              }
+              // if there is nothing in the cache for this key, then toggle all fields to false so it is fetched later
+              else {
+                for (const property in prototype[typeKey] as ProtoObjType) {
+                  if (
+                    !property.includes('__') &&
+                    typeof (prototype[typeKey] as ProtoObjType)[property] !==
+                      'object'
+                  ) {
+                    (prototype[typeKey] as ProtoObjType)[property] = false;
                   }
                 }
               }
-            );
-            // execute any remnants in redis run queue
-            await this.execRedisRunQueue(redisRunQueue);
+            };
+
+            const currTypeKey: string = itemFromCache[typeKey][i];
+
+            // If the size of the current batch equals the redisReadBatchSize in the constructor
+            // execute the current batch and reset the queue.
+            if (i !== 0 && i % this.redisReadBatchSize === 0) {
+              try {
+                const cacheResponseRaw = await redisRunQueue.exec();
+                cacheResponseRaw.forEach((cacheResponse) =>
+                  getCommandCallback(JSON.stringify(cacheResponse))
+                );
+              } catch (err: Error | unknown) {
+                console.log(`Error in buildFromCache: ${err}`);
+              }
+              redisRunQueue = this.redisCache.multi();
+            }
+
+            // Otherwise, add a get command for the current type key to the queue.
+            redisRunQueue.get(currTypeKey.toLowerCase());
+
+            // Execute any remnants in redis run queue.
+            try {
+              const cacheResponseRaw = await redisRunQueue.exec();
+              cacheResponseRaw.forEach((cacheResponse) =>
+                getCommandCallback(JSON.stringify(cacheResponse))
+              );
+            } catch (err: Error | unknown) {
+              console.log(`Error in buildFromCache: ${err}`);
+            }
           }
         }
       }
