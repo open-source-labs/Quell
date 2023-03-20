@@ -818,20 +818,6 @@ class QuellCache implements QuellCache {
   }
 
   /**
-   * execRedisRunQueue executes all previously queued transactions in Redis cache
-   * @param {String} redisRunQueue - Redis queue of transactions awaiting execution
-   */
-  async execRedisRunQueue(
-    redisRunQueue: ReturnType<typeof this.redisCache.multi>
-  ): Promise<void> {
-    try {
-      await redisRunQueue.exec();
-    } catch (err) {
-      console.log('err in execRedisRunQueue: ', err);
-    }
-  }
-
-  /**
    * getFromRedis reads from Redis cache and returns a promise (Redis v4 natively returns a promise).
    * @param {String} key - the key for Redis lookup
    * @returns {Promise} A promise representing the value from the redis cache with the provided key
@@ -925,11 +911,8 @@ class QuellCache implements QuellCache {
    */
 
   getFieldsMap(schema: GraphQLSchema): FieldsMapType {
-    // console.log('inside getFieldsMap');
     const fieldsMap: FieldsMapType = {};
     const typesList: GraphQLSchema['_typeMap'] = schema.getTypeMap();
-
-    // console.log('this is typeList:', typesList);
     const builtInTypes: string[] = [
       'String',
       'Int',
@@ -955,8 +938,6 @@ class QuellCache implements QuellCache {
     for (const type of customTypes) {
       const fieldsObj: FieldsObjectType = {};
       let fields = typesList[type]._fields;
-      // console.log('fields: ', fields);
-
       if (typeof fields === 'function') fields = fields();
       for (const field in fields) {
         const key: string = fields[field].name;
@@ -2546,6 +2527,21 @@ class QuellCache implements QuellCache {
     } catch (err) {
       console.log('err in checkFromRedis: ', err);
       return 0;
+    }
+  }
+
+  /**
+   * execRedisRunQueue executes all previously queued transactions in Redis cache
+   * @param {String} redisRunQueue - Redis queue of transactions awaiting execution
+   */
+  // BUG: execRedisRunQueue is an unused function -- will give it types if it ends up being used
+  async execRedisRunQueue(
+    redisRunQueue: ReturnType<typeof this.redisCache.multi>
+  ): Promise<void> {
+    try {
+      await redisRunQueue.exec();
+    } catch (err) {
+      console.log('err in execRedisRunQueue: ', err);
     }
   }
 }
