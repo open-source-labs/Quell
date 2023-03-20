@@ -1,3 +1,4 @@
+/* eslint-disable no-undef */
 const { parseAST } = require('../../src/quell');
 const { parse } = require('graphql/language/parser');
 

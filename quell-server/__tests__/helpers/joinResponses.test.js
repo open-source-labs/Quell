@@ -1,3 +1,4 @@
+/* eslint-disable no-undef */
 const { joinResponses } = require('../../src/quell');
 
 describe('tests for joinResponses on the server side', () => {

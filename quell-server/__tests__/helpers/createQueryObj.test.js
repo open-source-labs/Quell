@@ -1,3 +1,4 @@
+/* eslint-disable no-undef */
 const { createQueryObj } = require('../../src/quell');
 
 describe('server side tests for createQueryObj.js', () => {

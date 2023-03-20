@@ -108,8 +108,8 @@ class QuellCache implements QuellCache {
     this.depthLimit = this.depthLimit.bind(this);
     this.costLimit = this.costLimit.bind(this);
     this.rateLimiter = this.rateLimiter.bind(this);
-    this.queryMap = this.getQueryMap(schema);
-    this.mutationMap = this.getMutationMap(schema);
+    this.queryMap = getQueryMap(schema);
+    this.mutationMap = getMutationMap(schema);
     this.fieldsMap = this.getFieldsMap(schema);
     // this.idMap = this.getIdMap();
     this.cacheExpiration = cacheExpiration;
@@ -356,7 +356,7 @@ class QuellCache implements QuellCache {
       // Combine fragments on prototype so we can access fragment values in cache.
       const prototype: ProtoObjType =
         Object.keys(frags).length > 0
-          ? this.updateProtoWithFragment(proto, frags)
+          ? updateProtoWithFragment(proto, frags)
           : proto;
       // Create a list of the keys on prototype that will be passed to buildFromCache.
       const prototypeKeys = Object.keys(prototype);
@@ -469,44 +469,6 @@ class QuellCache implements QuellCache {
   }
 
   /**
-   * updateProtoWithFragment takes collected fragments and integrates them onto the prototype where referenced
-   * @param {Object} protoObj - prototype before it has been updated with fragments
-   * @param {Object} frags - fragments object to update prototype with
-   * @returns {Object} updated prototype object
-   */
-  updateProtoWithFragment(
-    protoObj: ProtoObjType,
-    frags: FragsType
-  ): ProtoObjType {
-    // If the proto or frags objects are null/undefined, return the protoObj.
-    if (!protoObj || !frags) return protoObj;
-
-    // Loop through the fields in the proto object.
-    for (const key in protoObj) {
-      // If the field is a nested object and not an introspection field (fields starting with '__'
-      // that provide information about the underlying schema)
-      if (typeof protoObj[key] === 'object' && !key.includes('__')) {
-        // Update the field to the result of recursively calling updateProtoWithFragment,
-        // passing the field and fragments.
-        protoObj[key] = this.updateProtoWithFragment(
-          protoObj[key] as ProtoObjType,
-          frags
-        );
-      }
-
-      // If the field is a reference to a fragment, replace the reference to the fragment with
-      // the actual fragment.
-      if (Object.prototype.hasOwnProperty.call(frags, key)) {
-        protoObj = { ...protoObj, ...frags[key] };
-        delete protoObj[key];
-      }
-    }
-
-    // Return the updated proto
-    return protoObj;
-  }
-
-  /**
    * getFromRedis reads from Redis cache and returns a promise (Redis v4 natively returns a promise).
    * @param {String} key - the key for Redis lookup
    * @returns {Promise} A promise representing the value from the redis cache with the provided key
@@ -520,76 +482,6 @@ class QuellCache implements QuellCache {
     } catch (err) {
       console.log('err in getFromRedis: ', err);
     }
-  }
-
-  /**
-   *  getMutationMap generates a map of mutation to GraphQL object types. This mapping is used
-   *  to identify references to cached data when mutation occurs.
-   *  @param {Object} schema - GraphQL defined schema that is used to facilitate caching by providing valid queries,
-   *  mutations, and fields
-   *  @returns {Object} mutationMap - map of mutations to GraphQL types
-   */
-  getMutationMap(schema: GraphQLSchema): MutationMapType {
-    const mutationMap: MutationMapType = {};
-    // get object containing all root mutations defined in the schema
-    const mutationTypeFields: GraphQLSchema['_mutationType'] = schema
-      ?.getMutationType()
-      ?.getFields();
-    // if queryTypeFields is a function, invoke it to get object with queries
-    const mutationsObj =
-      typeof mutationTypeFields === 'function'
-        ? mutationTypeFields()
-        : mutationTypeFields;
-    for (const mutation in mutationsObj) {
-      // get name of GraphQL type returned by query
-      // if ofType --> this is collection, else not collection
-      let returnedType;
-      if (mutationsObj[mutation].type.ofType) {
-        returnedType = [];
-        returnedType.push(mutationsObj[mutation].type.ofType.name);
-      }
-      if (mutationsObj[mutation].type.name) {
-        returnedType = mutationsObj[mutation].type.name;
-      }
-      mutationMap[mutation] = returnedType;
-    }
-
-    return mutationMap;
-  }
-
-  /**
-   *  getQueryMap generates a map of queries to GraphQL object types. This mapping is used
-   *  to identify and create references to cached data.
-   *  @param {Object} schema - GraphQL defined schema that is used to facilitate caching by providing valid queries,
-   *  mutations, and fields
-   *  @returns {Object} queryMap - map of queries to GraphQL types
-   */
-  getQueryMap(schema: GraphQLSchema): QueryMapType {
-    console.log('schema: ', this.schema);
-    const queryMap: QueryMapType = {};
-    // get object containing all root queries defined in the schema
-    const queryTypeFields: GraphQLSchema['_queryType'] = schema
-      ?.getQueryType()
-      ?.getFields();
-    // if queryTypeFields is a function, invoke it to get object with queries
-    const queriesObj =
-      typeof queryTypeFields === 'function'
-        ? queryTypeFields()
-        : queryTypeFields;
-    for (const query in queriesObj) {
-      // get name of GraphQL type returned by query
-      // if ofType --> this is collection, else not collection
-      let returnedType;
-      if (queriesObj[query].type.ofType) {
-        returnedType = [];
-        returnedType.push(queriesObj[query].type.ofType.name);
-      }
-      if (queriesObj[query].type.name) {
-        returnedType = queriesObj[query].type.name;
-      }
-      queryMap[query] = returnedType;
-    }
-    return queryMap;
   }
 
   /**
@@ -1694,7 +1586,7 @@ class QuellCache implements QuellCache {
     // check for fragments
     const prototype =
       Object.keys(frags).length > 0
-        ? this.updateProtoWithFragment(proto, frags)
+        ? updateProtoWithFragment(proto, frags)
         : proto;
 
     /**
@@ -1766,7 +1658,7 @@ class QuellCache implements QuellCache {
     // check for fragments
     const prototype =
       Object.keys(frags).length > 0
-        ? this.updateProtoWithFragment(proto, frags)
+        ? updateProtoWithFragment(proto, frags)
         : proto;
 
     let cost = 0;
@@ -1953,7 +1845,6 @@ class QuellCache implements QuellCache {
   //   }
   // }
 }
-
 // Modularized functions
 /**
  * createQueryStr traverses over a supplied query Object and uses the fields on there to create a query string reflecting the data,
@@ -2536,5 +2427,107 @@ function parseAST(
   });
   return { proto, operationType, frags };
 }
+/**
+ * updateProtoWithFragment takes collected fragments and integrates them onto the prototype where referenced
+ * @param {Object} protoObj - prototype before it has been updated with fragments
+ * @param {Object} frags - fragments object to update prototype with
+ * @returns {Object} updated prototype object
+ */
+function updateProtoWithFragment(
+  protoObj: ProtoObjType,
+  frags: FragsType
+): ProtoObjType {
+  // If the proto or frags objects are null/undefined, return the protoObj.
+  if (!protoObj || !frags) return protoObj;
 
-module.exports = { QuellCache, parseAST };
+  // Loop through the fields in the proto object.
+  for (const key in protoObj) {
+    // If the field is a nested object and not an introspection field (fields starting with '__'
+    // that provide information about the underlying schema)
+    if (typeof protoObj[key] === 'object' && !key.includes('__')) {
+      // Update the field to the result of recursively calling updateProtoWithFragment,
+      // passing the field and fragments.
+      protoObj[key] = updateProtoWithFragment(
+        protoObj[key] as ProtoObjType,
+        frags
+      );
+    }
+
+    // If the field is a reference to a fragment, replace the reference to the fragment with
+    // the actual fragment.
+    if (Object.prototype.hasOwnProperty.call(frags, key)) {
+      protoObj = { ...protoObj, ...frags[key] };
+      delete protoObj[key];
+    }
+  }
+
+  // Return the updated proto
+  return protoObj;
+}
+
+/**
+ *  getMutationMap generates a map of mutation to GraphQL object types. This mapping is used
+ *  to identify references to cached data when mutation occurs.
+ *  @param {Object} schema - GraphQL defined schema that is used to facilitate caching by providing valid queries,
+ *  mutations, and fields
+ *  @returns {Object} mutationMap - map of mutations to GraphQL types
+ */
+function getMutationMap(schema: GraphQLSchema): MutationMapType {
+  const mutationMap: MutationMapType = {};
+  // get object containing all root mutations defined in the schema
+  const mutationTypeFields: GraphQLSchema['_mutationType'] = schema
+    ?.getMutationType()
+    ?.getFields();
+  // if queryTypeFields is a function, invoke it to get object with queries
+  const mutationsObj =
+    typeof mutationTypeFields === 'function'
+      ? mutationTypeFields()
+      : mutationTypeFields;
+  for (const mutation in mutationsObj) {
+    // get name of GraphQL type returned by query
+    // if ofType --> this is collection, else not collection
+    let returnedType;
+    if (mutationsObj[mutation].type.ofType) {
+      returnedType = [];
+      returnedType.push(mutationsObj[mutation].type.ofType.name);
+    }
+    if (mutationsObj[mutation].type.name) {
+      returnedType = mutationsObj[mutation].type.name;
+    }
+    mutationMap[mutation] = returnedType;
+  }
+  return mutationMap;
+}
+
+/**
+ *  getQueryMap generates a map of queries to GraphQL object types. This mapping is used
+ *  to identify and create references to cached data.
+ *  @param {Object} schema - GraphQL defined schema that is used to facilitate caching by providing valid queries,
+ *  mutations, and fields
+ *  @returns {Object} queryMap - map of queries to GraphQL types
+ */
+function getQueryMap(schema: GraphQLSchema): QueryMapType {
+  const queryMap: QueryMapType = {};
+  // get object containing all root queries defined in the schema
+  const queryTypeFields: GraphQLSchema['_queryType'] = schema
+    ?.getQueryType()
+    ?.getFields();
+  // if queryTypeFields is a function, invoke it to get object with queries
+  const queriesObj =
+    typeof queryTypeFields === 'function' ? queryTypeFields() : queryTypeFields;
+  for (const query in queriesObj) {
+    // get name of GraphQL type returned by query
+    // if ofType --> this is collection, else not collection
+    let returnedType;
+    if (queriesObj[query].type.ofType) {
+      returnedType = [];
+      returnedType.push(queriesObj[query].type.ofType.name);
+    }
+    if (queriesObj[query].type.name) {
+      returnedType = queriesObj[query].type.name;
+    }
+    queryMap[query] = returnedType;
+  }
+  return queryMap;
+}
+module.exports = { QuellCache, getQueryMap };

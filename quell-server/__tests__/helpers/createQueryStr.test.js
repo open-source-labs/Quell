@@ -1,3 +1,4 @@
+/* eslint-disable no-undef */
 const { createQueryStr } = require('../../src/quell');
 
 describe('server side tests for createQueryStr.js', () => {
