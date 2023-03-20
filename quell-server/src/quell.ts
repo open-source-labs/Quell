@@ -818,22 +818,6 @@ class QuellCache implements QuellCache {
   }
 
   /**
-   * checkFromRedis reads from Redis cache and returns a promise.
-   * @param {String} key - the key for Redis lookup
-   * @returns {Promise} A promise that represents if the key was found in the redisCache
-   */
-  async checkFromRedis(key: string): Promise<number> {
-    try {
-      // will return 0 if key does not exists
-      const existsInRedis: number = await this.redisCache.exists(key);
-      return existsInRedis;
-    } catch (err) {
-      console.log('err in checkFromRedis: ', err);
-      return 0;
-    }
-  }
-
-  /**
    * execRedisRunQueue executes all previously queued transactions in Redis cache
    * @param {String} redisRunQueue - Redis queue of transactions awaiting execution
    */
@@ -2546,6 +2530,23 @@ class QuellCache implements QuellCache {
       else proto[key] = false;
     }
     return proto;
+  }
+
+  /**
+   * checkFromRedis reads from Redis cache and returns a promise.
+   * @param {String} key - the key for Redis lookup
+   * @returns {Promise} A promise that represents if the key was found in the redisCache
+   */
+  // BUG: checkFromRedis is an unused function -- will give it types if it ends up being used
+  async checkFromRedis(key: string): Promise<number> {
+    try {
+      // will return 0 if key does not exists
+      const existsInRedis: number = await this.redisCache.exists(key);
+      return existsInRedis;
+    } catch (err) {
+      console.log('err in checkFromRedis: ', err);
+      return 0;
+    }
   }
 }
 
