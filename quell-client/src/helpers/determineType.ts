@@ -6,15 +6,19 @@ import {
   OperationDefinitionNode,
   SelectionSetNode
 } from 'graphql';
+import { visit, BREAK } from 'graphql/language/visitor';
 
-const { visit, BREAK } = require('graphql/language/visitor');
+import {
+  ProtoObjType,
+  FragsType,
+  ArgsObjType,
+  FieldArgsType,
+  GQLNodeWithDirectivesType,
+  ValidArgumentNodeType,
+  FieldsValuesType,
+  FieldsObjectType
+} from '../types';
 
-type FieldsValuesType = {
-  [k: string]: boolean;
-};
-type FieldsObjectType = {
-  [k: string]: FieldsValuesType | FieldArgsType;
-};
 /**
  * determineType traverses the abstract syntax tree depth-first to determine which operations types are
  * 'unQuellable' along the AST
@@ -87,7 +91,7 @@ export default function determineType(AST: ASTNode): {
         for (let i = 0; i < node.selectionSet.selections.length; i++) {
           // create a property for this selection on the frags obj (aka target obj)
           if (node.selectionSet.selections[i].kind !== 'InlineFragment') {
-            targetObj[fragName][
+            (targetObj as FragsType)[fragName][
               (
                 node.selectionSet.selections[i] as
                   | FieldNode
@@ -160,7 +164,9 @@ export default function determineType(AST: ASTNode): {
         node: SelectionSetNode,
         key: string | number | undefined,
         parent: ASTNode | readonly ASTNode[] | undefined,
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         path: readonly (string | number)[],
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         ancestors: readonly (ASTNode | readonly ASTNode[])[]
       ) {
         selectionSetDepth++;
@@ -206,11 +212,14 @@ export default function determineType(AST: ASTNode): {
           // loop through stack to get correct path in proto for temp object;
           // mutates original prototype object WITH values from tempObject
           // "prev" is accumulator ie the prototype
-          stack.reduce((prev, curr, index) => {
-            // if last item in path, set value
-            if (index + 1 === stack.length) prev[curr] = { ...fieldsObject };
-            return prev[curr];
-          }, targetObj);
+          stack.reduce(
+            (prev: ProtoObjType, curr: string, index: number): ProtoObjType => {
+              // if last item in path, set value
+              if (index + 1 === stack.length) prev[curr] = { ...fieldsObject };
+              return prev[curr] as ProtoObjType;
+            },
+            targetObj
+          );
         }
       },
       leave() {

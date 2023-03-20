@@ -1,3 +1,171 @@
+import type {
+  GraphQLSchema,
+  IntValueNode,
+  FloatValueNode,
+  StringValueNode,
+  BooleanValueNode,
+  EnumValueNode,
+  OperationDefinitionNode,
+  VariableDefinitionNode,
+  FieldNode,
+  FragmentSpreadNode,
+  InlineFragmentNode,
+  FragmentDefinitionNode,
+  SchemaDefinitionNode,
+  ScalarTypeDefinitionNode,
+  ObjectTypeDefinitionNode,
+  FieldDefinitionNode,
+  InputValueDefinitionNode,
+  InterfaceTypeDefinitionNode,
+  UnionTypeDefinitionNode,
+  EnumTypeDefinitionNode,
+  EnumValueDefinitionNode,
+  InputObjectTypeDefinitionNode,
+  SchemaExtensionNode,
+  ScalarTypeExtensionNode,
+  ObjectTypeExtensionNode,
+  InterfaceTypeExtensionNode,
+  UnionTypeExtensionNode,
+  EnumTypeExtensionNode,
+  InputObjectTypeExtensionNode
+} from 'graphql';
+
+// QuellCache constructor parameters
+export interface ConstructorOptions {
+  schema: GraphQLSchema;
+  cacheExpiration?: number;
+  costParameters?: CostParamsType;
+  redisPort: number;
+  redisHost: string;
+  redisPassword: string;
+}
+
+export interface IdCacheType {
+  [queryName: string]: {
+    [fieldName: string]: string | string[];
+  };
+}
+
+export interface CostParamsType {
+  maxCost: number;
+  mutationCost: number;
+  objectCost: number;
+  scalarCost: number;
+  depthCostFactor: number;
+  maxDepth: number;
+  ipRate: number;
+}
+
+export interface CustomError extends Error {
+  log?: string;
+  status?: number;
+  msg?: string;
+}
+
+export interface ProtoObjType {
+  // [key: string]: unknown;
+  [key: string]: string | boolean | null | ProtoObjType;
+}
+
+export interface FragsType {
+  [fragName: string]: {
+    [fieldName: string]: boolean;
+  };
+}
+
+export interface MutationMapType {
+  [mutationName: string]: string | undefined;
+}
+
+export interface QueryMapType {
+  [queryName: string]: string | string[] | undefined;
+}
+
+export interface FieldsMapType {
+  [typeName: string]: FieldsObjectType;
+}
+
+// Incomplete because not being used
+export interface IdMapType {
+  [fieldType: string]: unknown;
+}
+
+export interface ParseASTOptions {
+  userDefinedID?: string | null;
+}
+
+/*
+ * The argsObj is used to store arguments. It is only used if the argument node is one of the
+ * valid nodes included in the ValidArgumentNodeType interface. It key will be the field name (string)
+ * and value will be the 'value' property of the argument node. For the valid argument nodes, the
+ * 'value' property will be a string, boolean, or null.
+ */
+export interface ArgsObjType {
+  [fieldName: string]: string | boolean | null;
+}
+
+export interface AuxObjType {
+  __type?: string | boolean | null;
+  __alias?: string | boolean | null;
+  __args?: ArgsObjType | null;
+  __id?: string | boolean | null;
+}
+
+export interface FieldArgsType {
+  [fieldName: string]: AuxObjType;
+}
+
+/*
+ * Types of arguments that Quell is able to cache
+ */
+export type ValidArgumentNodeType =
+  | IntValueNode
+  | FloatValueNode
+  | StringValueNode
+  | BooleanValueNode
+  | EnumValueNode;
+// Excludes the following types:
+// | VariableNode
+// | NullValueNode
+// | ListValueNode
+// | ObjectValueNode
+
+export interface FieldsObjectType {
+  [fieldName: string]: string | boolean | null | ArgsObjType | null;
+}
+
+export interface FieldsValuesType {
+  [fieldName: string]: boolean;
+}
+
+export interface GQLResponseType {
+  [key: string]: unknown;
+}
+
+export type GQLNodeWithDirectivesType =
+  | OperationDefinitionNode
+  | VariableDefinitionNode
+  | FieldNode
+  | FragmentSpreadNode
+  | InlineFragmentNode
+  | FragmentDefinitionNode
+  | SchemaDefinitionNode
+  | ScalarTypeDefinitionNode
+  | ObjectTypeDefinitionNode
+  | FieldDefinitionNode
+  | InputValueDefinitionNode
+  | InterfaceTypeDefinitionNode
+  | UnionTypeDefinitionNode
+  | EnumTypeDefinitionNode
+  | EnumValueDefinitionNode
+  | InputObjectTypeDefinitionNode
+  | SchemaExtensionNode
+  | ScalarTypeExtensionNode
+  | ObjectTypeExtensionNode
+  | InterfaceTypeExtensionNode
+  | UnionTypeExtensionNode
+  | EnumTypeExtensionNode
+  | InputObjectTypeExtensionNode;
 export interface QueryObject {
   [query: string]: QueryFields;
 }
@@ -43,7 +211,7 @@ export interface Type {
 }
 
 export interface MergedResponse {
-  [key: string]: Data | Data[];
+  [key: string]: Data | Data[] | boolean | MergedResponse[] | MergedResponse;
 }
 
 export interface DataResponse {
@@ -58,49 +226,48 @@ interface DataField {
   [key: string]: string;
 }
 
-/*
-query {
-    attractions(name: "Statue of Liberty") {
-        id
-        name
-    }
-    country(name: "Japan") {
-        id
-        name
-        cities {
-            id
-            name
-        }
-    }
-    city(name: "Seattle") {
-        id
-        name
-        attractions {
-            id
-            name
-            }
-        }
-    }
-
-
- mergedResponse = {
-  attractions: { id: '636b005e8c11797007e7e4a6', name: 'Statue of Liberty' },
-  country: {
-    id: '636afe2f8c11797007e7e49c',
-    name: 'Japan',
-    cities: [
-      { id: '636afef18c11797007e7e4a3', name: 'Tokyo' },
-      { id: '640f428665fcc5cf42fc9bb1', name: 'Kyoto' },
-      { id: '640f42f765fcc5cf42fc9bb8', name: 'Osaka' },
-    ],
-  },
-  city: {
-    id: '636afe598c11797007e7e49d',
-    name: 'Seattle',
-    attractions: [
-      { id: '636b01fa8c11797007e7e4ae', name: 'Pike Place Market' },
-      { id: '636b01df8c11797007e7e4ad', name: 'Space Needle' },
-    ],
-  },
+export type MutationTypeFieldsType = {
+  [key: string]: string | MutationTypeFieldsType | MutationTypeFieldsType[];
 };
-    */
+
+export type QueryTypeFieldsType = {
+  [key: string]:
+    | string
+    | QueryTypeFieldsType
+    | QueryTypeFieldsType[]
+    | undefined;
+};
+
+export type TypeMapFieldsType = {
+  [key: string]: string | TypeMapFieldsType | TypeMapFieldsType[];
+};
+
+export type ItemFromCacheType = {
+  [key: string]: any;
+};
+
+export type PropsFilterType = {
+  [k: string]: null | string | PropsFilterType;
+};
+
+export type RedisOptionsType = {
+  getStats: boolean;
+  getKeys: boolean;
+  getValues: boolean;
+};
+
+export type RedisStatsType = {
+  server: { name: string; value?: string }[];
+  client: { name: string; value?: string }[];
+  memory: { name: string; value?: string }[];
+  stats: { name: string; value?: string }[];
+};
+export type ServerErrorType = {
+  log: string;
+  status: number;
+  message: { err: string };
+};
+
+export type ResponseDataType = {
+  [k: string]: string | ResponseDataType | ResponseDataType[];
+};
