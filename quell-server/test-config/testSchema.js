@@ -269,5 +269,5 @@ const RootMutation = new GraphQLObjectType({
 module.exports = new GraphQLSchema({
   query: RootQuery,
   mutation: RootMutation,
-  types: [CountryType, CityType, BookType, BookShelfType],
+  types: [CountryType, CityType, BookType, BookShelfType]
 });

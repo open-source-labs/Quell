@@ -1,18 +1,11 @@
-const QuellCache = require('../../src/quell.js');
-const schema = require('../../test-config/testSchema');
-const redisPort = 6379;
-const timeout = 100;
-
+const { createQueryObj } = require('../../src/quell');
 
 describe('server side tests for createQueryObj.js', () => {
-  const Quell = new QuellCache(schema, redisPort, timeout);
-
   afterAll((done) => {
-    Quell.redisCache.flushAll();
     done();
   });
 
-  // TO-DO: Add the same test to the client side test folder 
+  // TO-DO: Add the same test to the client side test folder
   test('inputs prototype w/ all true should output empty object', () => {
     const prototype = {
       countries: {
@@ -31,12 +24,12 @@ describe('server side tests for createQueryObj.js', () => {
           id: true,
           country_id: true,
           name: true,
-          population: true,
-        },
-      },
+          population: true
+        }
+      }
     };
 
-    expect(Quell.createQueryObj(prototype)).toEqual({});
+    expect(createQueryObj(prototype)).toEqual({});
   });
 
   test('inputs prototype w/ only false scalar types should output same object', () => {
@@ -48,11 +41,11 @@ describe('server side tests for createQueryObj.js', () => {
         __type: 'countries',
         id: false,
         name: false,
-        capitol: false,
+        capitol: false
       }
     };
 
-    expect(Quell.createQueryObj(map)).toEqual({
+    expect(createQueryObj(map)).toEqual({
       countries: {
         __id: null,
         __alias: null,
@@ -60,8 +53,8 @@ describe('server side tests for createQueryObj.js', () => {
         __type: 'countries',
         id: false,
         name: false,
-        capitol: false,
-      },
+        capitol: false
+      }
     });
   });
 
@@ -83,12 +76,12 @@ describe('server side tests for createQueryObj.js', () => {
           id: true,
           country_id: true,
           name: true,
-          population: true,
-        },
-      },
+          population: true
+        }
+      }
     };
 
-    expect(Quell.createQueryObj(map)).toEqual({
+    expect(createQueryObj(map)).toEqual({
       countries: {
         __id: null,
         __alias: null,
@@ -96,8 +89,8 @@ describe('server side tests for createQueryObj.js', () => {
         __type: 'countries',
         id: false,
         name: false,
-        capitol: false,
-      },
+        capitol: false
+      }
     });
   });
 
@@ -119,12 +112,12 @@ describe('server side tests for createQueryObj.js', () => {
           id: false,
           country_id: false,
           name: false,
-          population: false,
-        },
-      },
+          population: false
+        }
+      }
     };
 
-    expect(Quell.createQueryObj(map)).toEqual({
+    expect(createQueryObj(map)).toEqual({
       countries: {
         id: false,
         __id: null,
@@ -139,9 +132,9 @@ describe('server side tests for createQueryObj.js', () => {
           id: false,
           country_id: false,
           name: false,
-          population: false,
-        },
-      },
+          population: false
+        }
+      }
     });
   });
 
@@ -163,12 +156,12 @@ describe('server side tests for createQueryObj.js', () => {
           id: true,
           country_id: false,
           name: true,
-          population: false,
-        },
-      },
+          population: false
+        }
+      }
     };
 
-    expect(Quell.createQueryObj(map)).toEqual({
+    expect(createQueryObj(map)).toEqual({
       countries: {
         __id: null,
         __alias: null,
@@ -184,9 +177,9 @@ describe('server side tests for createQueryObj.js', () => {
           __type: 'cities',
           id: false,
           country_id: false,
-          population: false,
-        },
-      },
+          population: false
+        }
+      }
     });
   });
 
@@ -206,7 +199,7 @@ describe('server side tests for createQueryObj.js', () => {
           __type: 'capitol',
           id: false,
           name: true,
-          population: false,
+          population: false
         }
       },
       Mexico: {
@@ -222,12 +215,12 @@ describe('server side tests for createQueryObj.js', () => {
           __args: {},
           __type: 'climate',
           seasons: true,
-          id: false,
+          id: false
         }
       }
     };
 
-    expect(Quell.createQueryObj(map)).toEqual({
+    expect(createQueryObj(map)).toEqual({
       Canada: {
         __id: '1',
         __type: 'country',
@@ -241,7 +234,7 @@ describe('server side tests for createQueryObj.js', () => {
           __alias: null,
           __args: {},
           __type: 'capitol',
-          __id: null,
+          __id: null
         }
       },
       Mexico: {
@@ -250,10 +243,10 @@ describe('server side tests for createQueryObj.js', () => {
         __alias: 'Mexico',
         __args: { id: '2' },
         __type: 'country',
-        __id: '2',
+        __id: '2'
       }
     });
-  })
+  });
 
   test('test requests with multiple queries in which half of the request if managed by the cache and the other half is managed by the response', () => {
     const map = {
@@ -271,7 +264,7 @@ describe('server side tests for createQueryObj.js', () => {
           __type: 'capitol',
           id: true,
           name: true,
-          population: true,
+          population: true
         }
       },
       WarBook: {
@@ -287,12 +280,12 @@ describe('server side tests for createQueryObj.js', () => {
           __args: {},
           __type: 'author',
           id: false,
-          name: false,
+          name: false
         }
       }
     };
 
-    expect(Quell.createQueryObj(map)).toEqual({
+    expect(createQueryObj(map)).toEqual({
       WarBook: {
         __id: '2',
         __alias: 'WarBook',
@@ -306,9 +299,9 @@ describe('server side tests for createQueryObj.js', () => {
           __args: {},
           __type: 'author',
           name: false,
-          id: false,
+          id: false
         }
       }
     });
-  })
+  });
 });

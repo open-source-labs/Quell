@@ -13,23 +13,34 @@ being entirely re-written, or without the functions being modularized and separa
 xdescribe('server test for buildFromCache', () => {
   const Quell = new QuellCache(schema, redisPort);
   // inputs: prototype object (which contains args), collection (defaults to an empty array)
-  // outputs: protoype object with fields that were not found in the cache set to false 
-  
+  // outputs: protoype object with fields that were not found in the cache set to false
+
   beforeAll(() => {
     const promise1 = (resolve, reject) => {
-      resolve(Quell.writeToCache('country--1', {id: "1", capitol: {id: "2", name: "DC"}}));
+      resolve(
+        Quell.writeToCache('country--1', {
+          id: '1',
+          capitol: { id: '2', name: 'DC' }
+        })
+      );
     };
     const promise2 = (resolve, reject) => {
-      resolve(Quell.writeToCache('country--2', {id: "2"}));
-    }; 
+      resolve(Quell.writeToCache('country--2', { id: '2' }));
+    };
     const promise3 = (resolve, reject) => {
-      resolve(Quell.writeToCache('country--3', {id: "3"}));
+      resolve(Quell.writeToCache('country--3', { id: '3' }));
     };
     const promise4 = (resolve, reject) => {
-      resolve(Quell.writeToCache('countries', ['country--1', 'country--2', 'country--3']));
+      resolve(
+        Quell.writeToCache('countries', [
+          'country--1',
+          'country--2',
+          'country--3'
+        ])
+      );
     };
     return [promise1, promise2, promise3, promise4];
-  })
+  });
 
   afterAll((done) => {
     Quell.redisCache.flushAll();
@@ -44,9 +55,9 @@ xdescribe('server test for buildFromCache', () => {
         __alias: null,
         __args: { id: '3' },
         __type: 'country',
-        __id: '3',
-        }
-      };
+        __id: '3'
+      }
+    };
     const endProto = {
       country: {
         id: true,
@@ -54,18 +65,21 @@ xdescribe('server test for buildFromCache', () => {
         __alias: null,
         __args: { id: '3' },
         __type: 'country',
-        __id: '3',
-        }
-      };
+        __id: '3'
+      }
+    };
     const expectedResponseFromCache = {
       data: {
         country: {
-          'id': '3'
+          id: '3'
         }
       }
-    }
-    const prototypeKeys = Object.keys(testProto); 
-    const responseFromCache = await Quell.buildFromCache(testProto, prototypeKeys);
+    };
+    const prototypeKeys = Object.keys(testProto);
+    const responseFromCache = await Quell.buildFromCache(
+      testProto,
+      prototypeKeys
+    );
     // we expect prototype after running through buildFromCache to have id has stayed true but every other field has been toggled to false (if not found in sessionStorage)
     expect(testProto).toEqual(endProto);
     expect(responseFromCache).toEqual(expectedResponseFromCache);
@@ -79,9 +93,9 @@ xdescribe('server test for buildFromCache', () => {
         __alias: null,
         __args: { id: '3' },
         __type: 'book',
-        __id: '3',
-        }
-      };
+        __id: '3'
+      }
+    };
     const endProto = {
       book: {
         id: false,
@@ -89,14 +103,17 @@ xdescribe('server test for buildFromCache', () => {
         __alias: null,
         __args: { id: '3' },
         __type: 'book',
-        __id: '3',
-        }
-      };
+        __id: '3'
+      }
+    };
     const expectedResponseFromCache = {
       data: { book: {} }
-    }
-    const prototypeKeys = Object.keys(testProto); 
-    const responseFromCache = await Quell.buildFromCache(testProto, prototypeKeys);
+    };
+    const prototypeKeys = Object.keys(testProto);
+    const responseFromCache = await Quell.buildFromCache(
+      testProto,
+      prototypeKeys
+    );
     // we expect prototype after running through buildFromCache to have id has stayed true but every other field has been toggled to false (if not found in sessionStorage)
     expect(testProto).toEqual(endProto);
     expect(responseFromCache).toEqual(expectedResponseFromCache);
@@ -118,7 +135,7 @@ xdescribe('server test for buildFromCache', () => {
           __alias: null,
           __args: {},
           __type: 'capitol',
-          __id: null,
+          __id: null
         }
       },
       Mexico: {
@@ -136,7 +153,7 @@ xdescribe('server test for buildFromCache', () => {
           __id: null
         }
       }
-    }
+    };
     const endProto = {
       Canada: {
         id: true,
@@ -167,10 +184,10 @@ xdescribe('server test for buildFromCache', () => {
           __alias: null,
           __args: {},
           __type: 'climate',
-          __id: null,
+          __id: null
         }
       }
-    }
+    };
     const expectedResponseFromCache = {
       data: {
         Canada: {
@@ -185,8 +202,11 @@ xdescribe('server test for buildFromCache', () => {
         }
       }
     };
-    const prototypeKeys = Object.keys(testProto); 
-    const responseFromCache = await Quell.buildFromCache(testProto, prototypeKeys);
+    const prototypeKeys = Object.keys(testProto);
+    const responseFromCache = await Quell.buildFromCache(
+      testProto,
+      prototypeKeys
+    );
     expect(testProto).toEqual(endProto);
     expect(responseFromCache).toEqual(expectedResponseFromCache);
   });
@@ -198,35 +218,38 @@ xdescribe('server test for buildFromCache', () => {
         name: true,
         __alias: null,
         __args: {},
-        __type: 'countries',
+        __type: 'countries'
       }
-    }
+    };
     const endProto = {
       countries: {
         id: true,
-        name: false, 
+        name: false,
         __alias: null,
         __args: {},
-        __type: 'countries',
-      },
-    }
+        __type: 'countries'
+      }
+    };
     const expectedResponseFromCache = {
       data: {
         countries: [
           {
-            "id": "1"
+            id: '1'
           },
           {
-            "id": "2"
+            id: '2'
           },
           {
-            "id": "3"
+            id: '3'
           }
         ]
       }
     };
-    const prototypeKeys = Object.keys(testProto); 
-    const responseFromCache = await Quell.buildFromCache(testProto, prototypeKeys);
+    const prototypeKeys = Object.keys(testProto);
+    const responseFromCache = await Quell.buildFromCache(
+      testProto,
+      prototypeKeys
+    );
     expect(testProto).toEqual(endProto);
     expect(responseFromCache).toEqual(expectedResponseFromCache);
   });
@@ -257,7 +280,7 @@ xdescribe('server test for buildFromCache', () => {
           }
         }
       }
-    }
+    };
     const endProto = {
       continents: {
         id: false,
@@ -283,12 +306,15 @@ xdescribe('server test for buildFromCache', () => {
           }
         }
       }
-    }
+    };
     const expectedResponseFromCache = {
       data: { continents: {} }
     };
-    const prototypeKeys = Object.keys(testProto); 
-    const responseFromCache = await Quell.buildFromCache(testProto, prototypeKeys);
+    const prototypeKeys = Object.keys(testProto);
+    const responseFromCache = await Quell.buildFromCache(
+      testProto,
+      prototypeKeys
+    );
     expect(testProto).toEqual(endProto);
     expect(responseFromCache).toEqual(expectedResponseFromCache);
   });

@@ -4,10 +4,8 @@ const schema = require('../../test-config/testSchema');
 const redisPort = 6379;
 const timeout = 100;
 
-
 describe('tests for update prototype with fragments on the server side', () => {
   const Quell = new QuellCache(schema, redisPort, timeout);
-
 
   afterAll((done) => {
     Quell.redisCache.flushAll();
@@ -22,16 +20,16 @@ describe('tests for update prototype with fragments on the server side', () => {
         __type: 'artists',
         id: true,
         name: true,
-        artistFragment: true,
-      },
+        artistFragment: true
+      }
     };
 
     const fragment = {
       artistFragment: {
         instrument: true,
         band: true,
-        hometown: true,
-      },
+        hometown: true
+      }
     };
 
     expect(Quell.updateProtoWithFragment(protoObj, fragment)).toEqual({
@@ -45,7 +43,7 @@ describe('tests for update prototype with fragments on the server side', () => {
         instrument: true,
         band: true,
         hometown: true
-      },
-    })
+      }
+    });
   });
-})
+});

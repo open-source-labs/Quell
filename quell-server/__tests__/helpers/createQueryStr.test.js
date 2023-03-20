@@ -1,21 +1,14 @@
-const QuellCache = require('../../src/quell.js');
-const schema = require('../../test-config/testSchema');
-const redisPort = 6379;
-const timeout = 100;
-
+const { createQueryStr } = require('../../src/quell');
 
 describe('server side tests for createQueryStr.js', () => {
-  const Quell = new QuellCache(schema, redisPort, timeout);
-
   afterAll((done) => {
-    Quell.redisCache.flushAll();
     done();
   });
-  
+
   test('inputs query object w/ no values', () => {
     const queryObject = {};
 
-    expect(Quell.createQueryStr(queryObject)).toEqual('');
+    expect(createQueryStr(queryObject)).toEqual('');
   });
 
   test('inputs query object w/ only scalar types and outputs GQL query string', () => {
@@ -27,11 +20,11 @@ describe('server side tests for createQueryStr.js', () => {
         __type: 'countries',
         id: false,
         name: false,
-        capitol: false,
+        capitol: false
       }
     };
 
-    expect(Quell.createQueryStr(queryObject)).toEqual(
+    expect(createQueryStr(queryObject)).toEqual(
       `{ countries { id name capitol } }`
     );
   });
@@ -51,12 +44,12 @@ describe('server side tests for createQueryStr.js', () => {
           id: false,
           country_id: false,
           name: false,
-          population: false,
-        },
-      },
+          population: false
+        }
+      }
     };
 
-    expect(Quell.createQueryStr(queryObject)).toEqual(
+    expect(createQueryStr(queryObject)).toEqual(
       `{ countries { cities { id country_id name population } } }`
     );
   });
@@ -83,7 +76,7 @@ describe('server side tests for createQueryStr.js', () => {
       }
     };
 
-    expect(Quell.createQueryStr(queryObject)).toEqual(
+    expect(createQueryStr(queryObject)).toEqual(
       `{ countries { id name capitol cities { id country_id name } } }`
     );
   });
@@ -107,11 +100,11 @@ describe('server side tests for createQueryStr.js', () => {
           country_id: false,
           name: false,
           population: false
-        },
+        }
       }
-    }; 
+    };
 
-    expect(Quell.createQueryStr(queryObject)).toEqual(
+    expect(createQueryStr(queryObject)).toEqual(
       `{ country(id: \"1\") { id name capitol cities { id country_id name population } } }`
     );
   });
@@ -123,8 +116,8 @@ describe('server side tests for createQueryStr.js', () => {
         __type: 'country',
         __alias: null,
         __args: {
-          name: "China", 
-          capitol: "Beijing"
+          name: 'China',
+          capitol: 'Beijing'
         },
         id: false,
         name: false,
@@ -137,12 +130,12 @@ describe('server side tests for createQueryStr.js', () => {
           id: false,
           country_id: false,
           name: false,
-          population: false,
-        },
-      },
+          population: false
+        }
+      }
     };
 
-    expect(Quell.createQueryStr(queryObject)).toEqual(
+    expect(createQueryStr(queryObject)).toEqual(
       `{ country(name: \"China\", capitol: \"Beijing\") { id name capital cities { id country_id name population } } }`
     );
   });
@@ -152,8 +145,8 @@ describe('server side tests for createQueryStr.js', () => {
       Canada: {
         __id: '3',
         __type: 'country',
-        __args: {id: '3'},
-        __alias: "Canada",
+        __args: { id: '3' },
+        __alias: 'Canada',
         id: false,
         cities: {
           __id: null,
@@ -161,12 +154,12 @@ describe('server side tests for createQueryStr.js', () => {
           __args: {},
           __alias: null,
           id: false,
-          name: false,
-        },
+          name: false
+        }
       }
     };
 
-    expect(Quell.createQueryStr(queryObject)).toEqual(
+    expect(createQueryStr(queryObject)).toEqual(
       `{ Canada: country(id: \"3\") { id cities { id name } } }`
     );
   });
@@ -175,20 +168,20 @@ describe('server side tests for createQueryStr.js', () => {
     const queryObject = {
       Canada: {
         __type: 'country',
-        __args: {id: 3},
+        __args: { id: 3 },
         __alias: 'Toronto',
         id: false,
         Toronto: {
           __type: 'city',
-          __args: {id: 5},
+          __args: { id: 5 },
           __alias: 'Toronto',
           id: false,
-          name: false,
-        },
+          name: false
+        }
       }
     };
 
-    expect(Quell.createQueryStr(queryObject)).toEqual(
+    expect(createQueryStr(queryObject)).toEqual(
       `{ Canada: country(id: \"3\") { id Toronto: city(id: \"5\") { id name } } }`
     );
   });
@@ -208,8 +201,8 @@ describe('server side tests for createQueryStr.js', () => {
           __args: {},
           __alias: null,
           id: false,
-          name: false,
-        },
+          name: false
+        }
       },
       book: {
         __id: '2',
@@ -224,12 +217,12 @@ describe('server side tests for createQueryStr.js', () => {
           id: false,
           name: false,
           __args: {},
-          __alias: null,
-        },
-      },
+          __alias: null
+        }
+      }
     };
 
-    expect(Quell.createQueryStr(queryObject)).toEqual(
+    expect(createQueryStr(queryObject)).toEqual(
       `{ country(id: \"1\") { id name cities { id name } } book(id: \"2\") { id title author { id name } } }`
     );
   });
@@ -277,7 +270,7 @@ describe('server side tests for createQueryStr.js', () => {
                     __type: 'not',
                     __alias: null,
                     __args: {},
-                    __id: null,
+                    __id: null
                   }
                 }
               }
@@ -286,8 +279,8 @@ describe('server side tests for createQueryStr.js', () => {
         }
       }
     };
-    expect(Quell.createQueryStr(queryObject)).toEqual(
+    expect(createQueryStr(queryObject)).toEqual(
       `{ countries { id cities { id attractions { id location { id latitude { id here { id not { id } } } } } } } }`
     );
-  })
+  });
 });

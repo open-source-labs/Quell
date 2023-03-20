@@ -1,18 +1,10 @@
-const QuellCache = require('../../src/quell');
-const schema = require('../../test-config/testSchema');
-
-const redisPort = 6379;
-const timeout = 100;
-
+const { joinResponses } = require('../../src/quell');
 
 describe('tests for joinResponses on the server side', () => {
-  const Quell = new QuellCache(schema, redisPort, timeout);
-
   afterAll((done) => {
-    Quell.redisCache.flushAll();
     done();
   });
-  
+
   const protoObj = {
     artists: {
       __id: null,
@@ -30,17 +22,17 @@ describe('tests for joinResponses on the server side', () => {
         album_id: true,
         id: true,
         name: true,
-        release_year: true,
-      },
-    },
+        release_year: true
+      }
+    }
   };
 
   const protoObjShort = {
     artists: {
       id: true,
       name: true,
-      instrument: true,
-    },
+      instrument: true
+    }
   };
 
   const result = [
@@ -50,8 +42,8 @@ describe('tests for joinResponses on the server side', () => {
       instrument: 'saxophone',
       albums: [
         { album_id: '1', id: '101', name: 'Blue Train', release_year: 1957 },
-        { album_id: '2', id: '201', name: 'Giant Steps', release_year: 1965 },
-      ],
+        { album_id: '2', id: '201', name: 'Giant Steps', release_year: 1965 }
+      ]
     },
     {
       id: '2',
@@ -63,9 +55,9 @@ describe('tests for joinResponses on the server side', () => {
           album_id: '4',
           id: '401',
           name: 'In a Silent Way',
-          release_year: 1969,
-        },
-      ],
+          release_year: 1969
+        }
+      ]
     },
     {
       id: '3',
@@ -76,11 +68,11 @@ describe('tests for joinResponses on the server side', () => {
           album_id: '5',
           id: '501',
           name: 'Brilliant Corners',
-          release_year: 1957,
+          release_year: 1957
         },
-        { album_id: '6', id: '601', name: 'Monks Dream', release_year: 1963 },
-      ],
-    },
+        { album_id: '6', id: '601', name: 'Monks Dream', release_year: 1963 }
+      ]
+    }
   ];
 
   test('inputs two flat response objects and outputs combined object', () => {
@@ -97,7 +89,7 @@ describe('tests for joinResponses on the server side', () => {
       data: {
         artist: {
           instrument: 'saxophone'
-        },
+        }
       }
     };
 
@@ -109,17 +101,19 @@ describe('tests for joinResponses on the server side', () => {
         __type: 'artist',
         id: true,
         name: true,
-        instrument: true,
-      },
+        instrument: true
+      }
     };
 
-    expect(Quell.joinResponses(cacheResponse.data, serverResponse.data, proto)).toEqual({
-        artist: {
-          id: '1',
-          name: 'John Coltrane',
-          instrument: 'saxophone'
-        }
-      });
+    expect(
+      joinResponses(cacheResponse.data, serverResponse.data, proto)
+    ).toEqual({
+      artist: {
+        id: '1',
+        name: 'John Coltrane',
+        instrument: 'saxophone'
+      }
+    });
   });
 
   test('inputs two nested response objects and outputs combined object', () => {
@@ -129,11 +123,11 @@ describe('tests for joinResponses on the server side', () => {
           id: '1',
           instrument: 'saxophone',
           album: {
-            id:'2',
+            id: '2',
             name: 'Ring Around the Rose-y'
-          },
-        },
-      },
+          }
+        }
+      }
     };
 
     const serverResponse = {
@@ -143,9 +137,9 @@ describe('tests for joinResponses on the server side', () => {
           name: 'John Coltrane',
           album: {
             yearOfRelease: '1800'
-          },
-        },
-      },
+          }
+        }
+      }
     };
 
     const prototype = {
@@ -168,8 +162,10 @@ describe('tests for joinResponses on the server side', () => {
         }
       }
     };
-  
-    expect(Quell.joinResponses(cacheResponse.data, serverResponse.data, prototype)).toEqual({
+
+    expect(
+      joinResponses(cacheResponse.data, serverResponse.data, prototype)
+    ).toEqual({
       artist: {
         id: '1',
         name: 'John Coltrane',
@@ -183,7 +179,6 @@ describe('tests for joinResponses on the server side', () => {
     });
   });
 
-  
   test('inputs a list retrieved from cache and a list retrieved from server and outputs combined List response', () => {
     const cacheResponse = {
       data: {
@@ -193,16 +188,26 @@ describe('tests for joinResponses on the server side', () => {
         ]
       }
     };
-      
+
     const serverResponse = {
       data: {
         albums: [
-          { album_id: '3', id: '301', name: 'Kind of Blue', release_year: 1959 },
-          { album_id: '4', id: '401', name: 'In a Silent Way', release_year: 1969 }
+          {
+            album_id: '3',
+            id: '301',
+            name: 'Kind of Blue',
+            release_year: 1959
+          },
+          {
+            album_id: '4',
+            id: '401',
+            name: 'In a Silent Way',
+            release_year: 1969
+          }
         ]
       }
     };
-    
+
     const prototype = {
       albums: {
         __id: null,
@@ -212,17 +217,24 @@ describe('tests for joinResponses on the server side', () => {
         album_id: false,
         id: false,
         name: false,
-        release_year: false,
+        release_year: false
       }
     };
 
-    expect(Quell.joinResponses(cacheResponse.data, serverResponse.data, prototype)).toEqual({
+    expect(
+      joinResponses(cacheResponse.data, serverResponse.data, prototype)
+    ).toEqual({
       albums: [
         { album_id: '1', id: '101', name: 'Blue Train', release_year: 1957 },
         { album_id: '2', id: '201', name: 'Giant Steps', release_year: 1965 },
         { album_id: '3', id: '301', name: 'Kind of Blue', release_year: 1959 },
-        { album_id: '4', id: '401', name: 'In a Silent Way', release_year: 1969 },
-      ],
+        {
+          album_id: '4',
+          id: '401',
+          name: 'In a Silent Way',
+          release_year: 1969
+        }
+      ]
     });
   });
 
@@ -233,22 +245,22 @@ describe('tests for joinResponses on the server side', () => {
           { id: '101', name: 'Blue Train' },
           { id: '201', name: 'Giant Steps' },
           { id: '301', name: 'Kind of Blue' },
-          { id: '401', name: 'In a Silent Way' },
-        ],
+          { id: '401', name: 'In a Silent Way' }
+        ]
       }
     };
-      
+
     const serverResponse = {
       data: {
         albums: [
           { album_id: '1', release_year: 1957 },
           { album_id: '2', release_year: 1965 },
           { album_id: '3', release_year: 1959 },
-          { album_id: '4', release_year: 1969 },
-        ],
+          { album_id: '4', release_year: 1969 }
+        ]
       }
     };
-    
+
     const prototype = {
       albums: {
         __id: null,
@@ -258,17 +270,24 @@ describe('tests for joinResponses on the server side', () => {
         album_id: false,
         id: false,
         name: false,
-        release_year: false,
+        release_year: false
       }
     };
 
-    expect(Quell.joinResponses(cacheResponse.data, serverResponse.data, prototype)).toEqual({
+    expect(
+      joinResponses(cacheResponse.data, serverResponse.data, prototype)
+    ).toEqual({
       albums: [
         { album_id: '1', id: '101', name: 'Blue Train', release_year: 1957 },
         { album_id: '2', id: '201', name: 'Giant Steps', release_year: 1965 },
         { album_id: '3', id: '301', name: 'Kind of Blue', release_year: 1959 },
-        { album_id: '4', id: '401', name: 'In a Silent Way', release_year: 1969 },
-      ],
+        {
+          album_id: '4',
+          id: '401',
+          name: 'In a Silent Way',
+          release_year: 1969
+        }
+      ]
     });
   });
 
@@ -280,20 +299,20 @@ describe('tests for joinResponses on the server side', () => {
           genre: 'Pop',
           albums: [
             {
-              id:'1',
+              id: '1',
               name: 'Tigermilk'
             },
             {
               id: '2',
-              name: 'If You\'re Feeling Sinister'
+              name: "If You're Feeling Sinister"
             },
             {
               id: '3',
               name: 'The Boy With The Arab Strap'
             }
-          ],
-        },
-      },
+          ]
+        }
+      }
     };
 
     const serverResponse = {
@@ -311,9 +330,9 @@ describe('tests for joinResponses on the server side', () => {
             {
               yearOfRelease: '1998'
             }
-          ],
-        },
-      },
+          ]
+        }
+      }
     };
 
     const prototype = {
@@ -334,21 +353,23 @@ describe('tests for joinResponses on the server side', () => {
         }
       }
     };
-  
-    expect(Quell.joinResponses(cacheResponse.data, serverResponse.data, prototype)).toEqual({
+
+    expect(
+      joinResponses(cacheResponse.data, serverResponse.data, prototype)
+    ).toEqual({
       artist: {
         id: '1',
         name: 'Belle & Sebastian',
         genre: 'Pop',
         albums: [
           {
-            id:'1',
+            id: '1',
             name: 'Tigermilk',
             yearOfRelease: '1996'
           },
           {
             id: '2',
-            name: 'If You\'re Feeling Sinister',
+            name: "If You're Feeling Sinister",
             yearOfRelease: '1996'
           },
           {
@@ -356,8 +377,8 @@ describe('tests for joinResponses on the server side', () => {
             name: 'The Boy With The Arab Strap',
             yearOfRelease: '1998'
           }
-        ],
-      },
+        ]
+      }
     });
   });
 
@@ -369,12 +390,12 @@ describe('tests for joinResponses on the server side', () => {
           instrument: 'saxophone',
           name: 'John Coltrane',
           album: {
-            id:'2',
+            id: '2',
             name: 'Ring Around the Rose-y',
             yearOfRelease: '1800'
-          },
-        },
-      },
+          }
+        }
+      }
     };
 
     const serverResponse = {
@@ -385,9 +406,9 @@ describe('tests for joinResponses on the server side', () => {
           book: {
             name: 'Crepes of Wrath',
             year: '1945'
-          },
-        },
-      },
+          }
+        }
+      }
     };
 
     const prototype = {
@@ -418,7 +439,7 @@ describe('tests for joinResponses on the server side', () => {
         name: false,
         book: {
           __id: null,
-          __args: { },
+          __args: {},
           __alias: null,
           __type: 'book',
           name: false,
@@ -426,8 +447,10 @@ describe('tests for joinResponses on the server side', () => {
         }
       }
     };
-  
-    expect(Quell.joinResponses(cacheResponse.data, serverResponse.data, prototype)).toEqual({
+
+    expect(
+      joinResponses(cacheResponse.data, serverResponse.data, prototype)
+    ).toEqual({
       artist: {
         id: '1',
         name: 'John Coltrane',
@@ -437,17 +460,17 @@ describe('tests for joinResponses on the server side', () => {
           name: 'Ring Around the Rose-y',
           yearOfRelease: '1800'
         }
-      }, 
+      },
       author: {
         id: '10',
         name: 'Jeane Steinbeck',
         book: {
           name: 'Crepes of Wrath',
           year: '1945'
-        },
+        }
       }
     });
-  })
+  });
 
   // TO-DO: test for alias compatibility (should be fine- server & bFC both create objects with alias as keys)
 });
