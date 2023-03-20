@@ -824,11 +824,12 @@ class QuellCache implements QuellCache {
    */
   async checkFromRedis(key: string): Promise<number> {
     try {
+      // will return 0 if key does not exists
       const existsInRedis: number = await this.redisCache.exists(key);
       return existsInRedis;
     } catch (err) {
       console.log('err in checkFromRedis: ', err);
-      return -1;
+      return 0;
     }
   }
 
