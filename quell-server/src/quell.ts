@@ -1786,11 +1786,12 @@ class QuellCache implements QuellCache {
         // temporary store for field properties
         const fieldStore: ResponseDataType = {};
 
-        const obj1 = currProto.__type as string;
-
         // create a cacheID based on __type and __id from the prototype
-        let cacheID: string = Object.prototype.hasOwnProperty.call(map, obj1)
-          ? (map[obj1] as string)
+        let cacheID: string = Object.prototype.hasOwnProperty.call(
+          map,
+          currProto.__type as string
+        )
+          ? (map[currProto.__type as string] as string)
           : (currProto.__type as string);
 
         cacheID += currProto.__id ? `--${currProto.__id}` : '';
@@ -1827,12 +1828,11 @@ class QuellCache implements QuellCache {
           // if object, recurse normalizeForCache assign in that object
           if (typeof currField[key] === 'object') {
             if (protoField[resultName] !== null) {
-              const obj = protoField[resultName] as ProtoObjType;
               await this.normalizeForCache(
                 { [key]: currField[key] },
                 map,
                 {
-                  [key]: obj[key]
+                  [key]: (protoField[resultName] as ProtoObjType)[key]
                 },
                 currName
               );
@@ -2310,8 +2310,7 @@ class QuellCache implements QuellCache {
       Object.keys(proto).forEach((key) => {
         // if the field is nested, recurse, increasing currentDepth by 1
         if (typeof proto[key] === 'object' && !key.includes('__')) {
-          const obj = proto[key] as ProtoObjType;
-          determineDepth(obj, currentDepth + 1);
+          determineDepth(proto[key] as ProtoObjType, currentDepth + 1);
         }
       });
     };
@@ -2390,8 +2389,7 @@ class QuellCache implements QuellCache {
         // if the field is nested, increase the total cost by objectCost and recurse
         if (typeof proto[key] === 'object' && !key.includes('__')) {
           cost += objectCost;
-          const obj = proto[key] as ProtoObjType;
-          return determineCost(obj);
+          return determineCost(proto[key] as ProtoObjType);
         }
         // if scalar, increase the total cost by scalarCost
         if (proto[key] === true && !key.includes('__')) {
@@ -2427,8 +2425,10 @@ class QuellCache implements QuellCache {
       Object.keys(proto).forEach((key) => {
         // if the field is nested, recurse, multiplying the current total cost by the depthCostFactor
         if (typeof proto[key] === 'object' && !key.includes('__')) {
-          const obj = proto[key] as ProtoObjType;
-          determineDepthCost(obj, totalCost * depthCostFactor);
+          determineDepthCost(
+            proto[key] as ProtoObjType,
+            totalCost * depthCostFactor
+          );
         }
       });
     };
