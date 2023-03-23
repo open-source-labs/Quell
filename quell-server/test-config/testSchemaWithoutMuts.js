@@ -201,85 +201,8 @@ const RootQuery = new GraphQLObjectType({
   }
 });
 
-// ================== //
-// ===== MUTATIONS ==== //
-// ================== //
-
-const RootMutation = new GraphQLObjectType({
-  name: 'RootMutationType',
-  fields: {
-    // add book
-    addBook: {
-      type: BookType,
-      args: {
-        name: { type: new GraphQLNonNull(GraphQLString) },
-        author: { type: GraphQLString },
-        shelf_id: { type: new GraphQLNonNull(GraphQLString) }
-      },
-      async resolve(parent, args) {
-        const author = args.author || '';
-
-        const newBook = await dbBooks.query(
-          `INSERT INTO books (name, author, shelf_id) VALUES ($1, $2, $3) RETURNING *`,
-          [args.name, author, Number(args.shelf_id)]
-        );
-        return newBook.rows[0];
-      }
-    },
-    // change book
-    changeBook: {
-      type: BookType,
-      args: {
-        id: { type: GraphQLID },
-        author: { type: GraphQLString }
-      },
-      async resolve(parent, args) {
-        const updatedBook = await dbBooks.query(
-          `UPDATE books SET author = $2 WHERE id = $1 RETURNING *`,
-          [args.id, args.author]
-        );
-        return updatedBook.rows[0];
-      }
-    },
-    // ADD SHELF
-    addBookShelf: {
-      type: BookShelfType,
-      args: {
-        name: { type: new GraphQLNonNull(GraphQLString) }
-      },
-      async resolve(parent, args) {
-        const newBookShelf = await dbBooks.query(
-          `INSERT INTO bookShelves (name) VALUES ($1) RETURNING *`,
-          [args.name]
-        );
-        return newBookShelf.rows[0];
-      }
-    },
-    // ADD COUNTRY
-    addCountry: {
-      type: CountryType,
-      args: { name: { type: GraphQLString } },
-      async resolve(parent, args) {
-        const country = await db.create({ name: args.name });
-        return country;
-      }
-    },
-    deleteCity: {
-      type: CityType,
-      args: { name: { type: GraphQLString } },
-      async resolve(parent, args) {
-        const findCity = await db.findOne({ name: args.name });
-        if (findCity) {
-          await db.deleteOne({ name: args.name });
-        }
-      }
-    }
-  }
-});
-
 // imported into server.js
 module.exports = new GraphQLSchema({
   query: RootQuery,
-  mutation: RootMutation,
   types: [CountryType, CityType, BookType, BookShelfType]
 });
