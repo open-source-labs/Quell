@@ -78,25 +78,35 @@ interface QuellCache {
 /**
  * Creates a QuellCache instance that provides middleware for caching between the graphQL endpoint and
  * front-end requests, connects to redis cloud store via user-specified parameters.
- *    - it takes in a schema, redis specifications grouped into an object, cache expiration time in seconds,
- *    and cost parameters as an object
- *    - if there is no cache expiration provided by the user, cacheExpiration defaults to 14 days in seconds,
- *    - if there are no cost parameters provided by the user, costParameters is given the default values
- *    found in defaultCostParameters
- *  @param {Object} schema - GraphQL defined schema that is used to facilitate caching by providing valid queries,
- *  mutations, and fields
- *  @param {Number} cacheExpiration - Time in seconds for redis values to be evicted from the cache
- *  @param {Object} costParameters - An object with key-pair values for maxCost, mutationCost, objectCost,
- *  scalarCost, depthCostFactor, maxDepth, ipRate
- *  @param {Number} redisPort - Redis port that Quell uses to facilitate caching
- *  @param {String} redisHost - Redis host URI
- *  @param {String} redisPassword - Redis password to host URI
+ *    - If there is no cache expiration provided by the user, cacheExpiration defaults to 14 days in seconds.
+ *    - If there are no cost parameters provided by the user, costParameters is given the default values.
+ *    - If redisPort, redisHost, and redisPassword are omitted, will use local Redis instance.
+ *     See https://redis.io/docs/getting-started/installation/ for instructions on installing Redis and starting a Redis server.
+ *  @param {ConstructorOptions} options - The options to use for the cache.
+ *  @param {GraphQLSchema} options.schema - GraphQL defined schema that is used to facilitate caching by providing valid queries,
+ *  mutations, and fields.
+ *  @param {number} [options.cacheExpiration=1209600] - Time in seconds for redis values to be evicted from the cache. Defaults to 14 days.
+ *  @param {CostParamsType} [options.costParameters=defaultCostParams] - The cost parameters to use for caching. Defaults to:
+ *    - maxCost: 5000 (maximum cost allowed before a request is rejected)
+ *    - mutationCost: 5 (cost of a mutation)
+ *    - objectCost: 2 (cost of retrieving an object)
+ *    - scalarCost: 1 (cost of retrieving a scalar)
+ *    - depthCostFactor: 1.5 (multiplicative cost of each depth level)
+ *    - maxDepth: 10 (depth limit parameter)
+ *    - ipRate: 3 (requests allowed per second)
+ *  @param {number} options.redisPort - (optional) The Redis port to connect to.
+ *  @param {string} options.redisHost - (optional) The Redis host URI to connect to.
+ *  @param {string} options.redisPassword - (optional) The Redis password to the host URI.
+ *  @example // Omit redisPort, redisHost, and redisPassword to use a local Redis instance.
+ *  const quellCache = new QuellCache({
+ *    schema: schema,
+ *    cacheExpiration: 3600, // 1 hour in seconds
+ *    });
  */
-// default host is localhost, default expiry time is 14 days in milliseconds
 class QuellCache implements QuellCache {
   constructor({
     schema,
-    cacheExpiration = 1209600, // default expiry time is 14 days in milliseconds;
+    cacheExpiration = 1209600, // Default expiry time is 14 days in seconds
     costParameters = defaultCostParams,
     redisPort,
     redisHost,
@@ -133,16 +143,10 @@ class QuellCache implements QuellCache {
   }
 
   /**
-   * A redis-based IP rate limiter method. It:
-   *    - receives the ipRate in requests per second from the request object on the front-end,
-   *    - if there is no ipRate set on front-end, it'll default to the value in the defaultCostParameters,
-   *    - creates a key using the IP address and current time in seconds,
-   *    - increments the value at this key for each new call received,
-   *    - if the value of calls is greater than the ipRate limit, it will not process the query,
-   *    - keys are set to expire after 1 second
-   *  @param {Object} req - Express request object, including request body with GraphQL query string
-   *  @param {Object} res - Express response object, will carry query response to next middleware
-   *  @param {Function} next - Express next middleware function, invoked when QuellCache completes its work
+   * A redis-based IP rate limiter middleware function that limits the number of requests per second based on IP address using Redis.
+   *  @param {Request} req - Express request object, including request body with GraphQL query string.
+   *  @param {Response} res - Express response object, will carry query response to next middleware.
+   *  @param {NextFunction} next - Express next middleware function, invoked when QuellCache completes its work.
    */
   async rateLimiter(
     req: Request,
