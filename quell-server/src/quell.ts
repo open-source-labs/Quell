@@ -1,22 +1,20 @@
 import { Response, Request, NextFunction, RequestHandler } from 'express';
 import { parse } from 'graphql/language/parser';
-import { visit, BREAK } from 'graphql/language/visitor';
 import { graphql } from 'graphql';
 import type { RedisClientType } from 'redis';
 import { createClient } from 'redis';
+import {
+  getFieldsMap,
+  updateProtoWithFragment,
+  parseAST,
+  joinResponses,
+  getQueryMap,
+  getMutationMap,
+  createQueryStr,
+  createQueryObj
+} from './helpers/quellHelpers';
 
-import type {
-  GraphQLSchema,
-  ExecutionResult,
-  ASTNode,
-  DocumentNode,
-  OperationDefinitionNode,
-  FragmentDefinitionNode,
-  FieldNode,
-  SelectionSetNode,
-  ArgumentNode,
-  FragmentSpreadNode
-} from 'graphql';
+import type { GraphQLSchema, ExecutionResult, DocumentNode } from 'graphql';
 import type {
   ConstructorOptions,
   IdCacheType,
@@ -27,26 +25,16 @@ import type {
   QueryMapType,
   FieldsMapType,
   IdMapType,
-  ParseASTOptions,
-  ArgsObjType,
-  FieldArgsType,
-  AuxObjType,
-  ValidArgumentNodeType,
-  FieldsObjectType,
-  FieldsValuesType,
-  GQLNodeWithDirectivesType,
   ItemFromCacheType,
   RedisOptionsType,
   RedisStatsType,
   ServerErrorType,
   ResponseDataType,
-  QueryObject,
   QueryFields,
   DatabaseResponseDataRaw,
   Type,
   MergedResponse,
   DataResponse,
-  Data,
   TypeData
 } from './types';
 

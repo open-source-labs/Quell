@@ -37,7 +37,7 @@ import type {
  * @param {Object} queryObject - a modified version of the prototype with only values we want to pass onto the queryString
  * @param {String} operationType - a string indicating the GraphQL operation type- 'query', 'mutation', etc.
  */
-function createQueryStr(
+export function createQueryStr(
   queryObject: QueryObject | ProtoObjType,
   operationType: string
 ): string {
@@ -121,7 +121,7 @@ function createQueryStr(
  * @param {String} map - map of fields and true/false values from initial request, should be the prototype
  * @returns {Object} queryObject with only values to be requested from GraphQL endpoint
  */
-function createQueryObj(map: ProtoObjType): ProtoObjType {
+export function createQueryObj(map: ProtoObjType): ProtoObjType {
   const output: ProtoObjType = {};
   // iterate over every key in map
   // true values are filtered out, false values are placed on output
@@ -188,7 +188,7 @@ function createQueryObj(map: ProtoObjType): ProtoObjType {
  * @param {Object} queryProto - current slice of the prototype being used as a template for final response object structure
  * @param {Boolean} fromArray - whether or not the current recursive loop came from within an array, should NOT be supplied to function call
  */
-function joinResponses(
+export function joinResponses(
   cacheResponse: DataResponse,
   serverResponse: DataResponse,
   queryProto: QueryObject | ProtoObjType,
@@ -331,7 +331,7 @@ function joinResponses(
  * @returns {string} operationType
  * @returns {Object} frags object
  */
-function parseAST(
+export function parseAST(
   AST: DocumentNode,
   options: ParseASTOptions = { userDefinedID: null }
 ): { proto: ProtoObjType; operationType: string; frags: FragsType } {
@@ -626,7 +626,7 @@ function parseAST(
  * @param {Object} frags - fragments object to update prototype with
  * @returns {Object} updated prototype object
  */
-function updateProtoWithFragment(
+export function updateProtoWithFragment(
   protoObj: ProtoObjType,
   frags: FragsType
 ): ProtoObjType {
@@ -665,7 +665,7 @@ function updateProtoWithFragment(
  *  mutations, and fields
  *  @returns {Object} mutationMap - map of mutations to GraphQL types
  */
-function getMutationMap(schema: GraphQLSchema): MutationMapType {
+export function getMutationMap(schema: GraphQLSchema): MutationMapType {
   const mutationMap: MutationMapType = {};
   // get object containing all root mutations defined in the schema
   const mutationTypeFields: GraphQLSchema['_mutationType'] = schema
@@ -699,7 +699,7 @@ function getMutationMap(schema: GraphQLSchema): MutationMapType {
  *  mutations, and fields
  *  @returns {Object} queryMap - map of queries to GraphQL types
  */
-function getQueryMap(schema: GraphQLSchema): QueryMapType {
+export function getQueryMap(schema: GraphQLSchema): QueryMapType {
   const queryMap: QueryMapType = {};
   // get object containing all root queries defined in the schema
   const queryTypeFields: GraphQLSchema['_queryType'] = schema
@@ -732,7 +732,7 @@ function getQueryMap(schema: GraphQLSchema): QueryMapType {
  *  @returns {Object} fieldsMap - map of fields to GraphQL types
  */
 
-function getFieldsMap(schema: GraphQLSchema): FieldsMapType {
+export function getFieldsMap(schema: GraphQLSchema): FieldsMapType {
   const fieldsMap: FieldsMapType = {};
   const typesList: GraphQLSchema['_typeMap'] = schema?.getTypeMap();
   const builtInTypes: string[] = [
@@ -773,14 +773,3 @@ function getFieldsMap(schema: GraphQLSchema): FieldsMapType {
   }
   return fieldsMap;
 }
-
-module.exports = {
-  getFieldsMap,
-  updateProtoWithFragment,
-  parseAST,
-  joinResponses,
-  getQueryMap,
-  getMutationMap,
-  createQueryStr,
-  createQueryObj
-};
