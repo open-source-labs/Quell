@@ -1,5 +1,5 @@
 /* eslint-disable no-undef */
-const { getMutationMap } = require('../../src/quell');
+const { getMutationMap } = require('../../src/helpers/quellHelpers');
 const schema = require('../../test-config/testSchema');
 const schemaWithoutMuts = require('../../test-config/testSchemaWithoutMuts');
 

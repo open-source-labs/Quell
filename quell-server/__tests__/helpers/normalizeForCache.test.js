@@ -1,13 +1,11 @@
 /* eslint-disable no-undef */
-const { getQueryMap } = require('../../src/helpers/quellHelpers');
-const schema = require('../../test-config/testSchema');
-const schemaWithoutQueries = require('../../test-config/testSchemaWithoutQueries');
+const { normalizeForCache2 } = require('../../src/helpers/quellHelpers');
 
-describe('server side tests for getQueryMap', () => {
+describe('server side tests for normalizeForCache2', () => {
   afterAll((done) => {
     done();
   });
-  test('Correctly returns valid queries and their respective type based on schema', () => {
+  test('Correctly returns a normalized version of the query response with proper references for nested objects', () => {
     expect(getQueryMap(schema)).toEqual({
       book: 'Book',
       bookShelf: 'BookShelf',
