@@ -153,9 +153,8 @@ class QuellCache implements QuellCache {
     res: Response,
     next: NextFunction
   ): Promise<void> {
-    // Set ipRate to the ipRate limit from the request body or use default.
-    const ipRateLimit: number =
-      req.body.costOptions?.ipRate ?? this.costParameters.ipRate;
+    // Set ipRate to the default ipRate from the cost parameters.
+    const ipRateLimit: number = this.costParameters.ipRate;
     // Get the IP address from the request.
     const ipAddress: string = req.ip;
     // Get the current time in seconds.
@@ -1501,10 +1500,8 @@ class QuellCache implements QuellCache {
   // what parameters should they take? If middleware, good as is, has to take in query obj in request, limit set inside.
   // If function inside whole of Quell, (query, limit), so they are explicitly defined and passed in
   depthLimit(req: Request, res: Response, next: NextFunction): void {
-    // get depth max limit from cost parameters
-    let { maxDepth } = this.costParameters;
-    // maxDepth can be reassigned to get depth max limit from req.body if user selects depth limit
-    if (req.body.costOptions.maxDepth) maxDepth = req.body.costOptions.maxDepth;
+    // Get maximum depth limit from the cost parameters.
+    const { maxDepth } = this.costParameters;
     // return error if no query in request.
     if (!req.body.query) {
       {
@@ -1574,12 +1571,9 @@ class QuellCache implements QuellCache {
    * @param {Function} next - Express next middleware function
    */
   costLimit(req: Request, res: Response, next: NextFunction): void {
-    // get default values for costParameters
-    let { maxCost } = this.costParameters;
-    const { mutationCost, objectCost, depthCostFactor, scalarCost } =
+    // Get the default cost parameters.
+    const { maxCost, mutationCost, objectCost, depthCostFactor, scalarCost } =
       this.costParameters;
-    // maxCost can be reassigned to get maxcost limit from req.body if user selects cost limit
-    if (req.body.costOptions.maxCost) maxCost = req.body.costOptions.maxCost;
     // return error if no query in request.
     if (!req.body.query) {
       const err: ServerErrorType = {
