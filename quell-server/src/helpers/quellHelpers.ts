@@ -28,7 +28,8 @@ import type {
   QueryFields,
   MergedResponse,
   DataResponse,
-  Data
+  Data,
+  ResponseDataType
 } from '../types';
 /**
  * createQueryStr traverses over a supplied query Object and uses the fields on there to create a query string reflecting the data,
@@ -772,4 +773,214 @@ export function getFieldsMap(schema: GraphQLSchema): FieldsMapType {
     fieldsMap[type] = fieldsObj;
   }
   return fieldsMap;
+}
+
+/*
+map:  {
+[1]   song: 'Song',
+[1]   album: 'Album',
+[1]   artist: [ 'Artist' ],
+[1]   country: 'Country',
+[1]   city: 'City',
+[1]   attractions: 'Attractions'
+[1] }
+responseData:  {
+[1]   artist: [
+[1]     {
+[1]       id: '6365be1ff176b90f3b81f0e9',
+[1]       name: 'Frank Ocean',
+[1]       albums: [Array]
+[1]     }
+[1]   ]
+[1] }
+protoField:  {
+[1]   artist: {
+[1]     id: false,
+[1]     name: false,
+[1]     __id: null,
+[1]     __type: 'artist',
+[1]     __alias: null,
+[1]     __args: { name: 'Frank Ocean' },
+[1]     albums: {
+[1]       id: false,
+[1]       name: false,
+[1]       __id: null,
+[1]       __type: 'albums',
+[1]       __alias: null,
+[1]       __args: null
+[1]     }
+[1]   }
+[1] }
+cacheID:  Artist
+[1] cacheID2:  Artist--6365be1ff176b90f3b81f0e9
+[1] currName:  string it should not be again
+[1] cacheID:  albums
+[1] cacheID2:  albums--6359930abeb03be432d17785
+[1] currName:  string it should not be again
+[1] cacheID:  albums
+[1] cacheID2:  albums--63599379beb03be432d17786
+[1] currName:  string it should not be again
+[1] idCache:  {
+[1]   'string it should not be again': {
+[1]     Artist: 'Artist--6365be1ff176b90f3b81f0e9',
+[1]     albums: [ 'albums--6359930abeb03be432d17785' ]
+[1]   }
+[1] }
+*/
+
+/*
+map:  {
+[1]   song: 'Song',
+[1]   album: 'Album',
+[1]   artist: [ 'Artist' ],
+[1]   country: 'Country',
+[1]   city: 'City',
+[1]   attractions: 'Attractions'
+[1] }
+responseData:  {
+[1]   artist: [
+[1]     {
+[1]       id: '6365be1ff176b90f3b81f0e9',
+[1]       name: 'Frank Ocean',
+[1]       albums: [Array]
+[1]     }
+[1]   ]
+[1] }
+protoField:  {
+[1]   artist: {
+[1]     id: false,
+[1]     name: false,
+[1]     __id: null,
+[1]     __type: 'artist',
+[1]     __alias: null,
+[1]     __args: { name: 'Frank Ocean' },
+[1]     albums: {
+[1]       id: false,
+[1]       name: false,
+[1]       __id: null,
+[1]       __type: 'albums',
+[1]       __alias: null,
+[1]       __args: null
+[1]     }
+[1]   }
+[1] }
+cacheID:  Artist
+[1] cacheID2:  Artist--6365be1ff176b90f3b81f0e9
+[1] currName:  string it should not be again
+[1] cacheID:  albums
+[1] cacheID2:  albums--6359930abeb03be432d17785
+[1] currName:  string it should not be again
+[1] cacheID:  albums
+[1] cacheID2:  albums--63599379beb03be432d17786
+[1] currName:  string it should not be again
+[1] idCache:  {
+[1]   'string it should not be again': {
+[1]     Artist: 'Artist--6365be1ff176b90f3b81f0e9',
+[1]     albums: [ 'albums--6359930abeb03be432d17785' ]
+[1]   }
+[1] }
+*/
+// /**
+//  * normalizeForCache2 traverses over response data and formats it appropriately so we can store it in the cache.
+//  * @param {Object} responseData - data we received from an external source of data such as a database or API
+//  * @param {Object} map - a map of queries to their desired data types, used to ensure accurate and consistent caching
+//  * @param {Object} protoField - a slice of the prototype currently being used as a template and reference for the responseData to send information to the cache
+//  * @param {String} currName - parent object name, used to pass into updateIDCache
+//  *
+//  * Logic Wanted - If responseData is an object, save the object with its properties to the IDcache(?)
+//  * but only the ID string is used as the value inside the nested object.
+//  * inside IDCache - the data's object can be stored with key:value with key being the object's ID
+//  * when the parent object is referenced, the nested response can grab the ID off the object, reference the IDCache,
+//  * and replace the reference with the actual value
+//  *
+//  * if DB response has nested values as well, keep recursing but only saving the IDs as the actual references
+//  *
+//  * currName needs to be looked at, currently is weird string (see comments above)
+//  * the IDCache is nesting the object's correcly with the right type--ID --> may be able to change the implementation for
+//  * nested structure
+//  *
+//  * query string should be saved to redisCache
+//  * where should ID:ID's Object be stored
+//  * where should the actual object with references be stored?
+//  * and should the Nested Object be saved to the IDCache?
+//  * attempt at refactoring normalizeForCache2
+//  */
+export async function normalizeForCache2(
+  responseData: ResponseDataType,
+  map: QueryMapType = {}
+) {
+  // loop through each resultName in response data
+  for (const resultName in responseData) {
+    // currField is assigned to the nestedObject or array on responseData
+    const currField = responseData[resultName];
+    if (Array.isArray(currField)) {
+      for (let i = 0; i < currField.length; i++) {
+        const el: ResponseDataType = currField[i];
+
+        const dataType: string | undefined | string[] = map[resultName];
+
+        if (typeof el === 'object' && typeof dataType === 'string') {
+          await normalizeForCache2({ [dataType]: el }, map);
+        }
+      }
+      // need currField to always have an ID property so it can be used for caching
+      // need to modify each query to add ID for each object/subobject being requested
+    } else if (typeof currField === 'object') {
+      // need to get non-Alias ID for cache
+
+      // temporary store for field properties
+      const fieldStore: ResponseDataType = {};
+
+      //set cacheID to ID value on currField (object)
+      let cacheID: string = Object.prototype.hasOwnProperty.call(
+        map,
+        currProto.__type as string
+      )
+        ? (map[currProto.__type as string] as string)
+        : (currProto.__type as string);
+
+      cacheID += currProto.__id ? `--${currProto.__id}` : '';
+
+      // iterate over keys in nested object
+      // need to save the actual object inside the object cache
+      // and only the ID is placed as a reference inside the nested object
+      for (const key in currField) {
+        // if prototype has no ID, check field keys for ID (mostly for arrays)
+        if (
+          !currProto.__id &&
+          (key === 'id' || key === '_id' || key === 'ID' || key === 'Id')
+        ) {
+          // if currname is undefined, assign to responseData at cacheid to lower case at name
+          if (responseData[cacheID.toLowerCase()]) {
+            const responseDataAtCacheID = responseData[cacheID.toLowerCase()];
+            if (
+              typeof responseDataAtCacheID !== 'string' &&
+              !Array.isArray(responseDataAtCacheID)
+            ) {
+              if (typeof responseDataAtCacheID.name === 'string') {
+                currName = responseDataAtCacheID.name;
+              }
+            }
+          }
+          // if the responseData at cacheid to lower case at name is not undefined, store under name variable and copy logic of writing to cache, want to update cache with same things, all stored under name
+          // store objKey as cacheID without ID added
+          const cacheIDForIDCache: string = cacheID;
+          cacheID += `--${currField[key]}`;
+          // call idcache here idCache(cacheIDForIDCache, cacheID)
+          updateIdCache(cacheIDForIDCache, cacheID, currName);
+        }
+
+        fieldStore[key] = currField[key];
+
+        // if object, recurse normalizeForCache assign in that object
+        if (typeof currField[key] === 'object') {
+          if (protoField[resultName] !== null) {
+            await normalizeForCache2({ [key]: currField[key] }, map);
+          }
+        }
+      }
+      // store "current object" on cache in JSON format
+
+    }
+  }
 }
