@@ -26,7 +26,6 @@ import type {
   MutationMapType,
   QueryMapType,
   FieldsMapType,
-  IdMapType,
   ParseASTOptions,
   ArgsObjType,
   FieldArgsType,
@@ -62,19 +61,6 @@ const defaultCostParams: CostParamsType = {
 
 let idCache: IdCacheType = {};
 
-interface QuellCache {
-  idCache: IdCacheType;
-  schema: GraphQLSchema;
-  costParameters: CostParamsType;
-  queryMap: QueryMapType;
-  mutationMap: MutationMapType;
-  fieldsMap: FieldsMapType;
-  idMap: IdMapType;
-  cacheExpiration: number;
-  redisReadBatchSize: number;
-  redisCache: RedisClientType;
-}
-
 /**
  * Creates a QuellCache instance that provides middleware for caching between the graphQL endpoint and
  * front-end requests, connects to redis cloud store via user-specified parameters.
@@ -103,7 +89,16 @@ interface QuellCache {
  *    cacheExpiration: 3600, // 1 hour in seconds
  *    });
  */
-class QuellCache implements QuellCache {
+export class QuellCache {
+  idCache: IdCacheType;
+  schema: GraphQLSchema;
+  costParameters: CostParamsType;
+  queryMap: QueryMapType;
+  mutationMap: MutationMapType;
+  fieldsMap: FieldsMapType;
+  cacheExpiration: number;
+  redisReadBatchSize: number;
+  redisCache: RedisClientType;
   constructor({
     schema,
     cacheExpiration = 1209600, // Default expiry time is 14 days in seconds
@@ -2760,5 +2755,3 @@ cacheID:  Artist
 //     }
 //   }
 // }
-
-module.exports = QuellCache;
