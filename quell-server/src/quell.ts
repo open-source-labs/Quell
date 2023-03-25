@@ -162,11 +162,12 @@ class QuellCache implements QuellCache {
     // Create a Redis IP key using the IP address and current time.
     const redisIpTimeKey = `${ipAddress}:${currentTimeSeconds}`;
 
-    // Return an error if no query is found in the request.
+    // Return an error if no query is found on the request.
     if (!req.body.query) {
       return next({
+        log: 'Error: no GraphQL query found on request body',
         status: 400, // Bad Request
-        log: 'Error: no GraphQL query found on request body'
+        message: { err: 'Error in rateLimiter' }
       });
     }
 
@@ -221,14 +222,18 @@ class QuellCache implements QuellCache {
    *    - joins the cached and uncached responses,
    *    - decomposes and caches the joined query, and
    *    - attaches the joined response to the response object before passing control to the next middleware.
-   *  @param {Object} req - Express request object, including request body with GraphQL query string
-   *  @param {Object} res - Express response object, will carry query response to next middleware
-   *  @param {Function} next - Express next middleware function, invoked when QuellCache completes its work
+   *  @param {Request} req - Express request object, including request body with GraphQL query string
+   *  @param {Response} res - Express response object, will carry query response to next middleware
+   *  @param {NextFunction} next - Express next middleware function, invoked when QuellCache completes its work
    */
   async query(req: Request, res: Response, next: NextFunction): Promise<void> {
-    // handle request without query
+    // Return an error if no query is found on the request.
     if (!req.body.query) {
-      return next({ log: 'Error: no GraphQL query found on request body' });
+      return next({
+        log: 'Error: no GraphQL query found on request body',
+        status: 400, // Bad Request
+        message: { err: 'Error in rateLimiter' }
+      });
     }
 
     // Retrieve GraphQL query string from request body.
@@ -240,8 +245,8 @@ class QuellCache implements QuellCache {
       ? res.locals.AST
       : parse(queryString);
 
-    // create response prototype, and operation type, and fragments object
-    // the response prototype is used as a template for most operations in quell including caching, building modified requests, and more
+    // Create response prototype, operation type, and fragments object.
+    // The response prototype is used as a template for most operations in Quell including caching, building modified requests, and more.
     const {
       proto,
       operationType,
@@ -252,11 +257,11 @@ class QuellCache implements QuellCache {
     // Determine if Quell is able to handle the operation.
     // Quell can handle mutations and queries.
 
-    /*
-     * If the operation is unQuellable (cannot be cached), execute the operation,
-     * add the result to the response, and return.
-     */
     if (operationType === 'unQuellable') {
+      /*
+       * If the operation is unQuellable (cannot be cached), execute the operation,
+       * add the result to the response, and return.
+       */
       graphql({ schema: this.schema, source: queryString })
         .then((queryResult: ExecutionResult): void => {
           res.locals.queryResponse = queryResult;
@@ -265,12 +270,13 @@ class QuellCache implements QuellCache {
         .catch((error: Error): void => {
           return next(`graphql library error: ${error}`);
         });
-
-      /*
-       * we can have two types of operation to take care of
-       * MUTATION OR QUERY
-       */
     } else if (operationType === 'noID') {
+      /*
+       * If ID was not included in the query, it will not be included in the cache. Execute the GraphQL
+       * operation without writing the result to cache and return.
+       */
+      // FIXME: Can possibly modify query to ALWAYS have an ID but not necessarily return it back to client
+      // unless they also queried for it.
       graphql({ schema: this.schema, source: queryString })
         .then((queryResult: ExecutionResult): void => {
           res.locals.queryResponse = queryResult;
@@ -280,13 +286,21 @@ class QuellCache implements QuellCache {
           return next({ log: 'graphql library error: ', error });
         });
 
-      // Check Redis for the query string.
+      /*
+       * BUG: The code from here to the end of the current if block was left over from a previous
+       * implementation and is not currently being used.
+       * For the previous implementation: if the ID was not included, used the cache result
+       * if the query string was found in the Redis cache. Otherwise, used the result of
+       * executing the operation and stored the result in cache.
+       */
+
+      // Check Redis for the query string .
       let redisValue: string | null | void = await this.getFromRedis(
         queryString
       );
 
-      // If the query string is found in Redis, add the result to the response and return.
       if (redisValue != null) {
+        // If the query string is found in Redis, add the result to the response and return.
         redisValue = JSON.parse(redisValue);
         res.locals.queriesResponse = redisValue;
         return next();
@@ -302,14 +316,9 @@ class QuellCache implements QuellCache {
             return next(`graphql library error: ${error}`);
           });
       }
-      /*
-       * If the operation is a mutation
-       */
     } else if (operationType === 'mutation') {
-      /*
-       * Currently clearing the cache on mutation because it is stale.
-       * We should instead be updating the cache following a mutation.
-       */
+      // BUG: If the operation is a mutation, we are currently clearing the cache because it is stale.
+      // The goal would be to instead have a normalized cache and update the cache following a mutation.
       this.redisCache.flushAll();
       idCache = {};
 
@@ -329,8 +338,7 @@ class QuellCache implements QuellCache {
           break;
         }
       }
-      //Can possibly modify query to ALWAYS have an ID but not necessarily return it back to client
-      // unless they also queried for it.
+
       // Execute the operation and add the result to the response.
       graphql({ schema: this.schema, source: queryString })
         .then((databaseResponse: ExecutionResult): void => {
@@ -361,7 +369,7 @@ class QuellCache implements QuellCache {
           ? updateProtoWithFragment(proto, frags)
           : proto;
       // Create a list of the keys on prototype that will be passed to buildFromCache.
-      const prototypeKeys = Object.keys(prototype);
+      const prototypeKeys: string[] = Object.keys(prototype);
 
       // Check the cache for the requested values.
       // buildFromCache will modify the prototype to mark any values not found in the cache
@@ -407,7 +415,6 @@ class QuellCache implements QuellCache {
 
             // Create merged response object to merge the data from the cache and the data from the database.
             // If the cache response does not have data then just use the database response.
-
             mergedResponse = cacheHasData
               ? joinResponses(
                   cacheResponse.data,
@@ -417,12 +424,12 @@ class QuellCache implements QuellCache {
               : databaseResponse;
 
             const currName = 'string it should not be again';
-            // await normalizeForCache(
-            //   mergedResponse.data as ResponseDataType,
-            //   this.queryMap,
-            //   prototype,
-            //   currName
-            // );
+            await this.normalizeForCache(
+              mergedResponse.data as ResponseDataType,
+              this.queryMap,
+              prototype,
+              currName
+            );
 
             // The response is given a cached key equal to false to indicate to the front end of the demo site that the
             // information was *NOT* entirely found in the cache.
@@ -496,7 +503,7 @@ class QuellCache implements QuellCache {
             (prototype[typeKey] as ProtoObjType)?.__args as object
           )[0];
         }
-        // is this also redundent
+        // is this also redundant
         if (idCache[keyName as string] && idCache[keyName as string][cacheID]) {
           cacheID = idCache[keyName as string][cacheID] as string;
         }
@@ -767,11 +774,11 @@ class QuellCache implements QuellCache {
                 }
               }
             }
-            // if the responseData at cacheid to lower case at name is not undefined, store under name variable and copy logic of writing to cache, want to update cache with same things, all stored under name
+            // if the responseData at cacheID to lower case at name is not undefined, store under name variable and copy logic of writing to cache, want to update cache with same things, all stored under name
             // store objKey as cacheID without ID added
             const cacheIDForIDCache: string = cacheID;
             cacheID += `--${currField[key]}`;
-            // call idcache here idCache(cacheIDForIDCache, cacheID)
+            // call IdCache here idCache(cacheIDForIDCache, cacheID)
             this.updateIdCache(cacheIDForIDCache, cacheID, currName);
           }
 
@@ -811,7 +818,7 @@ class QuellCache implements QuellCache {
   }
   /**
    * writeToCache writes a value to the cache unless the key indicates that the item is uncacheable. Note: writeToCache will JSON.stringify the input item
-   * writeTochache will set expiration time for each item written to cache
+   * writeToCache will set expiration time for each item written to cache
    * @param {String} key - unique id under which the cached data will be stored
    * @param {Object} item - item to be cached
    */
@@ -827,7 +834,7 @@ class QuellCache implements QuellCache {
    *    - stores keys in a nested object under parent name
    *    - if the key is a duplication, they are stored in an array
    *  @param {String} objKey - Object key; key to be cached without ID string
-   *  @param {String} keyWithID - Key to be cached with ID string attatched; redis data is stored under this key
+   *  @param {String} keyWithID - Key to be cached with ID string attached; redis data is stored under this key
    *  @param {String} currName - The parent object name
    */
   updateIdCache(objKey: string, keyWithID: string, currName: string): void {
@@ -1544,10 +1551,8 @@ class QuellCache implements QuellCache {
         res.locals.queryErr = err;
         return next(err);
       }
-
-      // for each field
+      // Loop through the fields, recursing and increasing currentDepth by 1 if the field is nested.
       Object.keys(proto).forEach((key) => {
-        // if the field is nested, recurse, increasing currentDepth by 1
         if (typeof proto[key] === 'object' && !key.includes('__')) {
           determineDepth(proto[key] as ProtoObjType, currentDepth + 1);
         }
@@ -1620,9 +1625,8 @@ class QuellCache implements QuellCache {
         return next(err);
       }
 
-      // for each field
+      // Loop through the fields, recursing and increasing the total cost by objectCost if the field is nested.
       Object.keys(proto).forEach((key) => {
-        // if the field is nested, increase the total cost by objectCost and recurse
         if (typeof proto[key] === 'object' && !key.includes('__')) {
           cost += objectCost;
           return determineCost(proto[key] as ProtoObjType);
@@ -1657,9 +1661,9 @@ class QuellCache implements QuellCache {
         return next(err);
       }
 
-      // for each field
+      // Loop through the fields, recursing and multiplying the current total cost
+      // by the depthCostFactor if the field is nested.
       Object.keys(proto).forEach((key) => {
-        // if the field is nested, recurse, multiplying the current total cost by the depthCostFactor
         if (typeof proto[key] === 'object' && !key.includes('__')) {
           determineDepthCost(
             proto[key] as ProtoObjType,
@@ -2079,7 +2083,7 @@ function parseAST(
         // Create an args object that will be populated with the current node's arguments.
         const argsObj: ArgsObjType = {};
 
-        // auxillary object for storing arguments, aliases, field-specific options, and more
+        // Auxiliary object for storing arguments, aliases, field-specific options, and more
         // query-wide options should be handled on Quell's options object
         const auxObj: AuxObjType = {
           __id: null
@@ -2088,7 +2092,7 @@ function parseAST(
         // Loop through the field's arguments.
         if (node.arguments) {
           node.arguments.forEach((arg: ArgumentNode) => {
-            const key = arg.name.value;
+            const key: string = arg.name.value;
 
             // Quell cannot cache queries with variables, so we need to return unQuellable if the query has variables.
             if (arg.value.kind === 'Variable' && operationType === 'query') {
@@ -2227,8 +2231,8 @@ function parseAST(
             )
               fieldsValues[field.name.value] = true;
           }
-          // if ID was not included on the request then the query will not be included in the cache, but the request will be processed
-          // AND if current node is NOT a fragment.
+          // If ID was not included on the request and the current node is not a fragment, then the query
+          // will not be included in the cache, but the request will be processed.
           if (
             !Object.prototype.hasOwnProperty.call(fieldsValues, 'id') &&
             !Object.prototype.hasOwnProperty.call(fieldsValues, '_id') &&
