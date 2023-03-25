@@ -148,7 +148,7 @@ export class QuellCache {
     res: Response,
     next: NextFunction
   ): Promise<void> {
-    // Set ipRate to the default ipRate from the cost parameters.
+    // Get IP rate limit from the cost parameters set on server connection.
     const ipRateLimit: number = this.costParameters.ipRate;
     // Get the IP address from the request.
     const ipAddress: string = req.ip;
@@ -833,32 +833,33 @@ export class QuellCache {
    * UpdateIdCache:
    *    - stores keys in a nested object under parent name
    *    - if the key is a duplication, they are stored in an array
-   *  @param {String} objKey - Object key; key to be cached without ID string
-   *  @param {String} keyWithID - Key to be cached with ID string attached; redis data is stored under this key
-   *  @param {String} currName - The parent object name
+   *  @param {string} objKey - Object key; key to be cached without ID string
+   *  @param {string} keyWithID - Key to be cached with ID string attached; Redis data is stored under this key
+   *  @param {string} currName - The parent object name
    */
   updateIdCache(objKey: string, keyWithID: string, currName: string): void {
     // BUG: Add check - If any of the arguments are missing, return immediately.
     // Currently, if currName is undefined, this function is adding 'undefined' as a
     // key in the idCache.
 
-    // if the parent object is not yet defined
     if (!idCache[currName]) {
+      // If the parent object is not yet defined in the idCache, create the object and add the new key.
       idCache[currName] = {};
       idCache[currName][objKey] = keyWithID;
       return;
-    }
-    // if parent obj is defined, but this is the first child key
-    else if (!idCache[currName][objKey]) {
+    } else if (!idCache[currName][objKey]) {
+      // If parent object is defined in the idCache, but this is the first child ID, create the
+      // array that the ID will be added to.
       idCache[currName][objKey] = [];
     }
-    // update ID cache under key of currName in an array
+    // Add the ID to the array in the idCache.
     (idCache[currName][objKey] as string[]).push(keyWithID);
   }
   /**
    * updateCacheByMutation updates the Redis cache when the operation is a mutation.
    * - For update and delete mutations, checks if the mutation query includes an id.
-   * If so, it will update the cache at that id. If not, it will iterate through the cache to find the appropriate fields to update/delete.
+   * If so, it will update the cache at that id. If not, it will iterate through the cache
+   * to find the appropriate fields to update/delete.
    * @param {Object} dbRespDataRaw - raw response from the database returned following mutation
    * @param {String} mutationName - name of the mutation (e.g. addItem)
    * @param {String} mutationType - type of mutation (add, update, delete)
@@ -1455,7 +1456,7 @@ export class QuellCache {
   }
 
   /**
-   * getRedisKeys gets the key names from the redis cache and adds them to the response.
+   * getRedisKeys gets the key names from the Redis cache and adds them to the response.
    * @param {Object} req - Express request object
    * @param {Object} res - Express response object
    * @param {Function} next - Express next middleware function
@@ -1497,21 +1498,26 @@ export class QuellCache {
 
   /**
    * depthLimit takes in the query, parses it, and identifies the general shape of the request.
-   * depthLimit then checks the depth limit set on server connection and compares it against the current queries depth.
+   * depthLimit then checks the depth limit set on server connection and compares it against the current query's depth.
    *
-   * In the instance of a malicious or overly nested query, depthLimit short-circuits the query before it goes to the database,
-   * sending a status code 400 (bad request) back to the client/requester.
+   * In the instance of a malicious or overly nested query, depthLimit short-circuits the query before it goes to the database
+   * and passes an error with a status code 413 (content too large).
    * @param {Object} req - Express request object
    * @param {Object} res - Express response object
    * @param {Function} next - Express next middleware function
+   * @returns {void} Passes an error to Express if the depth exceeds the maximum allowed depth.
    */
   // what parameters should they take? If middleware, good as is, has to take in query obj in request, limit set inside.
   // If function inside whole of Quell, (query, limit), so they are explicitly defined and passed in
   depthLimit(req: Request, res: Response, next: NextFunction): void {
-    // Get maximum depth limit from the cost parameters.
+    // Get maximum depth limit from the cost parameters set on server connection.
     const { maxDepth } = this.costParameters;
-    // return error if no query in request.
-    if (!req.body.query) {
+
+    // Get the GraphQL query string from request body.
+    const queryString: string = req.body.query;
+
+    // Pass error to Express if no query is found on the request.
+    if (!queryString) {
       {
         const err: ServerErrorType = {
           log: 'Invalid request, no query found in req.body',
@@ -1521,37 +1527,38 @@ export class QuellCache {
         return next(err);
       }
     }
-    // assign graphQL query string to variable queryString
-    const queryString: string = req.body.query;
 
-    // create AST
+    // Create abstract syntax tree with graphql-js parser.
     const AST: DocumentNode = parse(queryString);
 
-    // create response prototype, and operation type, and fragments object
-    // the response prototype is used as a template for most operations in quell including caching, building modified requests, and more
+    // Create response prototype, operation type, and fragments object.
+    // The response prototype is used as a template for most operations in Quell including caching, building modified requests, and more.
     const { proto, operationType, frags } = parseAST(AST);
-    // check for fragments
+    // Combine fragments on prototype so we can access fragment values in cache.
     const prototype =
       Object.keys(frags).length > 0
         ? updateProtoWithFragment(proto, frags)
         : proto;
 
     /**
-     * determineDepth is a helper function to pass an error if the depth of the proto is greater than the maxDepth.
-     * will be using this function to recursively go deeper into the nested query
-     * @param {Object} proto - the prototype
-     * @param {Number} currentDepth - initialized to 0, increases for each nested level within proto
+     * determineDepth is a recursive helper function that determines if the depth of the prototype object
+     * is greater than the maxDepth.
+     * @param {Object} proto - The prototype object to determine the depth of.
+     * @param {number} [currentDepth=0] - The current depth of the object. Defaults to 0.
+     * @returns {void} Passes an error to Express if the depth of the prototype exceeds the maxDepth.
      */
     const determineDepth = (proto: ProtoObjType, currentDepth = 0): void => {
       if (currentDepth > maxDepth) {
+        // Pass error to Express if the maximum depth has been exceeded.
         const err: ServerErrorType = {
           log: `Depth limit exceeded, tried to send query with the depth of ${currentDepth}.`,
-          status: 413,
+          status: 413, // Content Too Large
           message: { err: 'Error in determineDepth' }
         };
         res.locals.queryErr = err;
         return next(err);
       }
+
       // Loop through the fields, recursing and increasing currentDepth by 1 if the field is nested.
       Object.keys(proto).forEach((key) => {
         if (typeof proto[key] === 'object' && !key.includes('__')) {
@@ -1559,80 +1566,88 @@ export class QuellCache {
         }
       });
     };
-    // call helper function
+
+    // Call the helper function.
     determineDepth(prototype);
-    // attach to res.locals so query doesn't need to re run these functions again.
+    // Attach the AST and parsed AST to res.locals so that the next middleware doesn't need to determine these again.
     res.locals.AST = AST;
     res.locals.parsedAST = { proto, operationType, frags };
-    // if (currentDepth > this.limit) return res.status(400).send("Too many nested queries!");
     return next();
   }
 
   /**
    * costLimit checks the cost of the query and, in the instance of a malicious or overly nested query,
-   * costLimit short-circuits the query before it goes to the database,
-   * sending a status code 400 (bad request) back to the client/requester.
+   * costLimit short-circuits the query before it goes to the database
+   * and passes an error with a status code 413 (content too large).
    * @param {Object} req - Express request object
    * @param {Object} res - Express response object
    * @param {Function} next - Express next middleware function
+   * @returns {void} Passes an error to Express if the cost exceeds the maximum allowed cost.
    */
   costLimit(req: Request, res: Response, next: NextFunction): void {
-    // Get the default cost parameters.
+    // Get the cost parameters set on server connection.
     const { maxCost, mutationCost, objectCost, depthCostFactor, scalarCost } =
       this.costParameters;
-    // return error if no query in request.
-    if (!req.body.query) {
-      const err: ServerErrorType = {
-        log: 'Invalid request, no query found in req.body',
-        status: 400,
-        message: { err: 'Error in costLimit' }
-      };
-      return next(err);
-    }
-    // assign graphQL query string to variable queryString
+
+    // Get the GraphQL query string from request body.
     const queryString: string = req.body.query;
-    // create AST
+
+    // Pass error to Express if no query is found on the request.
+    if (!queryString) {
+      {
+        const err: ServerErrorType = {
+          log: 'Invalid request, no query found in req.body',
+          status: 400,
+          message: { err: 'Error in costLimit' }
+        };
+        return next(err);
+      }
+    }
+
+    // Create abstract syntax tree with graphql-js parser.
     const AST: DocumentNode = parse(queryString);
 
-    // create response prototype, and operation type, and fragments object
-    // the response prototype is used as a template for most operations in quell including caching, building modified requests, and more
+    // Create response prototype, operation type, and fragments object.
+    // The response prototype is used as a template for most operations in Quell including caching, building modified requests, and more.
     const { proto, operationType, frags } = parseAST(AST);
-    // check for fragments
+    // Combine fragments on prototype so we can access fragment values in cache.
     const prototype =
       Object.keys(frags).length > 0
         ? updateProtoWithFragment(proto, frags)
         : proto;
 
+    // Set initial cost to 0.
+    // If the operation is a mutation, add to the cost the mutation cost multiplied by the number of mutations.
     let cost = 0;
-
-    // mutation check
-    operationType === 'mutation'
-      ? (cost += Object.keys(prototype).length * mutationCost)
-      : null;
+    if (operationType === 'mutation') {
+      cost += Object.keys(prototype).length * mutationCost;
+    }
 
     /**
-     * helper function to pass an error if the cost of the proto is greater than the maxCost
-     * @param {Object} proto - the prototype
+     * Helper function to pass an error if the cost of the proto is greater than the maximum cost set on server connection.
+     * @param {Object} proto - The prototype object to determine the cost of.
+     * @returns {void} Passes an error to Express if the cost of the prototype exceeds the maxCost.
      */
     const determineCost = (proto: ProtoObjType): void => {
-      // create error if maxCost exceeded
+      // Pass error to Express if the maximum cost has been exceeded.
       if (cost > maxCost) {
         const err: ServerErrorType = {
           log: `Cost limit exceeded, tried to send query with a cost exceeding ${maxCost}.`,
-          status: 413,
+          status: 413, // Content Too Large
           message: { err: 'Error in determineCost' }
         };
         res.locals.queryErr = err;
         return next(err);
       }
 
-      // Loop through the fields, recursing and increasing the total cost by objectCost if the field is nested.
+      // Loop through the fields on the prototype.
       Object.keys(proto).forEach((key) => {
         if (typeof proto[key] === 'object' && !key.includes('__')) {
+          // If the current field is nested, recurse and increase the total cost by objectCost.
           cost += objectCost;
           return determineCost(proto[key] as ProtoObjType);
         }
-        // if scalar, increase the total cost by scalarCost
+        // If the current field is scalar, increase the total cost by the scalarCost.
         if (proto[key] === true && !key.includes('__')) {
           cost += scalarCost;
         }
@@ -1642,20 +1657,24 @@ export class QuellCache {
     determineCost(prototype);
 
     /**
-     * helper function to pass an error if the cost of the proto, taking into account depth levels, is greater than the maxCost
-     * essentially multiplies the cost by a depth cost adjustment, which is equal to depthCostFactor raised to the power of the depth
-     * @param {Object} proto - the prototype
-     * @param {Number} totalCost - cost of the proto
+     * Helper function to pass an error if the cost of the proto, taking into account depth levels, is greater than
+     * the maximum cost set on server connection.
+     *
+     * This function essentially multiplies the cost by a depth cost adjustment, which is equal to the
+     * depthCostFactor raised to the power of the depth.
+     * @param {Object} proto - The prototype object to determine the cost of.
+     * @param {number} totalCost - Current cost of the prototype.
+     * @returns {void} Passes an error to Express if the cost of the prototype exceeds the maxCost.
      */
     const determineDepthCost = (
       proto: ProtoObjType,
       totalCost = cost
     ): void => {
-      // create error if maxCost exceeded
+      // Pass error to Express if the maximum cost has been exceeded.
       if (totalCost > maxCost) {
         const err: ServerErrorType = {
           log: `Cost limit exceeded, tried to send query with a cost exceeding ${maxCost}.`,
-          status: 413,
+          status: 413, // Content Too Large
           message: { err: 'Error in determineDepthCost' }
         };
         res.locals.queryErr = err;
@@ -1675,10 +1694,10 @@ export class QuellCache {
     };
 
     determineDepthCost(prototype);
-    // attach to res.locals so query doesn't need to re run these functions again.
+
+    // Attach the AST and parsed AST to res.locals so that the next middleware doesn't need to determine these again.
     res.locals.AST = AST;
     res.locals.parsedAST = { proto, operationType, frags };
-    // return next
     return next();
   }
 }
@@ -1975,6 +1994,7 @@ function joinResponses(
   }
   return mergedResponse;
 }
+
 /**
  * parseAST traverses the abstract syntax tree depth-first to create a template for future operations, such as
  * request data from the cache, creating a modified query string for additional information needed, and joining cache and database responses
@@ -2162,11 +2182,6 @@ function parseAST(
         auxObj.__args = Object.keys(argsObj).length > 0 ? argsObj : null;
 
         // Add auxObj fields to prototype, allowing future access to type, alias, args, etc.
-        /*
-         * BUG: Should "...argsObj[fieldType]" be removed? Because we verified above that all the values in
-         * argsObj will be string/boolean/null, argsObj[fieldType] will never be an object, so spreading it will
-         * not result in key-value pairs. -- Removed argsObj[fieldType] from being spread into fieldArgs
-         */
         fieldArgs[fieldType] = {
           ...auxObj
         };
@@ -2195,7 +2210,7 @@ function parseAST(
         ancestors: readonly (ASTNode | readonly ASTNode[])[]
       ) {
         /*
-         * Exclude SelectionSet nodes whose parents' are not of the kind
+         * Exclude SelectionSet nodes whose parents are not of the kind
          * 'Field' to exclude nodes that do not contain information about
          *  queried fields.
          */
@@ -2252,7 +2267,7 @@ function parseAST(
             ...fieldsValues,
             ...fieldArgs[stack[stack.length - 1]]
           };
-          // loop through stack to get correct path in proto for temp object;
+          // Loop through stack to get correct path in proto for temp object
           stack.reduce(
             (prev: ProtoObjType, curr: string, index: number): ProtoObjType => {
               // if last item in path, set value
@@ -2266,7 +2281,7 @@ function parseAST(
 
       // If the current node is of type SelectionSet, this function will be triggered upon entering it.
       leave() {
-        // pop stacks to keep track of depth-first parsing path
+        // Pop stacks to keep track of depth-first parsing path
         stack.pop();
       }
     }
