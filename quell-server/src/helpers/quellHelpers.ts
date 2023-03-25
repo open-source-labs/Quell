@@ -858,12 +858,20 @@ export function normalizeForCache2(
 //     name: 'Channel Orange'
 //   },
 // need to handle cases for when the nested[key] is also an array of objs
+//  helper needs to: evaluate primitive values for current object
+// if value is an array: iterate through, create a reference object
+// that will contain _ref: ID and place it on the parent
+// helper all needs to save the actual value to cache with key = ID of obj in _ref
+// and the object's evaluated primitive properties, if an Array, recurse.
 function nestHelper(nested: any) {
   const nestProps: any = {};
 
   for (const key in nested) {
     // if nested[key] is not an object, build current fields
-    nestProps[`${key}`] = nested[key];
+    if (Array.isArray(nested[key])) {
+    } else {
+      nestProps[`${key}`] = nested[key];
+    }
   }
   return nestProps;
 }
