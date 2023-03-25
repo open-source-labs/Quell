@@ -453,8 +453,8 @@ class QuellCache implements QuellCache {
 
   /**
    * getFromRedis reads from Redis cache and returns a promise (Redis v4 natively returns a promise).
-   * @param {String} key - the key for Redis lookup
-   * @returns {Promise} A promise representing the value from the redis cache with the provided key
+   * @param {string} key - The key for Redis lookup
+   * @returns {Promise} - A promise representing the value from the redis cache with the provided key
    */
   async getFromRedis(key: string): Promise<string | null | void> {
     try {
@@ -468,13 +468,14 @@ class QuellCache implements QuellCache {
   }
 
   /**
-   * buildFromCache finds any requested information in the cache and assembles it on the cacheResponse
-   * uses the prototype as a template for cacheResponse, marks any data not found in the cache on the prototype for future retrieval from database
-   * @param {Object} prototype - unique id under which the cached data will be stored
-   * @param {Array} prototypeKeys - keys in the prototype
-   * @param {Object} itemFromCache - item to be cached
-   * @param {boolean} firstRun - boolean indicated if this is the first run
-   * @param {boolean|string} subID - used to pass id to recursive calls
+   * buildFromCache finds any requested information in the cache and assembles it on the cacheResponse.
+   * It uses the prototype as a template for cacheResponse and marks any data not found in the cache
+   * on the prototype for future retrieval from database
+   * @param {Object} prototype - Unique id under which the cached data will be stored
+   * @param {Array} prototypeKeys - Keys in the prototype
+   * @param {Object} itemFromCache - Item to be cached
+   * @param {boolean} firstRun - Boolean indicated if this is the first run
+   * @param {boolean|string} subID - Used to pass id to recursive calls
    * @returns {Object} cacheResponse, mutates prototype
    */
   async buildFromCache(
@@ -485,17 +486,19 @@ class QuellCache implements QuellCache {
     subID: boolean | string = false
   ): Promise<{ data: ItemFromCacheType }> {
     for (const typeKey in prototype) {
-      // if current key is a root query, check cache and set any results to itemFromCache
+      // If the current key is a root query, check cache and set any results to itemFromCache.
       if (prototypeKeys.includes(typeKey)) {
-        let cacheID: string = this.generateCacheID(
-          prototype[typeKey] as ProtoObjType
-        );
-        let keyName: string | undefined;
+        // Create a variable cacheID, used to determine what ID should be used for the Redis lookup.
+        let cacheID: string;
         if (typeof subID === 'string') {
+          // Use the subID argument if it is a string (used for recursive calls within buildFromCache)
           cacheID = subID;
+        } else {
+          cacheID = this.generateCacheID(prototype[typeKey] as ProtoObjType);
         }
-        // let cacheID: string = subID || this.generateCacheID(prototype[typeKey]);
-        // value won't always be at .name on the args object
+
+        let keyName: string | undefined;
+        // Value won't always be at .name on the args object
         if ((prototype[typeKey] as ProtoObjType)?.__args === null) {
           keyName = undefined;
         } else {
@@ -503,11 +506,12 @@ class QuellCache implements QuellCache {
             (prototype[typeKey] as ProtoObjType)?.__args as object
           )[0];
         }
-        // is this also redundant
+
         if (idCache[keyName as string] && idCache[keyName as string][cacheID]) {
           cacheID = idCache[keyName as string][cacheID] as string;
         }
-        // capitalize first letter of cache id just in case
+
+        // Capitalize first letter of cache ID just in case
         const capitalized: string =
           (cacheID as string).charAt(0).toUpperCase() + cacheID.slice(1);
         if (
@@ -516,13 +520,14 @@ class QuellCache implements QuellCache {
         ) {
           cacheID = idCache[keyName as string][capitalized] as string;
         }
+
         const cacheResponse: string | null | void = await this.getFromRedis(
           cacheID
         );
         itemFromCache[typeKey] = cacheResponse ? JSON.parse(cacheResponse) : {};
       }
 
-      // if itemFromCache at the current key is an array, iterate through and gather data
+      // If itemFromCache at the current key is an array, iterate through and gather data.
       if (Array.isArray(itemFromCache[typeKey])) {
         // Create a new Redis run queue.
         let redisRunQueue: ReturnType<typeof this.redisCache.multi> =
@@ -533,7 +538,7 @@ class QuellCache implements QuellCache {
             /**
              * getCommandCallback is a helper function that will be called for each response in the
              * array of responses returned by Redis' exec() command within buildFromCache.
-             * @param {String} cacheResponse - response from one of the get commands in the Redis queue
+             * @param {string} cacheResponse - Response from one of the get commands in the Redis queue
              */
             const getCommandCallback = (cacheResponse: string): void => {
               const tempObj: ItemFromCacheType = {};
@@ -543,7 +548,7 @@ class QuellCache implements QuellCache {
                   JSON.parse(cacheResponse);
 
                 for (const property in prototype[typeKey] as ProtoObjType) {
-                  // if property exists, set on tempObj
+                  // If property exists, set on tempObj
                   if (
                     Object.prototype.hasOwnProperty.call(
                       interimCache,
@@ -553,13 +558,12 @@ class QuellCache implements QuellCache {
                   ) {
                     tempObj[property] = interimCache[property];
                   }
-                  // if prototype is nested at this field, recurse
+                  // If prototype is nested at this field, recurse
                   else if (
                     !property.includes('__') &&
                     typeof (prototype[typeKey] as ProtoObjType)[property] ===
                       'object'
                   ) {
-                    // same as return type for buildfromcache
                     this.buildFromCache(
                       (prototype[typeKey] as ProtoObjType)[
                         property
@@ -570,7 +574,7 @@ class QuellCache implements QuellCache {
                       `${currTypeKey}--${property}`
                     ).then((tempData) => (tempObj[property] = tempData.data));
                   }
-                  // if cache does not have property, set to false on prototype so that it is sent to graphQL
+                  // If cache does not have property, set to false on prototype so that it is sent to GraphQL
                   else if (
                     !property.includes('__') &&
                     typeof (prototype[typeKey] as ProtoObjType)[property] !==
@@ -581,7 +585,7 @@ class QuellCache implements QuellCache {
                 }
                 itemFromCache[typeKey][i] = tempObj;
               }
-              // if there is nothing in the cache for this key, then toggle all fields to false so it is fetched later
+              // If there is nothing in the cache for this key, toggle all fields to false so they will be fetched later.
               else {
                 for (const property in prototype[typeKey] as ProtoObjType) {
                   if (
@@ -611,7 +615,7 @@ class QuellCache implements QuellCache {
               redisRunQueue = this.redisCache.multi();
             }
 
-            // Otherwise, add a get command for the current type key to the queue.
+            // Add a get command for the current type key to the queue.
             redisRunQueue.get(currTypeKey.toLowerCase());
 
             // Execute any remnants in redis run queue.
@@ -626,11 +630,12 @@ class QuellCache implements QuellCache {
           }
         }
       }
-      // recurse through buildFromCache using typeKey, prototype
-      // if itemFromCache is empty, then check the cache for data, else, persist itemFromCache
+
+      // Recurse through buildFromCache using typeKey and prototype.
+      // If itemFromCache is empty, then check the cache for data; otherwise, persist itemFromCache
       // if this iteration is a nested query (i.e. if typeKey is a field in the query)
       else if (firstRun === false) {
-        // if this field is NOT in the cache, then set this field's value to false
+        // If this field is not in the cache, then set this field's value to false.
         if (
           (itemFromCache === null ||
             !Object.prototype.hasOwnProperty.call(itemFromCache, typeKey)) &&
@@ -640,7 +645,7 @@ class QuellCache implements QuellCache {
         ) {
           prototype[typeKey] = false;
         }
-        // if this field is a nested query, then recurse the buildFromCache function and iterate through the nested query
+        // If this field is a nested query, then recurse the buildFromCache function and iterate through the nested query.
         if (
           !(Object.keys(itemFromCache).length > 0) &&
           typeof itemFromCache === 'object' &&
@@ -660,10 +665,10 @@ class QuellCache implements QuellCache {
           );
         }
       }
-      // if not an array and not a recursive call, handle normally
+      // If not an array and not a recursive call, handle normally
       else {
         for (const field in prototype[typeKey] as ProtoObjType) {
-          // if field is not found in cache then toggle to false
+          // If field is not found in cache then toggle to false
           if (
             itemFromCache[typeKey] &&
             !Object.prototype.hasOwnProperty.call(
@@ -676,7 +681,7 @@ class QuellCache implements QuellCache {
             (prototype[typeKey] as ProtoObjType)[field] = false;
           }
 
-          // if field contains a nested query, then recurse the function and iterate through the nested query
+          // If field contains a nested query, then recurse the function and iterate through the nested query
           if (
             !field.includes('__') &&
             typeof (prototype[typeKey] as ProtoObjType)[field] === 'object'
@@ -688,7 +693,7 @@ class QuellCache implements QuellCache {
               false
             );
           }
-          // if there are no data in itemFromCache, toggle to false
+          // If there are no data in itemFromCache, toggle to false
           else if (
             !itemFromCache[typeKey] &&
             !field.includes('__') &&
@@ -699,13 +704,13 @@ class QuellCache implements QuellCache {
         }
       }
     }
-    // return itemFromCache on a data property to resemble graphQL response format
+    // Return itemFromCache on a data property to resemble GraphQL response format.
     return { data: itemFromCache };
   }
   /**
-   * normalizeForCache traverses over response data and formats it appropriately so we can store it in the cache.
-   * @param {Object} responseData - data we received from an external source of data such as a database or API
-   * @param {Object} map - a map of queries to their desired data types, used to ensure accurate and consistent caching
+   * normalizeForCache traverses over response data and formats it appropriately so that it can be stored in the cache.
+   * @param {Object} responseData - Data we received from an external source of data such as a database or API
+   * @param {Object} map - Map of queries to their desired data types, used to ensure accurate and consistent caching
    * @param {Object} protoField - a slice of the prototype currently being used as a template and reference for the responseData to send information to the cache
    * @param {String} currName - parent object name, used to pass into updateIDCache
    */
