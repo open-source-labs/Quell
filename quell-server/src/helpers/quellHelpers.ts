@@ -775,111 +775,6 @@ export function getFieldsMap(schema: GraphQLSchema): FieldsMapType {
   return fieldsMap;
 }
 
-/*
-map:  {
-[1]   song: 'Song',
-[1]   album: 'Album',
-[1]   artist: [ 'Artist' ],
-[1]   country: 'Country',
-[1]   city: 'City',
-[1]   attractions: 'Attractions'
-[1] }
-responseData:  {
-[1]   artist: [
-[1]     {
-[1]       id: '6365be1ff176b90f3b81f0e9',
-[1]       name: 'Frank Ocean',
-[1]       albums: [Array]
-[1]     }
-[1]   ]
-[1] }
-protoField:  {
-[1]   artist: {
-[1]     id: false,
-[1]     name: false,
-[1]     __id: null,
-[1]     __type: 'artist',
-[1]     __alias: null,
-[1]     __args: { name: 'Frank Ocean' },
-[1]     albums: {
-[1]       id: false,
-[1]       name: false,
-[1]       __id: null,
-[1]       __type: 'albums',
-[1]       __alias: null,
-[1]       __args: null
-[1]     }
-[1]   }
-[1] }
-cacheID:  Artist
-[1] cacheID2:  Artist--6365be1ff176b90f3b81f0e9
-[1] currName:  string it should not be again
-[1] cacheID:  albums
-[1] cacheID2:  albums--6359930abeb03be432d17785
-[1] currName:  string it should not be again
-[1] cacheID:  albums
-[1] cacheID2:  albums--63599379beb03be432d17786
-[1] currName:  string it should not be again
-[1] idCache:  {
-[1]   'string it should not be again': {
-[1]     Artist: 'Artist--6365be1ff176b90f3b81f0e9',
-[1]     albums: [ 'albums--6359930abeb03be432d17785' ]
-[1]   }
-[1] }
-*/
-
-/*
-map:  {
-[1]   song: 'Song',
-[1]   album: 'Album',
-[1]   artist: [ 'Artist' ],
-[1]   country: 'Country',
-[1]   city: 'City',
-[1]   attractions: 'Attractions'
-[1] }
-responseData:  {
-[1]   artist: [
-[1]     {
-[1]       id: '6365be1ff176b90f3b81f0e9',
-[1]       name: 'Frank Ocean',
-[1]       albums: [Array]
-[1]     }
-[1]   ]
-[1] }
-protoField:  {
-[1]   artist: {
-[1]     id: false,
-[1]     name: false,
-[1]     __id: null,
-[1]     __type: 'artist',
-[1]     __alias: null,
-[1]     __args: { name: 'Frank Ocean' },
-[1]     albums: {
-[1]       id: false,
-[1]       name: false,
-[1]       __id: null,
-[1]       __type: 'albums',
-[1]       __alias: null,
-[1]       __args: null
-[1]     }
-[1]   }
-[1] }
-cacheID:  Artist
-[1] cacheID2:  Artist--6365be1ff176b90f3b81f0e9
-[1] currName:  string it should not be again
-[1] cacheID:  albums
-[1] cacheID2:  albums--6359930abeb03be432d17785
-[1] currName:  string it should not be again
-[1] cacheID:  albums
-[1] cacheID2:  albums--63599379beb03be432d17786
-[1] currName:  string it should not be again
-[1] idCache:  {
-[1]   'string it should not be again': {
-[1]     Artist: 'Artist--6365be1ff176b90f3b81f0e9',
-[1]     albums: [ 'albums--6359930abeb03be432d17785' ]
-[1]   }
-[1] }
-*/
 // /**
 //  * normalizeForCache2 traverses over response data and formats it appropriately so we can store it in the cache.
 //  * @param {Object} responseData - data we received from an external source of data such as a database or API
@@ -905,82 +800,70 @@ cacheID:  Artist
 //  * and should the Nested Object be saved to the IDCache?
 //  * attempt at refactoring normalizeForCache2
 //  */
-export async function normalizeForCache2(
-  responseData: ResponseDataType,
-  map: QueryMapType = {}
-) {
+export function normalizeForCache2(
+  responseData: { [x: string]: any },
+  map: any = {}
+): any {
+  const IDCache: any = {};
   // loop through each resultName in response data
   for (const resultName in responseData) {
-    // currField is assigned to the nestedObject or array on responseData
+    // currField is assigned to the nestedObject/array
     const currField = responseData[resultName];
+    // responseData gives the object inside an array, so step in one level of the array
     if (Array.isArray(currField)) {
       for (let i = 0; i < currField.length; i++) {
-        const el: ResponseDataType = currField[i];
-
-        const dataType: string | undefined | string[] = map[resultName];
-
-        if (typeof el === 'object' && typeof dataType === 'string') {
-          await normalizeForCache2({ [dataType]: el }, map);
+        const el = currField[i];
+        const dataType = map[resultName];
+        if (typeof el === 'object') {
+          return normalizeForCache2({ [dataType]: el }, map);
         }
       }
-      // need currField to always have an ID property so it can be used for caching
-      // need to modify each query to add ID for each object/subobject being requested
     } else if (typeof currField === 'object') {
-      // need to get non-Alias ID for cache
-
-      // temporary store for field properties
-      const fieldStore: ResponseDataType = {};
-
       //set cacheID to ID value on currField (object)
-      let cacheID: string = Object.prototype.hasOwnProperty.call(
-        map,
-        currProto.__type as string
-      )
-        ? (map[currProto.__type as string] as string)
-        : (currProto.__type as string);
+      const cacheID: string = currField.id as string;
+      IDCache[cacheID] = {};
 
-      cacheID += currProto.__id ? `--${currProto.__id}` : '';
-
-      // iterate over keys in nested object
-      // need to save the actual object inside the object cache
-      // and only the ID is placed as a reference inside the nested object
+      // iterate through all keys of the current object
       for (const key in currField) {
-        // if prototype has no ID, check field keys for ID (mostly for arrays)
-        if (
-          !currProto.__id &&
-          (key === 'id' || key === '_id' || key === 'ID' || key === 'Id')
-        ) {
-          // if currname is undefined, assign to responseData at cacheid to lower case at name
-          if (responseData[cacheID.toLowerCase()]) {
-            const responseDataAtCacheID = responseData[cacheID.toLowerCase()];
-            if (
-              typeof responseDataAtCacheID !== 'string' &&
-              !Array.isArray(responseDataAtCacheID)
-            ) {
-              if (typeof responseDataAtCacheID.name === 'string') {
-                currName = responseDataAtCacheID.name;
-              }
-            }
-          }
-          // if the responseData at cacheid to lower case at name is not undefined, store under name variable and copy logic of writing to cache, want to update cache with same things, all stored under name
-          // store objKey as cacheID without ID added
-          const cacheIDForIDCache: string = cacheID;
-          cacheID += `--${currField[key]}`;
-          // call idcache here idCache(cacheIDForIDCache, cacheID)
-          updateIdCache(cacheIDForIDCache, cacheID, currName);
+        // if value is not an object or array, add to the IDCache
+        if (typeof currField[key] !== 'object') {
+          IDCache[cacheID][`${key}`] = currField[key];
         }
-
-        fieldStore[key] = currField[key];
-
-        // if object, recurse normalizeForCache assign in that object
-        if (typeof currField[key] === 'object') {
-          if (protoField[resultName] !== null) {
-            await normalizeForCache2({ [key]: currField[key] }, map);
+        // if value is an array, iterate through array
+        if (Array.isArray(currField[key])) {
+          // array that will store references to other values in redis
+          const nestedObjs = [];
+          for (let i = 0; i < currField[key].length; i++) {
+            // get ID from object to be used as reference
+            const refObjId = currField[key][i].id;
+            // build reference object to be placed as nestedObj on parent
+            const refObj = { _ref: refObjId };
+            // obtain the refObj's evaluated values by using helper function
+            const objWithVals = currField[key][i];
+            // store reference object on parent and actual object as own object inside cache
+            IDCache[`${refObjId}`] = objWithVals;
+            nestedObjs.push(refObj);
           }
+          // add the nested array references to the parent object
+          IDCache[cacheID][`${key}`] = nestedObjs;
         }
       }
-      // store "current object" on cache in JSON format
-
     }
+    // whenever IDCache is referenced, that's when the value should be saved to redis
+    return IDCache;
   }
+}
+// '6359930abeb03be432d17785': {
+//     id: '6359930abeb03be432d17785',
+//     name: 'Channel Orange'
+//   },
+// need to handle cases for when the nested[key] is also an array of objs
+function nestHelper(nested: any) {
+  const nestProps: any = {};
+
+  for (const key in nested) {
+    // if nested[key] is not an object, build current fields
+    nestProps[`${key}`] = nested[key];
+  }
+  return nestProps;
 }
