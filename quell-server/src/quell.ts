@@ -234,8 +234,8 @@ export class QuellCache {
     // Retrieve GraphQL query string from request body.
     const queryString: string = req.body.query;
 
-    // Create abstract syntax tree with graphql-js parser.
-    // If depth limit was implemented, then we can get the parsed query from res.locals.
+    // Create the abstract syntax tree with graphql-js parser.
+    // If depth limit or cost limit were implemented, then we can get the AST and parsed AST from res.locals.
     const AST: DocumentNode = res.locals.AST
       ? res.locals.AST
       : parse(queryString);
@@ -1528,12 +1528,21 @@ export class QuellCache {
       }
     }
 
-    // Create abstract syntax tree with graphql-js parser.
-    const AST: DocumentNode = parse(queryString);
+    // Create the abstract syntax tree with graphql-js parser.
+    // If costLimit was included before depthLimit in middleware chain, we can get the AST and parsed AST from res.locals.
+    const AST: DocumentNode = res.locals.AST
+      ? res.locals.AST
+      : parse(queryString);
 
     // Create response prototype, operation type, and fragments object.
     // The response prototype is used as a template for most operations in Quell including caching, building modified requests, and more.
-    const { proto, operationType, frags } = parseAST(AST);
+    const {
+      proto,
+      operationType,
+      frags
+    }: { proto: ProtoObjType; operationType: string; frags: FragsType } =
+      res.locals.parsedAST ?? parseAST(AST);
+
     // Combine fragments on prototype so we can access fragment values in cache.
     const prototype =
       Object.keys(frags).length > 0
@@ -1604,12 +1613,21 @@ export class QuellCache {
       }
     }
 
-    // Create abstract syntax tree with graphql-js parser.
-    const AST: DocumentNode = parse(queryString);
+    // Create the abstract syntax tree with graphql-js parser.
+    // If depthLimit was included before costLimit in middleware chain, we can get the AST and parsed AST from res.locals.
+    const AST: DocumentNode = res.locals.AST
+      ? res.locals.AST
+      : parse(queryString);
 
     // Create response prototype, operation type, and fragments object.
     // The response prototype is used as a template for most operations in Quell including caching, building modified requests, and more.
-    const { proto, operationType, frags } = parseAST(AST);
+    const {
+      proto,
+      operationType,
+      frags
+    }: { proto: ProtoObjType; operationType: string; frags: FragsType } =
+      res.locals.parsedAST ?? parseAST(AST);
+
     // Combine fragments on prototype so we can access fragment values in cache.
     const prototype =
       Object.keys(frags).length > 0
