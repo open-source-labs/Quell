@@ -217,9 +217,9 @@ export class QuellCache {
    *    - joins the cached and uncached responses,
    *    - decomposes and caches the joined query, and
    *    - attaches the joined response to the response object before passing control to the next middleware.
-   *  @param {Request} req - Express request object, including request body with GraphQL query string
-   *  @param {Response} res - Express response object, will carry query response to next middleware
-   *  @param {NextFunction} next - Express next middleware function, invoked when QuellCache completes its work
+   *  @param {Request} req - Express request object, including request body with GraphQL query string.
+   *  @param {Response} res - Express response object, will carry query response to next middleware.
+   *  @param {NextFunction} next - Express next middleware function, invoked when QuellCache completes its work.
    */
   async query(req: Request, res: Response, next: NextFunction): Promise<void> {
     // Return an error if no query is found on the request.
@@ -447,9 +447,9 @@ export class QuellCache {
   }
 
   /**
-   * getFromRedis reads from Redis cache and returns a promise (Redis v4 natively returns a promise).
-   * @param {string} key - The key for Redis lookup
-   * @returns {Promise} - A promise representing the value from the redis cache with the provided key
+   * Reads from Redis cache and returns a promise (Redis v4 natively returns a promise).
+   * @param {string} key - The key for Redis lookup.
+   * @returns {Promise} - A promise representing the value from the redis cache with the provided key.
    */
   async getFromRedis(key: string): Promise<string | null | void> {
     try {
@@ -463,15 +463,15 @@ export class QuellCache {
   }
 
   /**
-   * buildFromCache finds any requested information in the cache and assembles it on the cacheResponse.
-   * It uses the prototype as a template for cacheResponse and marks any data not found in the cache
-   * on the prototype for future retrieval from database
-   * @param {Object} prototype - Unique id under which the cached data will be stored
-   * @param {Array} prototypeKeys - Keys in the prototype
-   * @param {Object} itemFromCache - Item to be cached
-   * @param {boolean} firstRun - Boolean indicated if this is the first run
-   * @param {boolean|string} subID - Used to pass id to recursive calls
-   * @returns {Object} cacheResponse, mutates prototype
+   * Finds any requested information in the cache and assembles it on the cacheResponse.
+   * Uses the prototype as a template for cacheResponse and marks any data not found in the cache
+   * on the prototype for future retrieval from database.
+   * @param {Object} prototype - Unique id under which the cached data will be stored.
+   * @param {Array} prototypeKeys - Keys in the prototype.
+   * @param {Object} itemFromCache - Item to be cached.
+   * @param {boolean} firstRun - Boolean indicated if this is the first run.
+   * @param {boolean|string} subID - Used to pass id to recursive calls.
+   * @returns {Object} cacheResponse, mutates prototype.
    */
   async buildFromCache(
     prototype: ProtoObjType,
@@ -531,9 +531,9 @@ export class QuellCache {
         for (let i = 0; i < itemFromCache[typeKey].length; i++) {
           if (typeof itemFromCache[typeKey] === 'string') {
             /**
-             * getCommandCallback is a helper function that will be called for each response in the
+             * Helper function that will be called for each response in the
              * array of responses returned by Redis' exec() command within buildFromCache.
-             * @param {string} cacheResponse - Response from one of the get commands in the Redis queue
+             * @param {string} cacheResponse - Response from one of the get commands in the Redis queue.
              */
             const getCommandCallback = (cacheResponse: string): void => {
               const tempObj: ItemFromCacheType = {};
@@ -702,12 +702,13 @@ export class QuellCache {
     // Return itemFromCache on a data property to resemble GraphQL response format.
     return { data: itemFromCache };
   }
+
   /**
-   * normalizeForCache traverses over response data and formats it appropriately so that it can be stored in the cache.
-   * @param {Object} responseData - Data we received from an external source of data such as a database or API
-   * @param {Object} map - Map of queries to their desired data types, used to ensure accurate and consistent caching
-   * @param {Object} protoField - a slice of the prototype currently being used as a template and reference for the responseData to send information to the cache
-   * @param {String} currName - parent object name, used to pass into updateIDCache
+   * Traverses over response data and formats it appropriately so that it can be stored in the cache.
+   * @param {Object} responseData - Data we received from an external source of data such as a database or API.
+   * @param {Object} map - Map of queries to their desired data types, used to ensure accurate and consistent caching.
+   * @param {Object} protoField - Slice of the prototype currently being used as a template and reference for the responseData to send information to the cache.
+   * @param {string} currName - Parent object name, used to pass into updateIDCache.
    */
   async normalizeForCache(
     responseData: ResponseDataType,
@@ -803,12 +804,12 @@ export class QuellCache {
       }
     }
   }
+
   /**
-   * helper function
-   * generateCacheID creates cacheIDs based on information from the prototype
-   * format of 'field--ID'
-   * @param {String} key - unique id under which the cached data will be stored
-   * @param {Object} item - item to be cached
+   * Helper function that creates cacheIDs based on information from the prototype in the
+   * format of 'field--ID'.
+   * @param {string} key - Unique id under which the cached data will be stored.
+   * @param {Object} item - Item to be cached.
    */
   generateCacheID(queryProto: ProtoObjType): string {
     const cacheID: string = queryProto.__id
@@ -816,11 +817,12 @@ export class QuellCache {
       : (queryProto.__type as string);
     return cacheID;
   }
+
   /**
-   * writeToCache writes a value to the cache unless the key indicates that the item is uncacheable. Note: writeToCache will JSON.stringify the input item
-   * writeToCache will set expiration time for each item written to cache
-   * @param {String} key - unique id under which the cached data will be stored
-   * @param {Object} item - item to be cached
+   * Stringifies and writes an item to the cache unless the key indicates that the item is uncacheable.
+   * Sets the expiration time for each item written to cache to the expiration time set on server connection.
+   * @param {string} key - Unique id under which the cached data will be stored.
+   * @param {Object} item - Item to be cached.
    */
   writeToCache(key: string, item: Type | string[] | ExecutionResult): void {
     const lowerKey: string = key.toLowerCase();
@@ -829,13 +831,13 @@ export class QuellCache {
       this.redisCache.EXPIRE(lowerKey, this.cacheExpiration);
     }
   }
+
   /**
-   * UpdateIdCache:
-   *    - stores keys in a nested object under parent name
-   *    - if the key is a duplication, they are stored in an array
-   *  @param {string} objKey - Object key; key to be cached without ID string
-   *  @param {string} keyWithID - Key to be cached with ID string attached; Redis data is stored under this key
-   *  @param {string} currName - The parent object name
+   * Stores keys in a nested object under parent name.
+   * If the key is a duplication, it is stored in an array.
+   *  @param {string} objKey - Object key; key to be cached without ID string.
+   *  @param {string} keyWithID - Key to be cached with ID string attached; Redis data is stored under this key.
+   *  @param {string} currName - The parent object name.
    */
   updateIdCache(objKey: string, keyWithID: string, currName: string): void {
     // BUG: Add check - If any of the arguments are missing, return immediately.
@@ -855,15 +857,16 @@ export class QuellCache {
     // Add the ID to the array in the idCache.
     (idCache[currName][objKey] as string[]).push(keyWithID);
   }
+
   /**
-   * updateCacheByMutation updates the Redis cache when the operation is a mutation.
+   * Updates the Redis cache when the operation is a mutation.
    * - For update and delete mutations, checks if the mutation query includes an id.
    * If so, it will update the cache at that id. If not, it will iterate through the cache
    * to find the appropriate fields to update/delete.
-   * @param {Object} dbRespDataRaw - raw response from the database returned following mutation
-   * @param {String} mutationName - name of the mutation (e.g. addItem)
-   * @param {String} mutationType - type of mutation (add, update, delete)
-   * @param {Object} mutationQueryObject - arguments and values for the mutation
+   * @param {Object} dbRespDataRaw - Raw response from the database returned following mutation.
+   * @param {string} mutationName - Name of the mutation (e.g. addItem).
+   * @param {string} mutationType - Type of mutation (add, update, delete).
+   * @param {Object} mutationQueryObject - Arguments and values for the mutation.
    */
   async updateCacheByMutation(
     dbRespDataRaw: DatabaseResponseDataRaw | ExecutionResult,
@@ -895,8 +898,8 @@ export class QuellCache {
     }
 
     /**
-     * Helper function that takes in a list of fields to remove from the
-     * @param {Set<string> | Array<string>} fieldKeysToRemove - field keys to be removed from the cached field list
+     * Helper function to delete field keys from cached field list.
+     * @param {Set<string> | Array<string>} fieldKeysToRemove - Field keys to be removed from the cached field list.
      */
     const removeFromFieldKeysList = async (
       fieldKeysToRemove: Set<string> | Array<string>
@@ -927,7 +930,7 @@ export class QuellCache {
 
     /**
      * Helper function that loops through the cachedFieldKeysList and helps determine which
-     * fieldKeys should be deleted and passes those fields to removeFromFieldKeysList for removal
+     * fieldKeys should be deleted and passes those fields to removeFromFieldKeysList for removal.
      */
     const deleteApprFieldKeys = async () => {
       if (fieldsListKey) {
@@ -1083,8 +1086,8 @@ export class QuellCache {
   }
 
   /**
-   * deleteCacheById removes key-value from the cache unless the key indicates that the item is not available.
-   * @param {String} key - unique id under which the cached data is stored that needs to be removed
+   * Removes key-value from the cache unless the key indicates that the item is not available.
+   * @param {string} key - Unique id under which the cached data is stored that needs to be removed.
    */
   async deleteCacheById(key: string) {
     try {
@@ -1095,13 +1098,12 @@ export class QuellCache {
   }
 
   /**
-   * clearCache flushes the Redis cache. To clear the cache from the client, establish an endpoint that
+   * Flushes the Redis cache. To clear the cache from the client, establish an endpoint that
    * passes the request and response objects to an instance of QuellCache.clearCache.
-   * @param {Object} req - Express request object
-   * @param {Object} res - Express response object
-   * @param {Function} next - Express next middleware function
+   * @param {Object} req - Express request object.
+   * @param {Object} res - Express response object.
+   * @param {Function} next - Express next middleware function.
    */
-
   clearCache(req: Request, res: Response, next: NextFunction) {
     console.log('Clearing Redis Cache');
     this.redisCache.flushAll();
@@ -1110,19 +1112,18 @@ export class QuellCache {
   }
 
   /**
-   * The getRedisInfo returns a chain of middleware based on what information
-   * (if any) the user would like to request from the specified redisCache. It
-   * requires an appropriately configured Express route and saves the specified stats
-   * to res.locals, for instance:
+   * Returns a chain of middleware based on what information (if any) the user would
+   * like to request from the specified redisCache. It requires an appropriately
+   * configured Express route and saves the specified stats to res.locals, for instance:
    * @example
    *  app.use('/redis', ...quellCache.getRedisInfo({
    *    getStats: true,
    *    getKeys: true,
    *    getValues: true
    *  }));
-   * @param {Object} options - three properties with boolean values:
+   * @param {Object} options - Three properties with boolean values:
    *                           getStats, getKeys, getValues
-   * @returns {Array} An array of middleware functions that retrieves specified Redis info
+   * @returns {Array} An array of middleware functions that retrieves specified Redis info.
    */
   getRedisInfo(
     options: RedisOptionsType = {
@@ -1135,10 +1136,10 @@ export class QuellCache {
     const middleware: RequestHandler[] = [];
 
     /**
-     * getOptions is a helper function within the getRedisInfo function that returns
-     * what redis data should be retrieved based off the passed in options
-     * @param {Object} opts - Options object containing a boolean value for getStats, getKeys, and getValues
-     * @returns {string} a string that indicates which data should be retrieved from redis instance
+     * Helper function within the getRedisInfo function that returns
+     * what redis data should be retrieved based on the passed in options.
+     * @param {Object} opts - Options object containing a boolean value for getStats, getKeys, and getValues.
+     * @returns {string} String that indicates which data should be retrieved from Redis instance.
      */
     const getOptions = (opts: RedisOptionsType): string => {
       const { getStats, getKeys, getValues } = opts;
@@ -1175,10 +1176,10 @@ export class QuellCache {
   }
 
   /**
-   * getStatsFromRedis gets information and statistics about the server and adds them to the response.
-   * @param {Object} req - Express request object
-   * @param {Object} res - Express response object
-   * @param {Function} next - Express next middleware function
+   * Gets information and statistics about the server and adds them to the response.
+   * @param {Object} req - Express request object.
+   * @param {Object} res - Express response object.
+   * @param {Function} next - Express next middleware function.
    */
   getStatsFromRedis(req: Request, res: Response, next: NextFunction): void {
     try {
@@ -1456,10 +1457,10 @@ export class QuellCache {
   }
 
   /**
-   * getRedisKeys gets the key names from the Redis cache and adds them to the response.
-   * @param {Object} req - Express request object
-   * @param {Object} res - Express response object
-   * @param {Function} next - Express next middleware function
+   * Gets the key names from the Redis cache and adds them to the response.
+   * @param {Object} req - Express request object.
+   * @param {Object} res - Express response object.
+   * @param {Function} next - Express next middleware function.
    */
   getRedisKeys(req: Request, res: Response, next: NextFunction): void {
     this.redisCache
@@ -1474,10 +1475,10 @@ export class QuellCache {
   }
 
   /**
-   * getRedisValues gets the values associated with the redis cache keys and adds them to the response.
-   * @param {Object} req - Express request object
-   * @param {Object} res - Express response object
-   * @param {Function} next - Express next middleware function
+   * Gets the values associated with the Redis cache keys and adds them to the response.
+   * @param {Object} req - Express request object.
+   * @param {Object} res - Express response object.
+   * @param {Function} next - Express next middleware function.
    */
   getRedisValues(req: Request, res: Response, next: NextFunction): void {
     if (res.locals.redisKeys.length !== 0) {
@@ -1497,15 +1498,15 @@ export class QuellCache {
   }
 
   /**
-   * depthLimit takes in the query, parses it, and identifies the general shape of the request.
-   * depthLimit then checks the depth limit set on server connection and compares it against the current query's depth.
+   * Takes in the query, parses it, and identifies the general shape of the request in order
+   * to compare the query's depth to the depth limit set on server connection.
    *
-   * In the instance of a malicious or overly nested query, depthLimit short-circuits the query before it goes to the database
-   * and passes an error with a status code 413 (content too large).
+   * In the instance of a malicious or overly nested query, short-circuits the query before
+   * it goes to the database and passes an error with a status code 413 (content too large).
    * @param {Object} req - Express request object
    * @param {Object} res - Express response object
    * @param {Function} next - Express next middleware function
-   * @returns {void} Passes an error to Express if the depth exceeds the maximum allowed depth.
+   * @returns {void} Passes an error to Express if no query was included in the request or if the depth exceeds the maximum allowed depth.
    */
   // what parameters should they take? If middleware, good as is, has to take in query obj in request, limit set inside.
   // If function inside whole of Quell, (query, limit), so they are explicitly defined and passed in
@@ -1550,7 +1551,7 @@ export class QuellCache {
         : proto;
 
     /**
-     * determineDepth is a recursive helper function that determines if the depth of the prototype object
+     * Recursive helper function that determines if the depth of the prototype object
      * is greater than the maxDepth.
      * @param {Object} proto - The prototype object to determine the depth of.
      * @param {number} [currentDepth=0] - The current depth of the object. Defaults to 0.
@@ -1585,13 +1586,13 @@ export class QuellCache {
   }
 
   /**
-   * costLimit checks the cost of the query and, in the instance of a malicious or overly nested query,
-   * costLimit short-circuits the query before it goes to the database
-   * and passes an error with a status code 413 (content too large).
-   * @param {Object} req - Express request object
-   * @param {Object} res - Express response object
-   * @param {Function} next - Express next middleware function
-   * @returns {void} Passes an error to Express if the cost exceeds the maximum allowed cost.
+   * Checks the cost of the query. In the instance of a malicious or overly nested query,
+   * short-circuits the query before it goes to the database and passes an error with a
+   * status code 413 (content too large).
+   * @param {Object} req - Express request object.
+   * @param {Object} res - Express response object.
+   * @param {Function} next - Express next middleware function.
+   * @returns {void} Passes an error to Express if no query was included in the request or if the cost exceeds the maximum allowed cost.
    */
   costLimit(req: Request, res: Response, next: NextFunction): void {
     // Get the cost parameters set on server connection.
@@ -1719,13 +1720,14 @@ export class QuellCache {
     return next();
   }
 }
+
 // Modularized functions
 /**
- * createQueryStr traverses over a supplied query Object and uses the fields on there to create a query string reflecting the data,
- * this query string is a modified version of the query string received by Quell that has references to data found within the cache removed
- * so that the final query is reduced in scope and faster
- * @param {Object} queryObject - a modified version of the prototype with only values we want to pass onto the queryString
- * @param {String} operationType - a string indicating the GraphQL operation type- 'query', 'mutation', etc.
+ * Traverses over a supplied query Object and uses the fields on there to create a query string reflecting the data.
+ * This query string is a modified version of the query string received by Quell that has references to data found within the cache removed
+ * so that the final query is faster and reduced in scope.
+ * @param {Object} queryObject - A modified version of the prototype with only values we want to pass onto the queryString.
+ * @param {string} operationType - A string indicating the GraphQL operation type- 'query', 'mutation', etc.
  */
 function createQueryStr(
   queryObject: QueryObject | ProtoObjType,
@@ -1750,13 +1752,11 @@ function createQueryStr(
   }
 
   /**
-   * stringify is a helper function that is used to recursively build a graphQL query string from a nested object and
-   * will ignore any __values (ie __alias and __args)
-   * @param {Object} fields - an object whose properties need to be converted to a string to be used for a graphQL query
-   * @returns {string} innerStr - a graphQL query string
+   * Helper function that is used to recursively build a GraphQL query string from a nested object,
+   * ignoring any __values (ie __alias and __args).
+   * @param {QueryFields} fields - An object whose properties need to be converted to a string to be used for a GraphQL query.
+   * @returns {string} innerStr - A graphQL query string.
    */
-  // recurse to build nested query strings
-  // ignore all __values (ie __alias and __args)
   function stringify(fields: QueryFields): string {
     // initialize inner string
     let innerStr = '';
@@ -1780,7 +1780,13 @@ function createQueryStr(
 
     return innerStr;
   }
-  // iterates through arguments object for current field and creates arg string to attach to query string
+
+  /**
+   * Helper function that iterates through arguments object for current field and creates
+   * an argument string to attach to the query string.
+   * @param {QueryFields} fields - Object whose arguments will be attached to the query string.
+   * @returns {string} - Argument string to be attached to the query string.
+   */
   function getArgs(fields: QueryFields): string {
     let argString = '';
     if (!fields.__args) return '';
@@ -1795,21 +1801,25 @@ function createQueryStr(
     return argString ? `${openParen}${argString}${closeParen}` : '';
   }
 
-  // if Alias exists, formats alias for query string
+  /**
+   * Helper function that formats the field's alias, if it exists, for the query string.
+   * @param {QueryFields} fields - Object whose alias will be attached to the query string.
+   * @returns {string} - Alias string to be attached to the query string.
+   */
   function getAliasType(fields: QueryFields): string {
     return fields.__alias ? `: ${fields.__type}` : '';
   }
 
-  // create final query string
+  // Create the final query string.
   const queryStr: string = openCurly + mainStr + ' ' + closeCurly;
   return operationType ? operationType + ' ' + queryStr : queryStr;
 }
 
 /**
- * createQueryObj takes in a map of fields and true/false values (the prototype), and creates a query object containing any values missing from the cache
- * the resulting queryObj is then used as a template to create GQL query strings
- * @param {String} map - map of fields and true/false values from initial request, should be the prototype
- * @returns {Object} queryObject with only values to be requested from GraphQL endpoint
+ * Takes in a map of fields and true/false values (the prototype) and creates a query object containing any values missing from the cache.
+ * The resulting queryObj is then used as a template to create GraphQL query strings.
+ * @param {ProtoObjType} map - Map of fields and true/false values from initial request, should be the prototype.
+ * @returns {Object} queryObject that includes only the values to be requested from GraphQL endpoint.
  */
 function createQueryObj(map: ProtoObjType): ProtoObjType {
   const output: ProtoObjType = {};
@@ -1823,29 +1833,28 @@ function createQueryObj(map: ProtoObjType): ProtoObjType {
   }
 
   /**
-   * reducer takes in a fields object and returns only the values needed from the server
+   * Takes in a fields object and returns only the values needed from the server.
    * @param {Object} fields - Object containing true or false values that determines what should be
    * retrieved from the server.
-   * @returns {Object} Filtered object of only queries without a value or an empty object
+   * @returns {Object} - Filtered object of only queries without a value or an empty object.
    */
-  // filter fields object to contain only values needed from server
   function reducer(fields: ProtoObjType): ProtoObjType {
-    // filter stores values needed from server
+    // Create a filter object to store values needed from server.
     const filter: ProtoObjType = {};
-    // propsFilter for properties such as args, aliases, etc.
+    // Create a propsFilter object for properties such as args, aliases, etc.
     const propsFilter: ProtoObjType = {};
 
     for (const key in fields) {
-      // if value is false, place directly on filter
+      // If value is false, place directly on filter
       if (fields[key] === false) {
         filter[key] = false;
       }
-      // force the id onto the query object
+      // Force the id onto the query object
       if (key === 'id' || key === '_id' || key === 'ID' || key === 'Id') {
         filter[key] = false;
       }
 
-      // if value is an object, recurse to determine nested values
+      // If value is an object, recurse to determine nested values
       if (typeof fields[key] === 'object' && !key.includes('__')) {
         const reduced: ProtoObjType = reducer(fields[key] as ProtoObjType);
         // if reduced object has any values to pass, place on filter
@@ -1854,7 +1863,7 @@ function createQueryObj(map: ProtoObjType): ProtoObjType {
         }
       }
 
-      // if reserved property such as args or alias, place on propsFilter
+      // If reserved property such as args or alias, place on propsFilter
       if (key.includes('__')) {
         propsFilter[key] = fields[key];
       }
@@ -1862,7 +1871,7 @@ function createQueryObj(map: ProtoObjType): ProtoObjType {
 
     const numFields: number = Object.keys(fields).length;
 
-    // if the filter has any values to pass, return filter & propsFilter, otherwise return empty object
+    // If the filter has any values to pass, return filter & propsFilter; otherwise return empty object
     return Object.keys(filter).length > 1 && numFields > 5
       ? { ...filter, ...propsFilter }
       : {};
@@ -1871,12 +1880,12 @@ function createQueryObj(map: ProtoObjType): ProtoObjType {
 }
 
 /**
- * joinResponses combines two objects containing results from separate sources and outputs a single object with information from both sources combined,
+ * Combines two objects containing results from separate sources and outputs a single object with information from both sources combined,
  * formatted to be delivered to the client, using the queryProto as a template for how to structure the final response object.
- * @param {Object} cacheResponse - response data from the cache
- * @param {Object} serverResponse - response data from the server or external API
- * @param {Object} queryProto - current slice of the prototype being used as a template for final response object structure
- * @param {Boolean} fromArray - whether or not the current recursive loop came from within an array, should NOT be supplied to function call
+ * @param {Object} cacheResponse - Response data from the cache.
+ * @param {Object} serverResponse - Response data from the server or external API.
+ * @param {Object} queryProto - Current slice of the prototype being used as a template for final response object structure.
+ * @param {boolean} fromArray - Whether or not the current recursive loop came from within an array (should NOT be supplied to function call).
  */
 function joinResponses(
   cacheResponse: DataResponse,
@@ -2014,10 +2023,10 @@ function joinResponses(
 }
 
 /**
- * parseAST traverses the abstract syntax tree depth-first to create a template for future operations, such as
- * request data from the cache, creating a modified query string for additional information needed, and joining cache and database responses
- * @param {Object} AST - an abstract syntax tree generated by gql library that we will traverse to build our prototype
- * @param {Object} options - a field for user-supplied options, not fully integrated
+ * Traverses the abstract syntax tree depth-first to create a template for future operations, such as
+ * request data from the cache, creating a modified query string for additional information needed, and joining cache and database responses.
+ * @param {Object} AST - An abstract syntax tree generated by GraphQL library that we will traverse to build our prototype.
+ * @param {Object} options - (not fully integrated) A field for user-supplied options.
  * @returns {Object} prototype object
  * @returns {string} operationType
  * @returns {Object} frags object
@@ -2306,11 +2315,12 @@ function parseAST(
   });
   return { proto, operationType, frags };
 }
+
 /**
- * updateProtoWithFragment takes collected fragments and integrates them onto the prototype where referenced
- * @param {Object} protoObj - prototype before it has been updated with fragments
- * @param {Object} frags - fragments object to update prototype with
- * @returns {Object} updated prototype object
+ * Takes collected fragments and integrates them onto the prototype where referenced.
+ * @param {Object} protoObj - Prototype before it has been updated with fragments.
+ * @param {Object} frags - Fragments object to update prototype with.
+ * @returns {Object} Updated prototype object.
  */
 function updateProtoWithFragment(
   protoObj: ProtoObjType,
@@ -2345,11 +2355,11 @@ function updateProtoWithFragment(
 }
 
 /**
- *  getMutationMap generates a map of mutation to GraphQL object types. This mapping is used
+ *  Generates a map of mutation to GraphQL object types. This mapping is used
  *  to identify references to cached data when mutation occurs.
  *  @param {Object} schema - GraphQL defined schema that is used to facilitate caching by providing valid queries,
- *  mutations, and fields
- *  @returns {Object} mutationMap - map of mutations to GraphQL types
+ *  mutations, and fields.
+ *  @returns {Object} mutationMap - Map of mutations to GraphQL types.
  */
 function getMutationMap(schema: GraphQLSchema): MutationMapType {
   const mutationMap: MutationMapType = {};
@@ -2379,11 +2389,11 @@ function getMutationMap(schema: GraphQLSchema): MutationMapType {
 }
 
 /**
- *  getQueryMap generates a map of queries to GraphQL object types. This mapping is used
+ *  Generates a map of queries to GraphQL object types. This mapping is used
  *  to identify and create references to cached data.
  *  @param {Object} schema - GraphQL defined schema that is used to facilitate caching by providing valid queries,
- *  mutations, and fields
- *  @returns {Object} queryMap - map of queries to GraphQL types
+ *  mutations, and fields.
+ *  @returns {Object} queryMap - Map of queries to GraphQL types.
  */
 function getQueryMap(schema: GraphQLSchema): QueryMapType {
   const queryMap: QueryMapType = {};
@@ -2411,13 +2421,12 @@ function getQueryMap(schema: GraphQLSchema): QueryMapType {
 }
 
 /**
- *  getFieldsMap generates of map of fields to GraphQL types. This mapping is used to identify
+ *  Generates of map of fields to GraphQL types. This mapping is used to identify
  *  and create references to cached data.
  *  @param {Object} schema - GraphQL defined schema that is used to facilitate caching by providing valid queries,
- *  mutations, and fields
- *  @returns {Object} fieldsMap - map of fields to GraphQL types
+ *  mutations, and fields.
+ *  @returns {Object} fieldsMap - Map of fields to GraphQL types.
  */
-
 function getFieldsMap(schema: GraphQLSchema): FieldsMapType {
   const fieldsMap: FieldsMapType = {};
   const typesList: GraphQLSchema['_typeMap'] = schema?.getTypeMap();
@@ -2459,6 +2468,7 @@ function getFieldsMap(schema: GraphQLSchema): FieldsMapType {
   }
   return fieldsMap;
 }
+
 // // TODO: Unused functions for QuellCache Class
 // /**
 //  * createRedisKey creates key based on field name and argument id and returns string or null if key creation is not possible
