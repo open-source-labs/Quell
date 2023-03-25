@@ -29,7 +29,8 @@ import type {
   MergedResponse,
   DataResponse,
   Data,
-  ResponseDataType
+  ItemFromCacheType,
+  IdCacheType
 } from '../types';
 /**
  * createQueryStr traverses over a supplied query Object and uses the fields on there to create a query string reflecting the data,
@@ -774,7 +775,6 @@ export function getFieldsMap(schema: GraphQLSchema): FieldsMapType {
   }
   return fieldsMap;
 }
-
 // /**
 //  * normalizeForCache2 traverses over response data and formats it appropriately so we can store it in the cache.
 //  * @param {Object} responseData - data we received from an external source of data such as a database or API
