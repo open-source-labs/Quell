@@ -282,7 +282,7 @@ export class QuellCache {
         });
 
       /*
-       * BUG: The code from here to the end of the current if block was left over from a previous
+       * The code from here to the end of the current if block was left over from a previous
        * implementation and is not currently being used.
        * For the previous implementation: if the ID was not included, used the cache result
        * if the query string was found in the Redis cache. Otherwise, used the result of
@@ -486,7 +486,7 @@ export class QuellCache {
         // Create a variable cacheID, used to determine what ID should be used for the Redis lookup.
         let cacheID: string;
         if (typeof subID === 'string') {
-          // Use the subID argument if it is a string (used for recursive calls within buildFromCache)
+          // Use the subID argument if it is a string (used for recursive calls within buildFromCache).
           cacheID = subID;
         } else {
           cacheID = this.generateCacheID(prototype[typeKey] as ProtoObjType);
@@ -716,7 +716,7 @@ export class QuellCache {
     protoField: ProtoObjType,
     currName: string
   ) {
-    // loop through each resultName in response data
+    // Loop through each resultName in response data
     for (const resultName in responseData) {
       // currField is assigned to the nestedObject on responseData
       const currField = responseData[resultName];
@@ -739,12 +739,12 @@ export class QuellCache {
           }
         }
       } else if (typeof currField === 'object') {
-        // need to get non-Alias ID for cache
+        // Need to get non-Alias ID for cache
 
-        // temporary store for field properties
+        // Temporary store for field properties
         const fieldStore: ResponseDataType = {};
 
-        // create a cacheID based on __type and __id from the prototype
+        // Create a cacheID based on __type and __id from the prototype.
         let cacheID: string = Object.prototype.hasOwnProperty.call(
           map,
           currProto.__type as string
@@ -754,16 +754,14 @@ export class QuellCache {
 
         cacheID += currProto.__id ? `--${currProto.__id}` : '';
 
-        // iterate over keys in nested object
-        // need to save the actual object inside the object cache
-        // and only the ID is placed as a reference inside the nested object
+        // Iterate over keys in nested object
         for (const key in currField) {
-          // if prototype has no ID, check field keys for ID (mostly for arrays)
+          // If prototype has no ID, check field keys for ID (mostly for arrays)
           if (
             !currProto.__id &&
             (key === 'id' || key === '_id' || key === 'ID' || key === 'Id')
           ) {
-            // if currname is undefined, assign to responseData at cacheid to lower case at name
+            // If currname is undefined, assign to responseData at cacheid to lower case at name
             if (responseData[cacheID.toLowerCase()]) {
               const responseDataAtCacheID = responseData[cacheID.toLowerCase()];
               if (
@@ -775,8 +773,9 @@ export class QuellCache {
                 }
               }
             }
-            // if the responseData at cacheID to lower case at name is not undefined, store under name variable and copy logic of writing to cache, want to update cache with same things, all stored under name
-            // store objKey as cacheID without ID added
+            // If the responseData at lower-cased cacheID at name is not undefined, store under name variable
+            // and copy the logic of writing to cache to update the cache with same things, all stored under name.
+            // Store objKey as cacheID without ID added
             const cacheIDForIDCache: string = cacheID;
             cacheID += `--${currField[key]}`;
             // call IdCache here idCache(cacheIDForIDCache, cacheID)
@@ -785,7 +784,7 @@ export class QuellCache {
 
           fieldStore[key] = currField[key];
 
-          // if object, recurse normalizeForCache assign in that object
+          // If object, recurse normalizeForCache assign in that object
           if (typeof currField[key] === 'object') {
             if (protoField[resultName] !== null) {
               await this.normalizeForCache(
@@ -799,7 +798,7 @@ export class QuellCache {
             }
           }
         }
-        // store "current object" on cache in JSON format
+        // Store "current object" on cache in JSON format
         this.writeToCache(cacheID, fieldStore);
       }
     }
@@ -881,7 +880,7 @@ export class QuellCache {
       // TODO: Need to modify this logic if ID is not being requested back during
       // mutation query.
       // dbRespDataRaw.data[mutationName] will always return the value at the mutationName
-      // in the form of an object
+      // in the form of an object.
       dbRespId = (dbRespDataRaw.data[mutationName] as TypeData)?.id as string;
       dbRespData = JSON.parse(JSON.stringify(dbRespDataRaw.data[mutationName]));
     }
@@ -915,7 +914,7 @@ export class QuellCache {
           );
 
           fieldKeysToRemove.forEach((fieldKey: string) => {
-            // index position of field key to remove from list of field keys
+            // Index position of field key to remove from list of field keys
             const removalFieldKeyIdx: number =
               cachedFieldKeysList.indexOf(fieldKey);
 
@@ -956,10 +955,6 @@ export class QuellCache {
               let remove = true;
               for (const arg in mutationQueryObject.__args as ProtoObjType) {
                 if (Object.prototype.hasOwnProperty.call(fieldKeyValue, arg)) {
-                  // how can argValue ever be a boolean?
-                  // argValue is the value at each argument of the query
-                  // and that is typically a string/value you are adding/removing
-                  // with the mutation query
                   const argValue: string = (
                     mutationQueryObject.__args as ProtoObjType
                   )[arg] as string;
@@ -998,7 +993,7 @@ export class QuellCache {
           cachedFieldKeysListRaw
         );
 
-        // iterate through field key field key values in redis, and compare to user
+        // Iterate through field key field key values in Redis, and compare to user
         // specified mutation args to determine which fields are used to update by
         // and which fields need to be updated.
 
@@ -1012,15 +1007,12 @@ export class QuellCache {
 
             const fieldsToUpdateBy: string[] = [];
             const updatedFieldKeyValue: ResponseDataType = fieldKeyValue;
-            // arg in forEach method is a string such as name
-            // argVal is the actual value 'San Diego'
-            // how would this work if it's a mutation query with arguments?
+
             Object.entries(mutationQueryObject.__args as ProtoObjType).forEach(
               ([arg, argVal]) => {
                 if (arg in fieldKeyValue && fieldKeyValue[arg] === argVal) {
-                  // foreign keys are not fields to update by
+                  // Foreign keys are not fields to update by
                   if (arg.toLowerCase().includes('id') === false) {
-                    // arg.toLowerCase
                     fieldsToUpdateBy.push(arg);
                   }
                 } else {
@@ -1037,50 +1029,49 @@ export class QuellCache {
         });
       }
     };
-    // if there is no id property on dbRespDataRaw.data[mutationName]
-    // dbRespId defaults to an empty string and no redisKey will be found
+    // If there is no id property on dbRespDataRaw.data[mutationName]
+    // dbRespId defaults to an empty string and no redisKey will be found.
     const hypotheticalRedisKey = `${mutationType.toLowerCase()}--${dbRespId}`;
     const redisKey: string | void | null = await this.getFromRedis(
       hypotheticalRedisKey
     );
 
     if (redisKey) {
-      // key was found in redis server cache so mutation is either update or delete mutation
-
-      // if user specifies dbRespId as an arg in mutation, then we only need to update/delete a single cache entry by dbRespId
+      // If the key was found in the Redis server cache, the mutation is either update or delete mutation.
       if (mutationQueryObject.__id) {
+        // If the user specifies dbRespId as an argument in the mutation, then we only need to
+        // update/delete a single cache entry by dbRespId.
         if (mutationName.substring(0, 3) === 'del') {
-          // if the first 3 letters of the mutationName are 'del' then mutation is a delete mutation
-          // users have to prefix their delete mutations with 'del' so that quell can distinguish between delete/update mutations
-          // toLowerCase on both mutation types
+          // If the first 3 letters of the mutationName are 'del' then the mutation is a delete mutation.
+          // Users have to prefix their delete mutations with 'del' so that quell can distinguish between delete/update mutations.
           this.deleteCacheById(
             `${mutationType.toLowerCase()}--${mutationQueryObject.__id}`
           );
           removeFromFieldKeysList([`${mutationType}--${dbRespId}`]);
         } else {
-          // update mutation for single dbRespId
+          // Update mutation for single dbRespId
           this.writeToCache(
             `${mutationType.toLowerCase()}--${mutationQueryObject.__id}`,
             dbRespData
           );
         }
       } else {
-        // user didn't specify dbRespId so we need to iterate through all key value pairs and determine which key values match dbRespData
-        // might have edge case here if there are no queries that have type GraphQLList
+        // If the user didn't specify dbRespId, we need to iterate through all key value pairs and determine which key values match dbRespData.
+        // Note that there is a potential edge case here if there are no queries that have type GraphQLList.
         // if (!fieldsListKey) throw 'error: schema must have a GraphQLList';
 
-        // unused variable
+        // Unused variable
         const removalFieldKeysList = [];
-        // TODO - look into what this is being used for if anything
+
         if (mutationName.substring(0, 3) === 'del') {
-          // mutation is delete mutation
+          // Mutation is delete mutation
           deleteApprFieldKeys();
         } else {
           updateApprFieldKeys();
         }
       }
     } else {
-      // key was not found in redis server cache so mutation is an add mutation
+      // If the key was not found in the Redis server cache, the mutation is an add mutation.
       this.writeToCache(hypotheticalRedisKey, dbRespData);
     }
   }
@@ -1184,37 +1175,36 @@ export class QuellCache {
   getStatsFromRedis(req: Request, res: Response, next: NextFunction): void {
     try {
       const getStats = () => {
-        // redisCache.info returns information and statistics about the server as an array of field:value
+        // redisCache.info returns information and statistics about the server as an array of field:value.
         this.redisCache
           .info()
           .then((response: string) => {
             const dataLines: string[] = response.split('\r\n');
-            // dataLines is an array of strings
             const output: RedisStatsType = {
               // SERVER
               server: [
-                // redis version
+                // Redis version
                 {
                   name: 'Redis version',
                   value: dataLines
                     .find((line) => line.match(/redis_version/))
                     ?.split(':')[1]
                 },
-                // redis build id
+                // Redis build id
                 {
                   name: 'Redis build id',
                   value: dataLines
                     .find((line) => line.match(/redis_build_id/))
                     ?.split(':')[1]
                 },
-                // redis mode
+                // Redis mode
                 {
                   name: 'Redis mode',
                   value: dataLines
                     .find((line) => line.match(/redis_mode/))
                     ?.split(':')[1]
                 },
-                // os hosting redis system
+                // OS hosting Redis system
                 {
                   name: 'Host operating system',
                   value: dataLines
@@ -1228,35 +1218,35 @@ export class QuellCache {
                     .find((line) => line.match(/tcp_port/))
                     ?.split(':')[1]
                 },
-                // server time
+                // Server time
                 // {
                 //   name: 'System time',
                 //   value: dataLines
                 //     .find((line) => line.match(/server_time_in_usec/))
                 //     .split(':')[1],
                 // },
-                // num of seconds since Redis server start
+                // Number of seconds since Redis server start
                 {
                   name: 'Server uptime (seconds)',
                   value: dataLines
                     .find((line) => line.match(/uptime_in_seconds/))
                     ?.split(':')[1]
                 },
-                // num of days since Redis server start
+                // Number of days since Redis server start
                 {
                   name: 'Server uptime (days)',
                   value: dataLines
                     .find((line) => line.match(/uptime_in_days/))
                     ?.split(':')[1]
                 },
-                // path to server's executable
+                // Path to server's executable
                 // {
                 //   name: 'Path to executable',
                 //   value: dataLines
                 //     .find((line) => line.match(/executable/))
                 //     .split(':')[1],
                 // },
-                // path to server's configuration file
+                // Path to server's configuration file
                 {
                   name: 'Path to configuration file',
                   value: dataLines
@@ -1266,35 +1256,35 @@ export class QuellCache {
               ],
               // CLIENT
               client: [
-                // number of connected clients
+                // Number of connected clients
                 {
                   name: 'Connected clients',
                   value: dataLines
                     .find((line) => line.match(/connected_clients/))
                     ?.split(':')[1]
                 },
-                // number of sockets used by cluster bus
+                // Number of sockets used by cluster bus
                 {
                   name: 'Cluster connections',
                   value: dataLines
                     .find((line) => line.match(/cluster_connections/))
                     ?.split(':')[1]
                 },
-                // max clients
+                // Max clients
                 {
                   name: 'Max clients',
                   value: dataLines
                     .find((line) => line.match(/maxclients/))
                     ?.split(':')[1]
                 },
-                // number of clients being tracked
+                // Number of clients being tracked
                 // {
                 //   name: 'Tracked clients',
                 //   value: dataLines
                 //     .find((line) => line.match(/tracking_clients/))
                 //     .split(':')[1],
                 // },
-                // blocked clients
+                // Blocked clients
                 {
                   name: 'Blocked clients',
                   value: dataLines
@@ -1304,14 +1294,14 @@ export class QuellCache {
               ],
               // MEMORY
               memory: [
-                // total allocated memory
+                // Total allocated memory
                 {
                   name: 'Total allocated memory',
                   value: dataLines
                     .find((line) => line.match(/used_memory_human/))
                     ?.split(':')[1]
                 },
-                // peak memory consumed
+                // Peak memory consumed
                 {
                   name: 'Peak memory consumed',
                   value: dataLines
@@ -1325,28 +1315,28 @@ export class QuellCache {
                 //     .find((line) => line.match(/used_memory_peak_perc/))
                 //     .split(':')[1],
                 // },
-                // initial amount of memory consumed at startup
+                // Initial amount of memory consumed at startup
                 // {
                 //   name: 'Memory consumed at startup',
                 //   value: dataLines
                 //     .find((line) => line.match(/used_memory_startup/))
                 //     .split(':')[1],
                 // },
-                // size of dataset
+                // Size of dataset
                 // {
                 //   name: 'Dataset size (bytes)',
                 //   value: dataLines
                 //     .find((line) => line.match(/used_memory_dataset/))
                 //     .split(':')[1],
                 // },
-                // percent of data out of net mem usage
+                // Percent of data out of net memory usage
                 // {
                 //   name: 'Dataset memory % total',
                 //   value: dataLines
                 //     .find((line) => line.match(/used_memory_dataset_perc/))
                 //     .split(':')[1],
                 // },
-                // total system memory
+                // Total system memory
                 // {
                 //   name: 'Total system memory',
                 //   value: dataLines
@@ -1356,84 +1346,84 @@ export class QuellCache {
               ],
               // STATS
               stats: [
-                // total number of connections accepted by server
+                // Total number of connections accepted by server
                 {
                   name: 'Total connections',
                   value: dataLines
                     .find((line) => line.match(/total_connections_received/))
                     ?.split(':')[1]
                 },
-                // total number of commands processed by server
+                // Total number of commands processed by server
                 {
                   name: 'Total commands',
                   value: dataLines
                     .find((line) => line.match(/total_commands_processed/))
                     ?.split(':')[1]
                 },
-                // number of commands processed per second
+                // Number of commands processed per second
                 {
                   name: 'Commands processed per second',
                   value: dataLines
                     .find((line) => line.match(/instantaneous_ops_per_sec/))
                     ?.split(':')[1]
                 },
-                // total number of keys being tracked
+                // Total number of keys being tracked
                 // {
                 //   name: 'Tracked keys',
                 //   value: dataLines
                 //     .find((line) => line.match(/tracking_total_keys/))
                 //     .split(':')[1],
                 // },
-                // total number of items being tracked(sum of clients number for each key)
+                // Total number of items being tracked(sum of clients number for each key)
                 // {
                 //   name: 'Tracked items',
                 //   value: dataLines
                 //     .find((line) => line.match(/tracking_total_items/))
                 //     .split(':')[1],
                 // },
-                // total number of read events processed
+                // Total number of read events processed
                 // {
                 //   name: 'Reads processed',
                 //   value: dataLines
                 //     .find((line) => line.match(/total_reads_processed/))
                 //     .split(':')[1],
                 // },
-                // total number of write events processed
+                // Total number of write events processed
                 // {
                 //   name: 'Writes processed',
                 //   value: dataLines
                 //     .find((line) => line.match(/total_writes_processed/))
                 //     .split(':')[1],
                 // },
-                // total number of error replies
+                // Total number of error replies
                 {
                   name: 'Error replies',
                   value: dataLines
                     .find((line) => line.match(/total_error_replies/))
                     ?.split(':')[1]
                 },
-                // total number of bytes read from network
+                // Total number of bytes read from network
                 {
                   name: 'Bytes read from network',
                   value: dataLines
                     .find((line) => line.match(/total_net_input_bytes/))
                     ?.split(':')[1]
                 },
-                // networks read rate per second
+                // Networks read rate per second
                 {
                   name: 'Network read rate (Kb/s)',
                   value: dataLines
                     .find((line) => line.match(/instantaneous_input_kbps/))
                     ?.split(':')[1]
                 },
-                // total number of bytes written to network
+                // Total number of bytes written to network
                 // {
                 //   name: 'Bytes written to network',
                 //   value: dataLines
                 //     .find((line) => line.match(/total_net_output_bytes/))
                 //     .split(':')[1],
                 // },
-                // networks write rate per second
+                // Networks write rate per second
                 {
                   name: 'Network write rate (Kb/s)',
                   value: dataLines
