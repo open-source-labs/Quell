@@ -142,6 +142,8 @@ export class QuellCache {
    *  @param {Request} req - Express request object, including request body with GraphQL query string.
    *  @param {Response} res - Express response object, will carry query response to next middleware.
    *  @param {NextFunction} next - Express next middleware function, invoked when QuellCache completes its work.
+   *  @returns {void} Passes an error to Express if no query was included in the request or if the number of requests by the current IP
+   *  exceeds the IP rate limit.
    */
   async rateLimiter(
     req: Request,
@@ -161,8 +163,7 @@ export class QuellCache {
     if (!req.body.query) {
       return next({
         log: 'Error: no GraphQL query found on request body',
-        status: 400, // Bad Request
-        message: { err: 'Error in rateLimiter' }
+        status: 400 // Bad Request
       });
     }
 
@@ -1061,6 +1062,7 @@ export class QuellCache {
         // if (!fieldsListKey) throw 'error: schema must have a GraphQLList';
 
         // Unused variable
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         const removalFieldKeysList = [];
 
         if (mutationName.substring(0, 3) === 'del') {
@@ -2074,7 +2076,7 @@ function parseAST(
     OperationDefinition(node: OperationDefinitionNode) {
       // Quell cannot cache subscriptions, so we need to return as unQuellable if the type is subscription.
       operationType = node.operation;
-      if (node.operation === 'subscription') {
+      if (operationType === 'subscription') {
         operationType = 'unQuellable';
         // Return BREAK to break out of the current traversal branch.
         return BREAK;
@@ -2083,15 +2085,17 @@ function parseAST(
 
     // If the current node is of type FragmentDefinition, this function will be triggered upon entering it.
     FragmentDefinition(node: FragmentDefinitionNode) {
-      // Add the fragment name to the stack.
-      stack.push(node.name.value);
-
       // Get the name of the fragment.
       const fragName = node.name.value;
 
+      // Add the fragment name to the stack.
+      stack.push(fragName);
+
       // Add the fragment name as a key in the frags object, initialized to an empty object.
       frags[fragName] = {};
-      // Loop through the selections in the selection set for the current FragmentDefinition node.
+
+      // Loop through the selections in the selection set for the current FragmentDefinition node
+      // in order to extract the fields in the fragment.
       for (let i = 0; i < node.selectionSet.selections.length; i++) {
         // Below, we get the 'name' property from the SelectionNode.
         // However, InlineFragmentNode (one of the possible types for SelectionNode) does
@@ -2121,8 +2125,8 @@ function parseAST(
         // Create an args object that will be populated with the current node's arguments.
         const argsObj: ArgsObjType = {};
 
-        // Auxiliary object for storing arguments, aliases, field-specific options, and more
-        // query-wide options should be handled on Quell's options object
+        // Auxiliary object for storing arguments, aliases, field-specific options, and more.
+        // Query-wide options should be handled on Quell's options object.
         const auxObj: AuxObjType = {
           __id: null
         };
@@ -2208,7 +2212,7 @@ function parseAST(
 
       // If the current node is of type Field, this function will be triggered after visiting it and all of its children.
       leave() {
-        // Pop stacks to keep track of depth-first parsing path
+        // Pop stacks to keep track of depth-first parsing path.
         stack.pop();
       }
     },
@@ -2239,6 +2243,8 @@ function parseAST(
           !Array.isArray(parent) && // parent is not readonly ASTNode[]
           (parent as ASTNode).kind === 'Field' // can now safely cast parent to ASTNode
         ) {
+          // Create fieldsValues object that will be used to collect fields as
+          // we loop through the selections.
           const fieldsValues: FieldsValuesType = {};
 
           /*
@@ -2278,8 +2284,8 @@ function parseAST(
             return BREAK;
           }
 
-          // place current fieldArgs object onto fieldsObject so it gets passed along to prototype
-          // fieldArgs contains arguments, aliases, etc.
+          // Place current fieldArgs object onto fieldsObject so it gets passed along to prototype.
+          // The fieldArgs contains arguments, aliases, etc.
           const fieldsObject: FieldsObjectType = {
             ...fieldsValues,
             ...fieldArgs[stack[stack.length - 1]]

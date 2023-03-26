@@ -25,11 +25,10 @@ i.e. {{JSONStringifiedQuery: $lokiID}}
   query3: $loki3
  };
  */
-
 let IDCache: IDLokiCacheType = {};
 
 /**
- * clearCache clears existing cache and ID cache and resets to a new cache
+ * Clears existing cache and ID cache and resets to a new cache.
  */
 const clearCache = (): void => {
   lokidb.removeCollection('loki-client-cache');
@@ -99,21 +98,22 @@ async function Quellify(
     });
   };
 
-  // Create AST based on the input query using the parse method available in the graphQL library (further reading: https://en.wikipedia.org/wiki/Abstract_syntax_tree)
+  // Create AST based on the input query using the parse method available in the graphQL library
+  // (further reading: https://en.wikipedia.org/wiki/Abstract_syntax_tree)
   const AST: DocumentNode = parse(query);
 
-  // find operationType, proto using determineType
+  // Find operationType, proto using determineType
   const { operationType, proto } = determineType(AST);
 
-  // pass-through for queries and operations that QuellCache cannot handle
+  // Pass-through for queries and operations that QuellCache cannot handle
   if (operationType === 'unQuellable') {
     // All returns in an async function return promises by default, therefore we are returning a promise that will resolve from perFormFetch
     const parsedData: JSONValue = await performFetch(postFetch);
     return parsedData;
   } else if (operationType === 'mutation') {
-    // assign mutationType
+    // Assign mutationType
     const mutationType: string = Object.keys(proto)[0];
-    // check for key words in the type
+    // Check for key words in the type
     if (
       // add mutation
       mutationType.includes('add') ||
@@ -121,14 +121,14 @@ async function Quellify(
       mutationType.includes('create') ||
       mutationType.includes('make')
     ) {
-      // execute initial query
+      // Execute initial query
       const parsedData: JSONValue = await performFetch(postFetch);
-      // clear cache so the next query will include mutation
+      // Clear cache so the next query will include mutation
       clearCache();
-      // return data
+      // Return data
       return parsedData;
     } else if (
-      // if query is update or delete mutation
+      // If query is update or delete mutation
       mutationType.includes('delete') ||
       mutationType.includes('remove')
     ) {
@@ -190,4 +190,4 @@ async function Quellify(
   }
 }
 
-module.exports = { Quellify, clearLokiCache: clearCache };
+export { Quellify, clearCache as clearLokiCache };
