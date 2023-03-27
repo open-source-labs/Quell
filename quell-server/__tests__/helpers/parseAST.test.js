@@ -1,5 +1,5 @@
 /* eslint-disable no-undef */
-const { parseAST } = require('../../src/quell');
+const { parseAST } = require('../../src/helpers/quellHelpers');
 const { parse } = require('graphql/language/parser');
 
 describe('server tests for Quell.parseAST.js', () => {

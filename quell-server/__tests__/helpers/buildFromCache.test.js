@@ -1,4 +1,4 @@
-const QuellCache = require('../../src/quell.js');
+const QuellCache = require('../../src/quell.ts');
 const schema = require('../../test-config/testSchema');
 
 const redisPort = 6379;
@@ -15,7 +15,7 @@ xdescribe('server test for buildFromCache', () => {
   // inputs: prototype object (which contains args), collection (defaults to an empty array)
   // outputs: protoype object with fields that were not found in the cache set to false
 
-  beforeAll(() => {
+  xbeforeAll(() => {
     const promise1 = (resolve, reject) => {
       resolve(
         Quell.writeToCache('country--1', {
@@ -42,12 +42,12 @@ xdescribe('server test for buildFromCache', () => {
     return [promise1, promise2, promise3, promise4];
   });
 
-  afterAll((done) => {
+  xafterAll((done) => {
     Quell.redisCache.flushAll();
     done();
   });
 
-  test('Basic query', async () => {
+  xtest('Basic query', async () => {
     const testProto = {
       country: {
         id: true,
@@ -85,7 +85,7 @@ xdescribe('server test for buildFromCache', () => {
     expect(responseFromCache).toEqual(expectedResponseFromCache);
   });
 
-  test('Basic query for data not in the cache', async () => {
+  xtest('Basic query for data not in the cache', async () => {
     const testProto = {
       book: {
         id: true,
@@ -211,7 +211,7 @@ xdescribe('server test for buildFromCache', () => {
     expect(responseFromCache).toEqual(expectedResponseFromCache);
   });
 
-  test('Handles array', async () => {
+  xtest('Handles array', async () => {
     const testProto = {
       countries: {
         id: true,
@@ -254,7 +254,7 @@ xdescribe('server test for buildFromCache', () => {
     expect(responseFromCache).toEqual(expectedResponseFromCache);
   });
 
-  test('Handles deeply nested queries with an empty cache', async () => {
+  xtest('Handles deeply nested queries with an empty cache', async () => {
     const testProto = {
       continents: {
         id: true,

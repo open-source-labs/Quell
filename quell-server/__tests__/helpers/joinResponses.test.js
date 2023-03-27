@@ -1,5 +1,5 @@
 /* eslint-disable no-undef */
-const { joinResponses } = require('../../src/quell');
+const { joinResponses } = require('../../src/helpers/quellHelpers');
 
 describe('tests for joinResponses on the server side', () => {
   afterAll((done) => {

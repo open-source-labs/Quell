@@ -1,5 +1,5 @@
 /* eslint-disable no-undef */
-const { updateProtoWithFragment } = require('../../src/quell');
+const { updateProtoWithFragment } = require('../../src/helpers/quellHelpers');
 
 describe('tests for update prototype with fragments on the server side', () => {
   afterAll((done) => {

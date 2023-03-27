@@ -1,5 +1,5 @@
 /* eslint-disable no-undef */
-const { getFieldsMap } = require('../../src/quell');
+const { getFieldsMap } = require('../../src/helpers/quellHelpers');
 const schema = require('../../test-config/testSchema');
 const schemaWithoutFields = require('../../test-config/testSchemaWithoutFields');
 
