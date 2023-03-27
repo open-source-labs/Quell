@@ -215,7 +215,7 @@ export class QuellCache {
       return next({
         log: 'Error: no GraphQL query found on request body',
         status: 400, // Bad Request
-        message: { err: 'Error in rateLimiter' }
+        message: { err: 'Error in QuellCache.query' }
       });
     }
 
