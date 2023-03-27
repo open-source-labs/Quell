@@ -300,7 +300,7 @@ export class QuellCache {
           });
       }
     } else if (operationType === 'mutation') {
-      // BUG: If the operation is a mutation, we are currently clearing the cache because it is stale.
+      // TODO: If the operation is a mutation, we are currently clearing the cache because it is stale.
       // The goal would be to instead have a normalized cache and update the cache following a mutation.
       this.redisCache.flushAll();
       idCache = {};

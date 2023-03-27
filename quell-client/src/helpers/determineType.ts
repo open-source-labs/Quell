@@ -275,7 +275,7 @@ export default function determineType(AST: ASTNode): {
         }
       },
       leave() {
-        // tracking depth of selection set
+        // Tracking depth of selection set
         selectionSetDepth--;
       }
     }
