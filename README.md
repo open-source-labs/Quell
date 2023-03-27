@@ -1,4 +1,4 @@
-<p align="center"><img src="./assets/quell.png" width='500' style="margin-top: 10px; margin-bottom: -10px;"></p>
+<p align="center"><img src="./assets/Quell-B2.png" width='500' style="margin-top: 10px; margin-bottom: -10px;"></p>
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://github.com/open-source-labs/Quell/blob/master/LICENSE)
 [![contributions welcome](https://img.shields.io/badge/contributions-welcome-brightgreen.svg?style=flat)](https://github.com/open-source-labs/Quell/issues)
@@ -24,7 +24,7 @@ Accelerated by [OS Labs](https://github.com/open-source-labs) and developed by [
   - View server-side cache data and contents, with the ability to manually clear the cache
   - Features require zero-to-minimal configuration and can work independently of `@quell/client` and `@quell/server`
 
-<p><img src="./assets/quell-diagram.png"></p>
+<p><img src="./assets/updatedQuell-diagram.png"></p>
 
 ### Demo 
 <p><img src="./assets/quell-demo.png"></p>

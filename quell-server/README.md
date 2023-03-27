@@ -44,7 +44,7 @@ Install the NPM package from your terminal: `npm i @quell/server`.
 - Common JS: `const { QuellCache } = require('@quell/server');`
 - ES6+: `import { QuellCache } from '@quell/server';`
 
-2. Instantiate QuellCache once for each GraphQL endpoint, passing to it an object wit the following properties:
+2. Instantiate QuellCache once for each GraphQL endpoint, passing to it an object with the following properties:
 
 - schema - The GraphQL schema you've defined using the graphql-JS library (NOTE: see 'Schema' section below).
 
