@@ -30,12 +30,13 @@ import type {
   DataResponse,
   Data
 } from '../types';
+
 /**
- * createQueryStr traverses over a supplied query Object and uses the fields on there to create a query string reflecting the data,
- * this query string is a modified version of the query string received by Quell that has references to data found within the cache removed
- * so that the final query is reduced in scope and faster
- * @param {Object} queryObject - a modified version of the prototype with only values we want to pass onto the queryString
- * @param {String} operationType - a string indicating the GraphQL operation type- 'query', 'mutation', etc.
+ * Traverses over a supplied query Object and uses the fields on there to create a query string reflecting the data.
+ * This query string is a modified version of the query string received by Quell that has references to data found within the cache removed
+ * so that the final query is faster and reduced in scope.
+ * @param {Object} queryObject - A modified version of the prototype with only values we want to pass onto the queryString.
+ * @param {string} operationType - A string indicating the GraphQL operation type- 'query', 'mutation', etc.
  */
 export function createQueryStr(
   queryObject: QueryObject | ProtoObjType,
@@ -60,13 +61,11 @@ export function createQueryStr(
   }
 
   /**
-   * stringify is a helper function that is used to recursively build a graphQL query string from a nested object and
-   * will ignore any __values (ie __alias and __args)
-   * @param {Object} fields - an object whose properties need to be converted to a string to be used for a graphQL query
-   * @returns {string} innerStr - a graphQL query string
+   * Helper function that is used to recursively build a GraphQL query string from a nested object,
+   * ignoring any __values (ie __alias and __args).
+   * @param {QueryFields} fields - An object whose properties need to be converted to a string to be used for a GraphQL query.
+   * @returns {string} innerStr - A graphQL query string.
    */
-  // recurse to build nested query strings
-  // ignore all __values (ie __alias and __args)
   function stringify(fields: QueryFields): string {
     // initialize inner string
     let innerStr = '';
@@ -90,7 +89,13 @@ export function createQueryStr(
 
     return innerStr;
   }
-  // iterates through arguments object for current field and creates arg string to attach to query string
+
+  /**
+   * Helper function that iterates through arguments object for current field and creates
+   * an argument string to attach to the query string.
+   * @param {QueryFields} fields - Object whose arguments will be attached to the query string.
+   * @returns {string} - Argument string to be attached to the query string.
+   */
   function getArgs(fields: QueryFields): string {
     let argString = '';
     if (!fields.__args) return '';
@@ -105,21 +110,25 @@ export function createQueryStr(
     return argString ? `${openParen}${argString}${closeParen}` : '';
   }
 
-  // if Alias exists, formats alias for query string
+  /**
+   * Helper function that formats the field's alias, if it exists, for the query string.
+   * @param {QueryFields} fields - Object whose alias will be attached to the query string.
+   * @returns {string} - Alias string to be attached to the query string.
+   */
   function getAliasType(fields: QueryFields): string {
     return fields.__alias ? `: ${fields.__type}` : '';
   }
 
-  // create final query string
+  // Create the final query string.
   const queryStr: string = openCurly + mainStr + ' ' + closeCurly;
   return operationType ? operationType + ' ' + queryStr : queryStr;
 }
 
 /**
- * createQueryObj takes in a map of fields and true/false values (the prototype), and creates a query object containing any values missing from the cache
- * the resulting queryObj is then used as a template to create GQL query strings
- * @param {String} map - map of fields and true/false values from initial request, should be the prototype
- * @returns {Object} queryObject with only values to be requested from GraphQL endpoint
+ * Takes in a map of fields and true/false values (the prototype) and creates a query object containing any values missing from the cache.
+ * The resulting queryObj is then used as a template to create GraphQL query strings.
+ * @param {ProtoObjType} map - Map of fields and true/false values from initial request, should be the prototype.
+ * @returns {Object} queryObject that includes only the values to be requested from GraphQL endpoint.
  */
 export function createQueryObj(map: ProtoObjType): ProtoObjType {
   const output: ProtoObjType = {};
@@ -133,29 +142,28 @@ export function createQueryObj(map: ProtoObjType): ProtoObjType {
   }
 
   /**
-   * reducer takes in a fields object and returns only the values needed from the server
+   * Takes in a fields object and returns only the values needed from the server.
    * @param {Object} fields - Object containing true or false values that determines what should be
    * retrieved from the server.
-   * @returns {Object} Filtered object of only queries without a value or an empty object
+   * @returns {Object} - Filtered object of only queries without a value or an empty object.
    */
-  // filter fields object to contain only values needed from server
   function reducer(fields: ProtoObjType): ProtoObjType {
-    // filter stores values needed from server
+    // Create a filter object to store values needed from server.
     const filter: ProtoObjType = {};
-    // propsFilter for properties such as args, aliases, etc.
+    // Create a propsFilter object for properties such as args, aliases, etc.
     const propsFilter: ProtoObjType = {};
 
     for (const key in fields) {
-      // if value is false, place directly on filter
+      // If value is false, place directly on filter
       if (fields[key] === false) {
         filter[key] = false;
       }
-      // force the id onto the query object
+      // Force the id onto the query object
       if (key === 'id' || key === '_id' || key === 'ID' || key === 'Id') {
         filter[key] = false;
       }
 
-      // if value is an object, recurse to determine nested values
+      // If value is an object, recurse to determine nested values
       if (typeof fields[key] === 'object' && !key.includes('__')) {
         const reduced: ProtoObjType = reducer(fields[key] as ProtoObjType);
         // if reduced object has any values to pass, place on filter
@@ -164,7 +172,7 @@ export function createQueryObj(map: ProtoObjType): ProtoObjType {
         }
       }
 
-      // if reserved property such as args or alias, place on propsFilter
+      // If reserved property such as args or alias, place on propsFilter
       if (key.includes('__')) {
         propsFilter[key] = fields[key];
       }
@@ -172,7 +180,7 @@ export function createQueryObj(map: ProtoObjType): ProtoObjType {
 
     const numFields: number = Object.keys(fields).length;
 
-    // if the filter has any values to pass, return filter & propsFilter, otherwise return empty object
+    // If the filter has any values to pass, return filter & propsFilter; otherwise return empty object
     return Object.keys(filter).length > 1 && numFields > 5
       ? { ...filter, ...propsFilter }
       : {};
@@ -181,12 +189,12 @@ export function createQueryObj(map: ProtoObjType): ProtoObjType {
 }
 
 /**
- * joinResponses combines two objects containing results from separate sources and outputs a single object with information from both sources combined,
+ * Combines two objects containing results from separate sources and outputs a single object with information from both sources combined,
  * formatted to be delivered to the client, using the queryProto as a template for how to structure the final response object.
- * @param {Object} cacheResponse - response data from the cache
- * @param {Object} serverResponse - response data from the server or external API
- * @param {Object} queryProto - current slice of the prototype being used as a template for final response object structure
- * @param {Boolean} fromArray - whether or not the current recursive loop came from within an array, should NOT be supplied to function call
+ * @param {Object} cacheResponse - Response data from the cache.
+ * @param {Object} serverResponse - Response data from the server or external API.
+ * @param {Object} queryProto - Current slice of the prototype being used as a template for final response object structure.
+ * @param {boolean} fromArray - Whether or not the current recursive loop came from within an array (should NOT be supplied to function call).
  */
 export function joinResponses(
   cacheResponse: DataResponse,
@@ -322,11 +330,12 @@ export function joinResponses(
   }
   return mergedResponse;
 }
+
 /**
- * parseAST traverses the abstract syntax tree depth-first to create a template for future operations, such as
- * request data from the cache, creating a modified query string for additional information needed, and joining cache and database responses
- * @param {Object} AST - an abstract syntax tree generated by gql library that we will traverse to build our prototype
- * @param {Object} options - a field for user-supplied options, not fully integrated
+ * Traverses the abstract syntax tree depth-first to create a template for future operations, such as
+ * request data from the cache, creating a modified query string for additional information needed, and joining cache and database responses.
+ * @param {Object} AST - An abstract syntax tree generated by GraphQL library that we will traverse to build our prototype.
+ * @param {Object} options - (not fully integrated) A field for user-supplied options.
  * @returns {Object} prototype object
  * @returns {string} operationType
  * @returns {Object} frags object
@@ -384,7 +393,7 @@ export function parseAST(
     OperationDefinition(node: OperationDefinitionNode) {
       // Quell cannot cache subscriptions, so we need to return as unQuellable if the type is subscription.
       operationType = node.operation;
-      if (node.operation === 'subscription') {
+      if (operationType === 'subscription') {
         operationType = 'unQuellable';
         // Return BREAK to break out of the current traversal branch.
         return BREAK;
@@ -393,15 +402,17 @@ export function parseAST(
 
     // If the current node is of type FragmentDefinition, this function will be triggered upon entering it.
     FragmentDefinition(node: FragmentDefinitionNode) {
-      // Add the fragment name to the stack.
-      stack.push(node.name.value);
-
       // Get the name of the fragment.
       const fragName = node.name.value;
 
+      // Add the fragment name to the stack.
+      stack.push(fragName);
+
       // Add the fragment name as a key in the frags object, initialized to an empty object.
       frags[fragName] = {};
-      // Loop through the selections in the selection set for the current FragmentDefinition node.
+
+      // Loop through the selections in the selection set for the current FragmentDefinition node
+      // in order to extract the fields in the fragment.
       for (let i = 0; i < node.selectionSet.selections.length; i++) {
         // Below, we get the 'name' property from the SelectionNode.
         // However, InlineFragmentNode (one of the possible types for SelectionNode) does
@@ -431,8 +442,8 @@ export function parseAST(
         // Create an args object that will be populated with the current node's arguments.
         const argsObj: ArgsObjType = {};
 
-        // auxillary object for storing arguments, aliases, field-specific options, and more
-        // query-wide options should be handled on Quell's options object
+        // Auxiliary object for storing arguments, aliases, field-specific options, and more.
+        // Query-wide options should be handled on Quell's options object.
         const auxObj: AuxObjType = {
           __id: null
         };
@@ -440,7 +451,7 @@ export function parseAST(
         // Loop through the field's arguments.
         if (node.arguments) {
           node.arguments.forEach((arg: ArgumentNode) => {
-            const key = arg.name.value;
+            const key: string = arg.name.value;
 
             // Quell cannot cache queries with variables, so we need to return unQuellable if the query has variables.
             if (arg.value.kind === 'Variable' && operationType === 'query') {
@@ -509,11 +520,6 @@ export function parseAST(
         auxObj.__args = Object.keys(argsObj).length > 0 ? argsObj : null;
 
         // Add auxObj fields to prototype, allowing future access to type, alias, args, etc.
-        /*
-         * BUG: Should "...argsObj[fieldType]" be removed? Because we verified above that all the values in
-         * argsObj will be string/boolean/null, argsObj[fieldType] will never be an object, so spreading it will
-         * not result in key-value pairs. -- Removed argsObj[fieldType] from being spread into fieldArgs
-         */
         fieldArgs[fieldType] = {
           ...auxObj
         };
@@ -523,7 +529,7 @@ export function parseAST(
 
       // If the current node is of type Field, this function will be triggered after visiting it and all of its children.
       leave() {
-        // Pop stacks to keep track of depth-first parsing path
+        // Pop stacks to keep track of depth-first parsing path.
         stack.pop();
       }
     },
@@ -542,7 +548,7 @@ export function parseAST(
         ancestors: readonly (ASTNode | readonly ASTNode[])[]
       ) {
         /*
-         * Exclude SelectionSet nodes whose parents' are not of the kind
+         * Exclude SelectionSet nodes whose parents are not of the kind
          * 'Field' to exclude nodes that do not contain information about
          *  queried fields.
          */
@@ -554,6 +560,8 @@ export function parseAST(
           !Array.isArray(parent) && // parent is not readonly ASTNode[]
           (parent as ASTNode).kind === 'Field' // can now safely cast parent to ASTNode
         ) {
+          // Create fieldsValues object that will be used to collect fields as
+          // we loop through the selections.
           const fieldsValues: FieldsValuesType = {};
 
           /*
@@ -579,8 +587,8 @@ export function parseAST(
             )
               fieldsValues[field.name.value] = true;
           }
-          // if ID was not included on the request then the query will not be included in the cache, but the request will be processed
-          // AND if current node is NOT a fragment.
+          // If ID was not included on the request and the current node is not a fragment, then the query
+          // will not be included in the cache, but the request will be processed.
           if (
             !Object.prototype.hasOwnProperty.call(fieldsValues, 'id') &&
             !Object.prototype.hasOwnProperty.call(fieldsValues, '_id') &&
@@ -593,13 +601,13 @@ export function parseAST(
             return BREAK;
           }
 
-          // place current fieldArgs object onto fieldsObject so it gets passed along to prototype
-          // fieldArgs contains arguments, aliases, etc.
+          // Place current fieldArgs object onto fieldsObject so it gets passed along to prototype.
+          // The fieldArgs contains arguments, aliases, etc.
           const fieldsObject: FieldsObjectType = {
             ...fieldsValues,
             ...fieldArgs[stack[stack.length - 1]]
           };
-          // loop through stack to get correct path in proto for temp object;
+          // Loop through stack to get correct path in proto for temp object
           stack.reduce(
             (prev: ProtoObjType, curr: string, index: number): ProtoObjType => {
               // if last item in path, set value
@@ -613,18 +621,19 @@ export function parseAST(
 
       // If the current node is of type SelectionSet, this function will be triggered upon entering it.
       leave() {
-        // pop stacks to keep track of depth-first parsing path
+        // Pop stacks to keep track of depth-first parsing path
         stack.pop();
       }
     }
   });
   return { proto, operationType, frags };
 }
+
 /**
- * updateProtoWithFragment takes collected fragments and integrates them onto the prototype where referenced
- * @param {Object} protoObj - prototype before it has been updated with fragments
- * @param {Object} frags - fragments object to update prototype with
- * @returns {Object} updated prototype object
+ * Takes collected fragments and integrates them onto the prototype where referenced.
+ * @param {Object} protoObj - Prototype before it has been updated with fragments.
+ * @param {Object} frags - Fragments object to update prototype with.
+ * @returns {Object} Updated prototype object.
  */
 export function updateProtoWithFragment(
   protoObj: ProtoObjType,
@@ -659,11 +668,11 @@ export function updateProtoWithFragment(
 }
 
 /**
- *  getMutationMap generates a map of mutation to GraphQL object types. This mapping is used
+ *  Generates a map of mutation to GraphQL object types. This mapping is used
  *  to identify references to cached data when mutation occurs.
  *  @param {Object} schema - GraphQL defined schema that is used to facilitate caching by providing valid queries,
- *  mutations, and fields
- *  @returns {Object} mutationMap - map of mutations to GraphQL types
+ *  mutations, and fields.
+ *  @returns {Object} mutationMap - Map of mutations to GraphQL types.
  */
 export function getMutationMap(schema: GraphQLSchema): MutationMapType {
   const mutationMap: MutationMapType = {};
@@ -693,11 +702,11 @@ export function getMutationMap(schema: GraphQLSchema): MutationMapType {
 }
 
 /**
- *  getQueryMap generates a map of queries to GraphQL object types. This mapping is used
+ *  Generates a map of queries to GraphQL object types. This mapping is used
  *  to identify and create references to cached data.
  *  @param {Object} schema - GraphQL defined schema that is used to facilitate caching by providing valid queries,
- *  mutations, and fields
- *  @returns {Object} queryMap - map of queries to GraphQL types
+ *  mutations, and fields.
+ *  @returns {Object} queryMap - Map of queries to GraphQL types.
  */
 export function getQueryMap(schema: GraphQLSchema): QueryMapType {
   const queryMap: QueryMapType = {};
@@ -725,13 +734,12 @@ export function getQueryMap(schema: GraphQLSchema): QueryMapType {
 }
 
 /**
- *  getFieldsMap generates of map of fields to GraphQL types. This mapping is used to identify
+ *  Generates of map of fields to GraphQL types. This mapping is used to identify
  *  and create references to cached data.
  *  @param {Object} schema - GraphQL defined schema that is used to facilitate caching by providing valid queries,
- *  mutations, and fields
- *  @returns {Object} fieldsMap - map of fields to GraphQL types
+ *  mutations, and fields.
+ *  @returns {Object} fieldsMap - Map of fields to GraphQL types.
  */
-
 export function getFieldsMap(schema: GraphQLSchema): FieldsMapType {
   const fieldsMap: FieldsMapType = {};
   const typesList: GraphQLSchema['_typeMap'] = schema?.getTypeMap();
