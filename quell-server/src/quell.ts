@@ -195,7 +195,7 @@ export class QuellCache {
       if (numRequests > ipRateLimit) {
         const err: ServerErrorType = {
           log: `Redis cache error: Express error handler caught too many requests from this IP address (${ipAddress}): limit is: ${ipRateLimit} requests per second, inside rateLimiter`,
-          status: 429,
+          status: 429, // Too Many Requests
           message: {
             err: 'Error in rateLimiter middleware. Check server log for more details.'
           }
@@ -1661,7 +1661,7 @@ export class QuellCache {
         // Pass error to Express if the maximum depth has been exceeded.
         const err: ServerErrorType = {
           log: `Depth limit exceeded, tried to send query with the depth of ${currentDepth}.`,
-          status: 413,
+          status: 413, // Content Too Large
           message: {
             err: 'Error in QuellCache.determineDepth. Check server log for more details.'
           }
@@ -1697,13 +1697,14 @@ export class QuellCache {
    */
   costLimit(req: Request, res: Response, next: NextFunction): void {
     // Get the cost parameters set on server connection.
-    const { mutationCost, objectCost, depthCostFactor, scalarCost } =
+    const { maxCost, mutationCost, objectCost, depthCostFactor, scalarCost } =
       this.costParameters;
-    let { maxCost } = this.costParameters;
-    // maxCost can be reassigned to get maxcost limit from req.body if user selects cost limit
-    if (req.body.costOptions.maxCost) maxCost = req.body.costOptions.maxCost;
-    // return error if no query in request.
-    if (!req.body.query) {
+
+    // Get the GraphQL query string from request body.
+    const queryString: string = req.body.query;
+
+    // Pass error to Express if no query is found on the request.
+    if (!queryString) {
       const err: ServerErrorType = {
         log: 'Invalid request, no query found in req.body',
         status: 400,
@@ -1713,9 +1714,7 @@ export class QuellCache {
       };
       return next(err);
     }
-    // assign graphQL query string to variable queryString
-    const queryString: string = req.body.query;
-    // create AST
+
     // Create the abstract syntax tree with graphql-js parser.
     // If depthLimit was included before costLimit in middleware chain, we can get the AST and parsed AST from res.locals.
     const AST: DocumentNode = res.locals.AST
@@ -1754,7 +1753,7 @@ export class QuellCache {
       if (cost > maxCost) {
         const err: ServerErrorType = {
           log: `Cost limit exceeded, tried to send query with a cost exceeding ${maxCost}.`,
-          status: 413,
+          status: 413, // Content Too Large
           message: {
             err: 'Error in costLimit.determineCost(helper). Check server log for more details.'
           }
@@ -1797,7 +1796,7 @@ export class QuellCache {
       if (totalCost > maxCost) {
         const err: ServerErrorType = {
           log: `Cost limit exceeded, tried to send query with a cost exceeding ${maxCost}.`,
-          status: 413,
+          status: 413, // Content Too Large
           message: {
             err: 'Error in costLimit.determineDepthCost(helper). Check server log for more details.'
           }
