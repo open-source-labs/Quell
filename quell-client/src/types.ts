@@ -123,3 +123,9 @@ export interface JSONObject {
 export type JSONValue = JSONObject | JSONArray | JSONPrimitive;
 type JSONPrimitive = number | string | boolean | null;
 type JSONArray = JSONValue[];
+
+export type ClientErrorType = {
+  log: string;
+  status: number;
+  message: { [k: string]: string };
+};
