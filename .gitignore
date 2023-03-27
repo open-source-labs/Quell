@@ -5,6 +5,7 @@ package-lock.json
 .rdb
 quell-server/package-lock.json
 quell-server/node_modules
+quell-server/coverage
 quell-client/package-lock.json
 quell-client/node_modules
 quell-extension/node_modules

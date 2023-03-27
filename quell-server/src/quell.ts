@@ -13,7 +13,6 @@ import {
   getQueryMap,
   getFieldsMap
 } from './helpers/quellHelpers';
-
 import type { GraphQLSchema, ExecutionResult, DocumentNode } from 'graphql';
 import type {
   ConstructorOptions,
