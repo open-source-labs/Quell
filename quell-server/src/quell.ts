@@ -93,7 +93,7 @@ interface QuellCache {
  *  @param {String} redisPassword - Redis password to host URI
  */
 // default host is localhost, default expiry time is 14 days in milliseconds
-class QuellCache implements QuellCache {
+export class QuellCache implements QuellCache {
   constructor({
     schema,
     cacheExpiration = 1209600, // default expiry time is 14 days in milliseconds;
@@ -2511,5 +2511,3 @@ function getFieldsMap(schema: GraphQLSchema): FieldsMapType {
   }
   return fieldsMap;
 }
-
-module.exports = QuellCache;
