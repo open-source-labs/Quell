@@ -189,20 +189,14 @@ export interface MapType {
   [query: string]: string | undefined;
 }
 
-/* dbRespDataRaw for Query is {"data":{"city":{"id":"636afe808c11797007e7e49f","name":"New York","country":"United States"}}} */
-/* dbRespDataRaw for Mutation is {"data":{"addCountry":{"id":"640e8298346ed37d0d33a132","name":"Brazil"}}} */
 export interface DatabaseResponseDataRaw {
   data: TypeData;
 }
 
-/* TypeData for a Query is {"city":{"id":"636afe808c11797007e7e49f","name":"New York","country":"United States"}} */
-/* TypeData for a Mutation is {"addCountry":{"id":"640e8298346ed37d0d33a132","name":"Brazil"}} */
 export interface TypeData {
   [type: string]: string | Type | Type[];
 }
 
-/* Type for a Query is {"id":"636afe808c11797007e7e49f","name":"New York","country":"United States"} */
-/* Type for a Mutation is {"id":"640e8298346ed37d0d33a132","name":"Brazil"} */
 export interface Type {
   id?: string;
   name?: string;
