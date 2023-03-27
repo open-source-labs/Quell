@@ -775,3 +775,107 @@ export function getFieldsMap(schema: GraphQLSchema): FieldsMapType {
   }
   return fieldsMap;
 }
+
+// // TODO: Unused functions for QuellCache Class
+// /**
+//  * createRedisKey creates key based on field name and argument id and returns string or null if key creation is not possible
+//  * @param {Object} mutationMap -
+//  * @param {Object} proto -
+//  * @param {Object} protoArgs -
+//  * @returns {Object} redisKey if possible, e.g. 'Book-1' or 'Book-2', where 'Book' is name from mutationMap and '1' is id from protoArgs
+//  * and isExist if we have this key in redis
+//  *
+//  */
+// // BUG: createRedisKey is an unused function -- types should be assigned if function is used
+// async function createRedisKey(mutationMap, proto, protoArgs) {
+//   let isExist = false;
+//   let redisKey;
+//   let redisValue = null;
+//   for (const mutationName in proto) {
+//     const mutationArgs = protoArgs[mutationName];
+//     redisKey = mutationMap[mutationName];
+//     for (const key in mutationArgs) {
+//       let identifier = null;
+//       if (key === 'id' || key === '_id') {
+//         identifier = mutationArgs[key];
+//         redisKey = mutationMap[mutationName] + '-' + identifier;
+//         isExist = await this.checkFromRedis(redisKey);
+//         if (isExist) {
+//           redisValue = await this.getFromRedis(redisKey);
+//           redisValue = JSON.parse(redisValue);
+//           // combine redis value and protoArgs
+//           let argumentsValue;
+//           for (const mutationName in protoArgs) {
+//             // change later, now we assume that we have only one mutation
+//             argumentsValue = protoArgs[mutationName];
+//           }
+//           // updateObject is not defined anywhere
+//           redisValue = this.updateObject(redisValue, argumentsValue);
+//         }
+//       }
+//     }
+//   }
+//   return { redisKey, isExist, redisValue };
+// }
+
+// // BUG: getIdMap is an unused function -- types should be assigned if function is used
+// function getIdMap() {
+//   const idMap = {};
+//   for (const type in this.fieldsMap) {
+//     const userDefinedIds = [];
+//     const fieldsAtType = this.fieldsMap[type];
+//     for (const key in fieldsAtType) {
+//       if (fieldsAtType[key] === 'ID') userDefinedIds.push(key);
+//     }
+//     idMap[type] = userDefinedIds;
+//   }
+//   return idMap;
+// }
+
+// /**
+//  * Toggles to false all values in a nested field not present in cache so that they will
+//  * be included in the reformulated query.
+//  * @param {Object} proto - The prototype or a nested field within the prototype
+//  * @returns {Object} proto - updated proto with false values for fields not present in cache
+//  */
+// // BUG: toggleProto is an unused function -- types should be assigned if function is used
+// function toggleProto(proto) {
+//   if (proto === undefined) return proto;
+//   for (const key in proto) {
+//     if (Object.keys(proto[key]).length > 0) this.toggleProto(proto[key]);
+//     else proto[key] = false;
+//   }
+//   return proto;
+// }
+
+// /**
+//  * checkFromRedis reads from Redis cache and returns a promise.
+//  * @param {String} key - the key for Redis lookup
+//  * @returns {Promise} A promise that represents if the key was found in the redisCache
+//  */
+// // BUG: checkFromRedis is an unused function -- types should be assigned if function is used
+// async function checkFromRedis(key: string): Promise<number> {
+//   try {
+//     // will return 0 if key does not exists
+//     const existsInRedis: number = await this.redisCache.exists(key);
+//     return existsInRedis;
+//   } catch (err) {
+//     console.log('err in checkFromRedis: ', err);
+//     return 0;
+//   }
+// }
+
+// /**
+//  * execRedisRunQueue executes all previously queued transactions in Redis cache
+//  * @param {String} redisRunQueue - Redis queue of transactions awaiting execution
+//  */
+// // BUG: execRedisRunQueue is an unused function -- types should be assigned if function is used
+// async function execRedisRunQueue(
+//   redisRunQueue: ReturnType<typeof this.redisCache.multi>
+// ): Promise<void> {
+//   try {
+//     await redisRunQueue.exec();
+//   } catch (err) {
+//     console.log('err in execRedisRunQueue: ', err);
+//   }
+// }
