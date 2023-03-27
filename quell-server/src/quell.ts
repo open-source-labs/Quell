@@ -127,9 +127,19 @@ class QuellCache implements QuellCache {
     this.getRedisInfo = this.getRedisInfo.bind(this);
     this.getRedisKeys = this.getRedisKeys.bind(this);
     this.getRedisValues = this.getRedisValues.bind(this);
-    this.redisCache.connect().then((): void => {
-      console.log('Connected to redisCache');
-    });
+    this.redisCache
+      .connect()
+      .then((): void => {
+        console.log('Connected to redisCache');
+      })
+      .catch((error) => {
+        const err: ServerErrorType = {
+          log: 'Error when trying to connect to redisCache',
+          status: 400,
+          message: { err: `Error trying to connect to redisCache ${error}` }
+        };
+        console.log(err);
+      });
   }
 
   /**
@@ -161,10 +171,12 @@ class QuellCache implements QuellCache {
 
     // Return an error if no query is found in the request.
     if (!req.body.query) {
-      return next({
-        status: 400, // Bad Request
-        log: 'Error: no GraphQL query found on request body'
-      });
+      const err: ServerErrorType = {
+        log: 'Error: no GraphQL query found on request body, inside rateLimiter',
+        status: 400,
+        message: { err: 'Error: no GraphQL query found on request body' }
+      };
+      return next(err);
     }
 
     try {
@@ -190,10 +202,14 @@ class QuellCache implements QuellCache {
 
       // If the number of requests is greater than the IP rate limit, throw an error.
       if (numRequests > ipRateLimit) {
-        return next({
-          status: 429, // Too Many Requests
-          log: `Redis cache error: Express error handler caught too many requests from this IP address (${ipAddress}): limit is: ${ipRateLimit} requests per second`
-        });
+        const err: ServerErrorType = {
+          log: `Redis cache error: Express error handler caught too many requests from this IP address (${ipAddress}): limit is: ${ipRateLimit} requests per second, inside rateLimiter`,
+          status: 429,
+          message: {
+            err: 'Error in rateLimiter middleware'
+          }
+        };
+        return next(err);
       }
 
       console.log(
@@ -202,10 +218,12 @@ class QuellCache implements QuellCache {
 
       return next();
     } catch (error) {
-      return next({
-        status: 500, // Internal Server Error
-        log: `Redis cache error: ${error}`
-      });
+      const err: ServerErrorType = {
+        log: 'Catch block in rateLimiter middleware',
+        status: 500,
+        message: { err: `Error in rateLimiter, ${error}` }
+      };
+      return next(err);
     }
   }
 
@@ -225,7 +243,12 @@ class QuellCache implements QuellCache {
   async query(req: Request, res: Response, next: NextFunction): Promise<void> {
     // handle request without query
     if (!req.body.query) {
-      return next({ log: 'Error: no GraphQL query found on request body' });
+      const err: ServerErrorType = {
+        log: 'Error: no GraphQL query found on request body',
+        status: 400,
+        message: { err: 'Error: no GraphQL query found on request body' }
+      };
+      return next(err);
     }
 
     // Retrieve GraphQL query string from request body.
@@ -260,7 +283,12 @@ class QuellCache implements QuellCache {
           return next();
         })
         .catch((error: Error): void => {
-          return next(`graphql library error: ${error}`);
+          const err: ServerErrorType = {
+            log: 'Error inside catch block of operationType === unQuellable of query',
+            status: 400,
+            message: { err: `Error in query, ${error}` }
+          };
+          return next(err);
         });
 
       /*
@@ -274,7 +302,12 @@ class QuellCache implements QuellCache {
           return next();
         })
         .catch((error: Error): void => {
-          return next({ log: 'graphql library error: ', error });
+          const err: ServerErrorType = {
+            log: 'Error inside catch block of operationType === noID of query',
+            status: 400,
+            message: { err: `Error in query, ${error}` }
+          };
+          return next(err);
         });
 
       // Check Redis for the query string.
@@ -296,7 +329,12 @@ class QuellCache implements QuellCache {
             return next();
           })
           .catch((error: Error): void => {
-            return next(`graphql library error: ${error}`);
+            const err: ServerErrorType = {
+              log: 'Error inside catch block of operationType === noID of query, graphQL query failed',
+              status: 400,
+              message: { err: `Error in query, ${error}` }
+            };
+            return next(err);
           });
       }
       /*
@@ -346,7 +384,12 @@ class QuellCache implements QuellCache {
           return next();
         })
         .catch((error: Error): void => {
-          return next(`graphql library error: ${error}`);
+          const err: ServerErrorType = {
+            log: 'Error inside catch block of operationType === mutation of query',
+            status: 400,
+            message: { err: `Error in query ${error}` }
+          };
+          return next(err);
         });
     } else {
       /*
@@ -414,12 +457,12 @@ class QuellCache implements QuellCache {
               : databaseResponse;
 
             const currName = 'string it should not be again';
-            // await normalizeForCache(
-            //   mergedResponse.data as ResponseDataType,
-            //   this.queryMap,
-            //   prototype,
-            //   currName
-            // );
+            await this.normalizeForCache(
+              mergedResponse.data as ResponseDataType,
+              this.queryMap,
+              prototype,
+              currName
+            );
 
             // The response is given a cached key equal to false to indicate to the front end of the demo site that the
             // information was *NOT* entirely found in the cache.
@@ -428,7 +471,12 @@ class QuellCache implements QuellCache {
             return next();
           })
           .catch((error: Error): void => {
-            return next({ log: 'graphql library error: ', error });
+            const err: ServerErrorType = {
+              log: 'Error inside catch block of operationType === query of query',
+              status: 400,
+              message: { err: `Error in query ${error}` }
+            };
+            return next(err);
           });
       } else {
         // If the query object is empty, there is nothing left to query and we can send the information from cache.
@@ -452,7 +500,12 @@ class QuellCache implements QuellCache {
       const lowerKey: string = key.toLowerCase();
       const redisResult: string | null = await this.redisCache.get(lowerKey);
       return redisResult;
-    } catch (err) {
+    } catch (error) {
+      const err: ServerErrorType = {
+        log: 'Error in QuellCache trying to getFromRedis',
+        status: 400,
+        message: { err: `Error in getFromRedis, ${error}` }
+      };
       console.log('err in getFromRedis: ', err);
     }
   }
@@ -595,8 +648,13 @@ class QuellCache implements QuellCache {
                 cacheResponseRaw.forEach((cacheResponse) =>
                   getCommandCallback(JSON.stringify(cacheResponse))
                 );
-              } catch (err: Error | unknown) {
-                console.log(`Error in buildFromCache: ${err}`);
+              } catch (error: Error | unknown) {
+                const err: ServerErrorType = {
+                  log: 'Error inside 1st-catch block of buildFromCache',
+                  status: 400,
+                  message: { err: `Error in buildFromCache, ${error}` }
+                };
+                console.log(err);
               }
               redisRunQueue = this.redisCache.multi();
             }
@@ -610,8 +668,13 @@ class QuellCache implements QuellCache {
               cacheResponseRaw.forEach((cacheResponse) =>
                 getCommandCallback(JSON.stringify(cacheResponse))
               );
-            } catch (err: Error | unknown) {
-              console.log(`Error in buildFromCache: ${err}`);
+            } catch (error: Error | unknown) {
+              const err: ServerErrorType = {
+                log: 'Error inside 2nd-catch block of buildFromCache',
+                status: 400,
+                message: { err: `Error in buildFromCache, ${error}` }
+              };
+              console.log(err);
             }
           }
         }
@@ -1078,8 +1141,13 @@ class QuellCache implements QuellCache {
   async deleteCacheById(key: string) {
     try {
       await this.redisCache.del(key);
-    } catch (err) {
-      console.log('err in deleteCacheById: ', err);
+    } catch (error) {
+      const err: ServerErrorType = {
+        log: 'Error inside deleteCacheById function',
+        status: 400,
+        message: { err: `Error in deleteCacheById, ${error}` }
+      };
+      console.log(err);
     }
   }
 
@@ -1094,6 +1162,7 @@ class QuellCache implements QuellCache {
   clearCache(req: Request, res: Response, next: NextFunction) {
     console.log('Clearing Redis Cache');
     this.redisCache.flushAll();
+    idCache = {};
     return next();
   }
 
@@ -1432,13 +1501,22 @@ class QuellCache implements QuellCache {
             res.locals.redisStats = output;
             return next();
           })
-          .catch((err: ServerErrorType) => {
+          .catch((error) => {
+            const err: ServerErrorType = {
+              log: 'Error inside catch block of getting info within getStatsFromRedis',
+              status: 400,
+              message: { err: `Error in getStatsFromRedis, ${error}` }
+            };
             return next(err);
           });
       };
-
       getStats();
-    } catch (err) {
+    } catch (error) {
+      const err: ServerErrorType = {
+        log: 'Error inside catch block of getStatsFromRedis',
+        status: 400,
+        message: { err: `Error in getStatsFromRedis, ${error}` }
+      };
       return next(err);
     }
   }
@@ -1456,7 +1534,12 @@ class QuellCache implements QuellCache {
         res.locals.redisKeys = response;
         return next();
       })
-      .catch((err: ServerErrorType) => {
+      .catch((error: ServerErrorType) => {
+        const err: ServerErrorType = {
+          log: 'Error inside catch block of getRedisKeys, keys potentially undefined',
+          status: 400,
+          message: { err: `Error in getRedisKeys, ${error}` }
+        };
         return next(err);
       });
   }
@@ -1475,7 +1558,12 @@ class QuellCache implements QuellCache {
           res.locals.redisValues = response;
           return next();
         })
-        .catch((err: ServerErrorType) => {
+        .catch((error: ServerErrorType) => {
+          const err: ServerErrorType = {
+            log: 'Error inside catch block of getRedisValues',
+            status: 400,
+            message: { error: `Error in getRedisValues, ${error}` }
+          };
           return next(err);
         });
     } else {
@@ -2423,334 +2511,5 @@ function getFieldsMap(schema: GraphQLSchema): FieldsMapType {
   }
   return fieldsMap;
 }
-// // TODO: Unused functions for QuellCache Class
-// /**
-//  * createRedisKey creates key based on field name and argument id and returns string or null if key creation is not possible
-//  * @param {Object} mutationMap -
-//  * @param {Object} proto -
-//  * @param {Object} protoArgs -
-//  * @returns {Object} redisKey if possible, e.g. 'Book-1' or 'Book-2', where 'Book' is name from mutationMap and '1' is id from protoArgs
-//  * and isExist if we have this key in redis
-//  *
-//  */
-// // BUG: createRedisKey is an unused function -- types should be assigned if function is used
-// async function createRedisKey(mutationMap, proto, protoArgs) {
-//   let isExist = false;
-//   let redisKey;
-//   let redisValue = null;
-//   for (const mutationName in proto) {
-//     const mutationArgs = protoArgs[mutationName];
-//     redisKey = mutationMap[mutationName];
-//     for (const key in mutationArgs) {
-//       let identifier = null;
-//       if (key === 'id' || key === '_id') {
-//         identifier = mutationArgs[key];
-//         redisKey = mutationMap[mutationName] + '-' + identifier;
-//         isExist = await this.checkFromRedis(redisKey);
-//         if (isExist) {
-//           redisValue = await this.getFromRedis(redisKey);
-//           redisValue = JSON.parse(redisValue);
-//           // combine redis value and protoArgs
-//           let argumentsValue;
-//           for (const mutationName in protoArgs) {
-//             // change later, now we assume that we have only one mutation
-//             argumentsValue = protoArgs[mutationName];
-//           }
-//           // updateObject is not defined anywhere
-//           redisValue = this.updateObject(redisValue, argumentsValue);
-//         }
-//       }
-//     }
-//   }
-//   return { redisKey, isExist, redisValue };
-// }
-
-// // BUG: getIdMap is an unused function -- types should be assigned if function is used
-// function getIdMap() {
-//   const idMap = {};
-//   for (const type in this.fieldsMap) {
-//     const userDefinedIds = [];
-//     const fieldsAtType = this.fieldsMap[type];
-//     for (const key in fieldsAtType) {
-//       if (fieldsAtType[key] === 'ID') userDefinedIds.push(key);
-//     }
-//     idMap[type] = userDefinedIds;
-//   }
-//   return idMap;
-// }
-
-// /**
-//  * Toggles to false all values in a nested field not present in cache so that they will
-//  * be included in the reformulated query.
-//  * @param {Object} proto - The prototype or a nested field within the prototype
-//  * @returns {Object} proto - updated proto with false values for fields not present in cache
-//  */
-// // BUG: toggleProto is an unused function -- types should be assigned if function is used
-// function toggleProto(proto) {
-//   if (proto === undefined) return proto;
-//   for (const key in proto) {
-//     if (Object.keys(proto[key]).length > 0) this.toggleProto(proto[key]);
-//     else proto[key] = false;
-//   }
-//   return proto;
-// }
-
-// /**
-//  * checkFromRedis reads from Redis cache and returns a promise.
-//  * @param {String} key - the key for Redis lookup
-//  * @returns {Promise} A promise that represents if the key was found in the redisCache
-//  */
-// // BUG: checkFromRedis is an unused function -- types should be assigned if function is used
-// async function checkFromRedis(key: string): Promise<number> {
-//   try {
-//     // will return 0 if key does not exists
-//     const existsInRedis: number = await this.redisCache.exists(key);
-//     return existsInRedis;
-//   } catch (err) {
-//     console.log('err in checkFromRedis: ', err);
-//     return 0;
-//   }
-// }
-
-// /**
-//  * execRedisRunQueue executes all previously queued transactions in Redis cache
-//  * @param {String} redisRunQueue - Redis queue of transactions awaiting execution
-//  */
-// // BUG: execRedisRunQueue is an unused function -- types should be assigned if function is used
-// async function execRedisRunQueue(
-//   redisRunQueue: ReturnType<typeof this.redisCache.multi>
-// ): Promise<void> {
-//   try {
-//     await redisRunQueue.exec();
-//   } catch (err) {
-//     console.log('err in execRedisRunQueue: ', err);
-//   }
-// }
-/*
-map:  {
-[1]   song: 'Song',
-[1]   album: 'Album',
-[1]   artist: [ 'Artist' ],
-[1]   country: 'Country',
-[1]   city: 'City',
-[1]   attractions: 'Attractions'
-[1] }
-responseData:  {
-[1]   artist: [
-[1]     {
-[1]       id: '6365be1ff176b90f3b81f0e9',
-[1]       name: 'Frank Ocean',
-[1]       albums: [Array]
-[1]     }
-[1]   ]
-[1] }
-protoField:  {
-[1]   artist: {
-[1]     id: false,
-[1]     name: false,
-[1]     __id: null,
-[1]     __type: 'artist',
-[1]     __alias: null,
-[1]     __args: { name: 'Frank Ocean' },
-[1]     albums: {
-[1]       id: false,
-[1]       name: false,
-[1]       __id: null,
-[1]       __type: 'albums',
-[1]       __alias: null,
-[1]       __args: null
-[1]     }
-[1]   }
-[1] }
-cacheID:  Artist
-[1] cacheID2:  Artist--6365be1ff176b90f3b81f0e9
-[1] currName:  string it should not be again
-[1] cacheID:  albums
-[1] cacheID2:  albums--6359930abeb03be432d17785
-[1] currName:  string it should not be again
-[1] cacheID:  albums
-[1] cacheID2:  albums--63599379beb03be432d17786
-[1] currName:  string it should not be again
-[1] idCache:  {
-[1]   'string it should not be again': {
-[1]     Artist: 'Artist--6365be1ff176b90f3b81f0e9',
-[1]     albums: [ 'albums--6359930abeb03be432d17785' ]
-[1]   }
-[1] }
-*/
-
-/*
-map:  {
-[1]   song: 'Song',
-[1]   album: 'Album',
-[1]   artist: [ 'Artist' ],
-[1]   country: 'Country',
-[1]   city: 'City',
-[1]   attractions: 'Attractions'
-[1] }
-responseData:  {
-[1]   artist: [
-[1]     {
-[1]       id: '6365be1ff176b90f3b81f0e9',
-[1]       name: 'Frank Ocean',
-[1]       albums: [Array]
-[1]     }
-[1]   ]
-[1] }
-protoField:  {
-[1]   artist: {
-[1]     id: false,
-[1]     name: false,
-[1]     __id: null,
-[1]     __type: 'artist',
-[1]     __alias: null,
-[1]     __args: { name: 'Frank Ocean' },
-[1]     albums: {
-[1]       id: false,
-[1]       name: false,
-[1]       __id: null,
-[1]       __type: 'albums',
-[1]       __alias: null,
-[1]       __args: null
-[1]     }
-[1]   }
-[1] }
-cacheID:  Artist
-[1] cacheID2:  Artist--6365be1ff176b90f3b81f0e9
-[1] currName:  string it should not be again
-[1] cacheID:  albums
-[1] cacheID2:  albums--6359930abeb03be432d17785
-[1] currName:  string it should not be again
-[1] cacheID:  albums
-[1] cacheID2:  albums--63599379beb03be432d17786
-[1] currName:  string it should not be again
-[1] idCache:  {
-[1]   'string it should not be again': {
-[1]     Artist: 'Artist--6365be1ff176b90f3b81f0e9',
-[1]     albums: [ 'albums--6359930abeb03be432d17785' ]
-[1]   }
-[1] }
-*/
-// /**
-//  * normalizeForCache2 traverses over response data and formats it appropriately so we can store it in the cache.
-//  * @param {Object} responseData - data we received from an external source of data such as a database or API
-//  * @param {Object} map - a map of queries to their desired data types, used to ensure accurate and consistent caching
-//  * @param {Object} protoField - a slice of the prototype currently being used as a template and reference for the responseData to send information to the cache
-//  * @param {String} currName - parent object name, used to pass into updateIDCache
-//  *
-//  * Logic Wanted - If responseData is an object, save the object with its properties to the IDcache(?)
-//  * but only the ID string is used as the value inside the nested object.
-//  * inside IDCache - the data's object can be stored with key:value with key being the object's ID
-//  * when the parent object is referenced, the nested response can grab the ID off the object, reference the IDCache,
-//  * and replace the reference with the actual value
-//  *
-//  * if DB response has nested values as well, keep recursing but only saving the IDs as the actual references
-//  *
-//  * currName needs to be looked at, currently is weird string (see comments above)
-//  * the IDCache is nesting the object's correcly with the right type--ID --> may be able to change the implementation for
-//  * nested structure
-//  *
-//  * query string should be saved to redisCache
-//  * where should ID:ID's Object be stored
-//  * where should the actual object with references be stored?
-//  * and should the Nested Object be saved to the IDCache?
-//  * attempt at refactoring normalizeForCache2
-//  */
-// async function normalizeForCache2(
-//   responseData: ResponseDataType,
-//   map: QueryMapType = {},
-//   protoField: ProtoObjType,
-//   currName: string
-// ) {
-//   // loop through each resultName in response data
-//   for (const resultName in responseData) {
-//     // currField is assigned to the nestedObject or array on responseData
-//     const currField = responseData[resultName];
-//     const currProto: ProtoObjType = protoField[resultName] as ProtoObjType;
-//     if (Array.isArray(currField)) {
-//       for (let i = 0; i < currField.length; i++) {
-//         const el: ResponseDataType = currField[i];
-
-//         const dataType: string | undefined | string[] = map[resultName];
-
-//         if (typeof el === 'object' && typeof dataType === 'string') {
-//           await normalizeForCache2(
-//             { [dataType]: el },
-//             map,
-//             {
-//               [dataType]: currProto
-//             },
-//             currName
-//           );
-//         }
-//       }
-//       // need currField to always have an ID property so it can be used for caching
-//       // need to modify each query to add ID for each object/subobject being requested
-//     } else if (typeof currField === 'object') {
-//       // need to get non-Alias ID for cache
-
-//       // temporary store for field properties
-//       const fieldStore: ResponseDataType = {};
-
-//       //set cacheID to ID value on currField (object)
-//       let cacheID: string = Object.prototype.hasOwnProperty.call(
-//         map,
-//         currProto.__type as string
-//       )
-//         ? (map[currProto.__type as string] as string)
-//         : (currProto.__type as string);
-
-//       cacheID += currProto.__id ? `--${currProto.__id}` : '';
-
-//       // iterate over keys in nested object
-//       // need to save the actual object inside the object cache
-//       // and only the ID is placed as a reference inside the nested object
-//       for (const key in currField) {
-//         // if prototype has no ID, check field keys for ID (mostly for arrays)
-//         if (
-//           !currProto.__id &&
-//           (key === 'id' || key === '_id' || key === 'ID' || key === 'Id')
-//         ) {
-//           // if currname is undefined, assign to responseData at cacheid to lower case at name
-//           if (responseData[cacheID.toLowerCase()]) {
-//             const responseDataAtCacheID = responseData[cacheID.toLowerCase()];
-//             if (
-//               typeof responseDataAtCacheID !== 'string' &&
-//               !Array.isArray(responseDataAtCacheID)
-//             ) {
-//               if (typeof responseDataAtCacheID.name === 'string') {
-//                 currName = responseDataAtCacheID.name;
-//               }
-//             }
-//           }
-//           // if the responseData at cacheid to lower case at name is not undefined, store under name variable and copy logic of writing to cache, want to update cache with same things, all stored under name
-//           // store objKey as cacheID without ID added
-//           const cacheIDForIDCache: string = cacheID;
-//           cacheID += `--${currField[key]}`;
-//           // call idcache here idCache(cacheIDForIDCache, cacheID)
-//           updateIdCache(cacheIDForIDCache, cacheID, currName);
-//         }
-
-//         fieldStore[key] = currField[key];
-
-//         // if object, recurse normalizeForCache assign in that object
-//         if (typeof currField[key] === 'object') {
-//           if (protoField[resultName] !== null) {
-//             await normalizeForCache2(
-//               { [key]: currField[key] },
-//               map,
-//               {
-//                 [key]: (protoField[resultName] as ProtoObjType)[key]
-//               },
-//               currName
-//             );
-//           }
-//         }
-//       }
-//       // store "current object" on cache in JSON format
-//       this.writeToCache(cacheID, fieldStore);
-//     }
-//   }
-// }
 
 module.exports = QuellCache;

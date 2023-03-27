@@ -265,7 +265,7 @@ export type RedisStatsType = {
 export type ServerErrorType = {
   log: string;
   status: number;
-  message: { err: string };
+  message: { [k: string]: string };
 };
 
 export type ResponseDataType = {

@@ -64,20 +64,6 @@ async function Quellify(
   query: string,
   costOptions: CostParamsType
 ) {
-  // const performFetch = async (): Promise<JSONValue> => {
-  //   const fetchOptions: FetchObjType = {
-  //     method: 'POST',
-  //     headers: {
-  //       'Content-Type': 'application/json'
-  //     },
-  //     body: JSON.stringify({ query, costOptions })
-  //   };
-  //   const serverResponse: Response = await fetch(endPoint, fetchOptions);
-  //   const parsedData: JSONObject = await serverResponse.json();
-  //   const result: JSONValue = parsedData.queryResponse;
-  //   return result;
-  // };
-
   const postFetch: FetchObjType = {
     method: 'POST',
     headers: {
@@ -98,13 +84,10 @@ async function Quellify(
       return response.json();
     });
   };
-
   // Create AST based on the input query using the parse method available in the graphQL library (further reading: https://en.wikipedia.org/wiki/Abstract_syntax_tree)
   const AST: DocumentNode = parse(query);
-
   // find operationType, proto using determineType
   const { operationType, proto } = determineType(AST);
-
   // pass-through for queries and operations that QuellCache cannot handle
   if (operationType === 'unQuellable') {
     // All returns in an async function return promises by default, therefore we are returning a promise that will resolve from perFormFetch
@@ -132,19 +115,6 @@ async function Quellify(
       mutationType.includes('delete') ||
       mutationType.includes('remove')
     ) {
-      // assign delete request method
-      // const fetchOptions: FetchObjType = {
-      //   method: 'DELETE',
-      //   headers: {
-      //     'Content-Type': 'application/json'
-      //   },
-      //   body: JSON.stringify({ query, costOptions })
-      // };
-      // execute initial query
-      // const serverResponse: Response = await fetch(endPoint, fetchOptions);
-      // const parsedData: JSONObject = await serverResponse.json();
-      // const result: JSONValue = parsedData.queryResponse;
-      // clear caches
       const parsedData: JSONObject = await performFetch(deleteFetch);
       const result: JSONValue = parsedData.queryResponse;
       clearCache();
@@ -167,12 +137,9 @@ async function Quellify(
     // lokiCache to see if this call has a $loki associated with it. if so, retrieve and return it
     if (IDCache[query]) {
       // grab the $loki ID from the IDCache
-
       const queryID: number = IDCache[query];
-
       // grab results from lokiCache by $loki ID
       const results: LokiGetType = lokiCache.get(queryID);
-
       // second element is boolean for whether data can be found in lokiCache
       return results;
     } else {
