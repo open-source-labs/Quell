@@ -9,7 +9,8 @@ import type {
   LokiGetType,
   FetchObjType,
   JSONObject,
-  JSONValue
+  JSONValue,
+  ClientErrorType
 } from './types';
 const lokidb: Loki = new Loki('client-cache');
 let lokiCache: Collection = lokidb.addCollection('loki-client-cache', {
@@ -79,18 +80,20 @@ async function Quellify(
     body: JSON.stringify({ query, costOptions })
   };
 
-  // const performFetch = async <T>(fetchConfig?: FetchObjType): Promise<T> => {
-  //   return fetch(endPoint, fetchConfig).then<T>((response) => {
-  //     return response.json();
-  //   });
-  // };
-
   const performFetch = async <T>(fetchConfig?: FetchObjType): Promise<T> => {
     try {
-      const response = 
-      return fetch(endPoint, fetchConfig).then<T>((response) => {
-        return response.json();
-      })
+      const response = await fetch(endPoint, fetchConfig);
+      return await response.json();
+    } catch (error) {
+      const err: ClientErrorType = {
+        log: `Error when trying to perform fetch to graphQL endpoint: ${error}.`,
+        status: 400,
+        message: {
+          err: 'Error in performFetch. Check server log for more details.'
+        }
+      };
+      console.log('Error when performing Fetch: ', err);
+      throw error;
     }
   };
   // Create AST based on the input query using the parse method available in the graphQL library (further reading: https://en.wikipedia.org/wiki/Abstract_syntax_tree)
