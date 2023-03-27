@@ -6,16 +6,8 @@
 
 @quell/server is an easy-to-implement Node.js/Express middleware that satisfies and caches GraphQL queries and mutations. Quell's schema-governed, type-level normalization algorithm caches GraphQL query and mutation responses as flattened key-value representations of the graph's nodes, making it possible to partially satisfy queries from the server's Redis cache, reformulate the query, and then fetch additional data from other APIs or databases.
 
-New with Quell 6.0! 
-- (New!) Quell now handles add and delete mutations for server-side with new cache eviction policy. 
-- (New!) Quell server now successfully reads from the cache. 
--  Quell has now migrated from Node-Redis 3.0 to Node-Revis 4.4. This was a breaking change for how Quell stood-up the Redis cache but shouldn't change how Quell is implemented!
--  Quell has now migrated from GraphQL V14.x to GraphQL V16.x. This was a breaking change for Quell logic but shouldn't change how Quell is implemented!
--  Quell/server now offers optional depth and cost limiting middleware to protect your GraphQL endpoint! To use, please explore the [@quell/server readme](./quell-server/README.md).
--  Server-side cache now caches entire queries in instances where it is unable to cache individual datapoints. 
--  Server-side cache will properly join partial responses where the database and cache have different datapoints for the same query.
 
-@quell/server is an open-source NPM package accelerated by [OS Labs](https://github.com/open-source-labs) and developed by [Hannah Spencer](https://github.com/Hannahspen), [Garik Asplund](https://github.com/garikAsplund), [Katie Sandfort](https://github.com/katiesandfort), [Sarah Cynn](https://github.com/cynnsarah), [Rylan Wessel](https://github.com/XpIose), [Alex Martinez](https://github.com/alexmartinez123), [Cera Barrow](https://github.com/cerab), [Jackie He](https://github.com/Jckhe), [Zoe Harper](https://github.com/ContraireZoe), [David Lopez](https://github.com/DavidMPLopez),[Sercan Tuna](https://github.com/srcntuna),[Idan Michael](https://github.com/IdanMichael),[Tom Pryor](https://github.com/Turmbeoz), [Chang Cai](https://github.com/ccai89), [Robert Howton](https://github.com/roberthowton), [Joshua Jordan](https://github.com/jjordan-90), [Jinhee Choi](https://github.com/jcroadmovie), [Nayan Parmar](https://github.com/nparmar1), [Tashrif Sanil](https://github.com/tashrifsanil), [Tim Frenzel](https://github.com/TimFrenzel), [Robleh Farah](https://github.com/farahrobleh), [Angela Franco](https://github.com/ajfranco18), [Ken Litton](https://github.com/kenlitton), [Thomas Reeder](https://github.com/nomtomnom), [Andrei Cabrera](https://github.com/Andreicabrerao), [Dasha Kondratenko](https://github.com/dasha-k), [Derek Sirola](https://github.com/dsirola1), [Xiao Yu Omeara](https://github.com/xyomeara), [Nick Kruckenberg](https://github.com/kruckenberg), [Mike Lauri](https://github.com/MichaelLauri), [Rob Nobile](https://github.com/RobNobile) and [Justin Jaeger](https://github.com/justinjaeger).
+@quell/server is an open-source NPM package accelerated by [OS Labs](https://github.com/open-source-labs) and developed by [Angelo Chengcuenca](https://github.com/amchengcuenca), [Emily Hoang](https://github.com/emilythoang), [Keely Timms](https://github.com/keelyt), [Yusuf Bhaiyat](https://github.com/yusuf-bha), [Hannah Spencer](https://github.com/Hannahspen), [Garik Asplund](https://github.com/garikAsplund), [Katie Sandfort](https://github.com/katiesandfort), [Sarah Cynn](https://github.com/cynnsarah), [Rylan Wessel](https://github.com/XpIose), [Alex Martinez](https://github.com/alexmartinez123), [Cera Barrow](https://github.com/cerab), [Jackie He](https://github.com/Jckhe), [Zoe Harper](https://github.com/ContraireZoe), [David Lopez](https://github.com/DavidMPLopez),[Sercan Tuna](https://github.com/srcntuna),[Idan Michael](https://github.com/IdanMichael),[Tom Pryor](https://github.com/Turmbeoz), [Chang Cai](https://github.com/ccai89), [Robert Howton](https://github.com/roberthowton), [Joshua Jordan](https://github.com/jjordan-90), [Jinhee Choi](https://github.com/jcroadmovie), [Nayan Parmar](https://github.com/nparmar1), [Tashrif Sanil](https://github.com/tashrifsanil), [Tim Frenzel](https://github.com/TimFrenzel), [Robleh Farah](https://github.com/farahrobleh), [Angela Franco](https://github.com/ajfranco18), [Ken Litton](https://github.com/kenlitton), [Thomas Reeder](https://github.com/nomtomnom), [Andrei Cabrera](https://github.com/Andreicabrerao), [Dasha Kondratenko](https://github.com/dasha-k), [Derek Sirola](https://github.com/dsirola1), [Xiao Yu Omeara](https://github.com/xyomeara), [Nick Kruckenberg](https://github.com/kruckenberg), [Mike Lauri](https://github.com/MichaelLauri), [Rob Nobile](https://github.com/RobNobile) and [Justin Jaeger](https://github.com/justinjaeger).
 
 ## Installation
 
@@ -44,20 +36,24 @@ Install the NPM package from your terminal: `npm i @quell/server`.
 - Common JS: `const { QuellCache } = require('@quell/server');`
 - ES6+: `import { QuellCache } from '@quell/server';`
 
-2. Instantiate QuellCache once for each GraphQL endpoint, passing to it the following arguments:
+2. Instantiate QuellCache once for each GraphQL endpoint, passing to it an object with the following properties:
 
-- schema - the GraphQL schema you've defined using the graphql-JS library (NOTE: see 'Schema' section below)
+- schema - The GraphQL schema you've defined using the graphql-JS library (NOTE: see 'Schema' section below).
 
-- Redis configuration object - an object with the keys `redisPort`, `redisHost`, and `redisPassword`, with the respective values mapping to your corresponding Redis server information
+- cacheExpiration - Number of seconds you want data to persist in the Redis cache.
 
-- cacheExpiration - number of seconds you want data to persist in the Redis cache
+- redisPort - The port number on which the Redis server is listening for incoming connections. The default Redis port is 6379.
 
-- costParameters (optional, see "Rate and Cost Limiting Implementation" section below) 
+- redisHost - The hostname or IP address of the Redis server you want to connect to. For a local Redis instance, you can use '127.0.0.1'.
+
+- redisPassword - The password required to authenticate with the Redis server.
+
+- costParameters (optional, see "Rate and Cost Limiting Implementation" section below). 
 
 3. Add quell-server's controller function `quellCache.query` to the Express route that receives GraphQL queries:
 
 So, for example, to instantiate the middleware to satisfy GraphQL queries using the schema you've stored or imported as `myGraphQLSchema` and cache responses to a Redis database on your local machine listening at port `6379` for `3600` seconds, you would add to your server file:
-`const quellCache = new QuellCache(myGraphQLSchema, { redisPort: 6379, redisHost: '127.0.0.1', redisPassword: 'insertPasswordHere'} 'localhost', 3600);`
+`const quellCache = new QuellCache({schema: myGraphQLSchema, cacheExpiration: 3600, redisPort: 6379, redisHost: '127.0.0.1', redisPassword: 'insertPasswordHere'});`
 
 And your server file might look like this:
 
@@ -73,9 +69,13 @@ const PASSWORD = process.env.PASSWORD;
 const app = express();
 
 // instantiate quell-server
-const quellCache = new QuellCache(myGraphQLSchema, 
-  { redisPort: REDIS_PORT, redisHost: REDIS_HOST, redisPassword: PASSWORD}, 
-  3600);
+const quellCache = new QuellCache({ 
+  schema: myGraphQLSchema,
+  cacheExpiration: 3600,
+  redisPort: REDIS_PORT, 
+  redisHost: REDIS_HOST, 
+  redisPassword: PASSWORD
+});
 
 // apply Express's JSON parser
 app.use(express.json());
@@ -111,7 +111,7 @@ That's it! You now have a normalized cache for your GraphQL endpoint.
 
 @quell/server now offers optional cost- and rate-limiting of incoming GraphQL queries for additional endpoint security from malicious nested or costly queries.
 
-Both of these middleware packages use an optional, fourth "Cost Object" parameter in the QuellCache constructor. Below is an example of the **default** Cost Object.
+Both of these middleware packages use an optional "Cost Object" parameter in the QuellCache constructor. Below is an example of the **default** Cost Object.
 
 ```javascript
   const defaultCostParams = {
@@ -134,10 +134,15 @@ Using the implementation described in our "Cache Implementation" section, we cou
 
 ```javascript
 // instantiate quell-server
-const quellCache = new QuellCache(myGraphQLSchema, 
-  { redisPort: REDIS_PORT, redisHost: REDIS_HOST, redisPassword: PASSWORD}, 
-  3600, 
-  { maxCost: 100, depthMax: 5, ipRate: 5 });
+const quellCache = new QuellCache({
+  schema: myGraphQLSchema,
+  cacheExpiration: 3600,
+  redisPort: REDIS_PORT, 
+  redisHost: REDIS_HOST, 
+  redisPassword: PASSWORD,
+  costParameters: { maxCost: 100, depthMax: 5, ipRate: 5 }
+});
+
 
 // GraphQL route and Quell middleware
 app.use('/graphql',
@@ -195,7 +200,7 @@ module.exports = new GraphQLSchema({
 ### Usage Notes
 
 - @quell/server reads queries from Express' request object at `request.body.query` and attaches the query response to Express' response object at `response.locals`.
-- @quell/server can only cache items it can uniquely identify. It will will look for fields called `id`, `_id`, `Id`, or `ID`. If a query lacks all four, it will execute the query without caching the response.
+- @quell/server can only cache items it can uniquely identify. It will look for fields called `id`, `_id`, `Id`, or `ID`. If a query lacks all four, it will execute the query without caching the response.
 - Currently, Quell can cache 1) query-type requests without variables or directives and 2) mutation-type requests (add, update, and delete) with cache invalidation implemented. Quell will still process other requests, but will not cache the responses.
 
 ### Future Additions
