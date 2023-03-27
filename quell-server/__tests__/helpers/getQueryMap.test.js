@@ -1,5 +1,5 @@
 /* eslint-disable no-undef */
-const { getQueryMap } = require('../../src/quell');
+const { getQueryMap } = require('../../src/helpers/quellHelpers');
 const schema = require('../../test-config/testSchema');
 const schemaWithoutQueries = require('../../test-config/testSchemaWithoutQueries');
 
