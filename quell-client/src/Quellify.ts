@@ -79,10 +79,19 @@ async function Quellify(
     body: JSON.stringify({ query, costOptions })
   };
 
+  // const performFetch = async <T>(fetchConfig?: FetchObjType): Promise<T> => {
+  //   return fetch(endPoint, fetchConfig).then<T>((response) => {
+  //     return response.json();
+  //   });
+  // };
+
   const performFetch = async <T>(fetchConfig?: FetchObjType): Promise<T> => {
-    return fetch(endPoint, fetchConfig).then<T>((response) => {
-      return response.json();
-    });
+    try {
+      const response = 
+      return fetch(endPoint, fetchConfig).then<T>((response) => {
+        return response.json();
+      })
+    }
   };
   // Create AST based on the input query using the parse method available in the graphQL library (further reading: https://en.wikipedia.org/wiki/Abstract_syntax_tree)
   const AST: DocumentNode = parse(query);
