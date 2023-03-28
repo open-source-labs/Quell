@@ -55,7 +55,8 @@ The first bar represents uncached and the second bar represents cached client-si
 A demonstration of how Quell can be implemented to protect against costly network requests.
 
 </br>
-
+</br>
+</br>
 Try Quell out [here](https://quell.dev/)
 
 #### Usage Notes
