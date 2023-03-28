@@ -1659,10 +1659,10 @@ export class QuellCache {
       if (currentDepth > maxDepth) {
         // Pass error to Express if the maximum depth has been exceeded.
         const err: ServerErrorType = {
-          log: `Depth limit exceeded, tried to send query with the depth of ${currentDepth}.`,
+          log: 'Error in QuellCache.determineDepth: depth limit exceeded.',
           status: 413, // Content Too Large
           message: {
-            err: 'Error in QuellCache.determineDepth. Check server log for more details.'
+            err: `Depth limit exceeded, tried to send query with the depth of ${currentDepth}.`
           }
         };
         res.locals.queryErr = err;
@@ -1751,10 +1751,10 @@ export class QuellCache {
       // Pass error to Express if the maximum cost has been exceeded.
       if (cost > maxCost) {
         const err: ServerErrorType = {
-          log: `Cost limit exceeded, tried to send query with a cost exceeding ${maxCost}.`,
+          log: 'Error in costLimit.determineCost(helper): cost limit exceeded.',
           status: 413, // Content Too Large
           message: {
-            err: 'Error in costLimit.determineCost(helper). Check server log for more details.'
+            err: `Cost limit exceeded, tried to send query with a cost exceeding ${maxCost}.`
           }
         };
         res.locals.queryErr = err;
@@ -1794,10 +1794,10 @@ export class QuellCache {
       // Pass error to Express if the maximum cost has been exceeded.
       if (totalCost > maxCost) {
         const err: ServerErrorType = {
-          log: `Cost limit exceeded, tried to send query with a cost exceeding ${maxCost}.`,
+          log: 'Error in costLimit.determineDepthCost(helper): cost limit exceeded.',
           status: 413, // Content Too Large
           message: {
-            err: 'Error in costLimit.determineDepthCost(helper). Check server log for more details.'
+            err: `Cost limit exceeded, tried to send query with a cost exceeding ${maxCost}.`
           }
         };
         res.locals.queryErr = err;

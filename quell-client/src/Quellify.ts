@@ -97,7 +97,7 @@ async function Quellify(
     try {
       const data = await fetch(endPoint, fetchConfig);
       const response = await data.json();
-      return response.queryResponse;
+      return response.queryResponse.data;
     } catch (error) {
       const err: ClientErrorType = {
         log: `Error when trying to perform fetch to graphQL endpoint: ${error}.`,
@@ -182,8 +182,8 @@ async function Quellify(
       // If the query has not been made already, execute a fetch request with the query.
       const parsedData: JSONObject = await performFetch(postFetch);
       // Add the new data to the lokiCache.
-      if (parsedData && parsedData.data) {
-        const addedEntry = lokiCache.insert(parsedData.data);
+      if (parsedData) {
+        const addedEntry = lokiCache.insert(parsedData);
         // Add query $loki ID to IDcache at query key
         IDCache[query] = addedEntry.$loki;
         // The second element in the return array is a boolean that the data was not found in the lokiCache.
