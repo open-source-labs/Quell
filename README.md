@@ -52,7 +52,7 @@ Quell is divided into two npm packages:
 ### Demo
 
 <p><img src="https://user-images.githubusercontent.com/107441308/228376189-6a0214f2-ee44-464b-a85b-a3104de18e57.gif"></p>
-The first bar represents uncached and the second bar represents cached client-side queries.
+The first bar represents an uncached client-side query and the second bar represents the response time of a cached request.
 
 </br>
 </br>
