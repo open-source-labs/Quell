@@ -7,6 +7,17 @@
 
 Quell is an easy-to-use, lightweight JavaScript library providing a client- and server-side caching solution and cache invalidation for GraphQL.
 
+![JavaScript](https://img.shields.io/badge/javascript-%23323330.svg?style=for-the-badge&logo=javascript&logoColor=%23F7DF1E)
+![NodeJS](https://img.shields.io/badge/node.js-6DA55F?style=for-the-badge&logo=node.js&logoColor=white)
+![Express.js](https://img.shields.io/badge/express.js-%23404d59.svg?style=for-the-badge&logo=express&logoColor=%2361DAFB)
+![TypeScript](https://img.shields.io/badge/TypeScript-007ACC?style=for-the-badge&logo=typescript&logoColor=white)
+![Jest](https://img.shields.io/badge/-jest-%23C21325?style=for-the-badge&logo=jest&logoColor=white)
+![Redis](https://img.shields.io/badge/redis-%23DD0031.svg?&style=for-the-badge&logo=redis&logoColor=white)
+![GraphQL](https://img.shields.io/badge/-GraphQL-E10098?style=for-the-badge&logo=graphql&logoColor=white)
+![Postgres](https://img.shields.io/badge/postgres-%23316192.svg?style=for-the-badge&logo=postgresql&logoColor=white)
+![MySQL](https://img.shields.io/badge/mysql-%2300f.svg?style=for-the-badge&logo=mysql&logoColor=white)
+![MongoDB](https://img.shields.io/badge/MongoDB-%234ea94b.svg?style=for-the-badge&logo=mongodb&logoColor=white)
+
 ## Installation
 
 ### Quell-Client and Quell-Server
@@ -38,6 +49,8 @@ Quell is divided into two npm packages:
 
 <p><img src="https://user-images.githubusercontent.com/107441308/228376189-6a0214f2-ee44-464b-a85b-a3104de18e57.gif"></p>
 The first bar represents uncached and the second bar represents cached client-side queries.
+</br>
+</br>
 <p><img src="https://user-images.githubusercontent.com/107441308/228376175-d095b697-4f15-4ec6-9bfa-7029ccd469ac.gif"></p>
 A demonstration of how Quell can be implemented to protect against costly network requests.
 
