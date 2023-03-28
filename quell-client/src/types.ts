@@ -97,10 +97,10 @@ export interface FieldsObjectType {
 
 export interface CostParamsType {
   maxCost: number;
-  mutationCost: number;
-  objectCost: number;
-  scalarCost: number;
-  depthCostFactor: number;
+  mutationCost?: number;
+  objectCost?: number;
+  scalarCost?: number;
+  depthCostFactor?: number;
   maxDepth: number;
   ipRate: number;
 }
@@ -127,5 +127,5 @@ type JSONArray = JSONValue[];
 export type ClientErrorType = {
   log: string;
   status: number;
-  message: { [k: string]: string };
+  message: { err: string };
 };
