@@ -91,10 +91,13 @@ async function Quellify(
    * @param {FetchObjType} [fetchConfig] - (optional) Configuration options for the fetch call.
    * @returns {Promise} A Promise that resolves to the parsed JSON response.
    */
-  const performFetch = async <T>(fetchConfig?: FetchObjType): Promise<T> => {
+  const performFetch = async (
+    fetchConfig?: FetchObjType
+  ): Promise<JSONObject> => {
     try {
-      const response = await fetch(endPoint, fetchConfig);
-      return await response.json();
+      const data = await fetch(endPoint, fetchConfig);
+      const response = await data.json();
+      return response.queryResponse;
     } catch (error) {
       const err: ClientErrorType = {
         log: `Error when trying to perform fetch to graphQL endpoint: ${error}.`,
@@ -123,7 +126,8 @@ async function Quellify(
     // All returns in an async function return promises by default;
     // therefore we are returning a promise that will resolve from perFormFetch.
     const parsedData: JSONValue = await performFetch(postFetch);
-    return parsedData;
+    // The second element in the return array is a boolean that the data was not found in the lokiCache.
+    return [parsedData, false];
   } else if (operationType === 'mutation') {
     // TODO: If the operation is a mutation, we are currently clearing the cache because it is stale.
     // The goal would be to instead have a normalized cache and update the cache following a mutation.
@@ -142,7 +146,8 @@ async function Quellify(
       // If the mutation is a create mutation, execute the mutation and return the result.
       // Assume create mutations will start with 'add', 'new', 'create', or 'make'.
       const parsedData: JSONValue = await performFetch(postFetch);
-      return parsedData;
+      // The second element in the return array is a boolean that the data was not found in the lokiCache.
+      return [parsedData, false];
     } else if (
       mutationType.includes('delete') ||
       mutationType.includes('remove')
@@ -150,13 +155,14 @@ async function Quellify(
       // If the mutation is a delete mutation, execute the mutation and return the result.
       // Assume delete mutations will start with 'delete' or 'remove'.
       const parsedData: JSONObject = await performFetch(deleteFetch);
-      const result: JSONValue = parsedData.queryResponse;
-      return result;
+      // The second element in the return array is a boolean that the data was not found in the lokiCache.
+      return [parsedData, false];
     } else if (mutationType.includes('update')) {
       // If the mutation is an update mutation, execute the mutation and return the result.
       // Assume update mutations will start with 'update'.
       const parsedData: JSONValue = await performFetch(postFetch);
-      return parsedData;
+      // The second element in the return array is a boolean that the data was not found in the lokiCache.
+      return [parsedData, false];
     }
   } else {
     // Otherwise, the operation is a query.
@@ -176,14 +182,8 @@ async function Quellify(
       // If the query has not been made already, execute a fetch request with the query.
       const parsedData: JSONObject = await performFetch(postFetch);
       // Add the new data to the lokiCache.
-      if (
-        parsedData &&
-        parsedData.queryResponse &&
-        (parsedData.queryResponse as JSONObject).data
-      ) {
-        const addedEntry = lokiCache.insert(
-          (parsedData.queryResponse as JSONObject).data
-        );
+      if (parsedData && parsedData.data) {
+        const addedEntry = lokiCache.insert(parsedData.data);
         // Add query $loki ID to IDcache at query key
         IDCache[query] = addedEntry.$loki;
         // The second element in the return array is a boolean that the data was not found in the lokiCache.

@@ -1582,8 +1582,7 @@ export class QuellCache {
             log: `Error inside catch block of getRedisValues, ${error}`,
             status: 400,
             message: {
-              error:
-                'Error in redis - getRedisValues. Check server log for more details.'
+              err: 'Error in redis - getRedisValues. Check server log for more details.'
             }
           };
           return next(err);
