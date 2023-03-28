@@ -56,7 +56,7 @@ A demonstration of how Quell can be implemented to protect against costly networ
 
 </br>
 </br>
-</br>
+
 Try Quell out [here](https://quell.dev/)
 
 #### Usage Notes
