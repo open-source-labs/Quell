@@ -499,7 +499,7 @@ export class QuellCache {
   /**
    * Reads from Redis cache and returns a promise (Redis v4 natively returns a promise).
    * @param {string} key - The key for Redis lookup.
-   * @returns {Promise} - A promise representing the value from the redis cache with the provided key.
+   * @returns {Promise} A promise representing the value from the redis cache with the provided key.
    */
   async getFromRedis(key: string): Promise<string | null | void> {
     try {
