@@ -64,7 +64,7 @@ Quellify('/graphQL', sampleQuery, costOptions)
   .then( /* use parsed response */ );
 ```
 
-Note: Quell will return a promise that resolves into a JS object containing your data in the same form as a typical GraphQL response `{ data: // response }`
+Note: Quell will return a promise that resolves into an array with two elements. The first element will be a JS object containing your data; this is in the same form as the response found on the 'data' key of a typical GraphQL response `{ data: // response }`. The second element will be a boolean indicating whether or not the data was found in the client-side cache.
 
 That's it! You're now caching your GraphQL queries in the LokiJS client-side cache storage.
 
@@ -77,9 +77,9 @@ That's it! You're now caching your GraphQL queries in the LokiJS client-side cac
 # Future Additions
 Goals for the future of Quell/client include:
   - The caching logic for the server-side is multi-faceted, allowing for each query to be broken down into parts and have each data point cached individually. The client-side logic was not working as intended and was iterating through each data-point in the cache. As the cache grew in size this became extremely slow, and as such, the most recent iteration of quell removes much of the functionality to trim the file size down and prevent this issue. 
-    1) Implement caching algorithims for caching subsequest queries after a mutation (currently cache invalidation resets the cache after a mutation).
+    1) Implement caching algorithms for caching subsequent queries after a mutation (currently cache invalidation resets the cache after a mutation).
     2) Re-write much of the core logic, as LokiDB has significantly different functions and benefits than a Redis DB. Alternatively, as the logic is very simple right now, the DB could be transitioned from LokiDB to a newer DB technology that also offers in-memory storage for quick retrieval of data. 
-  - The previous testing suites created during the original implementation of Quell/client were very thorough, but as the project grew in complexity and versins these tests were not updated to test the new functionality. 
+  - The previous testing suites created during the original implementation of Quell/client were very thorough, but as the project grew in complexity and versions these tests were not updated to test the new functionality. 
     1) Create new testing suites for the current implementation of the client-side cache.
     2) Restart TDD from the ground up while implementing mutation caching logic. 
 
