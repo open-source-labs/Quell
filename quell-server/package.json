@@ -160,7 +160,7 @@
       "url": "https://github.com/yusuf-bha"
     }
   ],
-  "homepage": "http://quellql.io",
+  "homepage": "http://quell.dev",
   "dependencies": {
     "graphql": "^16.6.0",
     "redis": "^4.6.5"
