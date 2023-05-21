@@ -7,7 +7,6 @@ export function Visualizer({ query, elapsed }: VisualizerProps) {
         <div className={styles.graphContainer}>
             <h3>Execution Tree</h3>
             <div className={styles.flowTree}>
-                {/* <FlowTree query={query}/> */}
                 <FlowTree query={query} elapsed={elapsed}/>
             </div>
             <h3> Execution Table </h3>

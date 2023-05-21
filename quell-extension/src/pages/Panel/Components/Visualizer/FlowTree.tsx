@@ -170,8 +170,6 @@ const FlowTree: React.FC<{query: string, elapsed: {}}> = ({query, elapsed}) => {
   const [currentQuery, setCurrentQuery] = useState(query);
   const [elapsedTime, setElapsedTime] = useState(elapsed);
 
-  console.log('elapsed in flowtree: ', elapsed);
-
 // update the state of nodes and edges when query changes
   useEffect(() => {
   // only update if the query is different from the currentQuery

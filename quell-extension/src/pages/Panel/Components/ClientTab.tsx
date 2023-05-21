@@ -24,21 +24,6 @@ const ClientTab = ({ graphQLRoute, clientAddress, clientRequests, queryTimes } =
   // A value of '-1' indicates row is not selected and will display metrics, otherwise >= 0 is the index of the row
   const [activeRow, setActiveRow] = useState<number>(-1);
   const [clickedRowData, setClickedRowData] = useState({});
-  const [clickedRowTime, setClickedRowTime] = useState({});
-
-  console.log('reached client tab');
-
-  // log active row data to console
-  useEffect(() => {
-    console.log('activeRow: ', activeRow);
-    console.log('queryTimes: ', queryTimes);
-  }, [activeRow]);
-
-  // log clicked row data to console
-  useEffect(() => {
-    console.log('clickedRowData: ', clickedRowData);
-  }, [clickedRowData]);
-
 
   return (
     <div className="clientTab">
