@@ -128,6 +128,7 @@ const App = () => {
             graphQLRoute={graphQLRoute}
             clientAddress={clientAddress}
             clientRequests={clientRequests} //change the props to 'data' for testing purposes
+            queryTimes={queryTimes}
           />
         )}
 

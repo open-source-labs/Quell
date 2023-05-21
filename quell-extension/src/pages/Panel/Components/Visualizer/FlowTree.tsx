@@ -165,12 +165,12 @@ const elapsed = `{albums: 90}`
 
 
 // render a tree graph from GraphQL AST
-const FlowTree: React.FC<{query: string}> = ({query}) => {
-
-
+const FlowTree: React.FC<{query: string, elapsed: {}}> = ({query, elapsed}) => {
 
   const [currentQuery, setCurrentQuery] = useState(query);
   const [elapsedTime, setElapsedTime] = useState(elapsed);
+
+  console.log('elapsed in flowtree: ', elapsed);
 
 // update the state of nodes and edges when query changes
   useEffect(() => {
