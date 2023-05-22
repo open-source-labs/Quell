@@ -1,6 +1,6 @@
 /* eslint-disable react/react-in-jsx-scope */
 import { useState, useEffect } from 'react';
-import { Controlled as CodeMirror } from 'react-codemirror2';
+import { Controlled as CodeMirror } from "react-codemirror2-react-17";
 import 'codemirror/lib/codemirror.css';
 import 'codemirror/theme/material-darker.css';
 import 'codemirror/theme/xq-light.css';

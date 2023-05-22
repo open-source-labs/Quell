@@ -11,6 +11,7 @@ export function Visualizer({ query, elapsed }: VisualizerProps) {
                 {/* <FlowTree query={query} elapsed={elapsed} /> */}
             </div>
             <h3> Execution Table </h3>
+            <FlowTable query={query}/>
             {/* <div className={styles.flowTable}>
                 <FlowTable query={query} elapsed={elapsed}/>
             </div> */}
