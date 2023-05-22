@@ -7,19 +7,18 @@ export function Visualizer({ query, elapsed }: VisualizerProps) {
         <div className={styles.graphContainer}>
             <h3>Execution Tree</h3>
             <div className={styles.flowTree}>
-                <FlowTree query={query}/>
-                {/* <FlowTree query={query} elapsed={elapsed} /> */}
+                <FlowTree query={query} elapsed={elapsed}/>
             </div>
             <h3> Execution Table </h3>
-            <FlowTable query={query}/>
-            {/* <div className={styles.flowTable}>
+            <div className={styles.flowTable}>
                 <FlowTable query={query} elapsed={elapsed}/>
-            </div> */}
+            </div>
         </div>
     );
 }
 
 interface VisualizerProps {
   query: string;
+  elapsed: {};
 }
 

@@ -25,6 +25,7 @@ const App = () => {
   const [results, setResults] = useState({});
   const [schema, setSchema] = useState({});
   const [queryString, setQueryString] = useState<string>("");
+  const [queryTimes, setQueryTimes] = useState([]);
   const [clientRequests, setClientRequests] = useState<ClientRequest[]>([]);
 
   // various routes to get information
@@ -56,11 +57,25 @@ const App = () => {
       });
     }
   };
+
+  // function to listen to network requests and add query times to state
+  const timeListener = (request: ClientRequest): void => {
+    // if request was sent to the /api/queryTime route, add response body to queryTimes state
+    request.getContent((body) => {
+      const responseData = JSON.parse(body);
+      if (responseData.time) {
+        setQueryTimes((prev) => prev.concat([responseData.time]));
+      }
+    });
+  };
   
   // COMMENT OUT IF WORKING FROM DEV SERVER
   useEffect(() => {
     handleRequestFinished(gqlListener);
     handleNavigate(gqlListener);
+
+    handleRequestFinished(timeListener);
+    handleNavigate(timeListener);
   }, []);
 
   useEffect(() => {
@@ -106,6 +121,7 @@ const App = () => {
             graphQLRoute={graphQLRoute}
             clientAddress={clientAddress}
             clientRequests={clientRequests} //change the props to 'data' for testing purposes
+            queryTimes={queryTimes}
           />
         )}
 

@@ -5,31 +5,30 @@ import { Controlled as CodeMirror } from 'react-codemirror2-react-17';
 // defining the expected type
 interface Props {
   query: string;
-  // elapsed: { [key: string]: number };
+  elapsed: { [key: string]: number };
 }
 
 // The FC stands for Function Component
-// const FlowTable: React.FC<Props> = ({ query, elapsed }) => {
-const FlowTable: React.FC<Props> = ({ query}) => {
+const FlowTable: React.FC<Props> = ({ query, elapsed }) => {
   const [queryOperations, setQueryOperations] = useState<string[]>([]);
-  // const [elapsedTime, setElapsedTime] = useState<{ [key: string]: number }>(elapsed);
+  const [elapsedTime, setElapsedTime] = useState<{ [key: string]: number }>(elapsed);
   const editorRef = useRef<any>(null);
 
   // Set elapsed time
-  // useEffect(() => {
-  //   setElapsedTime(elapsed);
-  // }, [query, elapsed]);
+  useEffect(() => {
+    setElapsedTime(elapsed);
+  }, [query, elapsed]);
   
   // The useEffect parse the query and generate the operation order
   useEffect(() => {
     const operation = parseQuery(query);
-    // if (operation) {
-      // setElapsedTime(elapsed);
+    if (operation) {
+      setElapsedTime(elapsed);
       const operationOrder = generateOperationOrder(operation);
       setQueryOperations(operationOrder);
-    // }
-  // }, [elapsedTime]);
-}, [query]);
+    }
+  }, [elapsedTime]);
+
 
   // parses the query
   const parseQuery = (query: string): SelectionSetNode | OperationDefinitionNode | undefined => {
@@ -61,12 +60,12 @@ const FlowTable: React.FC<Props> = ({ query}) => {
         // console.log('elapsedTime: ', elapsedTime);
         // console.log('elapsedTime[selection.name.value]: ',elapsedTime[selection.name.value]);
         // console.log('fieldName', fieldName);
-        // if (elapsedTime[selection.name.value] && operationOrder.length > 1) {
-        //   const newName = fieldName + ` [resolved in ${elapsedTime[selection.name.value]}ms]`;
-        //   operationOrder.push(newName);
-        // } else{
+        if (elapsedTime[selection.name.value] && operationOrder.length > 1) {
+          const newName = fieldName + ` [resolved in ${elapsedTime[selection.name.value]}ms]`;
+          operationOrder.push(newName);
+        } else{
           operationOrder.push(fieldName)
-        // };
+        };
         // Recursively generate the operation order for nested selection
         if ('selectionSet' in selection) {
           const nestedSelections = generateOperationOrder(selection.selectionSet, fieldName);
