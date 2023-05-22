@@ -19,12 +19,11 @@ import { getQueryString, getOperationNames } from '../helpers/parseQuery';
 import { useEffect } from 'react';
 import {Visualizer} from './Visualizer/Visualizer'
 
-const ClientTab = ({ graphQLRoute, clientAddress, clientRequests } = props) => {
+const ClientTab = ({ graphQLRoute, clientAddress, clientRequests, queryTimes } = props) => {
   // allows for highlighting of selected row and saves row data in state to display upon clicking for more information
   // A value of '-1' indicates row is not selected and will display metrics, otherwise >= 0 is the index of the row
   const [activeRow, setActiveRow] = useState<number>(-1);
   const [clickedRowData, setClickedRowData] = useState({});
-
 
   return (
     <div className="clientTab">
@@ -52,7 +51,7 @@ const ClientTab = ({ graphQLRoute, clientAddress, clientRequests } = props) => {
           </div>
           {/* conditionally renders either the metrics or additional info about specific query*/}
           {activeRow > -1 ? (
-            <RequestDetails clickedRowData={clickedRowData} />
+            <RequestDetails clickedRowData={clickedRowData} queryTime={queryTimes[activeRow]}/>
           ) : (
             <div
               id="client-request-metrics"
@@ -78,7 +77,7 @@ const ClientTab = ({ graphQLRoute, clientAddress, clientRequests } = props) => {
   );
 };
 
-const RequestDetails = ({ clickedRowData } = props) => {
+const RequestDetails = ({ clickedRowData, queryTime } = props) => {
   const [activeTab, setActiveTab] = useState<string>('request');
   const activeStyle = {
     backgroundColor: '#444',
@@ -135,7 +134,7 @@ const RequestDetails = ({ clickedRowData } = props) => {
         {activeTab === 'display' && (
           <>
             <Visualizer  
-              query={getQueryString(clickedRowData)}
+              query={getQueryString(clickedRowData)} elapsed={queryTime}
             />
           </>
         )}
