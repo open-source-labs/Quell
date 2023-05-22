@@ -17,6 +17,7 @@ import NavButton from './NavButton';
 import { getResponseStatus } from '../helpers/getResponseStatus';
 import { getQueryString, getOperationNames } from '../helpers/parseQuery';
 import { useEffect } from 'react';
+import {Visualizer} from './Visualizer/Visualizer'
 
 const ClientTab = ({ graphQLRoute, clientAddress, clientRequests } = props) => {
   // allows for highlighting of selected row and saves row data in state to display upon clicking for more information
@@ -87,6 +88,13 @@ const RequestDetails = ({ clickedRowData } = props) => {
   return (
     <div id="queryExtras">
       <div className="clientNavBar">
+      <NavButton
+          text={'display'}
+          activeTab={activeTab}
+          setActiveTab={setActiveTab}
+          altText={'Execution Context'}
+          altClass={'clientNavButton'}
+        />
         <NavButton
           text={'request'}
           activeTab={activeTab}
@@ -124,6 +132,13 @@ const RequestDetails = ({ clickedRowData } = props) => {
         className="headersTabs"
         style={activeTab === 'data' ? { height: '0px' } : {}}
       >
+        {activeTab === 'display' && (
+          <>
+            <Visualizer  
+              query={getQueryString(clickedRowData)}
+            />
+          </>
+        )}
         {activeTab === 'request' && (
           <>
             {/* <div className="networkTitle">Request Headers</div> */}

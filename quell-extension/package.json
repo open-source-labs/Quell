@@ -140,17 +140,18 @@
     "@types/chrome": "^0.0.172",
     "codemirror": "^5.64.0",
     "codemirror-graphql": "^1.2.4",
-    "graphql": "^16.0.1",
+    "graphql": "^16.6.0",
     "graphql-tag": "^2.12.6",
     "jest-environment-jsdom": "^27.4.4",
     "jest-fetch-mock": "^3.0.3",
     "json-beautify": "^1.1.1",
-    "react": "^17.0.1",
+    "react": "^17.0.2",
     "react-codemirror2": "^6.0.1",
     "react-dom": "^17.0.1",
     "react-split-pane": "^0.1.92",
     "react-table": "^7.7.0",
-    "react-trend": "^1.2.5"
+    "react-trend": "^1.2.5",
+    "reactflow": "^11.7.2"
   },
   "devDependencies": {
     "@babel/core": "^7.12.13",
