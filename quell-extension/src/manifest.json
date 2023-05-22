@@ -7,9 +7,9 @@
   "author": "Chang Cai, Robert Howton, Joshua Jordan, Angelo Chengcuenca, Emily Hoang, Keely Timms, Yusuf Bhaiyat",
   "action": {
     "default_icon": {
-      "16": "./assets/favicon-16x16.png",
-      "48": "./assets/favicon-32x32.png",
-      "128": "./assets/mstile-150x150.png"
+      "16": "./assets/icon16.png",
+      "48": "./assets/icon48.png",
+      "128": "./assets/icon128.png"
     },
     "default_title": "Quell Developer Tool"
   },
@@ -18,8 +18,8 @@
     "service_worker": "background.bundle.js"
   },
   "icons": {
-    "16": "./assets/favicon-16x16.png",
-    "48": "./assets/favicon-32x32.png",
-    "128": "./assets/mstile-150x150.png"
+    "16": "./assets/icon16.png",
+    "48": "./assets/icon48.png",
+    "128": "./assets/icon128.png"
   }
 }
