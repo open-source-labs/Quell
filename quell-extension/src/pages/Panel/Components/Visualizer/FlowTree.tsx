@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import ReactFlow, { Controls, Background, applyEdgeChanges, applyNodeChanges, MiniMap, NodeChange, EdgeChange, Edge, Node, MarkerType, XYPosition } from 'reactflow';
 import { parse, DocumentNode, FieldNode, SelectionNode, OperationDefinitionNode } from 'graphql';
-import styles from './Visualizer.modules.css';
 
 
 // type for NodeData
@@ -161,7 +160,7 @@ const astToTree = (query: string, elapsed: {} ): { nodes: NodeData[]; edges: Flo
   return { nodes, edges };
 };
 
-const elapsed = `{albums: 90}`
+const elapsed = {albums: 90}
 
 
 // render a tree graph from GraphQL AST
