@@ -29,12 +29,12 @@ const InputEditor = (props) => {
       },
       body: JSON.stringify({
         query: query,
-        operationName: undefined,
-        variables: null,
+        // operationName: undefined,
+        costOptions: { maxDepth:15, maxCost:6000, ipRate:22}
       }),
     })
       .then((response) => response.json())
-      .then((data) => props.setResults(data))
+      .then((data) => props.setResults(data.queryResponse))
       .then(() => props.logNewTime(performance.now() - startT))
       .catch((err) => props.setResults(err));
   };

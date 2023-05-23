@@ -80,7 +80,6 @@ const App = () => {
 
   useEffect(() => {
     const introspectionQuery = getIntrospectionQuery();
-    console.log('introspection query: ', introspectionQuery);
     const address = `${serverAddress}${graphQLRoute}`;
     fetch(address, {
       method: "POST",
@@ -98,8 +97,9 @@ const App = () => {
       .then((data) => {
         console.log('introspection query promise resolved');
         console.log('data: ', data);
-        console.log('data.data: ', data.data);
-        const schema = buildClientSchema(data.data);
+        // console.log('data.data: ', data.data);
+        // const schema = buildClientSchema(data.data);
+        const schema = buildClientSchema(data.queryResponse.data);
         setSchema(schema || 'No schema retreived');
         console.log("schema: ",schema);
         console.log("data: ", data );
