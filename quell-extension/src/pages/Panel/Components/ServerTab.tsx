@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import InputEditor from "./InputEditor";
 import OutputEditor from "./OutputEditor";
 import Metrics from "./Metrics";
-// import SplitPane from "react-split-pane";
+import SplitPane from "react-split-pane";
 
 const ServerTab = ({
   clientAddress,
@@ -27,7 +27,7 @@ const ServerTab = ({
 
   return (
     <div className="serverTab">
-      {/* <SplitPane
+       <SplitPane
         className="outer_pane"
         split="vertical"
         minSize={300}
@@ -60,7 +60,7 @@ const ServerTab = ({
             fetchTimeInt={queryResponseTime}
           />
         </div>
-      </SplitPane> */}
+      </SplitPane>
     </div>
   );
 };

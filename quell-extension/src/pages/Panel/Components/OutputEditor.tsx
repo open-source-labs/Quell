@@ -23,11 +23,7 @@ const OutputEditor = ({results}) => {
         theme: 'material-darker',
         lineNumbers: false,
         mode:'json'
-      }}  
-      // onBeforeChange={(editor, data, value) => {
-      //   console.log(value);
-      // }}
-
+      }}
     />
   );
 };
