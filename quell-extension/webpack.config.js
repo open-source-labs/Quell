@@ -4,7 +4,7 @@ const HtmlWebpackPlugin = require('html-webpack-plugin');
 
 module.exports = {
   entry: {
-    background: './src/pages/Background/index.tsx',
+    background: './src/pages/Background/background.tsx',
     devtools: './src/pages/Devtools/index.tsx',
     panel: '/src/pages/Panel/index.tsx',
   },
