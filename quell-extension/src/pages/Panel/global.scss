@@ -160,10 +160,9 @@ tr:hover {
 #queryExtras {
   border: 1px solid #444;
   padding: 2px;
-  width: 67%;
+  width: 99%;
   height: calc(100vh - 74px);
-  overflow-x: scroll;
-  overflow-y: scroll;
+  overflow-x: hidden;
   body::-webkit-scrollbar {
     display: none;
   }

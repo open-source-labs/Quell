@@ -157,8 +157,7 @@ const RequestDetails = ({ clickedRowData, queryTime } = props) => {
               options={{
                 theme: 'material-darker',
                 mode: 'graphql',
-                scrollbarStyle: 'null',
-                lineWrapping: true
+                scrollbarStyle: 'null'
               }}
             />
           </>
