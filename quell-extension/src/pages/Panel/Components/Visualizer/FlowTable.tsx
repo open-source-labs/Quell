@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { parse, DocumentNode, SelectionSetNode, OperationDefinitionNode } from 'graphql';
 import { Controlled as CodeMirror } from 'react-codemirror2-react-17';
+import styles from './Visualizer.modules.css';
 
 // defining the expected type
 interface Props {
@@ -85,18 +86,13 @@ const FlowTable: React.FC<Props> = ({ query, elapsed }) => {
   return (
     <div>
       <CodeMirror
+      className={styles.codemirror}
         value={queryOperations.join('\n')}
         options={{
-          mode: 'graphql',
-          theme: 'default',
+          mode: 'xml',
+          theme: 'material',
           readOnly: true,
           lineNumbers: true,
-        }}
-        onBeforeChange={(editor, data, value) => {
-          // Do any required logic before changing the value
-        }}
-        onChange={(editor, data, value) => {
-          // Handle any change in the editor value
         }}
       />
     </div>

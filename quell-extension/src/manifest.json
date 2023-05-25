@@ -17,6 +17,9 @@
     "default_title": "Quell Developer Tool"
   },
   "devtools_page": "devtools.html",
+  "background": {
+    "service_worker": "background.bundle.js"
+  },
   "icons": {
     "16": "./assets/icon16.png",
     "48": "./assets/icon48.png",
