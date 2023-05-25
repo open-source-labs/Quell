@@ -161,13 +161,15 @@ tr:hover {
   border: 1px solid #444;
   padding: 2px;
   width: 99%;
-  height: calc(100vh - 74px);
+  max-height: calc(100vh - 74px);
   overflow-x: hidden;
+  overflow-y: auto;
+  box-sizing: border-box;
   body::-webkit-scrollbar {
     display: none;
   }
   display: grid;
-  grid-template-rows: 17px ;
+  grid-template-rows: 17px;
 }
 
 .clientNavBar {

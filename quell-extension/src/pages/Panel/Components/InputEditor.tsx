@@ -29,7 +29,7 @@ const InputEditor = (props) => {
       },
       body: JSON.stringify({
         query: query,
-        costOptions: { maxDepth:15, maxCost:6000, ipRate:22}
+        costOptions: { maxDepth: 15, maxCost: 6000, ipRate: 22}
       }),
     })
       .then((response) => response.json())

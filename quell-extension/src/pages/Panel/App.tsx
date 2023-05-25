@@ -89,8 +89,9 @@ const App = () => {
       },
       body: JSON.stringify({
         query: introspectionQuery,
-        operationName: "IntrospectionQuery",
-        variables: null,
+        costOptions: { maxDepth: 15, maxCost: 6000, ipRate: 22}
+        // operationName: "IntrospectionQuery",
+        // variables: null,
       }),
     })
       .then((response) => response.json())
