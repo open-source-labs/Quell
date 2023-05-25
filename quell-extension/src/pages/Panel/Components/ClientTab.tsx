@@ -179,7 +179,8 @@ const RequestDetails = ({ clickedRowData, queryTime } = props) => {
         <>
           <CodeMirror
             className="client_editor"
-            value={beautify(clickedRowData.responseData, null, 2, 80)}
+            value={JSON.stringify(clickedRowData.responseData, null, 2)}
+            // value={beautify(clickedRowData.responseData, null, 2, 80)}
             options={{
               theme: 'material-darker',
               mode: 'json',
