@@ -11,7 +11,8 @@ const OutputEditor = ({results}) => {
 
   useEffect(() => {
     if (Object.keys(results).length > 0) {
-      setOutput(beautify(results, null, 2, 80));
+      // setOutput(beautify(results, null, 2, 80));
+      setOutput(JSON.stringify(results, null, 2));
     }
   }, [results])
 
@@ -21,8 +22,9 @@ const OutputEditor = ({results}) => {
       value={output}
       options={{
         theme: 'material-darker',
-        lineNumbers: false,
-        mode:'json'
+        // lineNumbers: false,
+        mode:'json',
+        scrollbarStyle: 'null'
       }}
     />
   );
