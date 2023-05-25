@@ -29,15 +29,15 @@ const App = () => {
   const [clientRequests, setClientRequests] = useState<ClientRequest[]>([]);
 
   // various routes to get information
-  const [graphQLRoute, setGraphQLRoute] = useState<string>("/graphQL");
+  const [graphQLRoute, setGraphQLRoute] = useState<string>("/api/graphql");
   const [clientAddress, setClientAddress] = useState<string>(
     "http://localhost:8080"
   );
   const [serverAddress, setServerAddress] = useState<string>(
     "http://localhost:3000"
   );
-  const [redisRoute, setRedisRoute] = useState<string>("/redis");
-  const [clearCacheRoute, setClearCacheRoute] = useState<string>("/clearCache");
+  const [redisRoute, setRedisRoute] = useState<string>("/api/redis");
+  const [clearCacheRoute, setClearCacheRoute] = useState<string>("/api/clearCache");
 
   // function to clear front end cache
   const handleClearCache = (): void => {
@@ -95,7 +95,11 @@ const App = () => {
     })
       .then((response) => response.json())
       .then((data) => {
-        const schema = buildClientSchema(data.data);
+        console.log('introspection query promise resolved');
+        console.log('data: ', data);
+        // console.log('data.data: ', data.data);
+        // const schema = buildClientSchema(data.data);
+        const schema = buildClientSchema(data.queryResponse.data);
         setSchema(schema || 'No schema retreived');
         console.log("schema: ",schema);
         console.log("data: ", data );
