@@ -2,8 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import ReactFlow, { Controls, Background, applyEdgeChanges, applyNodeChanges, MiniMap, NodeChange, EdgeChange, Edge, Node, MarkerType, XYPosition } from 'reactflow';
 import { parse, DocumentNode, FieldNode, SelectionNode, OperationDefinitionNode } from 'graphql';
 
-
-// type for NodeData
+// Type for NodeData
 // data describes the content of the node
 interface NodeData {
   id: string;
@@ -16,7 +15,7 @@ interface NodeData {
   type?: string;
 }
 
-// type for FlowElement
+// Type for FlowElement
 interface FlowElement extends NodeData {
   id: string;
   position?: Position;
@@ -40,14 +39,12 @@ interface Position {
   y: number;
 }
 
-
-// declares prop x on Position
+// Declares prop x on Position
 interface PositionWithX extends Position {
   x: number;
 }
 
-
-// turns ast field to node
+// Convert AST field to React Flow node
 const getNode = (
   node: FieldNode | SelectionNode | OperationDefinitionNode,
   depth: number,
@@ -79,10 +76,8 @@ const getNode = (
   };
 };
 
-
-
-// gets edge connection between parent/child nodes
-// edge is the thing that visually connects the parent/child node together
+// Gets edge connection between parent and child nodes
+// edge is the line that visually connects the parent and child node
 
 const getEdge = (parent: FieldNode, child: SelectionNode, elapsed: any): FlowElement => {
   const parentId = `${parent.loc?.start}-${parent.loc?.end}`;
@@ -115,7 +110,7 @@ const getEdge = (parent: FieldNode, child: SelectionNode, elapsed: any): FlowEle
   return edgeProps;
 };
 
-// recursively constructs a tree structure from GraphQL AST
+// Recursively constructs a tree structure from GraphQL AST
 const buildTree = (
   node: FieldNode | SelectionNode,
   nodes: NodeData[],
@@ -126,17 +121,16 @@ const buildTree = (
   numSiblings = 1,
   parentPosition?: Position
 ): void => {
-  // gets the parent node and pushes it into the nodes array
+  // Gets the parent node and pushes it into the nodes array
   const parent = getNode(node, depth, siblingIndex, numSiblings, numSiblings, parentPosition);
   nodes.push(parent);
-
-  // the selectionSet means that it has child nodes
+  // The selectionSet means that it has child nodes
   if (node.kind === 'Field' && node.selectionSet) {
     const numChildren = node.selectionSet.selections.length;
-    // forEach childNode it will call getNode
+    // Call getNode for each child node
     node.selectionSet.selections.forEach((childNode, i) => {
       const child = getNode(childNode, depth + 1, i, numChildren, numSiblings, parent.position);
-      //pushes the child node and edge into the respective arrays
+      // Pushes the child node and edge into the respective arrays
       edges.push(getEdge(node as FieldNode, childNode, elapsed));
       buildTree(childNode, nodes, edges, elapsed, depth + 1, i, numChildren, parent.position);
     });
@@ -145,7 +139,7 @@ const buildTree = (
 
 
 
-// takes the ast and returns nodes and edges as arrays for ReactFlow to render
+// Takes the AST and returns nodes and edges as arrays for ReactFlow to render
 const astToTree = (query: string, elapsed: {}): { nodes: NodeData[]; edges: FlowElement[] } => {
   const ast: DocumentNode = parse(query);
   const operation = ast.definitions.find(
@@ -173,9 +167,8 @@ const astToTree = (query: string, elapsed: {}): { nodes: NodeData[]; edges: Flow
   return { nodes, edges };
 };
 
-// render a tree graph from GraphQL AST
+// Render a tree graph from GraphQL AST
 const FlowTree: React.FC<{query: string, elapsed: {}}> = ({query, elapsed}) => {
-
   const [currentQuery, setCurrentQuery] = useState(query);
   const [elapsedTime, setElapsedTime] = useState(elapsed);
 
@@ -195,7 +188,6 @@ const FlowTree: React.FC<{query: string, elapsed: {}}> = ({query, elapsed}) => {
 } , [query, currentQuery, elapsed, elapsedTime]);
 
   const { nodes, edges } = astToTree(query, elapsedTime);
-
   // storing the initial values of the nodes and edges
   const [newNodes, setNodes] = useState<NodeData[]>(nodes);
   const [newEdges, setEdges] = useState<FlowElement[]>(edges);
@@ -204,7 +196,7 @@ const FlowTree: React.FC<{query: string, elapsed: {}}> = ({query, elapsed}) => {
   const onNodesChange = useCallback( (changes: NodeChange[]) => setNodes((nds) => applyNodeChanges(changes, nds)),[] );
   const onEdgesChange = useCallback( (changes: EdgeChange[]) => setEdges((eds) => applyEdgeChanges(changes, eds)),[] );
 
-  // this is to remove the reactflow watermark
+  // Remove React Flow watermark
   const proOptions = { hideAttribution: true };
   
   return (
