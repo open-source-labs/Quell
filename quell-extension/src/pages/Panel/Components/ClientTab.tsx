@@ -24,6 +24,14 @@ const ClientTab = ({ graphQLRoute, clientAddress, clientRequests, queryTimes } =
   const [activeRow, setActiveRow] = useState<number>(-1);
   const [clickedRowData, setClickedRowData] = useState({});
 
+  // TEST: when clicked row changes, console log the row data and query time
+  useEffect(() => {
+    console.log('client requests: ', clientRequests);
+    console.log('clicked row query string ', getQueryString(clickedRowData));
+    console.log('queryTimes', queryTimes);
+    console.log('queryTime: ', queryTimes[activeRow]);
+  }, [clientRequests, clickedRowData, activeRow]);
+
   return (
     <div className="clientTab">
       <div className="title_bar">Client Quell Requests</div>
@@ -280,6 +288,7 @@ const NetworkRequestTable = ({
                           if (activeRow !== cell.row.id)
                             setActiveRow(cell.row.id);
                           else setActiveRow(-1);
+                          console.log('cell passed into handleRowClick', cell);
                           handleRowClick(cell);
                         }}
                       >

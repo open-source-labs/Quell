@@ -4,7 +4,9 @@ import gql from 'graphql-tag';
  * @param {Object} req - HAR log entry
  */
 export const getQueryString = (req: object) => {
+  if (!req.request) return null;
   if (!req.request.postData?.text) return null;
+  console.log('parsed req.request.postData.text (in getQueryString)', JSON.parse(req.request.postData.text));
   return JSON.parse(req.request.postData.text).query;
 };
 

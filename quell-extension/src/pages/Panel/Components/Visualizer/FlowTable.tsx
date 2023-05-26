@@ -17,6 +17,7 @@ const FlowTable: React.FC<Props> = ({ query, elapsed }) => {
 
   // Set elapsed time
   useEffect(() => {
+    console.log('elapsed in flowtable: ', elapsed);
     setElapsedTime(elapsed);
   }, [query, elapsed]);
   
