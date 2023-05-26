@@ -90,21 +90,12 @@ const App = () => {
       body: JSON.stringify({
         query: introspectionQuery,
         costOptions: { maxDepth: 15, maxCost: 6000, ipRate: 22}
-        // operationName: "IntrospectionQuery",
-        // variables: null,
       }),
     })
       .then((response) => response.json())
       .then((data) => {
-        console.log('introspection query promise resolved');
-        console.log('data: ', data);
-        // console.log('data.data: ', data.data);
-        // const schema = buildClientSchema(data.data);
         const schema = buildClientSchema(data.queryResponse.data);
         setSchema(schema || 'No schema retreived');
-        console.log("schema: ",schema);
-        console.log("data: ", data );
-
       })
       .catch((err) => console.log(err));
   }, [clientAddress, serverAddress, graphQLRoute]);

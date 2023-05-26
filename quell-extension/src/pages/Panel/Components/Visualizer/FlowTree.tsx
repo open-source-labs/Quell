@@ -109,7 +109,6 @@ const getEdge = (parent: FieldNode, child: SelectionNode, elapsed: any): FlowEle
   };
 
   const childNode = child as FieldNode;
-  // console.log(childNode.name.value);
   if(elapsed[childNode.name.value]){
     edgeProps.label = `${elapsed[childNode.name.value]}ms`;
   }
@@ -131,7 +130,6 @@ const buildTree = (
   const parent = getNode(node, depth, siblingIndex, numSiblings, numSiblings, parentPosition);
   nodes.push(parent);
 
-  // console.log("Parent node: ", parent);
   // the selectionSet means that it has child nodes
   if (node.kind === 'Field' && node.selectionSet) {
     const numChildren = node.selectionSet.selections.length;
