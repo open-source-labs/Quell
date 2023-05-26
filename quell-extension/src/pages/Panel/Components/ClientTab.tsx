@@ -12,7 +12,6 @@ import 'codemirror/addon/hint/show-hint';
 import 'codemirror-graphql/lint';
 import 'codemirror-graphql/hint';
 import 'codemirror-graphql/mode';
-import beautify from 'json-beautify';
 import NavButton from './NavButton';
 import { getResponseStatus } from '../helpers/getResponseStatus';
 import { getQueryString, getOperationNames } from '../helpers/parseQuery';
@@ -180,7 +179,6 @@ const RequestDetails = ({ clickedRowData, queryTime } = props) => {
           <CodeMirror
             className="client_editor"
             value={JSON.stringify(clickedRowData.responseData, null, 2)}
-            // value={beautify(clickedRowData.responseData, null, 2, 80)}
             options={{
               theme: 'material-darker',
               mode: 'json',

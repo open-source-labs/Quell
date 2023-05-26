@@ -23,9 +23,8 @@ const Settings = ({
   clearCacheRoute,
   setClearCacheRoute,
 } = props) => {
-  const [editorText, setEditorText] = useState(beautify(schema, null, 2, 80));
+  const [editorText, setEditorText] = useState(JSON.stringify(schema, null, 2));
 
-  // 
   const inputArea = (_id:string, func, defaultVal) => {
     return (
       <div id={`${_id.toLowerCase().split(" ").join("_")}`}>
