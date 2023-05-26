@@ -49,6 +49,11 @@ const CacheTab = ({
     const output = [];
     if (title in redisStats) {
       for (let key in redisStats[title]) {
+        // "Redis build id" value was just showing up as zeroes extending off the page,
+        // and "Path to configuration file" had no value,
+        // so we're just not going to show those two stats for now.
+        if (redisStats[title][key].name === 'Redis build id') continue;
+        if (redisStats[title][key].name === 'Path to configuration file') continue;
         output.push(
           <div className="subStats">
             <div
