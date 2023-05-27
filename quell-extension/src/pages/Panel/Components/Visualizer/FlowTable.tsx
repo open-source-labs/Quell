@@ -32,7 +32,7 @@ const FlowTable: React.FC<Props> = ({ query, elapsed }) => {
   }, [elapsedTime]);
 
 
-  // parses the query
+  // Parses the query, returning the selection set
   const parseQuery = (query: string): SelectionSetNode | OperationDefinitionNode | undefined => {
     const ast: DocumentNode = parse(query);
 
@@ -48,7 +48,7 @@ const FlowTable: React.FC<Props> = ({ query, elapsed }) => {
     return undefined;
   };
 
-  // function that takes the query and returns an array of operations in order of the query
+  // Function that takes the query and returns an array of operations in order of the query
   const generateOperationOrder = (operation: SelectionSetNode | OperationDefinitionNode | any, parentName = ''): string[] => {
     const operationOrder: string[] = [];
     if (!operation) {

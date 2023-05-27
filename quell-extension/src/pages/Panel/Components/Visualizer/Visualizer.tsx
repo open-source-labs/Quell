@@ -2,10 +2,9 @@ import styles from './Visualizer.modules.css';
 import FlowTree from "./FlowTree";
 import FlowTable from "./FlowTable";
 
+// Container that renders the flow tree and flow table
 export function Visualizer({ query, elapsed }: VisualizerProps) {
-    console.log('in Visualizer, query is: ', query);
-    console.log('in Visualizer, elapsed is: ', elapsed);
-    
+    // If no query time is passed, set elapsed to an empty object to avoid app crash
     const elapsedProp = elapsed !== null && elapsed !== undefined ? elapsed : {};
 
     return (

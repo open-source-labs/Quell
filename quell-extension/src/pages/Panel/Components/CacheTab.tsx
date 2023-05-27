@@ -16,7 +16,7 @@ const CacheTab = ({
   redisRoute,
   handleClearCache,
 }: CacheTabProps) => {
-  //use state to store data from redis server
+  //Store data from Redis server
   const [redisStats, setRedisStats] = useState<RedisStats>({
     server: [],
     client: [],

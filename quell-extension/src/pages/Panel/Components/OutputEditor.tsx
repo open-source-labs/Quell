@@ -20,9 +20,8 @@ const OutputEditor = ({results}) => {
       value={output}
       options={{
         theme: 'material-darker',
-        // lineNumbers: false,
         mode:'json',
-        scrollbarStyle: 'native'
+        scrollbarStyle: 'null'
       }}
     />
   );
