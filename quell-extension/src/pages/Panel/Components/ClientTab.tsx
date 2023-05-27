@@ -280,7 +280,6 @@ const NetworkRequestTable = ({
                           if (activeRow !== cell.row.id)
                             setActiveRow(cell.row.id);
                           else setActiveRow(-1);
-                          console.log('cell passed into handleRowClick', cell);
                           handleRowClick(cell);
                         }}
                       >

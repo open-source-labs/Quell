@@ -31,7 +31,6 @@ const CacheTab = ({
     fetch(`${serverAddress}${redisRoute}`)
       .then((response) => response.json())
       .then((data: RedisInfo) => {
-        console.log('redis info: ', data);
         if (data.redisStats) setRedisStats(data.redisStats);
         if (data.redisKeys) setRedisKeys(data.redisKeys);
         if (data.redisValues) setRedisValues(data.redisValues);
