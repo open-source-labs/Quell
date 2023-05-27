@@ -1,5 +1,5 @@
 import NavButton from './NavButton';
-import Logo from '../assets/Quell_full_size.png';
+import Logo from '../assets/icon128.png';
 
 const PrimaryNavBar = ({ 
   activeTab, 

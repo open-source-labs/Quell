@@ -16,7 +16,7 @@ const CacheTab = ({
   redisRoute,
   handleClearCache,
 }: CacheTabProps) => {
-  //use state to store data from redis server
+  //Store data from Redis server
   const [redisStats, setRedisStats] = useState<RedisStats>({
     server: [],
     client: [],
@@ -31,7 +31,6 @@ const CacheTab = ({
     fetch(`${serverAddress}${redisRoute}`)
       .then((response) => response.json())
       .then((data: RedisInfo) => {
-        console.log('redis info: ', data);
         if (data.redisStats) setRedisStats(data.redisStats);
         if (data.redisKeys) setRedisKeys(data.redisKeys);
         if (data.redisValues) setRedisValues(data.redisValues);
