@@ -25,18 +25,19 @@ const App = () => {
   const [results, setResults] = useState({});
   const [schema, setSchema] = useState({});
   const [queryString, setQueryString] = useState<string>("");
+  const [queryTimes, setQueryTimes] = useState([]);
   const [clientRequests, setClientRequests] = useState<ClientRequest[]>([]);
 
   // various routes to get information
-  const [graphQLRoute, setGraphQLRoute] = useState<string>("/graphQL");
+  const [graphQLRoute, setGraphQLRoute] = useState<string>("/api/graphql");
   const [clientAddress, setClientAddress] = useState<string>(
     "http://localhost:8080"
   );
   const [serverAddress, setServerAddress] = useState<string>(
     "http://localhost:3000"
   );
-  const [redisRoute, setRedisRoute] = useState<string>("/redis");
-  const [clearCacheRoute, setClearCacheRoute] = useState<string>("/clearCache");
+  const [redisRoute, setRedisRoute] = useState<string>("/api/redis");
+  const [clearCacheRoute, setClearCacheRoute] = useState<string>("/api/clearCache");
 
   // function to clear front end cache
   const handleClearCache = (): void => {
@@ -56,11 +57,25 @@ const App = () => {
       });
     }
   };
+
+  // function to listen to network requests and add query times to state
+  const timeListener = (request: ClientRequest): void => {
+    // if request was sent to the /api/queryTime route, add response body to queryTimes state
+    request.getContent((body) => {
+      const responseData = JSON.parse(body);
+      if (responseData.time) {
+        setQueryTimes((prev) => prev.concat([responseData.time]));
+      }
+    });
+  };
   
   // COMMENT OUT IF WORKING FROM DEV SERVER
   useEffect(() => {
     handleRequestFinished(gqlListener);
     handleNavigate(gqlListener);
+
+    handleRequestFinished(timeListener);
+    handleNavigate(timeListener);
   }, []);
 
   useEffect(() => {
@@ -74,17 +89,13 @@ const App = () => {
       },
       body: JSON.stringify({
         query: introspectionQuery,
-        operationName: "IntrospectionQuery",
-        variables: null,
+        costOptions: { maxDepth: 15, maxCost: 6000, ipRate: 22}
       }),
     })
       .then((response) => response.json())
       .then((data) => {
-        const schema = buildClientSchema(data.data);
+        const schema = buildClientSchema(data.queryResponse.data);
         setSchema(schema || 'No schema retreived');
-        console.log("schema: ",schema);
-        console.log("data: ", data );
-
       })
       .catch((err) => console.log(err));
   }, [clientAddress, serverAddress, graphQLRoute]);
@@ -106,6 +117,7 @@ const App = () => {
             graphQLRoute={graphQLRoute}
             clientAddress={clientAddress}
             clientRequests={clientRequests} //change the props to 'data' for testing purposes
+            queryTimes={queryTimes}
           />
         )}
 

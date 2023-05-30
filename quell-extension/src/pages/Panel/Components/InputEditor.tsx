@@ -1,6 +1,6 @@
 /* eslint-disable react/prop-types */
 import React, { useState } from 'react';
-import { Controlled as CodeMirror } from 'react-codemirror2';
+import { Controlled as CodeMirror } from "react-codemirror2-react-17";
 import 'codemirror/lib/codemirror.css';
 import 'codemirror/theme/material-darker.css';
 import 'codemirror/theme/xq-light.css';
@@ -29,12 +29,11 @@ const InputEditor = (props) => {
       },
       body: JSON.stringify({
         query: query,
-        operationName: undefined,
-        variables: null,
+        costOptions: { maxDepth: 15, maxCost: 6000, ipRate: 22}
       }),
     })
       .then((response) => response.json())
-      .then((data) => props.setResults(data))
+      .then((data) => props.setResults(data.queryResponse))
       .then(() => props.logNewTime(performance.now() - startT))
       .catch((err) => props.setResults(err));
   };
@@ -47,15 +46,13 @@ const InputEditor = (props) => {
           theme: 'material-darker',
           lineNumbers: true,
           mode: 'graphql',
-          // ### DELETE ###
-          // linting does not seem to work, and breaks app if no schema retrieved
-          // lint: props.schema === {} ? false : { schema: props.schema },
-          // hintOptions: props.schema === {} ? false : { schema: props.schema }
+          lint: Object.keys(props.schema).length === 0 ? false : { schema: props.schema },
+          hintOptions: Object.keys(props.schema).length === 0 ? false : { schema: props.schema }
         }}
         onBeforeChange={(editor, data, value) => {
           setText(value);
         }}
-        // sends Query to parent componet to be processed by
+        // sends Query to parent componet to be processed
         onChange={(editor, data, value) => {
           props.setQueryString(value);
         }}

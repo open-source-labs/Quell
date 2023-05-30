@@ -16,7 +16,7 @@ const CacheTab = ({
   redisRoute,
   handleClearCache,
 }: CacheTabProps) => {
-  //use state to store data from redis server
+  //Store data from Redis server
   const [redisStats, setRedisStats] = useState<RedisStats>({
     server: [],
     client: [],
@@ -31,7 +31,6 @@ const CacheTab = ({
     fetch(`${serverAddress}${redisRoute}`)
       .then((response) => response.json())
       .then((data: RedisInfo) => {
-        console.log('redis info: ', data);
         if (data.redisStats) setRedisStats(data.redisStats);
         if (data.redisKeys) setRedisKeys(data.redisKeys);
         if (data.redisValues) setRedisValues(data.redisValues);
@@ -49,6 +48,11 @@ const CacheTab = ({
     const output = [];
     if (title in redisStats) {
       for (let key in redisStats[title]) {
+        // "Redis build id" value was just showing up as zeroes extending off the page,
+        // and "Path to configuration file" had no value,
+        // so we're just not going to show those two stats for now.
+        if (redisStats[title][key].name === 'Redis build id') continue;
+        if (redisStats[title][key].name === 'Path to configuration file') continue;
         output.push(
           <div className="subStats">
             <div

@@ -2,7 +2,7 @@ import { useState, useMemo } from 'react';
 import { useTable } from 'react-table';
 import Metrics from './Metrics';
 import SplitPane from 'react-split-pane';
-import { Controlled as CodeMirror } from 'react-codemirror2';
+import { Controlled as CodeMirror } from "react-codemirror2-react-17";
 import 'codemirror/lib/codemirror.css';
 import 'codemirror/theme/material-darker.css';
 import 'codemirror/theme/xq-light.css';
@@ -12,18 +12,17 @@ import 'codemirror/addon/hint/show-hint';
 import 'codemirror-graphql/lint';
 import 'codemirror-graphql/hint';
 import 'codemirror-graphql/mode';
-import beautify from 'json-beautify';
 import NavButton from './NavButton';
 import { getResponseStatus } from '../helpers/getResponseStatus';
 import { getQueryString, getOperationNames } from '../helpers/parseQuery';
 import { useEffect } from 'react';
+import {Visualizer} from './Visualizer/Visualizer'
 
-const ClientTab = ({ graphQLRoute, clientAddress, clientRequests } = props) => {
+const ClientTab = ({ graphQLRoute, clientAddress, clientRequests, queryTimes } = props) => {
   // allows for highlighting of selected row and saves row data in state to display upon clicking for more information
   // A value of '-1' indicates row is not selected and will display metrics, otherwise >= 0 is the index of the row
   const [activeRow, setActiveRow] = useState<number>(-1);
   const [clickedRowData, setClickedRowData] = useState({});
-
 
   return (
     <div className="clientTab">
@@ -51,7 +50,7 @@ const ClientTab = ({ graphQLRoute, clientAddress, clientRequests } = props) => {
           </div>
           {/* conditionally renders either the metrics or additional info about specific query*/}
           {activeRow > -1 ? (
-            <RequestDetails clickedRowData={clickedRowData} />
+            <RequestDetails clickedRowData={clickedRowData} queryTime={queryTimes[activeRow]}/>
           ) : (
             <div
               id="client-request-metrics"
@@ -77,7 +76,7 @@ const ClientTab = ({ graphQLRoute, clientAddress, clientRequests } = props) => {
   );
 };
 
-const RequestDetails = ({ clickedRowData } = props) => {
+const RequestDetails = ({ clickedRowData, queryTime } = props) => {
   const [activeTab, setActiveTab] = useState<string>('request');
   const activeStyle = {
     backgroundColor: '#444',
@@ -87,6 +86,13 @@ const RequestDetails = ({ clickedRowData } = props) => {
   return (
     <div id="queryExtras">
       <div className="clientNavBar">
+      <NavButton
+          text={'display'}
+          activeTab={activeTab}
+          setActiveTab={setActiveTab}
+          altText={'Execution Context'}
+          altClass={'clientNavButton'}
+        />
         <NavButton
           text={'request'}
           activeTab={activeTab}
@@ -124,6 +130,13 @@ const RequestDetails = ({ clickedRowData } = props) => {
         className="headersTabs"
         style={activeTab === 'data' ? { height: '0px' } : {}}
       >
+        {activeTab === 'display' && (
+          <>
+            <Visualizer  
+              query={getQueryString(clickedRowData)} elapsed={queryTime}
+            />
+          </>
+        )}
         {activeTab === 'request' && (
           <>
             {/* <div className="networkTitle">Request Headers</div> */}
@@ -143,8 +156,7 @@ const RequestDetails = ({ clickedRowData } = props) => {
               options={{
                 theme: 'material-darker',
                 mode: 'graphql',
-                scrollbarStyle: 'null',
-                lineWrapping: true
+                scrollbarStyle: 'null'
               }}
             />
           </>
@@ -166,7 +178,7 @@ const RequestDetails = ({ clickedRowData } = props) => {
         <>
           <CodeMirror
             className="client_editor"
-            value={beautify(clickedRowData.responseData, null, 2, 80)}
+            value={JSON.stringify(clickedRowData.responseData, null, 2)}
             options={{
               theme: 'material-darker',
               mode: 'json',

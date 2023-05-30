@@ -1,6 +1,6 @@
 /* eslint-disable react/prop-types */
 import React, { useState } from 'react';
-import { Controlled as CodeMirror } from 'react-codemirror2';
+import { Controlled as CodeMirror } from "react-codemirror2-react-17";
 import 'codemirror/lib/codemirror.css';
 import 'codemirror/theme/material-darker.css';
 import 'codemirror/theme/xq-light.css';
@@ -10,7 +10,6 @@ import 'codemirror/addon/hint/show-hint';
 import 'codemirror-graphql/lint';
 import 'codemirror-graphql/hint';
 import 'codemirror-graphql/mode';
-import beautify from 'json-beautify';
  
 const Settings = ({
   graphQLRoute,
@@ -23,9 +22,8 @@ const Settings = ({
   clearCacheRoute,
   setClearCacheRoute,
 } = props) => {
-  const [editorText, setEditorText] = useState(beautify(schema, null, 2, 80));
+  const [editorText, setEditorText] = useState(JSON.stringify(schema, null, 2));
 
-  // 
   const inputArea = (_id:string, func, defaultVal) => {
     return (
       <div id={`${_id.toLowerCase().split(" ").join("_")}`}>

@@ -27,7 +27,7 @@ const ServerTab = ({
 
   return (
     <div className="serverTab">
-      <SplitPane
+       <SplitPane
         className="outer_pane"
         split="vertical"
         minSize={300}
