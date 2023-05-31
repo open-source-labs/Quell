@@ -22,6 +22,7 @@ Quell is an easy-to-use, lightweight JavaScript library providing a client- and 
 ![Postgres](https://img.shields.io/badge/postgres-%23316192.svg?style=for-the-badge&logo=postgresql&logoColor=white)
 ![MySQL](https://img.shields.io/badge/mysql-%2300f.svg?style=for-the-badge&logo=mysql&logoColor=white)
 ![MongoDB](https://img.shields.io/badge/MongoDB-%234ea94b.svg?style=for-the-badge&logo=mongodb&logoColor=white)
+![TailwindCSS](https://img.shields.io/badge/Tailwind_CSS-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white)
 
 </div>
 
@@ -41,6 +42,7 @@ Quell is divided into two npm packages:
 - Quell/server offers optional depth and cost limiting middleware to protect your GraphQL endpoint! To use, please explore the [@quell/server readme](./quell-server/README.md).
 - Server-side cache now caches entire queries in instances where it is unable to cache individual datapoints.
 - Client-side caching utilizing LokiJS.
+- Client-side caching utilizing Least Recently Used (LRU) caching strategy.
 - Server-side caching utilizing a configurable Redis in-memory data store with batching.
 - Partial and exact match query caching.
 - Programmatic rebuilding of GraphQL queries to fetch only the minimum data necessary to complete the response based upon current cache contents.
