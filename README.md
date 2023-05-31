@@ -1,6 +1,7 @@
 <p align="center"><img src="./assets/Quell-B2.png" width='500' style="margin-top: 10px; margin-bottom: -10px;"></p>
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://github.com/open-source-labs/Quell/blob/master/LICENSE)
+![AppVeyor](https://img.shields.io/badge/version-8.0.0-blue.svg)
 [![contributions welcome](https://img.shields.io/badge/contributions-welcome-brightgreen.svg?style=flat)](https://github.com/open-source-labs/Quell/issues)
 
 # Quell
