@@ -1,5 +1,5 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://github.com/open-source-labs/Quell/blob/master/LICENSE)
-![AppVeyor](https://img.shields.io/badge/version-5.0.0-blue.svg)
+![AppVeyor](https://img.shields.io/badge/version-6.0.0-blue.svg)
 [![contributions welcome](https://img.shields.io/badge/contributions-welcome-brightgreen.svg?style=flat)](https://github.com/open-source-labs/Quell/issues)
 
 # @quell/client
