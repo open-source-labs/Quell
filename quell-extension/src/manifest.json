@@ -3,9 +3,6 @@
   "name": "Quell Developer Tool",
   "description": "Developer tool for the Quell JavaScript library: https://quell.dev",
   "version": "2.0",
-  "permissions": [
-    "contextMenus"
-  ],
   "homepage_url": "https://quell.dev",
   "author": "Michael Lav, Lenny Yambao, Jonah Weinbaum, Justin Hua, Chang Cai, Robert Howton, Joshua Jordan, Angelo Chengcuenca, Emily Hoang, Keely Timms, Yusuf Bhaiyat",
   "action": {
@@ -21,11 +18,6 @@
     "16": "./assets/icon16.png",
     "48": "./assets/icon48.png",
     "128": "./assets/icon128.png"
-  },
-  "contextMenus": {
-    "id": "quellMenu",
-    "title": "Quell",
-    "contexts": ["page"]
   },
   "background": {
     "service_worker": "background.bundle.js",
