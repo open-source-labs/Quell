@@ -27,8 +27,12 @@ import type {
   InterfaceTypeExtensionNode,
   UnionTypeExtensionNode,
   EnumTypeExtensionNode,
-  InputObjectTypeExtensionNode
+  InputObjectTypeExtensionNode,
+  DocumentNode,
+  ExecutionResult,
 } from 'graphql';
+
+import { Response, Request } from 'express';
 
 // QuellCache constructor parameters
 export interface ConstructorOptions {
@@ -56,6 +60,12 @@ export interface CostParamsType {
   ipRate: number;
 }
 
+/**
+ * The 'CustomError' interface extends the built-in 'Error' class and represents a custom error object
+ * It adds optional properties for additional error information 
+ * @interface CustomError
+ * @extends Error
+ */
 export interface CustomError extends Error {
   log?: string;
   status?: number;
@@ -63,8 +73,7 @@ export interface CustomError extends Error {
 }
 
 export interface ProtoObjType {
-  // [key: string]: unknown;
-  [key: string]: string | boolean | null | ProtoObjType;
+  [key: string]: string | number | boolean | null | ProtoObjType;
 }
 
 export interface FragsType {
@@ -74,7 +83,7 @@ export interface FragsType {
 }
 
 export interface MutationMapType {
-  [mutationName: string]: string | undefined;
+  [mutationName: string]: string | undefined | ReturnType;
 }
 
 export interface QueryMapType {
@@ -213,7 +222,7 @@ export interface DataResponse {
 }
 
 export interface Data {
-  [key: string]: DataField[] | string | Data | Data[];
+  [key: string]: DataField[] | string | number | Data | Data[];
 }
 
 interface DataField {
@@ -265,3 +274,58 @@ export type ServerErrorType = {
 export type ResponseDataType = {
   [k: string]: string | ResponseDataType | ResponseDataType[];
 };
+
+// Response Parameter Types:
+interface CostOptionsType {
+  maxDepth?: number;
+  maxCost?: number;
+  ipRate?: number;
+}
+
+export interface RequestBodyType {
+  query?: string;
+  costOptions?: CostOptionsType;
+}
+
+// AST:
+export interface ParsedASTType {
+  proto: ProtoObjType;
+  operationType: string;
+  frags: FragsType;
+}
+
+export type ReturnType = string | string[] | undefined;
+
+export type FieldType = {
+  name: string;
+  type: {
+    name: string;
+    ofType: {
+      name: string;
+    };
+  };
+};
+
+export type RedisValue = string | null | void;
+
+export interface RequestType extends Request {
+  body: RequestBodyType;
+}
+
+export interface ResLocals extends Response {
+  AST?: DocumentNode;
+  parsedAST?: ParsedASTType;
+  queryResponse?: ExecutionResult | RedisValue;
+  redisStats?: RedisStatsType;
+  queryErr?: ServerErrorType;
+  redisValues?: (string | null)[];
+  redisKeys?: string[];
+}
+
+export interface CustomResponse extends Response {
+  locals: ResLocals;
+}
+
+export interface FieldKeyValue {
+  [key: string]: string;
+}

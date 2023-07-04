@@ -1,6 +1,6 @@
 {
   "name": "@quell/client",
-  "version": "8.0.0",
+  "version": "9.0.0",
   "description": "Quell is an open-source NPM package providing a light-weight caching layer implementation and cache invalidation for GraphQL responses on both the client- and server-side. Use Quell to prevent redundant client-side API requests and to minimize costly server-side response latency.",
   "main": "src/Quellify.js",
   "scripts": {
@@ -21,7 +21,6 @@
   },
   "keywords": [
     "cache-invalidation",
-    "LokiJS",
     "graphQL",
     "cache",
     "caching",
@@ -29,6 +28,22 @@
     "quell"
   ],
   "contributors": [
+    {
+      "name": "Alexander Martinez",
+      "url": "https://github.com/alexmartinez123"
+    },
+    {
+      "name": "Cera Barrow",
+      "url": "https://github.com/cerab"
+    },
+    {
+      "name": "Jackie He",
+      "url": "https://github.com/Jckhe"
+    },
+    {
+      "name": "Zoe Harper",
+      "url": "https://github.com/ContraireZoe"
+    },
     {
       "name": "Alexander Martinez",
       "url": "https://github.com/alexmartinez123"
@@ -138,45 +153,28 @@
       "url": "https://github.com/kruckenberg"
     },
     {
-      "name": "Angelo Chengcuenca",
-      "url": "https://github.com/amchengcuenca"
+      "name": "Cassidy Komp",
+      "url": "https://github.com/mimikomp"
     },
     {
-      "name": "Emily Hoang",
-      "url": "https://github.com/emilythoang"
+      "name": "Andrew Dai",
+      "url": "https://github.com/andrewmdai"
     },
     {
-      "name": "Keely Timms",
-      "url": "https://github.com/keelyt"
+      "name": "Stacey Lee",
+      "url": "https://github.com/staceyjhlee"
     },
     {
-      "name": "Yusuf Bhaiyat",
-      "url": "https://github.com/yusuf-bha"
-    },
-    {
-      "name": "Jonah Weinbaum",
-      "url": "https://github.com/jonahpw"
-    },
-    {
-      "name": "Justin Hua",
-      "url": "https://github.com/justinfhua"
-    },
-    {
-      "name": "Lenny Yambao",
-      "url": "https://github.com/lennin6"
-    },
-    {
-      "name": "Michael Lav",
-      "url": "https://github.com/mikelav258"
+      "name": "Ian Weinholtz",
+      "url": "https://github.com/itsHackinTime"
     }
   ],
-  "homepage": "http://quell.dev",
+  "homepage": "http://quellql.io",
   "dependencies": {
-    "graphql": "^16.6.0",
-    "lokijs": "^1.5.12"
+    "graphql": "^16.6.0"
   },
   "devDependencies": {
-    "@types/lokijs": "^1.5.7",
+    "@types/jest": "^29.5.2",
     "@types/node": "^18.15.3",
     "@typescript-eslint/eslint-plugin": "^5.54.1",
     "@typescript-eslint/parser": "^5.54.1",
@@ -187,6 +185,7 @@
     "eslint-plugin-n": "^15.6.1",
     "eslint-plugin-prettier": "^4.2.1",
     "eslint-plugin-promise": "^6.1.1",
+    "lru-cache": "^10.0.0",
     "prettier": "^2.8.4",
     "typescript": "^4.9.5"
   }

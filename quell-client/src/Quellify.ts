@@ -1,284 +1,291 @@
 import { DocumentNode } from 'graphql';
-import { Collection } from 'lokijs';
 import { parse } from 'graphql/language/parser';
 import determineType from './helpers/determineType';
 import { LRUCache } from 'lru-cache';
-import Loki from 'lokijs';
+
 import {
   CostParamsType,
-  LokiGetType,
+  MapCacheType,
   FetchObjType,
   JSONObject,
   JSONValue,
-  ClientErrorType
+  ClientErrorType,
+  QueryResponse
 } from './types';
 
-
-const lokidb: Loki = new Loki('client-cache');
-let lokiCache: Collection = lokidb.addCollection('loki-client-cache', {
-  disableMeta: true
-});
-
-/**
- * Function to manually removes item from cache
- */
-const invalidateCache = (query: string): void => {
-  const cachedEntry = lokiCache.findOne({ query });
-  if (cachedEntry) {
-    lruCache.delete(query);
-    lokiCache.remove(cachedEntry);
+// Custom Error class for client errors
+class ClientError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'ClientError';
   }
 }
 
 /**
- * Implement LRU caching strategy
+ * Factory function to create custom client error objects
+ * @param message - Error message string
+ * @returns - a custom error object
  */
+function createClientError(message: string): ClientErrorType {
+  return {
+    log: message,
+    status: 400,
+    message: { err: 'Error in performFetch. Check server log for more details.' }
+  };
+}
 
-// Set the maximum cache size on LRU cache
-const MAX_CACHE_SIZE: number = 2;
-const lruCache = new LRUCache<string, LokiGetType>({
-  max: MAX_CACHE_SIZE,
-});
+// Cache configurations
+const MAX_CACHE_SIZE = 2;
+const mapCache: Map<string, MapCacheType> = new Map();
+const lruCache = new LRUCache<string, MapCacheType>({ max: MAX_CACHE_SIZE });
 
-// Track the order of accessed queries
-const lruCacheOrder: string[] = []; 
+///////////////////////////////////////////////////////
 
-// Function to update LRU Cache on each query
-const updateLRUCache = (query: string, results: JSONObject): void => {
-  const cacheSize = lruCacheOrder.length;
-  if (cacheSize >= MAX_CACHE_SIZE) {
-    const leastRecentlyUsedQuery = lruCacheOrder.shift();
-    if (leastRecentlyUsedQuery) {
-      invalidateCache(leastRecentlyUsedQuery);
-    }
+// Define an interface for the mutation type handlers
+interface MutationTypeHandlers {
+  delete: string[];
+  update: string[];
+  create: string[];
+} 
+
+// Identifiers for different types of mutations and their name variations
+const mutationTypeHandlers: MutationTypeHandlers = {
+  delete: ['delete', 'remove'],
+  update: ['update', 'edit'],
+  create: ['create', 'add', 'new', 'make']
+};
+
+/**
+ * Normalize the results object by recursively normalizing each value.
+ * @param results - the results object to be normalized.
+ * @returns - the normalized results object.
+ */
+const normalizeResults = (results: JSONObject): JSONObject => {
+  const normalizedResults: JSONObject = {};
+  // Iterate over the entries of the results object
+  const entries = Object.entries(results);
+  for (const [key, value] of entries) {
+    // Normalize the value
+    const normalizedValue = normalizeValue(value);
+    // Assign the normalized value to the corresponding key in the normalized results object
+    normalizedResults[key] = normalizedValue;
   }
-  lruCacheOrder.push(query);
-  lruCache.set(query, results as LokiGetType);
+  return normalizedResults;
 };
+
 /**
- * Clears entire existing cache and ID cache and resets to a new cache.
+ * Normalize a JSON value by checking its type and applying the corresponding normalization logic.
+ * @param value - the JSON value to be normalized.
+ * @returns - the normalized JSON value.
  */
-const clearCache = (): void => {
-  lokidb.removeCollection('loki-client-cache');
-  lokiCache = lokidb.addCollection('loki-client-cache', {
-    disableMeta: true
+const normalizeValue = (value: JSONValue): JSONValue => {
+  // If the value is null, return null
+  if (value === null) return null;
+  // If the value is an array, recursively normalize each element
+  else if (Array.isArray(value)) return normalizeArray(value);
+  // If the value is an object, recursively normalize each property
+  else if (typeof value === 'object' && value !== null) return normalizeObject(value);
+  // If the value is neither an array nor an object, return the value as is
+  else return value;
+};
+
+/**
+ * Normalize a JSON object by recursively normalizing each value.
+ * @param obj - the JSON object to be normalized.
+ * @returns - the normalized JSON object.
+ */
+const normalizeObject = (obj: JSONObject): JSONObject => {
+  const normalizedObj: JSONObject = {};
+  // Iterate over the entries of the object
+  const entries = Object.entries(obj);
+  // Normalize the value
+  for (const [key, value] of entries) {
+    const normalizedValue = normalizeValue(value);
+    // Assign the normalized value to the corresponding key in the normalized object
+    normalizedObj[key] = normalizedValue;
+  }
+  return normalizedObj;
+};
+
+/**
+ * Normalize a JSON array by recursively normalizing each element.
+ * @param arr - the JSON array to be normalized.
+ * @returns - the normalized JSON array.
+ */
+const normalizeArray = (arr: JSONValue[]): JSONValue[] => {
+  return arr.map((value) => {
+    // Normalize each element in the array
+    return normalizeValue(value);
   });
-  lruCache.clear();
-  console.log('Client cache has been cleared.');
 };
 
-
+///////////////////////////////////////////////////////
 
 /**
- * Quellify replaces the need for front-end developers who are using GraphQL to communicate with their servers
- * to write fetch requests. Quell provides caching functionality that a normal fetch request would not provide.
- *  @param {string} endPoint - The endpoint to send the GraphQL query or mutation to, e.g. '/graphql'.
- *  @param {string} query - The GraphQL query or mutation to execute.
- *  @param {object} costOptions - Any changes to the default cost options for the query or mutation.
- *
- *  default costOptions = {
-
- * }
- *
+ * Update LRU and Map caches with new results after normalizing them.
+ * @param query - the query associated with the results.
+ * @param results - the results object to be cached.
+ * @param fieldNames - the field names associated with the query.
  */
-async function Quellify(
+const updateCaches = (query: string, results: JSONObject, fieldNames: string[]): void => {
+  const normalizedResults = normalizeResults(results);
+  const cacheEntry = { data: normalizedResults, fieldNames };
+  const invalidResponse = fieldNames.length > 0 && normalizedResults[fieldNames[0]] === null;
+  
+  // Update the LRU cache
+  if (!invalidResponse) {
+    lruCache.set(query, cacheEntry);
+  
+  // Check if the query already exists in the map cache
+  const mapCacheEntry = mapCache.get(query);
+  if (mapCacheEntry) {
+    // Update the existing map cache entry
+    mapCacheEntry.data = normalizedResults;
+    mapCacheEntry.fieldNames = fieldNames;
+  } else {
+    // Add a new entry to the map cache
+    mapCache.set(query, cacheEntry);
+  }
+  }
+};
+
+// Function to clear both the LRU and Map caches
+const clearCache = (): void => {
+  mapCache.clear();
+  lruCache.clear();
+};
+
+/**
+ * Perform an HTTP fetch to a specified endpoint.
+ * @param endPoint - The URL endpoint to fetch data from.
+ * @param fetchConfig - Configuration options for the fetch request.
+ * @returns A promise that resolves with the fetched data.
+ */
+const performFetch = async (endPoint: string, fetchConfig?: FetchObjType): Promise<JSONObject> => {
+  try {
+    // Sending a request to the GraphQL endpoint with the given configurations
+    const response = await fetch(endPoint, fetchConfig);
+    // Parsing the response as JSON and destructure queryResponse from the response
+    const { queryResponse }: QueryResponse = await response.json();
+    return queryResponse.data;
+  } catch (error) {
+    throw createClientError(`Error when trying to perform fetch to graphQL endpoint: ${error}.`);
+  }
+};
+
+/**
+ * Main function that executes GraphQL queries, maintaining a cache for optimization.
+ * @param endPoint - the URL endpoint of the GraphQL server.
+ * @param query - the GraphQL query string to be executed.
+ * @param costOptions - cost parameters to optimize query execution.
+ * @param variables - optional variables for the GraphQL query.
+ * @returns - a promise that resolves with the response data and a boolean indicating if the data was from the cache.
+ * @throws {ClientError} - when an error occurs during the execution process.
+ */
+const Quellify = async (
   endPoint: string,
   query: string,
   costOptions: CostParamsType,
-  variables?: Record<string, any>
-) {
+  mutationMap: Record<string, string[]> = {},
+  variables?: Record<string, any>,
+): Promise<[JSONValue, boolean]> => {
 
-  // Check the LRU cache before performing fetch request
-  const cachedResults = lruCache.get(query);
-  if (cachedResults) {
-    return [cachedResults, true];
-  }
-  
-  /**
-   * Fetch configuration for post requests that is passed to the performFetch function.
-   */
-  const postFetch: FetchObjType = {
+  // Configuration object for the fetch requests
+  const fetchConfig: FetchObjType = {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json'
-    },
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ query, costOptions })
   };
-  /**
-   * Fetch configuration for delete requests that is passed to the performFetch function.
-   */
-  const deleteFetch: FetchObjType = {
-    method: 'DELETE',
-    headers: {
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({ query, costOptions })
-  };
-  /**
-   * Makes requests to the GraphQL endpoint.
-   * @param {FetchObjType} [fetchConfig] - (optional) Configuration options for the fetch call.
-   * @returns {Promise} A Promise that resolves to the parsed JSON response.
-   */
-  const performFetch = async (
-    fetchConfig?: FetchObjType
-  ): Promise<JSONObject> => {
-    try {
-      const data = await fetch(endPoint, fetchConfig);
-      const response = await data.json();
-      updateLRUCache(query, response.queryResponse.data);
-      return response.queryResponse.data;
-    } catch (error) {
-      const err: ClientErrorType = {
-        log: `Error when trying to perform fetch to graphQL endpoint: ${error}.`,
-        status: 400,
-        message: {
-          err: 'Error in performFetch. Check server log for more details.'
-        }
-      };
-      console.log('Error when performing Fetch: ', err);
-      throw error;
-    }
-  };
-  // Refetch LRU cache
-  const refetchLRUCache = async (): Promise<void> => {
-    try {
-      const cacheSize = lruCacheOrder.length;
-      // i < cacheSize - 1 because the last query in the order array is the current query
-      for (let i = 0; i < cacheSize - 1; i++) {
-        const query = lruCacheOrder[i];
-        // Get operation type for query
-        const oldAST: DocumentNode = parse(query);
-        const { operationType } = determineType(oldAST);
-        // If the operation type is not a query, leave it out of the refetch
-        if (operationType !== 'query') {
-          continue;
-        }
-        // If the operation type is a query, refetch the query from the LRU cache
-        const cachedResults = lruCache.get(query);
-        if (cachedResults) {
-          // Fetch configuration for post requests that is passed to the performFetch function.
-          const fetchConfig: FetchObjType = {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ query, costOptions })
-          };
-          const data = await fetch(endPoint, fetchConfig);
-          const response = await data.json();
-          updateLRUCache(query, response.queryResponse.data);
-        }
+
+  try {
+    // Parsing the query into an AST (Abstract Syntax Tree)
+    const AST: DocumentNode = parse(query);
+
+    // Determine the operation type (query, mutation, etc.) of the GraphQL query
+    const { operationType, proto, fieldNames } = determineType(AST);
+
+    // Handle query operation type
+    if (operationType === 'query') {  
+      // Check if results are in LRU, returns results if available
+      const lruCachedResults = lruCache.get(query);
+      if (lruCachedResults) {
+        return [lruCachedResults.data, true];
       }
-    } catch (error) {
-      const err: ClientErrorType = {
-        log: `Error when trying to refetch LRU cache: ${error}.`,
-        status: 400,
-        message: {
-          err: 'Error in refetchLRUCache. Check server log for more details.'
-        }
-      };
-      console.log('Error when refetching LRU cache: ', err);
-      throw error;
-    }
-  };
-
-
-  // Create AST based on the input query using the parse method available in the GraphQL library
-  // (further reading: https://en.wikipedia.org/wiki/Abstract_syntax_tree).
-  const AST: DocumentNode = parse(query);
-
-  // Find operationType, proto using determineType
-  const { operationType, proto } = determineType(AST);
-
-  if (operationType === 'unQuellable') {
-    /*
-     * If the operation is unQuellable (cannot be cached), fetch the data
-     * from the GraphQL endpoint.
-     */
-    // All returns in an async function return promises by default;
-    // therefore we are returning a promise that will resolve from perFormFetch.
-    const parsedData: JSONValue = await performFetch(postFetch);
-    // The second element in the return array is a boolean that the data was not found in the lokiCache.
-    return [parsedData, false];
-  } else if (operationType === 'mutation') {
-    // Assign mutationType
-    const mutationType: string = Object.keys(proto)[0];
-
-       // Check if mutation is an add mutation
-       if (
-        mutationType.includes('add') ||
-        mutationType.includes('new') ||
-        mutationType.includes('create') ||
-        mutationType.includes('make')
-      ) {
-        // Execute a fetch request with the query
-        const parsedData: JSONObject = await performFetch(postFetch);
-        if (parsedData) {
-          const addedEntry = lokiCache.insert(parsedData);
-          // Refetch each query in the LRU cache to update the cache
-          refetchLRUCache();
-          return [addedEntry, false];
-        }
-      }
-
-      // Check if mutation is an edit mutation
-      else if(
-        mutationType.includes('edit') || 
-        mutationType.includes('update')
-        ){
-        // Execute a fetch request with the query
-        const parsedData: JSONObject = await performFetch(postFetch);
-        if (parsedData) {
-          // Find the existing entry by its ID
-          const cachedEntry = lokiCache.findOne({ id: parsedData.id }); 
-          if (cachedEntry) {
-            // Update the existing entry with the new data
-            Object.assign(cachedEntry, parsedData); 
-             // Update the entry in the Loki cache
-            lokiCache.update(cachedEntry);
-            // Update LRU Cache
-            updateLRUCache(query, cachedEntry);
-            refetchLRUCache();
-            return [cachedEntry, false];
-        }
+      // If not in LRU cache, checks if results are in Map Cache, adds to LRU Cache and returns results
+      const mapCachedResults = mapCache.get(query);
+      if (mapCachedResults) {
+        lruCache.set(query, mapCachedResults as MapCacheType);
+        return [mapCachedResults.data, true];
+      } 
+      // If not in either cache, perform fetch, update cache, and return results
+      else {
+        const data = await performFetch(endPoint, fetchConfig);
+        updateCaches(query, data, fieldNames);
+        return [data, false];
       }
     }
-    // Check if mutation is a delete mutation
-      else if (
-        mutationType.includes('delete') ||
-        mutationType.includes('remove')
-      )  {
-        // Execute a fetch request with the query
-        const parsedData: JSONObject = await performFetch(deleteFetch);
-        if (parsedData) {
-          // Find the existing entry by its ID
-          const cachedEntry = lokiCache.findOne({ id: parsedData.id });
-          if (cachedEntry) {
-          // Remove the item from cache
-          lokiCache.remove(cachedEntry);
-          invalidateCache(query);
-          // Refetch each query in the LRU cache to update the cache
-          refetchLRUCache();
-          return [cachedEntry, false];
-        } else {
-          return [null, false];
+    
+    // Handle mutation operation type
+    if (operationType === 'mutation') {
+      // Extract the name of the mutation (e.g. "addCity") from the 'proto' object by getting the first key
+      const mutationType: string = Object.keys(proto)[0];
+
+      // Determine the type of mutation (e.g. "add") by finding a match in mutationTypeHandlers
+      const mutationAction = Object.keys(mutationTypeHandlers).find((action) =>
+        mutationTypeHandlers[action as keyof MutationTypeHandlers].some((type: string) => mutationType.includes(type))
+      ) as keyof MutationTypeHandlers;
+
+      // Check if mutation type is valid (defined in MutationTypeHandlers), perform the mutation and update cache accordingly
+      if (mutationAction) {
+        const fetchResult: JSONObject = await performFetch(endPoint, fetchConfig);
+        
+
+        // Get the list of fields that could be affected by this mutation from the mutationMap
+        const affectedFields = mutationMap[mutationType];
+        
+        // Loop through mapCache to check if the mutation affects any cached queries
+        for (const [cachedQuery, cachedInfo] of mapCache.entries()) {
+          // Get the field names that are present in the current cached query
+          const cachedFieldNames: string[] = cachedInfo.fieldNames;
+          
+          // Determine if any of the fields affected by the mutation are present in the cached query
+          const shouldRefetch = cachedFieldNames.some(fieldName => affectedFields.includes(fieldName));
+      
+          // If affected fields, refetch the data and update the cache
+          if (shouldRefetch) {
+            const refetchConfig = {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ query: cachedQuery, costOptions })
+            };
+            try {
+              const refetchedData = await performFetch(endPoint, refetchConfig);
+              // Update the cache with the refetched data
+              updateCaches(cachedQuery, refetchedData, cachedFieldNames);
+            } catch (error) {
+              console.error('Error refetching data:', error);
+            }
+          }
         }
+
+        // Return the result of the mutation and a boolean indicating that the data was not from the cache
+        return [fetchResult, false];
       }
+      // Throw error if mutation type is not supported
+      throw createClientError('The operation type is not supported.');
     }
-    // Operation type does not meet mutation or unquellable types. 
-    // In other words, it is a Query
-  } else {
-        // If the query has not been made already, execute a fetch request with the query.
-        const parsedData: JSONObject = await performFetch(postFetch);
-        // Add the new data to the lokiCache.
-        if (parsedData) {
-          const addedEntry = lokiCache.insert(parsedData);
-          // Add query and results to lruCache
-          lruCache.set(query, addedEntry);
-          // The second element in the return array is a boolean that the data was not found in the lokiCache.
-          return [addedEntry, false];
-      }
+
+    // Handle cases where the query is not optimizable (unQuellable) and directly fetch data
+    else if (operationType === 'unQuellable') {
+      const data = await performFetch(endPoint, fetchConfig);
+      return [data, false];
     }
+    // Throw error if operation type is not supported
+    else throw createClientError('The operation type is not supported.');
+  } catch (error) {
+    throw error instanceof ClientError ? error : createClientError(`Error occurred during Quellify process: ${error}.`);
   }
+};
 
-export { Quellify, clearCache as clearLokiCache, lruCache };
+// Export the Quellify function and the clearCache function
+export { Quellify, clearCache, lruCache, updateCaches };

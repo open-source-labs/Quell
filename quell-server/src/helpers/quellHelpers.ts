@@ -1,4 +1,4 @@
-import { visit, BREAK } from 'graphql/language/visitor';
+import { visit, BREAK } from "graphql/language/visitor";
 import type {
   GraphQLSchema,
   ASTNode,
@@ -8,8 +8,8 @@ import type {
   FieldNode,
   SelectionSetNode,
   ArgumentNode,
-  FragmentSpreadNode
-} from 'graphql';
+  FragmentSpreadNode,
+} from "graphql";
 import type {
   ProtoObjType,
   FragsType,
@@ -28,8 +28,11 @@ import type {
   QueryFields,
   MergedResponse,
   DataResponse,
-  Data
-} from '../types';
+  Data,
+  ReturnType,
+  MutationTypeFieldsType,
+  FieldType,
+} from "../types";
 
 /**
  * Traverses over a supplied query Object and uses the fields on there to create a query string reflecting the data.
@@ -40,15 +43,15 @@ import type {
  */
 export function createQueryStr(
   queryObject: QueryObject | ProtoObjType,
-  operationType: string
+  operationType?: string
 ): string {
-  if (Object.keys(queryObject).length === 0) return '';
-  const openCurly = '{';
-  const closeCurly = '}';
-  const openParen = '(';
-  const closeParen = ')';
+  if (Object.keys(queryObject).length === 0) return "";
+  const openCurly = "{";
+  const closeCurly = "}";
+  const openParen = "(";
+  const closeParen = ")";
 
-  let mainStr = '';
+  let mainStr = "";
 
   // iterate over every key in queryObject
   // place key into query object
@@ -68,15 +71,15 @@ export function createQueryStr(
    */
   function stringify(fields: QueryFields): string {
     // initialize inner string
-    let innerStr = '';
+    let innerStr = "";
     // iterate over KEYS in OBJECT
     for (const key in fields) {
       // is fields[key] string? concat with inner string & empty space
-      if (typeof fields[key] === 'boolean') {
-        innerStr += key + ' ';
+      if (typeof fields[key] === "boolean") {
+        innerStr += key + " ";
       }
       // is key object? && !key.includes('__'), recurse stringify
-      if (typeof fields[key] === 'object' && !key.includes('__')) {
+      if (typeof fields[key] === "object" && !key.includes("__")) {
         const fieldsObj: QueryFields = fields[key] as QueryFields;
         // TODO try to fix this error
         const type: string = getAliasType(fieldsObj);
@@ -97,8 +100,8 @@ export function createQueryStr(
    * @returns {string} Argument string to be attached to the query string.
    */
   function getArgs(fields: QueryFields): string {
-    let argString = '';
-    if (!fields.__args) return '';
+    let argString = "";
+    if (!fields.__args) return "";
 
     Object.keys(fields.__args).forEach((key) => {
       argString
@@ -107,7 +110,7 @@ export function createQueryStr(
     });
 
     // return arg string in parentheses, or if no arguments, return an empty string
-    return argString ? `${openParen}${argString}${closeParen}` : '';
+    return argString ? `${openParen}${argString}${closeParen}` : "";
   }
 
   /**
@@ -116,12 +119,12 @@ export function createQueryStr(
    * @returns {string} Alias string to be attached to the query string.
    */
   function getAliasType(fields: QueryFields): string {
-    return fields.__alias ? `: ${fields.__type}` : '';
+    return fields.__alias ? `: ${fields.__type}` : "";
   }
 
   // Create the final query string.
-  const queryStr: string = openCurly + mainStr + ' ' + closeCurly;
-  return operationType ? operationType + ' ' + queryStr : queryStr;
+  const queryStr: string = openCurly + mainStr + " " + closeCurly;
+  return operationType ? operationType + " " + queryStr : queryStr;
 }
 
 /**
@@ -159,12 +162,12 @@ export function createQueryObj(map: ProtoObjType): ProtoObjType {
         filter[key] = false;
       }
       // Force the id onto the query object
-      if (key === 'id' || key === '_id' || key === 'ID' || key === 'Id') {
+      if (key === "id" || key === "_id" || key === "ID" || key === "Id") {
         filter[key] = false;
       }
 
       // If value is an object, recurse to determine nested values
-      if (typeof fields[key] === 'object' && !key.includes('__')) {
+      if (typeof fields[key] === "object" && !key.includes("__")) {
         const reduced: ProtoObjType = reducer(fields[key] as ProtoObjType);
         // if reduced object has any values to pass, place on filter
         if (Object.keys(reduced).length > 1) {
@@ -173,7 +176,7 @@ export function createQueryObj(map: ProtoObjType): ProtoObjType {
       }
 
       // If reserved property such as args or alias, place on propsFilter
-      if (key.includes('__')) {
+      if (key.includes("__")) {
         propsFilter[key] = fields[key];
       }
     }
@@ -236,7 +239,7 @@ export function joinResponses(
         if (keysSame) {
           mergedResponse[key] = [
             ...(cacheResponse[key] as Data[]),
-            ...(serverResponse[key] as Data[])
+            ...(serverResponse[key] as Data[]),
           ];
         }
         // otherwise, we need to combine the responses at the object level
@@ -264,21 +267,21 @@ export function joinResponses(
         // if object doesn't come from an array, we must assign on the object at the given key
         mergedResponse[key] = {
           ...cacheResponse[key],
-          ...serverResponse[key]
+          ...serverResponse[key],
         };
       } else {
         // if the object comes from an array, we do not want to assign to a key as per GQL spec
         (mergedResponse as object) = {
           ...cacheResponse[key],
-          ...serverResponse[key]
+          ...serverResponse[key],
         };
       }
 
       for (const fieldName in queryProto[key] as ProtoObjType) {
         // check for nested objects
         if (
-          typeof (queryProto[key] as ProtoObjType)[fieldName] === 'object' &&
-          !fieldName.includes('__')
+          typeof (queryProto[key] as ProtoObjType)[fieldName] === "object" &&
+          !fieldName.includes("__")
         ) {
           // recurse joinResponses on that object to create deeply nested copy on mergedResponse
           let mergedRecursion: MergedResponse = {};
@@ -289,10 +292,10 @@ export function joinResponses(
             ) {
               mergedRecursion = joinResponses(
                 {
-                  [fieldName]: (cacheResponse[key] as DataResponse)[fieldName]
+                  [fieldName]: (cacheResponse[key] as DataResponse)[fieldName],
                 },
                 {
-                  [fieldName]: (serverResponse[key] as DataResponse)[fieldName]
+                  [fieldName]: (serverResponse[key] as DataResponse)[fieldName],
                 },
                 { [fieldName]: (queryProto[key] as QueryObject)[fieldName] }
               );
@@ -309,19 +312,19 @@ export function joinResponses(
           // place on merged response, spreading the mergedResponse[key] if it
           // is an object or an array, or just adding it as a value at key otherwise
           if (
-            typeof mergedResponse[key] === 'object' ||
+            typeof mergedResponse[key] === "object" ||
             Array.isArray(mergedResponse[key])
           ) {
             mergedResponse[key] = {
               ...(mergedResponse[key] as MergedResponse | MergedResponse[]),
-              ...mergedRecursion
+              ...mergedRecursion,
             };
           } else {
             // case for when mergedResponse[key] is not an object or array and possibly
             // boolean or a string
             mergedResponse[key] = {
               key: mergedResponse[key] as Data | boolean,
-              ...mergedRecursion
+              ...mergedRecursion,
             };
           }
         }
@@ -354,7 +357,7 @@ export function parseAST(
   const frags: FragsType = {};
 
   // Create operation type variable. This will be 'query', 'mutation', 'subscription', 'noID', or 'unQuellable'.
-  let operationType = '';
+  let operationType = "";
 
   // Initialize a stack to keep track of depth first parsing path.
   const stack: string[] = [];
@@ -381,7 +384,7 @@ export function parseAST(
       // Quell cannot cache directives, so we need to return as unQuellable if the node has directives.
       if ((node as GQLNodeWithDirectivesType)?.directives) {
         if ((node as GQLNodeWithDirectivesType)?.directives?.length ?? 0 > 0) {
-          operationType = 'unQuellable';
+          operationType = "unQuellable";
           // Return BREAK to break out of the current traversal branch.
           return BREAK;
         }
@@ -393,8 +396,8 @@ export function parseAST(
     OperationDefinition(node: OperationDefinitionNode) {
       // Quell cannot cache subscriptions, so we need to return as unQuellable if the type is subscription.
       operationType = node.operation;
-      if (operationType === 'subscription') {
-        operationType = 'unQuellable';
+      if (operationType === "subscription") {
+        operationType = "unQuellable";
         // Return BREAK to break out of the current traversal branch.
         return BREAK;
       }
@@ -417,7 +420,7 @@ export function parseAST(
         // Below, we get the 'name' property from the SelectionNode.
         // However, InlineFragmentNode (one of the possible types for SelectionNode) does
         // not have a 'name' property, so we will want to skip nodes with that type.
-        if (node.selectionSet.selections[i].kind !== 'InlineFragment') {
+        if (node.selectionSet.selections[i].kind !== "InlineFragment") {
           // Add base-level field names in the fragment to the frags object.
           frags[fragName][
             (
@@ -433,8 +436,8 @@ export function parseAST(
       enter(node: FieldNode) {
         // Return introspection queries as unQuellable so that we do not cache them.
         // "__keyname" syntax is later used for Quell's field-specific options, though this does not create collision with introspection.
-        if (node.name.value.includes('__')) {
-          operationType = 'unQuellable';
+        if (node.name.value.includes("__")) {
+          operationType = "unQuellable";
           // Return BREAK to break out of the current traversal branch.
           return BREAK;
         }
@@ -445,7 +448,7 @@ export function parseAST(
         // Auxiliary object for storing arguments, aliases, field-specific options, and more.
         // Query-wide options should be handled on Quell's options object.
         const auxObj: AuxObjType = {
-          __id: null
+          __id: null,
         };
 
         // Loop through the field's arguments.
@@ -454,8 +457,8 @@ export function parseAST(
             const key: string = arg.name.value;
 
             // Quell cannot cache queries with variables, so we need to return unQuellable if the query has variables.
-            if (arg.value.kind === 'Variable' && operationType === 'query') {
-              operationType = 'unQuellable';
+            if (arg.value.kind === "Variable" && operationType === "query") {
+              operationType = "unQuellable";
               // Return BREAK to break out of the current traversal branch.
               return BREAK;
             }
@@ -468,18 +471,18 @@ export function parseAST(
              * the 'kind' does not match any of those types.
              */
             if (
-              arg.value.kind === 'NullValue' ||
-              arg.value.kind === 'ObjectValue' ||
-              arg.value.kind === 'ListValue'
+              arg.value.kind === "NullValue" ||
+              arg.value.kind === "ObjectValue" ||
+              arg.value.kind === "ListValue"
             ) {
-              operationType = 'unQuellable';
+              operationType = "unQuellable";
               // Return BREAK to break out of the current traversal branch.
               return BREAK;
             }
 
             // Assign argument values to argsObj (key will be argument name, value will be argument value),
             // skipping field-specific options ('__') provided as arguments.
-            if (!key.includes('__')) {
+            if (!key.includes("__")) {
               // Get the value from the argument node's value node.
               argsObj[key] = (arg.value as ValidArgumentNodeType).value;
             }
@@ -491,10 +494,10 @@ export function parseAST(
             } else if (
               // If a userDefinedID was not provided, determine the uniqueID from the args.
               // Note: do not use key.includes('id') to avoid assigning fields such as "idea" or "idiom" as uniqueID.
-              key === 'id' ||
-              key === '_id' ||
-              key === 'ID' ||
-              key === 'Id'
+              key === "id" ||
+              key === "_id" ||
+              key === "ID" ||
+              key === "Id"
             ) {
               // If the name of the argument is 'id', '_id', 'ID', or 'Id',
               // set the '__id' field on the auxObj equal to value of that argument.
@@ -521,7 +524,7 @@ export function parseAST(
 
         // Add auxObj fields to prototype, allowing future access to type, alias, args, etc.
         fieldArgs[fieldType] = {
-          ...auxObj
+          ...auxObj,
         };
         // Add the field type to stacks to keep track of depth-first parsing path.
         stack.push(fieldType);
@@ -531,7 +534,7 @@ export function parseAST(
       leave() {
         // Pop stacks to keep track of depth-first parsing path.
         stack.pop();
-      }
+      },
     },
 
     SelectionSet: {
@@ -558,7 +561,7 @@ export function parseAST(
         if (
           parent && // parent is not undefined
           !Array.isArray(parent) && // parent is not readonly ASTNode[]
-          (parent as ASTNode).kind === 'Field' // can now safely cast parent to ASTNode
+          (parent as ASTNode).kind === "Field" // can now safely cast parent to ASTNode
         ) {
           // Create fieldsValues object that will be used to collect fields as
           // we loop through the selections.
@@ -572,7 +575,7 @@ export function parseAST(
            */
           let fragment = false;
           for (const field of node.selections) {
-            if (field.kind === 'FragmentSpread') fragment = true;
+            if (field.kind === "FragmentSpread") fragment = true;
             /*
              * If the current selection in the selections array is not a nested object
              * (i.e. does not have a SelectionSet), set its value in fieldsValues to true.
@@ -582,21 +585,21 @@ export function parseAST(
              * Furthermore, FragmentSpreadNodes never have a selection set property.
              */
             if (
-              field.kind !== 'InlineFragment' &&
-              (field.kind === 'FragmentSpread' || !field.selectionSet)
+              field.kind !== "InlineFragment" &&
+              (field.kind === "FragmentSpread" || !field.selectionSet)
             )
               fieldsValues[field.name.value] = true;
           }
           // If ID was not included on the request and the current node is not a fragment, then the query
           // will not be included in the cache, but the request will be processed.
           if (
-            !Object.prototype.hasOwnProperty.call(fieldsValues, 'id') &&
-            !Object.prototype.hasOwnProperty.call(fieldsValues, '_id') &&
-            !Object.prototype.hasOwnProperty.call(fieldsValues, 'ID') &&
-            !Object.prototype.hasOwnProperty.call(fieldsValues, 'Id') &&
+            !Object.prototype.hasOwnProperty.call(fieldsValues, "id") &&
+            !Object.prototype.hasOwnProperty.call(fieldsValues, "_id") &&
+            !Object.prototype.hasOwnProperty.call(fieldsValues, "ID") &&
+            !Object.prototype.hasOwnProperty.call(fieldsValues, "Id") &&
             !fragment
           ) {
-            operationType = 'noID';
+            operationType = "noID";
             // Return BREAK to break out of the current traversal branch.
             return BREAK;
           }
@@ -605,7 +608,7 @@ export function parseAST(
           // The fieldArgs contains arguments, aliases, etc.
           const fieldsObject: FieldsObjectType = {
             ...fieldsValues,
-            ...fieldArgs[stack[stack.length - 1]]
+            ...fieldArgs[stack[stack.length - 1]],
           };
           // Loop through stack to get correct path in proto for temp object
           stack.reduce(
@@ -623,8 +626,8 @@ export function parseAST(
       leave() {
         // Pop stacks to keep track of depth-first parsing path
         stack.pop();
-      }
-    }
+      },
+    },
   });
   return { proto, operationType, frags };
 }
@@ -646,7 +649,7 @@ export function updateProtoWithFragment(
   for (const key in protoObj) {
     // If the field is a nested object and not an introspection field (fields starting with '__'
     // that provide information about the underlying schema)
-    if (typeof protoObj[key] === 'object' && !key.includes('__')) {
+    if (typeof protoObj[key] === "object" && !key.includes("__")) {
       // Update the field to the result of recursively calling updateProtoWithFragment,
       // passing the field and fragments.
       protoObj[key] = updateProtoWithFragment(
@@ -677,18 +680,19 @@ export function updateProtoWithFragment(
 export function getMutationMap(schema: GraphQLSchema): MutationMapType {
   const mutationMap: MutationMapType = {};
   // get object containing all root mutations defined in the schema
-  const mutationTypeFields: GraphQLSchema['_mutationType'] = schema
+  const mutationTypeFields: GraphQLSchema["_mutationType"] = schema
     ?.getMutationType()
     ?.getFields();
   // if queryTypeFields is a function, invoke it to get object with queries
-  const mutationsObj =
-    typeof mutationTypeFields === 'function'
+  const mutationsObj: { [field: string]: FieldType } =
+    typeof mutationTypeFields === "function"
       ? mutationTypeFields()
       : mutationTypeFields;
   for (const mutation in mutationsObj) {
     // get name of GraphQL type returned by query
     // if ofType --> this is collection, else not collection
-    let returnedType;
+
+    let returnedType: ReturnType;
     if (mutationsObj[mutation].type.ofType) {
       returnedType = [];
       returnedType.push(mutationsObj[mutation].type.ofType.name);
@@ -711,16 +715,16 @@ export function getMutationMap(schema: GraphQLSchema): MutationMapType {
 export function getQueryMap(schema: GraphQLSchema): QueryMapType {
   const queryMap: QueryMapType = {};
   // get object containing all root queries defined in the schema
-  const queryTypeFields: GraphQLSchema['_queryType'] = schema
+  const queryTypeFields: GraphQLSchema["_queryType"] = schema
     ?.getQueryType()
     ?.getFields();
   // if queryTypeFields is a function, invoke it to get object with queries
-  const queriesObj =
-    typeof queryTypeFields === 'function' ? queryTypeFields() : queryTypeFields;
+  const queriesObj: { [field: string]: FieldType } =
+    typeof queryTypeFields === "function" ? queryTypeFields() : queryTypeFields;
   for (const query in queriesObj) {
     // get name of GraphQL type returned by query
     // if ofType --> this is collection, else not collection
-    let returnedType;
+    let returnedType: ReturnType;
     if (queriesObj[query].type.ofType) {
       returnedType = [];
       returnedType.push(queriesObj[query].type.ofType.name);
@@ -740,35 +744,38 @@ export function getQueryMap(schema: GraphQLSchema): QueryMapType {
  *  mutations, and fields.
  *  @returns {Object} fieldsMap - Map of fields to GraphQL types.
  */
-export function getFieldsMap(schema: GraphQLSchema): FieldsMapType {
+export function getFieldsMap(schema: any): FieldsMapType {
   const fieldsMap: FieldsMapType = {};
-  const typesList: GraphQLSchema['_typeMap'] = schema?.getTypeMap();
+  const typesList: GraphQLSchema["_typeMap"] = schema?.default?._typeMap || {};
   const builtInTypes: string[] = [
-    'String',
-    'Int',
-    'Float',
-    'Boolean',
-    'ID',
-    'Query',
-    '__Type',
-    '__Field',
-    '__EnumValue',
-    '__DirectiveLocation',
-    '__Schema',
-    '__TypeKind',
-    '__InputValue',
-    '__Directive'
+    "String",
+    "Int",
+    "Float",
+    "Boolean",
+    "ID",
+    "Query",
+    "__Type",
+    "__Field",
+    "__EnumValue",
+    "__DirectiveLocation",
+    "__Schema",
+    "__TypeKind",
+    "__InputValue",
+    "__Directive",
   ];
   // exclude built-in types
   const customTypes = Object.keys(typesList).filter(
     (type) =>
-      !builtInTypes.includes(type) && type !== schema.getQueryType()?.name
+      !builtInTypes.includes(type) && type !== schema.default?._queryType?.name
   );
+
   // loop through types
   for (const type of customTypes) {
     const fieldsObj: FieldsObjectType = {};
+    // let fields: { [field: string]: FieldType }  = typesList[type]._fields;
     let fields = typesList[type]._fields;
-    if (typeof fields === 'function') fields = fields();
+
+    if (typeof fields === "function") fields = fields();
     for (const field in fields) {
       const key: string = fields[field].name;
       const value: string = fields[field].type.ofType
