@@ -1,5 +1,7 @@
 node_modules
 dump.rdb
 package-lock.json
-dist
 coverage
+dist
+dist/
+.tgz
