@@ -150,7 +150,7 @@ const updateCaches = (query: string, results: JSONObject, fieldNames: string[]):
 };
 
 // Function to clear both the LRU and Map caches
-export const clearCache = (): void => {
+const clearCache = (): void => {
   mapCache.clear();
   lruCache.clear();
 };
@@ -182,7 +182,7 @@ const performFetch = async (endPoint: string, fetchConfig?: FetchObjType): Promi
  * @returns - a promise that resolves with the response data and a boolean indicating if the data was from the cache.
  * @throws {ClientError} - when an error occurs during the execution process.
  */
-export const Quellify = async (
+const Quellify = async (
   endPoint: string,
   query: string,
   costOptions: CostParamsType,
@@ -288,4 +288,4 @@ export const Quellify = async (
 };
 
 // Export the Quellify function and the clearCache function
-export {lruCache, updateCaches };
+export { Quellify, clearCache, lruCache, updateCaches };

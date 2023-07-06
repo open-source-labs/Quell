@@ -1,17 +1,18 @@
 {
   "name": "@quell/server",
-  "version": "9.0.0",
+  "version": "9.0.1",
   "description": "Quell is an open-source NPM package providing a light-weight caching layer implementation and cache invalidation for GraphQL responses on both the client- and server-side. Use Quell to prevent redundant client-side API requests and to minimize costly server-side response latency.",
   "main": "dist/quell.js",
   "types": "dist/types.d.ts",
   "files": [
-    "dist/*/*",
+    "dist/**/*",
     "package.json",
     "README.md"
   ],
   "scripts": {
     "test": "jest --forceExit",
-    "clear-cache": "node bin/clearCache.js"
+    "clear-cache": "node bin/clearCache.js",
+    "build": "tsc"
   },
   "engines": {
     "node": ">=14.17.5",

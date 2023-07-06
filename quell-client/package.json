@@ -1,16 +1,16 @@
 {
   "name": "@quell/client",
-  "version": "9.0.0",
+  "version": "9.0.2",
   "description": "Quell is an open-source NPM package providing a light-weight caching layer implementation and cache invalidation for GraphQL responses on both the client- and server-side. Use Quell to prevent redundant client-side API requests and to minimize costly server-side response latency.",
-  "main": "dist/Quellify.js",
-  "types": "dist/types.d.ts",
+  "main": "./dist/Quellify.js",
+  "types": "./dist/types.d.ts",
   "files": [
     "dist/**/*",
     "package.json",
     "README.md"
   ],
   "scripts": {
-    "start": "node dist/Quellify.js"
+    "start": "node ./dist/Quellify.js"
   },
   "engines": {
     "node": ">=14.17.5",

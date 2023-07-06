@@ -1,8 +1,6 @@
-<p align="center"><img src="./assets/quell-logo-no-padding.png" width='500' style="margin-top: 10px; margin-bottom: -10px;"></p>
-
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://github.com/open-source-labs/Quell/blob/master/LICENSE)
 ![AppVeyor](https://img.shields.io/badge/build-passing-brightgreen.svg)
-![AppVeyor](https://img.shields.io/badge/version-2.3.1-blue.svg)
+![AppVeyor](https://img.shields.io/badge/version-9.0.0-blue.svg)
 [![contributions welcome](https://img.shields.io/badge/contributions-welcome-brightgreen.svg?style=flat)](https://github.com/open-source-labs/Quell/issues)
 
 # @quell/server
@@ -37,8 +35,8 @@ Install the NPM package from your terminal: `npm i @quell/server`.
 
 1. Import quell-server into your Node.js/Express file:
 
-- Common JS: `const { QuellCache } = require('@quell/server');`
-- ES6+: `import { QuellCache } from '@quell/server';`
+- Common JS: `const { QuellCache } = require('@quell/server/dist/quell');`
+- ES6+: `import { QuellCache } from '@quell/server/dist/quell';`
 
 2. Instantiate QuellCache once for each GraphQL endpoint, passing to it an object with the following properties:
 
@@ -64,7 +62,7 @@ And your server file might look like this:
 ```javascript
 const express = require('express');
 const myGraphQLSchema = require('./schema/schema');
-const { QuellCache } = require('@quell/server')
+const { QuellCache } = require('@quell/server/dist/quell')
 const REDIS_PORT = process.env.REDIS_PORT || 6379;
 const REDIS_HOST = process.env.REDIS_HOST || '127.0.0.1';
 const PASSWORD = process.env.PASSWORD;
@@ -217,7 +215,7 @@ module.exports = new GraphQLSchema({
 ```
 Once you have created this mapping object, you need to export it from the file where it is defined and then import it into the file where Quell is being used. This mapping object should be passed into the invocation of Quellify.
 ```javascript
-const { Quellify, clearCache } = require("@quell/client");
+const { Quellify, clearCache } = require("@quell/client/dist/Quellify");
 const { mutationMap } = require('./schema/schema');
 ...
 Quellify("/api/graphql", query, { maxDepth, maxCost, ipRate }, mutationMap) { ... }

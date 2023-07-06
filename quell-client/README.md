@@ -1,8 +1,6 @@
-<p align="center"><img src="./assets/quell-logo-no-padding.png" width='500' style="margin-top: 10px; margin-bottom: -10px;"></p>
-
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://github.com/open-source-labs/Quell/blob/master/LICENSE)
 ![AppVeyor](https://img.shields.io/badge/build-passing-brightgreen.svg)
-![AppVeyor](https://img.shields.io/badge/version-3.1.1-blue.svg)
+![AppVeyor](https://img.shields.io/badge/version-9.0.0-blue.svg)
 [![contributions welcome](https://img.shields.io/badge/contributions-welcome-brightgreen.svg?style=flat)](https://github.com/open-source-labs/Quell/issues)
 
 # @quell/client
@@ -50,7 +48,7 @@ costOptions = {
 
 To make that same request with Quell:
 
-1. Import Quell with `import { Quellify } from '@quell/client'`
+1. Import Quell with `import { Quellify } from '@quell/client/dist/Quellify'`
 2. Instead of calling `fetch(endpoint)` and passing the query through the request body, replace with `Quellify(endpoint, query, costOptions)`
 
 - The `Quellify` method takes in three parameters
