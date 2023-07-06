@@ -1,13 +1,18 @@
 import { RedisClientType } from "redis";
 import { createClient } from "redis";
+import dotenv from "dotenv";
+dotenv.config();
 
-const redisPort = Number(process.env.REDIS_PORT) || 6379;
-const redisHost = process.env.REDIS_HOST || "127.0.0.1";
-const redisPassword = process.env.REDIS_PASSWORD || "";
 
 // Create and export the Redis client instance
+
+const redisPort = Number(process.env.REDIS_PORT);
+const redisHost = process.env.REDIS_HOST;
+const redisPassword = process.env.REDIS_PASSWORD;
+
+
 export const redisCacheMain: RedisClientType = createClient({
-  socket: { host: redisHost, port: redisPort },
+  socket: { host: redisHost, port: Number(redisPort) },
   password: redisPassword,
 });
 
