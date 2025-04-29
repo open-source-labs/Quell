@@ -713,6 +713,8 @@ export function getMutationMap(schema: GraphQLSchema): MutationMapType {
  *  @returns {Object} queryMap - Map of queries to GraphQL types.
  */
 export function getQueryMap(schema: GraphQLSchema): QueryMapType {
+  console.log('getQueryMapSchema from Quell')
+  console.log('BANANA')
   const queryMap: QueryMapType = {};
   // get object containing all root queries defined in the schema
   const queryTypeFields: GraphQLSchema["_queryType"] = schema
