@@ -11,10 +11,17 @@ import {
   joinResponses,
   parseAST,
   updateProtoWithFragment,
+  // getMutationMap,
+  // getQueryMap,
+  // getFieldsMap,
+} from "./helpers/quellHelpers";
+
+import {
+  anySchemaToQuellSchema,
   getMutationMap,
   getQueryMap,
   getFieldsMap,
-} from "./helpers/quellHelpers";
+} from "./helpers/schemaHelpers";
 
 import {
   ConstructorOptions,
@@ -108,15 +115,22 @@ export class QuellCache {
     redisHost,
     redisPassword,
   }: ConstructorOptions) {
+      // Convert schema to a standardized format
+  const standardizedSchema = anySchemaToQuellSchema(schema);
+
     this.idCache = idCache;
     this.schema = schema;
     this.costParameters = Object.assign(defaultCostParams, costParameters);
     this.depthLimit = this.depthLimit.bind(this);
     this.costLimit = this.costLimit.bind(this);
     this.rateLimiter = this.rateLimiter.bind(this);
-    this.queryMap = getQueryMap(schema);
-    this.mutationMap = getMutationMap(schema);
-    this.fieldsMap = getFieldsMap(schema);
+      // Use standardized helpers instead of the old ones
+  this.queryMap = getQueryMap(standardizedSchema);
+  this.mutationMap = getMutationMap(standardizedSchema);
+  this.fieldsMap = getFieldsMap(standardizedSchema);
+    // this.queryMap = getQueryMap(schema);
+    // this.mutationMap = getMutationMap(schema);
+    // this.fieldsMap = getFieldsMap(schema);
     this.cacheExpiration = cacheExpiration;
     this.redisReadBatchSize = 10;
     this.redisCache = redisCacheMain;
@@ -232,6 +246,8 @@ export class QuellCache {
     res: Response,
     next: NextFunction
   ): Promise<void> {
+    console.log('***RUNNING QUERY***');
+    
     // Return an error if no query is found on the request.
     if (!req.body.query) {
       const err: ServerErrorType = {
@@ -246,6 +262,7 @@ export class QuellCache {
 
     // Retrieve GraphQL query string from request body.
     const queryString: string = req.body.query;
+    console.log('QUERY STRING:', queryString);
 
     // Create the abstract syntax tree with graphql-js parser.
     // If depth limit or cost limit were implemented, then we can get the AST and parsed AST from res.locals.
@@ -253,12 +270,15 @@ export class QuellCache {
     const AST: DocumentNode = res.locals.AST
       ? res.locals.AST
       : parse(queryString);
-
-    // Create response prototype, operation type, and fragments object.
-    // The response prototype is used as a template for most operations in Quell including caching, building modified requests, and more.
-    const { proto, operationType, frags }: ParsedASTType =
+      // console.log('AST', AST)
+      
+      // Create response prototype, operation type, and fragments object.
+      // The response prototype is used as a template for most operations in Quell including caching, building modified requests, and more.
+      const { proto, operationType, frags }: ParsedASTType =
       res.locals.parsedAST ?? parseAST(AST);
-
+      console.log('PROTO', proto)
+      console.log('OPERATION TYPE', operationType)
+      console.log('FRAGS', frags)
     // Determine if Quell is able to handle the operation.
     // Quell can handle mutations and queries.
 
@@ -277,7 +297,7 @@ export class QuellCache {
             log: `Error inside catch block of operationType === unQuellable of query, ${error}`,
             status: 400,
             message: {
-              err: "GraphQL query Error: Check server log for more details.",
+              err: `GraphQL query Error: Check server log for more details. Error: ${error}`,
             },
           };
           return next(err);
@@ -299,7 +319,7 @@ export class QuellCache {
             log: `Error inside catch block of operationType === noID of query, ${error}`,
             status: 400,
             message: {
-              err: "GraphQL query Error: Check server log for more details.",
+              err: `GraphQL query Error: Check server log for more details. Error: ${error}`,
             },
           };
           return next(err);
@@ -337,7 +357,7 @@ export class QuellCache {
               log: `Error inside catch block of operationType === noID of query, graphQL query failed, ${error}`,
               status: 400,
               message: {
-                err: "GraphQL query Error: Check server log for more details.",
+                err: `GraphQL query Error: Check server log for more details. Error: ${error}`,
               },
             };
             return next(err);
@@ -397,7 +417,7 @@ export class QuellCache {
       /*
        * Otherwise, the operation type is a query.
        */
-      
+
       // Combine fragments on prototype so we can access fragment values in cache.
       const prototype: ProtoObjType =
         Object.keys(frags).length > 0
@@ -465,7 +485,7 @@ export class QuellCache {
               prototype,
               currName
             );
-            
+
             // The response is given a cached key equal to false to indicate to the front end of the demo site that the
             // information was *NOT* entirely found in the cache.
             mergedResponse.cached = false;
@@ -479,7 +499,7 @@ export class QuellCache {
               log: `Error inside catch block of operationType === query of query, ${error}`,
               status: 400,
               message: {
-                err: "GraphQL query Error: Check server log for more details.",
+                err: `GraphQL query Error: Check server log for more details. Error: ${error}`,
               },
             };
             return next(err);
@@ -771,15 +791,10 @@ export class QuellCache {
     protoField: ProtoObjType,
     currName: string
   ) {
-    
-
     for (const resultName in responseData) {
       const currField = responseData[resultName];
       const currProto: ProtoObjType = protoField[resultName] as ProtoObjType;
       if (Array.isArray(currField)) {
-       
-
-        
         for (let i = 0; i < currField.length; i++) {
           const el: ResponseDataType = currField[i];
 
@@ -802,14 +817,16 @@ export class QuellCache {
         // Temporary store for field properties
         const fieldStore: ResponseDataType = {};
 
-
         // Create a cacheID based on __type and __id from the prototype.
-        let cacheID: string = Object.prototype.hasOwnProperty.call(map, currProto.__type as string)
+        let cacheID: string = Object.prototype.hasOwnProperty.call(
+          map,
+          currProto.__type as string
+        )
           ? (map[currProto.__type as string] as string)
           : (currProto.__type as string);
 
         cacheID += currProto.__id ? `--${currProto.__id}` : "";
-        
+
         // Iterate over keys in nested object
         for (const key in currField) {
           // If prototype has no ID, check field keys for ID (mostly for arrays)
@@ -833,28 +850,18 @@ export class QuellCache {
             // and copy the logic of writing to cache to update the cache with same things, all stored under name.
             // Store objKey as cacheID without ID added
             const cacheIDForIDCache: string = cacheID;
-           
-
-            
 
             cacheID += `--${currField[key]}`;
             // call IdCache here idCache(cacheIDForIDCache, cacheID)
-           
 
             this.updateIdCache(cacheIDForIDCache, cacheID, currName);
-
           }
 
           fieldStore[key] = currField[key];
 
-
           // If object, recurse normalizeForCache assign in that object
           if (typeof currField[key] === "object") {
-        
-
             if (protoField[resultName] !== null) {
-            
-
               const test = await this.normalizeForCache(
                 { [key]: currField[key] },
                 map,
@@ -906,22 +913,22 @@ export class QuellCache {
    *  @param {string} keyWithID - Key to be cached with ID string attached; Redis data is stored under this key.
    *  @param {string} currName - The parent object name.
    */
- 
 
   updateIdCache(objKey: string, keyWithID: string, currName: string): void {
-
     if (!idCache[currName]) {
       idCache[currName] = {};
       idCache[currName][objKey] = keyWithID;
       return undefined; // Explicitly return undefined
-    } else if (!Array.isArray(idCache[currName][objKey]) || !idCache[currName][objKey]) {
+    } else if (
+      !Array.isArray(idCache[currName][objKey]) ||
+      !idCache[currName][objKey]
+    ) {
       idCache[currName][objKey] = [];
     } else {
-      (idCache[currName][objKey] as string[]).push(keyWithID);    
+      (idCache[currName][objKey] as string[]).push(keyWithID);
     }
     return undefined; // Explicitly return undefined
   }
-  
 
   /**
    * Updates the Redis cache when the operation is a mutation.

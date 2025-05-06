@@ -713,8 +713,6 @@ export function getMutationMap(schema: GraphQLSchema): MutationMapType {
  *  @returns {Object} queryMap - Map of queries to GraphQL types.
  */
 export function getQueryMap(schema: GraphQLSchema): QueryMapType {
-  console.log('getQueryMapSchema from Quell')
-  console.log('BANANA')
   const queryMap: QueryMapType = {};
   // get object containing all root queries defined in the schema
   const queryTypeFields: GraphQLSchema["_queryType"] = schema
@@ -736,6 +734,7 @@ export function getQueryMap(schema: GraphQLSchema): QueryMapType {
     }
     queryMap[query] = returnedType;
   }
+  console.log('QUERY MAP UPDATE: MORE LOGS', queryMap)
   return queryMap;
 }
 
@@ -747,7 +746,46 @@ export function getQueryMap(schema: GraphQLSchema): QueryMapType {
  *  @returns {Object} fieldsMap - Map of fields to GraphQL types.
  */
 export function getFieldsMap(schema: any): FieldsMapType {
+  console.log('Schema structure:', Object.keys(schema));
+  console.log('Does schema have default?', schema.default ? 'Yes' : 'No');
+  
+  // if (schema.default) {
+  //   console.log('Schema.default props:', Object.keys(schema.default));
+  // } else if (schema._typeMap) {
+  //   console.log('Schema has direct _typeMap');
+  // } else if (schema.getTypeMap) {
+  //   console.log('Schema has getTypeMap() method');
+  // } else {
+  //   console.log('Schema format not recognized by Quell');
+  // }
+
   const fieldsMap: FieldsMapType = {};
+  
+  // Handle multiple schema formats
+  let typeMap;
+  
+  if (schema?.default?._typeMap) {
+    // Original format that Quell expected
+    typeMap = schema.default._typeMap;
+    console.log('Using schema.default._typeMap format');
+  } 
+  else if (schema._typeMap) {
+    // Direct _typeMap property
+    typeMap = schema._typeMap;
+    console.log('Using direct schema._typeMap format');
+  }
+  else if (schema.getTypeMap) {
+    // Standard GraphQL API method
+    typeMap = schema.getTypeMap();
+    console.log('Using schema.getTypeMap() method');
+  }
+  else {
+    // Fallback to empty object
+    console.log('No recognized schema format found');
+    typeMap = {};
+  }
+
+  // const fieldsMap: FieldsMapType = {};
   const typesList: GraphQLSchema["_typeMap"] = schema?.default?._typeMap || {};
   const builtInTypes: string[] = [
     "String",
