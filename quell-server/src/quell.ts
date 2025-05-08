@@ -146,7 +146,7 @@ export class QuellCache {
       req.body.costOptions?.ipRate ?? this.costParameters.ipRate;
 
     // Get the IP address from the request.
-    const ipAddress: string = req.ip;
+    const ipAddress: string | undefined = req.ip;
     // Get the current time in seconds.
     const currentTimeSeconds: number = Math.floor(Date.now() / 1000);
     // Create a Redis IP key using the IP address and current time.
