@@ -57,7 +57,7 @@ export const getRedisInfo = (
     getValues: true,
   }
 ): RequestHandler[] => {
-  console.log("Getting Redis Info");
+  // console.log("Getting Redis Info");
   const middleware: RequestHandler[] = [];
 
   /**

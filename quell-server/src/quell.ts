@@ -117,6 +117,7 @@ export class QuellCache {
   }: ConstructorOptions) {
       // Convert schema to a standardized format
   const standardizedSchema = anySchemaToQuellSchema(schema);
+  // console.log('+++QUELL+++ STANDARDIZED SCHEMA',  standardizedSchema)
 
     this.idCache = idCache;
     this.schema = schema;
@@ -246,7 +247,7 @@ export class QuellCache {
     res: Response,
     next: NextFunction
   ): Promise<void> {
-    console.log('***RUNNING QUERY***');
+    // console.log('***RUNNING QUERY***');
     
     // Return an error if no query is found on the request.
     if (!req.body.query) {
@@ -262,7 +263,7 @@ export class QuellCache {
 
     // Retrieve GraphQL query string from request body.
     const queryString: string = req.body.query;
-    console.log('QUERY STRING:', queryString);
+    // console.log('+++QUELL+++ QUERY STRING:', queryString);
 
     // Create the abstract syntax tree with graphql-js parser.
     // If depth limit or cost limit were implemented, then we can get the AST and parsed AST from res.locals.
@@ -270,15 +271,16 @@ export class QuellCache {
     const AST: DocumentNode = res.locals.AST
       ? res.locals.AST
       : parse(queryString);
-      // console.log('AST', AST)
+      // console.log('+++QUELL+++ AST:', parse(queryString))
       
       // Create response prototype, operation type, and fragments object.
       // The response prototype is used as a template for most operations in Quell including caching, building modified requests, and more.
       const { proto, operationType, frags }: ParsedASTType =
       res.locals.parsedAST ?? parseAST(AST);
-      console.log('PROTO', proto)
-      console.log('OPERATION TYPE', operationType)
-      console.log('FRAGS', frags)
+      console.log('+++QUELL+++ PARSED AST:', parseAST(AST))
+      // console.log('PROTO', proto)
+      console.log('+++QUELL+++ OPERATION TYPE', operationType)
+      // console.log('FRAGS', frags)
     // Determine if Quell is able to handle the operation.
     // Quell can handle mutations and queries.
 

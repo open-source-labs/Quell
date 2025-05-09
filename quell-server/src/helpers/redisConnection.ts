@@ -23,5 +23,5 @@ redisCacheMain.on("error", (error: Error) => {
 
 // Establish the connection to Redis
 redisCacheMain.connect().then(() => {
-  console.log("Connected to redisCacheMain");
+  // console.log("Connected to redisCacheMain");
 });
