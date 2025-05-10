@@ -107,6 +107,7 @@ export class QuellCache {
   cacheExpiration: number;
   redisReadBatchSize: number;
   redisCache: RedisClientType;
+
   constructor({
     schema,
     cacheExpiration = 1209600, // Default expiry time is 14 days in seconds
@@ -115,9 +116,9 @@ export class QuellCache {
     redisHost,
     redisPassword,
   }: ConstructorOptions) {
-      // Convert schema to a standardized format
-  const standardizedSchema = anySchemaToQuellSchema(schema);
-  // console.log('+++QUELL+++ STANDARDIZED SCHEMA',  standardizedSchema)
+    // Convert schema to a standardized format
+    const standardizedSchema = anySchemaToQuellSchema(schema);
+    // console.log('+++QUELL+++ STANDARDIZED SCHEMA',  standardizedSchema)
 
     this.idCache = idCache;
     this.schema = schema;
@@ -125,10 +126,9 @@ export class QuellCache {
     this.depthLimit = this.depthLimit.bind(this);
     this.costLimit = this.costLimit.bind(this);
     this.rateLimiter = this.rateLimiter.bind(this);
-      // Use standardized helpers instead of the old ones
-  this.queryMap = getQueryMap(standardizedSchema);
-  this.mutationMap = getMutationMap(standardizedSchema);
-  this.fieldsMap = getFieldsMap(standardizedSchema);
+    this.queryMap = getQueryMap(standardizedSchema);
+    this.mutationMap = getMutationMap(standardizedSchema);
+    this.fieldsMap = getFieldsMap(standardizedSchema);
     // this.queryMap = getQueryMap(schema);
     // this.mutationMap = getMutationMap(schema);
     // this.fieldsMap = getFieldsMap(schema);
@@ -248,7 +248,7 @@ export class QuellCache {
     next: NextFunction
   ): Promise<void> {
     // console.log('***RUNNING QUERY***');
-    
+
     // Return an error if no query is found on the request.
     if (!req.body.query) {
       const err: ServerErrorType = {
@@ -271,16 +271,16 @@ export class QuellCache {
     const AST: DocumentNode = res.locals.AST
       ? res.locals.AST
       : parse(queryString);
-      // console.log('+++QUELL+++ AST:', parse(queryString))
-      
-      // Create response prototype, operation type, and fragments object.
-      // The response prototype is used as a template for most operations in Quell including caching, building modified requests, and more.
-      const { proto, operationType, frags }: ParsedASTType =
-      res.locals.parsedAST ?? parseAST(AST);
-      console.log('+++QUELL+++ PARSED AST:', parseAST(AST))
-      // console.log('PROTO', proto)
-      console.log('+++QUELL+++ OPERATION TYPE', operationType)
-      // console.log('FRAGS', frags)
+    // console.log('+++QUELL+++ AST:', parse(queryString))
+
+    // Create response prototype, operation type, and fragments object.
+    // The response prototype is used as a template for most operations in Quell including caching, building modified requests, and more.
+    const { proto, operationType, frags }: ParsedASTType = res.locals.parsedAST ?? parseAST(AST);
+
+    // console.log('+++QUELL+++ PARSED AST:', parseAST(AST))
+    // console.log('PROTO', proto)
+    console.log("+++QUELL+++ OPERATION TYPE", operationType);
+    // console.log('FRAGS', frags)
     // Determine if Quell is able to handle the operation.
     // Quell can handle mutations and queries.
 
@@ -336,35 +336,35 @@ export class QuellCache {
        */
 
       // Check Redis for the query string .
-      let redisValue: RedisValue = await getFromRedis(
-        queryString,
-        this.redisCache
-      );
+      // let redisValue: RedisValue = await getFromRedis(
+      //   queryString,
+      //   this.redisCache
+      // );
 
-      if (redisValue != null) {
-        // If the query string is found in Redis, add the result to the response and return.
-        redisValue = JSON.parse(redisValue);
-        res.locals.queryResponse = redisValue;
-        return next();
-      } else {
-        // Execute the operation, add the result to the response, write the query string and result to cache, and return.
-        graphql({ schema: this.schema, source: queryString })
-          .then((queryResult: ExecutionResult): void => {
-            res.locals.queryResponse = queryResult;
-            this.writeToCache(queryString, queryResult);
-            return next();
-          })
-          .catch((error: Error): void => {
-            const err: ServerErrorType = {
-              log: `Error inside catch block of operationType === noID of query, graphQL query failed, ${error}`,
-              status: 400,
-              message: {
-                err: `GraphQL query Error: Check server log for more details. Error: ${error}`,
-              },
-            };
-            return next(err);
-          });
-      }
+      // if (redisValue != null) {
+      //   // If the query string is found in Redis, add the result to the response and return.
+      //   redisValue = JSON.parse(redisValue);
+      //   res.locals.queryResponse = redisValue;
+      //   return next();
+      // } else {
+      //   // Execute the operation, add the result to the response, write the query string and result to cache, and return.
+      //   graphql({ schema: this.schema, source: queryString })
+      //     .then((queryResult: ExecutionResult): void => {
+      //       res.locals.queryResponse = queryResult;
+      //       this.writeToCache(queryString, queryResult);
+      //       return next();
+      //     })
+      //     .catch((error: Error): void => {
+      //       const err: ServerErrorType = {
+      //         log: `Error inside catch block of operationType === noID of query, graphQL query failed, ${error}`,
+      //         status: 400,
+      //         message: {
+      //           err: `GraphQL query Error: Check server log for more details. Error: ${error}`,
+      //         },
+      //       };
+      //       return next(err);
+      //     });
+      // }
     } else if (operationType === "mutation") {
       // TODO: If the operation is a mutation, we are currently clearing the cache because it is stale.
       // The goal would be to instead have a normalized cache and update the cache following a mutation.
@@ -447,28 +447,39 @@ export class QuellCache {
       if (Object.keys(queryObject).length > 0) {
         // Create a new query string that contains only the fields not found in the cache so that we can
         // request only that information from the database.
+
+
         const newQueryString: string = createQueryStr(
           queryObject,
           operationType
         );
-
+        
         // Execute the query using the new query string.
         graphql({ schema: this.schema, source: newQueryString })
-          .then(async (databaseResponseRaw: ExecutionResult): Promise<void> => {
+        .then(async (databaseResponseRaw: ExecutionResult): Promise<void> => {
             // The GraphQL must be parsed in order to join with it with the data retrieved from
             // the cache before sending back to user.
             const databaseResponse: DataResponse = JSON.parse(
               JSON.stringify(databaseResponseRaw)
             );
+            console.log('DATABASE RESPONSE RAW:', JSON.stringify(databaseResponseRaw));
+            console.log('DATABASE RESPONSE PARSED:', JSON.stringify(databaseResponse));
 
             // Check if the cache response has any data by iterating over the keys in cache response.
             let cacheHasData = false;
+
+             // Check cache data
+    console.log('CACHE RESPONSE DATA:', JSON.stringify(cacheResponse.data));
+    
 
             for (const key in cacheResponse.data) {
               if (Object.keys(cacheResponse.data[key]).length > 0) {
                 cacheHasData = true;
               }
             }
+
+            console.log('CACHE HAS DATA:', cacheHasData);
+
 
             // Create merged response object to merge the data from the cache and the data from the database.
             // If the cache response does not have data then just use the database response.
@@ -478,7 +489,11 @@ export class QuellCache {
                   databaseResponse.data as DataResponse,
                   prototype
                 )
-              : databaseResponse;
+                : databaseResponse;
+              // : { data: databaseResponse };
+
+              console.log('MERGED RESPONSE:', JSON.stringify(mergedResponse));
+
 
             const currName = "string it should not be again";
             const test = await this.normalizeForCache(

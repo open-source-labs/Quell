@@ -19,7 +19,7 @@ import {
    * @returns A standardized GraphQL schema that Quell can work with
    */
   export function anySchemaToQuellSchema(schema: GraphQLSchema): GraphQLSchema {
-    console.log('+++QUELL+++ Standardizing schema for Quell')
+    // console.log('+++QUELL+++ Standardizing schema for Quell')
     // Step 1: Get standardized introspection result
     const introspectionResult = graphqlSync({
       schema,
