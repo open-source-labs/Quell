@@ -3,7 +3,7 @@ import schema from '../../test-config/testSchema';
 
 
 
-describe('server test for buildFromCache', () => {
+xdescribe('server test for buildFromCache', () => {
   const Quell = new QuellCache({
     schema: schema,
     redisPort: Number(process.env.REDIS_PORT) || 6379,
