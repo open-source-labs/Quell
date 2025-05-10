@@ -11,6 +11,7 @@
   ],
   "scripts": {
     "test": "jest --forceExit",
+    "test-coverage": "jest --coverage",
     "clear-cache": "node bin/clearCache.js",
     "build": "tsc"
   },
