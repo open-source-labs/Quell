@@ -32,7 +32,7 @@ import type {
   ReturnType,
   MutationTypeFieldsType,
   FieldType,
-} from "../types";
+} from "../types/types";
 
 /**
  * Traverses over a supplied query Object and uses the fields on there to create a query string reflecting the data.
@@ -734,7 +734,7 @@ export function getQueryMap(schema: GraphQLSchema): QueryMapType {
     }
     queryMap[query] = returnedType;
   }
-  console.log('QUERY MAP UPDATE: MORE LOGS', queryMap)
+  console.log("QUERY MAP UPDATE: MORE LOGS", queryMap);
   return queryMap;
 }
 
@@ -746,9 +746,9 @@ export function getQueryMap(schema: GraphQLSchema): QueryMapType {
  *  @returns {Object} fieldsMap - Map of fields to GraphQL types.
  */
 export function getFieldsMap(schema: any): FieldsMapType {
-  console.log('Schema structure:', Object.keys(schema));
-  console.log('Does schema have default?', schema.default ? 'Yes' : 'No');
-  
+  console.log("Schema structure:", Object.keys(schema));
+  console.log("Does schema have default?", schema.default ? "Yes" : "No");
+
   // if (schema.default) {
   //   console.log('Schema.default props:', Object.keys(schema.default));
   // } else if (schema._typeMap) {
@@ -760,28 +760,25 @@ export function getFieldsMap(schema: any): FieldsMapType {
   // }
 
   const fieldsMap: FieldsMapType = {};
-  
+
   // Handle multiple schema formats
   let typeMap;
-  
+
   if (schema?.default?._typeMap) {
     // Original format that Quell expected
     typeMap = schema.default._typeMap;
-    console.log('Using schema.default._typeMap format');
-  } 
-  else if (schema._typeMap) {
+    console.log("Using schema.default._typeMap format");
+  } else if (schema._typeMap) {
     // Direct _typeMap property
     typeMap = schema._typeMap;
-    console.log('Using direct schema._typeMap format');
-  }
-  else if (schema.getTypeMap) {
+    console.log("Using direct schema._typeMap format");
+  } else if (schema.getTypeMap) {
     // Standard GraphQL API method
     typeMap = schema.getTypeMap();
-    console.log('Using schema.getTypeMap() method');
-  }
-  else {
+    console.log("Using schema.getTypeMap() method");
+  } else {
     // Fallback to empty object
-    console.log('No recognized schema format found');
+    console.log("No recognized schema format found");
     typeMap = {};
   }
 

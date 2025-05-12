@@ -2,7 +2,6 @@ import { Response, Request, NextFunction, RequestHandler } from "express";
 import { parse } from "graphql/language/parser";
 import { RedisClientType } from "redis";
 import { redisCacheMain } from "./helpers/redisConnection";
-import { getFromRedis } from "./helpers/redisHelpers";
 import { graphql, GraphQLSchema, ExecutionResult, DocumentNode } from "graphql";
 
 // import middleware functions
@@ -10,38 +9,35 @@ import { createRateLimiter } from "./middleware/rateLimiter";
 import { createCostLimit } from "./middleware/costLimit";
 import { createDepthLimit } from "./middleware/depthLimit";
 
-// import cache operations
+// Import cache operations
 import {
   createBuildFromCache,
   createGenerateCacheID,
 } from "./cacheOperations/readCache";
 import {
-  createUpdateIdCache,
   createWriteToCache,
   createNormalizeForCache,
+  createUpdateIdCache,
 } from "./cacheOperations/writeCache";
 import { createUpdateCacheByMutation } from "./cacheOperations/updateCache";
-import type { UpdateCacheByMutationFunction } from "./types/updateCacheTypes";
-
 import {
   createClearCache,
   createDeleteCacheById,
   createClearAllCaches,
 } from "./cacheOperations/invalidateCache";
-import type {
-  ClearCacheFunction,
-  DeleteCacheByIdFunction,
-  ClearAllCachesFunction,
-} from "./types/invalidateCacheTypes";
+import {
+  createBuildCacheFromResponse,
+  createBuildCacheFromMergedResponse,
+  createHandleQueryCaching,
+} from "./cacheOperations/buildCache";
+
+// Import helper functions
 import {
   createQueryStr,
   createQueryObj,
   joinResponses,
   parseAST,
   updateProtoWithFragment,
-  // getMutationMap,
-  // getQueryMap,
-  // getFieldsMap,
 } from "./helpers/quellHelpers";
 
 import {
@@ -51,44 +47,45 @@ import {
   getFieldsMap,
 } from "./helpers/schemaHelpers";
 
-import {
+// Import types
+import type {
   ConstructorOptions,
   IdCacheType,
   CostParamsType,
   ProtoObjType,
-  FragsType,
   MutationMapType,
   QueryMapType,
   FieldsMapType,
-  ItemFromCacheType,
-  RedisOptionsType,
-  RedisStatsType,
   ServerErrorType,
-  ResponseDataType,
-  QueryFields,
-  DatabaseResponseDataRaw,
-  Type,
-  MergedResponse,
-  DataResponse,
-  TypeData,
-  RequestBodyType,
   ParsedASTType,
-  RedisValue,
   RequestType,
   ResLocals,
-  FieldKeyValue,
+  CustomResponse,
 } from "./types/types";
 
+// Import function types
 import type {
   BuildFromCacheFunction,
   GenerateCacheIDFunction,
+  CacheResponse
 } from "./types/readCacheTypes";
-
 import type {
   WriteToCacheFunction,
   NormalizeForCacheFunction,
   UpdateIdCacheFunction,
 } from "./types/writeCacheTypes";
+import type { UpdateCacheByMutationFunction } from "./types/updateCacheTypes";
+import type {
+  ClearCacheFunction,
+  DeleteCacheByIdFunction,
+  ClearAllCachesFunction,
+} from "./types/invalidateCacheTypes";
+import type {
+  BuildCacheFromResponseFunction,
+  BuildCacheFromMergedResponseFunction,
+  HandleQueryCachingFunction,
+} from "./types/buildCacheTypes";
+
 /*
  * Note: This file is identical to the main quell-server file, except that the
  * rateLimiter, depthLimit, and costLimit have been modified to allow the limits
@@ -136,6 +133,7 @@ let idCache: IdCacheType = {};
  *    });
  */
 export class QuellCache {
+  // Properties
   idCache: IdCacheType;
   schema: GraphQLSchema;
   costParameters: CostParamsType;
@@ -146,7 +144,7 @@ export class QuellCache {
   redisReadBatchSize: number;
   redisCache: RedisClientType;
 
-  // middleware
+  // Middleware functions
   costLimit: (req: Request, res: Response, next: NextFunction) => void;
   depthLimit: (req: Request, res: Response, next: NextFunction) => void;
   rateLimiter: (
@@ -154,19 +152,20 @@ export class QuellCache {
     res: Response,
     next: NextFunction
   ) => Promise<void>;
-  // query: (req: RequestType, res: Response, next: NextFunction) => Promise<void>;
 
-  // cache operations
+  // Cache operation functions
   buildFromCache: BuildFromCacheFunction;
   generateCacheID: GenerateCacheIDFunction;
   writeToCache: WriteToCacheFunction;
   normalizeForCache: NormalizeForCacheFunction;
   updateIdCache: UpdateIdCacheFunction;
   updateCacheByMutation: UpdateCacheByMutationFunction;
-
   clearCache: ClearCacheFunction;
   deleteCacheById: DeleteCacheByIdFunction;
   clearAllCaches: ClearAllCachesFunction;
+  buildCacheFromResponse: BuildCacheFromResponseFunction;
+  buildCacheFromMergedResponse: BuildCacheFromMergedResponseFunction;
+  handleQueryCaching: HandleQueryCachingFunction;
 
   constructor({
     schema,
@@ -178,21 +177,36 @@ export class QuellCache {
   }: ConstructorOptions) {
     // Convert schema to a standardized format
     const standardizedSchema = anySchemaToQuellSchema(schema);
-    // console.log('+++QUELL+++ STANDARDIZED SCHEMA',  standardizedSchema)
+console.log('+++++++++++++++++++');
 
-    // schema
+    // Initialize schema-related properties
     this.schema = schema;
     this.queryMap = getQueryMap(standardizedSchema);
     this.mutationMap = getMutationMap(standardizedSchema);
     this.fieldsMap = getFieldsMap(standardizedSchema);
 
-    // query
-
-    // cache
+    // Initialize cache properties
     this.idCache = idCache;
     this.redisCache = redisCacheMain;
     this.redisReadBatchSize = 10;
     this.cacheExpiration = cacheExpiration;
+
+    // Initialize cost parameters
+    this.costParameters = Object.assign(defaultCostParams, costParameters);
+
+    // Initialize middleware
+    this.costLimit = createCostLimit({
+      costParameters: this.costParameters,
+      schema: this.schema, // if needed
+    });
+    this.depthLimit = createDepthLimit({
+      maxDepth: this.costParameters.maxDepth,
+    });
+    this.rateLimiter = createRateLimiter({
+      ipRate: this.costParameters.ipRate,
+      redisCache: this.redisCache,
+    });
+
     // Initialize invalidation operations
     this.clearCache = createClearCache({
       redisCache: this.redisCache,
@@ -244,24 +258,26 @@ export class QuellCache {
       deleteCacheById: this.deleteCacheById,
     });
 
-    // // If you need a method that clears both Redis and ID cache:
-    // this.clearAllCaches = async () => {
-    //   await this.redisCache.flushAll();
-    //   this.idCacheManager.clear();
-    // };
-
-    // middleware
-    this.costParameters = Object.assign(defaultCostParams, costParameters);
-    this.costLimit = createCostLimit({
-      costParameters: this.costParameters,
-      schema: this.schema, // if needed
+    // Initialize build operations
+    this.buildCacheFromResponse = createBuildCacheFromResponse({
+      queryMap: this.queryMap,
+      cacheExpiration: this.cacheExpiration,
+      writeToCache: this.writeToCache,
+      normalizeForCache: this.normalizeForCache,
     });
-    this.depthLimit = createDepthLimit({
-      maxDepth: this.costParameters.maxDepth,
+    this.buildCacheFromMergedResponse = createBuildCacheFromMergedResponse({
+      queryMap: this.queryMap,
+      cacheExpiration: this.cacheExpiration,
+      writeToCache: this.writeToCache,
+      normalizeForCache: this.normalizeForCache,
     });
-    this.rateLimiter = createRateLimiter({
-      ipRate: this.costParameters.ipRate,
-      redisCache: this.redisCache,
+    this.handleQueryCaching = createHandleQueryCaching({
+      queryMap: this.queryMap,
+      cacheExpiration: this.cacheExpiration,
+      writeToCache: this.writeToCache,
+      normalizeForCache: this.normalizeForCache,
+      buildCacheFromResponse: this.buildCacheFromResponse,
+      buildCacheFromMergedResponse: this.buildCacheFromMergedResponse,
     });
 
     this.query = this.query.bind(this);
@@ -410,39 +426,32 @@ export class QuellCache {
       this.redisCache.flushAll();
       idCache = {};
 
-      // Determine if the query string is a valid mutation in the schema.
-      // Declare variables to store the mutation proto, mutation name, and mutation type.
-      let mutationQueryObject: ProtoObjType;
-      let mutationName = "";
-      let mutationType = "";
-      // Loop through the mutations in the mutationMap.
-      for (const mutation in this.mutationMap) {
-        // If any mutation from the mutationMap is found on the proto, the query string includes
-        // a valid mutation. Update the mutation query object, name, type variables.
-        if (Object.prototype.hasOwnProperty.call(proto, mutation)) {
-          mutationName = mutation;
-          mutationType = this.mutationMap[mutation] as string;
-          mutationQueryObject = proto[mutation] as ProtoObjType;
-          break;
-        }
-      }
-
+      
       // Execute the operation and add the result to the response.
       graphql({ schema: this.schema, source: queryString })
-        .then((databaseResponse: ExecutionResult): void => {
-          res.locals.queryResponse = databaseResponse;
-
-          // If there is a mutation, update the cache with the response.
+      .then((databaseResponse: ExecutionResult): void => {
+        res.locals.queryResponse = databaseResponse;
+        
+        // Determine if the query string is a valid mutation in the schema.
+        // Loop through the mutations in the mutationMap.
+        for (const mutation in this.mutationMap) {
+          // If any mutation from the mutationMap is found on the proto, the query string includes
+          // a valid mutation. Update the mutation query object, name, type variables. Update the cache with the response.
           // We don't need to wait until writeToCache is finished.
-          if (mutationQueryObject) {
+          if (Object.prototype.hasOwnProperty.call(proto, mutation)) {
+            const mutationName = mutation;
+            const mutationType = this.mutationMap[mutation] as string;
+            const mutationQueryObject = proto[mutation] as ProtoObjType;
             this.updateCacheByMutation(
               databaseResponse,
               mutationName,
               mutationType,
               mutationQueryObject
             );
+            break;
           }
-          return next();
+          }
+          return next()
         })
         .catch((error: Error): void => {
           const err: ServerErrorType = {
@@ -470,82 +479,84 @@ export class QuellCache {
       // Check the cache for the requested values.
       // buildFromCache will modify the prototype to mark any values not found in the cache
       // so that they may later be retrieved from the database.
-      const cacheResponse: {
-        data: ItemFromCacheType;
-        cached?: boolean;
-      } = await this.buildFromCache(prototype, prototypeKeys);
-      // Create merged response object to merge the data from the cache and the data from the database.
-      let mergedResponse: MergedResponse;
+      // const cacheResponse: {
+      //   data: ItemFromCacheType;
+      //   cached?: boolean;
+      // } = await this.buildFromCache(prototype, prototypeKeys);
 
+      const cacheResponse: CacheResponse = await this.buildFromCache(prototype, prototypeKeys);
+
+      
       // Create query object containing the fields that were not found in the cache.
       // This will be used to create a new GraphQL string.
       const queryObject: ProtoObjType = createQueryObj(prototype);
-
+      
       // If the cached response is incomplete, reformulate query,
       // handoff query, join responses, and cache joined responses.
       if (Object.keys(queryObject).length > 0) {
         // Create a new query string that contains only the fields not found in the cache so that we can
         // request only that information from the database.
-
+        
         const newQueryString: string = createQueryStr(
           queryObject,
           operationType
         );
-
+        
         // Execute the query using the new query string.
         graphql({ schema: this.schema, source: newQueryString })
-          .then(async (databaseResponseRaw: ExecutionResult): Promise<void> => {
-            // The GraphQL must be parsed in order to join with it with the data retrieved from
-            // the cache before sending back to user.
-            const databaseResponse: DataResponse = JSON.parse(
-              JSON.stringify(databaseResponseRaw)
-            );
-            console.log(
-              "DATABASE RESPONSE RAW:",
-              JSON.stringify(databaseResponseRaw)
-            );
-            console.log(
-              "DATABASE RESPONSE PARSED:",
-              JSON.stringify(databaseResponse)
-            );
-
-            // Check if the cache response has any data by iterating over the keys in cache response.
-            let cacheHasData = false;
-
-            // Check cache data
-            console.log(
-              "CACHE RESPONSE DATA:",
-              JSON.stringify(cacheResponse.data)
-            );
-
-            for (const key in cacheResponse.data) {
-              if (Object.keys(cacheResponse.data[key]).length > 0) {
-                cacheHasData = true;
-              }
+        .then(async (databaseResponseRaw: ExecutionResult): Promise<void> => {
+          // The GraphQL must be parsed in order to join with it with the data retrieved from
+          // the cache before sending back to user.
+          const databaseResponse = JSON.parse(
+            JSON.stringify(databaseResponseRaw)
+          );
+          console.log(
+            "DATABASE RESPONSE RAW:",
+            JSON.stringify(databaseResponseRaw)
+          );
+          console.log(
+            "DATABASE RESPONSE PARSED:",
+            JSON.stringify(databaseResponse)
+          );
+          
+          // Check if the cache response has any data by iterating over the keys in cache response.
+          let cacheHasData = false;
+          
+          // Check cache data
+          console.log(
+            "CACHE RESPONSE DATA:",
+            JSON.stringify(cacheResponse.data)
+          );
+          
+          for (const key in cacheResponse.data) {
+            if (Object.keys(cacheResponse.data[key]).length > 0) {
+              cacheHasData = true;
+              break;
             }
-
-            console.log("CACHE HAS DATA:", cacheHasData);
-
-            // Create merged response object to merge the data from the cache and the data from the database.
+          }
+          
+          console.log("CACHE HAS DATA:", cacheHasData);
+          
+           // Create merged response object to merge the data from the cache and the data from the database.
             // If the cache response does not have data then just use the database response.
-            mergedResponse = cacheHasData
+            const mergedResponse = cacheHasData
               ? joinResponses(
                   cacheResponse.data,
-                  databaseResponse.data as DataResponse,
+                  databaseResponse.data,
                   prototype
                 )
               : databaseResponse;
-            // : { data: databaseResponse };
 
-            console.log("MERGED RESPONSE:", JSON.stringify(mergedResponse));
+                 // CACHE THE MERGED RESPONSE
+            await this.handleQueryCaching('partial', mergedResponse, prototype, operationType);
 
-            const currName = "string it should not be again";
-            const test = await this.normalizeForCache(
-              mergedResponse.data as ResponseDataType,
-              this.queryMap,
-              prototype,
-              currName
-            );
+            // const currName = "string it should not be again";
+            // const test = await this.normalizeForCache(
+            //   mergedResponse.data as ResponseDataType,
+            //   this.queryMap,
+            //   prototype,
+            //   currName
+            // );
 
             // The response is given a cached key equal to false to indicate to the front end of the demo site that the
             // information was *NOT* entirely found in the cache.
