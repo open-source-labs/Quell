@@ -20,12 +20,19 @@ import {
   createWriteToCache,
   createNormalizeForCache,
 } from "./cacheOperations/writeCache";
+import { createUpdateCacheByMutation } from "./cacheOperations/updateCache";
+import type { UpdateCacheByMutationFunction } from "./types/updateCacheTypes";
+
 import {
   createClearCache,
   createDeleteCacheById,
+  createClearAllCaches,
 } from "./cacheOperations/invalidateCache";
-// import { IdCacheManager } from './cacheOperations/idCacheManager';
-
+import type {
+  ClearCacheFunction,
+  DeleteCacheByIdFunction,
+  ClearAllCachesFunction,
+} from "./types/invalidateCacheTypes";
 import {
   createQueryStr,
   createQueryObj,
@@ -155,9 +162,11 @@ export class QuellCache {
   writeToCache: WriteToCacheFunction;
   normalizeForCache: NormalizeForCacheFunction;
   updateIdCache: UpdateIdCacheFunction;
-  clearCache: (req: Request, res: Response, next: NextFunction) => void;
-  deleteCacheById: (key: string) => Promise<void>;
-  private idCacheManager: IdCacheManager;
+  updateCacheByMutation: UpdateCacheByMutationFunction;
+
+  clearCache: ClearCacheFunction;
+  deleteCacheById: DeleteCacheByIdFunction;
+  clearAllCaches: ClearAllCachesFunction;
 
   constructor({
     schema,
@@ -184,6 +193,22 @@ export class QuellCache {
     this.redisCache = redisCacheMain;
     this.redisReadBatchSize = 10;
     this.cacheExpiration = cacheExpiration;
+    // Initialize invalidation operations
+    this.clearCache = createClearCache({
+      redisCache: this.redisCache,
+      idCache: this.idCache,
+    });
+
+    this.deleteCacheById = createDeleteCacheById({
+      redisCache: this.redisCache,
+    });
+
+    this.clearAllCaches = createClearAllCaches({
+      redisCache: this.redisCache,
+      idCache: this.idCache,
+    });
+
+    // Initialize read operations
     this.generateCacheID = createGenerateCacheID();
     this.buildFromCache = createBuildFromCache({
       redisCache: this.redisCache,
@@ -197,7 +222,6 @@ export class QuellCache {
       cacheExpiration: this.cacheExpiration,
       idCache: this.idCache,
     });
-
     this.writeToCache = createWriteToCache({
       redisCache: this.redisCache,
       cacheExpiration: this.cacheExpiration,
@@ -212,11 +236,12 @@ export class QuellCache {
       updateIdCache: this.updateIdCache,
     });
 
-    this.clearCache = createClearCache({
+    // Initialize update operations
+    this.updateCacheByMutation = createUpdateCacheByMutation({
       redisCache: this.redisCache,
-    });
-    this.deleteCacheById = createDeleteCacheById({
-      redisCache: this.redisCache,
+      queryMap: this.queryMap,
+      writeToCache: this.writeToCache,
+      deleteCacheById: this.deleteCacheById,
     });
 
     // // If you need a method that clears both Redis and ID cache:
@@ -240,7 +265,6 @@ export class QuellCache {
     });
 
     this.query = this.query.bind(this);
-    this.updateCacheByMutation = this.updateCacheByMutation.bind(this);
   }
 
   /**
@@ -551,6 +575,4 @@ export class QuellCache {
       }
     }
   }
-
-
 }
