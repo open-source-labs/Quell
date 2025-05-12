@@ -1,4 +1,4 @@
-import { QuellCache } from './quell';
+import { QuellCache } from './QuellCache';
 import { createQuellRouter } from './quellRouter';
 
 export { QuellCache, createQuellRouter };
