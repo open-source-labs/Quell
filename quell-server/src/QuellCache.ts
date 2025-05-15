@@ -16,9 +16,10 @@ import {
 } from "./cacheOperations/readCache";
 import {
   createWriteToCache,
-  createNormalizeForCache,
   createUpdateIdCache,
 } from "./cacheOperations/writeCache";
+import {
+  createNormalizeForCache} from "./cacheOperations/normalizeCache";
 import { createUpdateCacheByMutation } from "./cacheOperations/updateCache";
 import {
   createClearCache,
@@ -59,8 +60,6 @@ import type {
   ServerErrorType,
   ParsedASTType,
   RequestType,
-  ResLocals,
-  CustomResponse,
 } from "./types/types";
 
 // Import function types
@@ -71,9 +70,9 @@ import type {
 } from "./types/readCacheTypes";
 import type {
   WriteToCacheFunction,
-  NormalizeForCacheFunction,
   UpdateIdCacheFunction,
 } from "./types/writeCacheTypes";
+import type { NormalizeForCacheFunction } from "./cacheOperations/normalizeCache";
 import type { UpdateCacheByMutationFunction } from "./types/updateCacheTypes";
 import type {
   ClearCacheFunction,
@@ -243,9 +242,6 @@ console.log('+++++++++++++++++++');
     });
 
     this.normalizeForCache = createNormalizeForCache({
-      redisCache: this.redisCache,
-      cacheExpiration: this.cacheExpiration,
-      idCache: this.idCache,
       writeToCache: this.writeToCache,
       updateIdCache: this.updateIdCache,
     });

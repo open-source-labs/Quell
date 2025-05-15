@@ -21,7 +21,7 @@ jest.mock('redis', () => ({
   }));
  
  import type { RedisClientType } from 'redis';
- import { createReadCacheRedisMock } from '../helpers/mocks';
+ import { createReadCacheRedisMock } from '../__mocks__/mockRedisClient';
  // Functions you're testing
  import { 
     createBuildFromCache, 
