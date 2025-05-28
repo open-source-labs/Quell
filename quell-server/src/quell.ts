@@ -4,6 +4,7 @@ import { RedisClientType } from "redis";
 import { redisCacheMain } from "./helpers/redisConnection";
 import { getFromRedis } from "./helpers/redisHelpers";
 import { graphql, GraphQLSchema, ExecutionResult, DocumentNode } from "graphql";
+import { createServerError } from "./helpers/cacheUtils";
 
 import {
   createQueryStr,
@@ -154,14 +155,14 @@ export class QuellCache {
 
     // Return an error if no query is found on the request.
     if (!req.body.query) {
-      const err: ServerErrorType = {
-        log: "Error: no GraphQL query found on request body, inside rateLimiter",
-        status: 400,
-        message: {
-          err: "Error in rateLimiter: Bad Request. Check server log for more details.",
-        },
-      };
-      return next(err);
+      next(
+        createServerError(
+          "Error: no GraphQL query found on request body, inside rateLimiter",
+          400,
+          "Error in rateLimiter: Bad Request. Check server log for more details."
+        )
+      );
+      return;
     }
 
     try {
@@ -186,16 +187,27 @@ export class QuellCache {
       const numRequests: number = parseInt(numRequestsString, 10);
 
       // If the number of requests is greater than the IP rate limit, throw an error.
+      // if (numRequests > ipRateLimit) {
+      //   const err: ServerErrorType = {
+      //     log: `Redis cache error: Express error handler caught too many requests from this IP address (${ipAddress}): limit is: ${ipRateLimit} requests per second, inside rateLimiter`,
+      //     status: 429, // Too Many Requests
+      //     message: {
+      //       err: "Error in rateLimiter middleware. Check server log for more details.",
+      //     },
+      //   };
+      //   return next(err);
+      // }
+
       if (numRequests > ipRateLimit) {
-        const err: ServerErrorType = {
-          log: `Redis cache error: Express error handler caught too many requests from this IP address (${ipAddress}): limit is: ${ipRateLimit} requests per second, inside rateLimiter`,
-          status: 429, // Too Many Requests
-          message: {
-            err: "Error in rateLimiter middleware. Check server log for more details.",
-          },
-        };
-        return next(err);
-      }
+        next(
+          createServerError(
+            `Redis cache error: Express error handler caught too many requests from this IP address (${ipAddress}): limit is: ${ipRateLimit} requests per second, inside rateLimiter`,
+            429,
+            "Error in rateLimiter middleware. Check server log for more details."
+          )
+        );
+        return;
+      }      
 
       console.log(
         `IP ${ipAddress} made a request. Limit is: ${ipRateLimit} requests per second. Result: OK.`
@@ -203,14 +215,14 @@ export class QuellCache {
 
       return next();
     } catch (error) {
-      const err: ServerErrorType = {
-        log: `Catch block in rateLimiter middleware, ${error}`,
-        status: 500,
-        message: {
-          err: "IPRate Limiting Error. Check server log for more details.",
-        },
-      };
-      return next(err);
+        next(
+          createServerError(
+            `Catch block in rateLimiter middleware, ${error}`,
+            500,
+            "IPRate Limiting Error. Check server log for more details."
+          )
+        )
+        return;
     }
   }
 
