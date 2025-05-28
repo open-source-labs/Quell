@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import { RedisClientType } from "redis";
 import { ServerErrorType } from "../types/types";
+import { createServerError } from "../helpers/cacheUtils";
 
 export interface RateLimiterConfig {
   ipRate: number;
@@ -66,14 +67,14 @@ export function createRateLimiter(config: RateLimiterConfig) {
 
       // If the number of requests is greater than the IP rate limit, throw an error.
       if (numRequests > ipRateLimit) {
-        const err: ServerErrorType = {
-          log: `Redis cache error: Express error handler caught too many requests from this IP address (${ipAddress}): limit is: ${ipRateLimit} requests per second, inside rateLimiter`,
-          status: 429, // Too Many Requests
-          message: {
-            err: "Error in rateLimiter middleware. Check server log for more details.",
-          },
-        };
-        return next(err);
+        next(
+          createServerError(
+            `Redis cache error: Express error handler caught too many requests from this IP address (${ipAddress}): limit is: ${ipRateLimit} requests per second, inside rateLimiter`,
+            429,
+            "Error in rateLimiter middleware. Check server log for more details."
+          )
+        );
+        return;
       }
 
       console.log(
@@ -82,14 +83,14 @@ export function createRateLimiter(config: RateLimiterConfig) {
 
       return next();
     } catch (error) {
-      const err: ServerErrorType = {
-        log: `Catch block in rateLimiter middleware, ${error}`,
-        status: 500,
-        message: {
-          err: "IPRate Limiting Error. Check server log for more details.",
-        },
-      };
-      return next(err);
-    }
-  };
+      next(
+        createServerError(
+          `Catch block in rateLimiter middleware, ${error}`,
+          500,
+          "IPRate Limiting Error. Check server log for more details."
+        )
+      )
+      return;
+  }
+}
 }

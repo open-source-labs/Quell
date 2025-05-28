@@ -3,6 +3,7 @@ import { parse } from "graphql/language/parser";
 import { RedisClientType } from "redis";
 import { redisCacheMain } from "./helpers/redisConnection";
 import { graphql, GraphQLSchema, ExecutionResult, DocumentNode } from "graphql";
+import { createServerError } from "./helpers/cacheUtils";
 
 // import middleware functions
 import { createRateLimiter } from "./middleware/rateLimiter";
@@ -301,14 +302,14 @@ console.log('+++++++++++++++++++');
 
     // Return an error if no query is found on the request.
     if (!req.body.query) {
-      const err: ServerErrorType = {
-        log: "Error: no GraphQL query found on request body",
-        status: 400,
-        message: {
-          err: "Error in quellCache.query: Check server log for more details.",
-        },
-      };
-      return next(err);
+      next(
+        createServerError(
+          "Error: no GraphQL query found on request body, inside rateLimiter",
+          400,
+          "Error in rateLimiter: Bad Request. Check server log for more details."
+        )
+      );
+      return;
     }
 
     // Retrieve GraphQL query string from request body.
