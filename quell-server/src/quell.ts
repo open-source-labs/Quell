@@ -215,14 +215,14 @@ export class QuellCache {
 
       return next();
     } catch (error) {
-      const err: ServerErrorType = {
-        log: `Catch block in rateLimiter middleware, ${error}`,
-        status: 500,
-        message: {
-          err: "IPRate Limiting Error. Check server log for more details.",
-        },
-      };
-      return next(err);
+        next(
+          createServerError(
+            `Catch block in rateLimiter middleware, ${error}`,
+            500,
+            "IPRate Limiting Error. Check server log for more details."
+          )
+        )
+        return;
     }
   }
 
