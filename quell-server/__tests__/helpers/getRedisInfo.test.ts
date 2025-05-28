@@ -1,6 +1,6 @@
 import request from 'supertest';
 import app from '../../test-config/test-server';
-import { QuellCache } from '../../src/quell';
+import { QuellCache } from '../../src/QuellCache';
 import schema from '../../test-config/testSchema';
 import { getRedisInfo } from '../../src/helpers/redisHelpers';
 
