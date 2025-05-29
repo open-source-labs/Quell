@@ -1,4 +1,4 @@
-import { QuellCache } from '../../src/quell';
+import { QuellCache } from '../../src/QuellCache';
 import schema from '../../test-config/testSchema';
 
 
