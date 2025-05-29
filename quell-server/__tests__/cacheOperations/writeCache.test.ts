@@ -19,3 +19,11 @@ Array data normalization
 ID extraction from different field names
 Cache expiration functionality
  */
+
+describe('Test Suite for writeCache.ts', () => {
+    console.log ('Test Suite for writeCache.ts');
+
+    it ('This is a test', () => {
+        console.log ('This is a filler test');
+    })
+})

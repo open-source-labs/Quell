@@ -1,5 +1,5 @@
 /** buildCache.ts
- 
+
 Functions to test:
 createBuildCacheFromResponse
 createBuildCacheFromMergedResponse
@@ -18,3 +18,11 @@ Error responses
 Mutation skipping
 Cache key extraction
  */
+
+describe('Test Suite for buildCache.ts', () => {
+    console.log ('Test Suite for buildCache.ts');
+
+    it ('This is a test', () => {
+        console.log ('This is a filler test');
+    })
+})

@@ -17,3 +17,11 @@ Field list updates
 Batch updates
 Error scenarios
  */
+
+describe('Test Suite for updateCache.ts', () => {
+    console.log ('Test Suite for updateCache.ts');
+
+    it ('This is a test', () => {
+        console.log ('This is a filler test');
+    })
+})
