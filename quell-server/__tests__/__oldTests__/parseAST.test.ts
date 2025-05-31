@@ -123,7 +123,7 @@ describe('server tests for parseAST', () => {
     expect(operationType).toEqual('query');
   });
 
-  xtest('should reject query without id for', () => {
+  test('should reject query without id for', () => {
     const query = `{
       countries { 
         id 

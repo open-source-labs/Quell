@@ -3,7 +3,7 @@ import schema from '../../test-config/testSchema';
 
 
 
-xdescribe('server test for buildFromCache', () => {
+describe('server test for buildFromCache', () => {
   const Quell = new QuellCache({
     schema: schema,
     redisPort: Number(process.env.REDIS_PORT) || 6379,
@@ -210,7 +210,7 @@ xdescribe('server test for buildFromCache', () => {
     expect(responseFromCache).toEqual(expectedResponseFromCache);
   });
 
-  xtest('Handles array', async () => {
+  test('Handles array', async () => {
     const testProto = {
       countries: {
         id: true,

@@ -5,7 +5,7 @@ import schema from '../../test-config/testSchema';
 import { getRedisInfo } from '../../src/helpers/redisHelpers';
 
 // tests pass locally, but time out in travis CI build...
-xdescribe('server test for getRedisInfo', () => {
+describe('server test for getRedisInfo', () => {
   const Quell = new QuellCache({
     schema: schema,
     redisPort: Number(process.env.REDIS_PORT) || 6379,
