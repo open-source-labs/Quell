@@ -9,6 +9,9 @@
     "package.json",
     "README.md"
   ],
+  "bin": {
+    "quell": "./bin/quell.js"
+  },
   "scripts": {
     "test": "jest --forceExit",
     "test-coverage": "jest --coverage",
@@ -170,8 +173,11 @@
   ],
   "homepage": "https://www.quell.dev/",
   "dependencies": {
+    "chalk": "^5.4.1",
+    "commander": "^14.0.0",
     "dotenv": "^16.3.1",
     "express": ">=4.0.0",
+    "fs-extra": "^11.3.0",
     "pg": "^8.11.1",
     "redis": "^4.6.5",
     "redis-mock": "^0.56.3"
