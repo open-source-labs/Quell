@@ -4,7 +4,11 @@ module.exports = {
   transform: {
     '^.+\\.tsx?$': ['ts-jest', { tsconfig: 'tsconfig.json' }],
   },
-  testPathIgnorePatterns: ['dist'],
+  testPathIgnorePatterns: [
+    "/node_modules/",
+    "/dist/",
+    "/__tests__/__mocks__/mockRedisClient.ts"
+  ],
   collectCoverage: true,
   collectCoverageFrom: [
     'src/**/*.{ts,tsx}',

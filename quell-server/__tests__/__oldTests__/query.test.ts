@@ -1,7 +1,7 @@
 import e from 'express';
-import { QuellCache } from '../src/QuellCache';
-import { RequestType } from '../src/types/types';
-import schema from '../test-config/testSchema';
+import { QuellCache } from '../../src/QuellCache';
+import { RequestType } from '../../src/types/types';
+import schema from '../../test-config/testSchema';
 // import { describe, expect, test, beforeAll, } from 'jest';
 
 describe('server test for query', () => {
