@@ -1,6 +1,6 @@
 // src/helpers/cacheUtils.ts
-import { ProtoObjType, QueryMapType } from "../types";
-import { ServerErrorType } from "../types";
+import { ProtoObjType, QueryMapType } from "../types/types";
+import { ServerErrorType } from "../types/types";
 
 export function getCacheID(proto: ProtoObjType, map: QueryMapType): string {
   const base = map[proto.__type as string] ?? proto.__type;

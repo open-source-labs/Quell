@@ -1,5 +1,5 @@
 // src/helpers/cacheNormalizer.ts
-import { ResponseDataType, ProtoObjType, QueryMapType } from "../types";
+import { ResponseDataType, ProtoObjType, QueryMapType } from "../types/types";
 import { getCacheID } from "./cacheUtils";
 
 export function normalizeNode(
