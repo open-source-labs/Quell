@@ -166,7 +166,20 @@
     {
       "name": "Ian Weinholtz",
       "url": "https://github.com/itsHackinTime"
-    }
+    },
+    {
+      "name": "Aditi Srivastava",
+      "url": "https://github.com/dsriva03"
+    },
+    {
+      "name": "Alicia Brooks",
+      "url": "https://github.com/abrooks11"
+    },
+    {
+      "name": "Jeremy Dalton",
+      "url": "https://github.com/jeremycoledalton"
+    },
+
   ],
   "homepage": "https://www.quell.dev/",
   "dependencies": {
