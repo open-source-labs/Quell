@@ -6,7 +6,6 @@ export const packageScriptsAdditions = {
 };
 
 export const packageDependencies = [
-  '@quell/server',
   'express',
   'graphql',
   'redis',     
