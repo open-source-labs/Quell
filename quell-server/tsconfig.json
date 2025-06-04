@@ -27,7 +27,7 @@
 
     /* Modules */
     "module": "commonjs" /* Specify what module code is generated. */,
-    "rootDir": "." /* Specify the root folder within your source files. */,
+    "rootDir": "src" /* Specify the root folder within your source files. */,
     // "moduleResolution": "node",                       /* Specify how TypeScript looks up a file from a given module specifier. */
     // "baseUrl": "./",                                  /* Specify the base directory to resolve non-relative module names. */
     "paths": {"@quell/server": ["./node_modules/@quell/server"]},                                      /* Specify a set of entries that re-map imports to additional lookup locations. */
@@ -102,5 +102,5 @@
     "skipLibCheck": true /* Skip type checking all .d.ts files. */
   },
   "include": ["src/**/*", "__tests__/**/*"],
-  "exclude": ["node_modules", "dist"]
+  "exclude": ["node_modules", "dist", "__tests__", "**/*.test.ts"]
 }

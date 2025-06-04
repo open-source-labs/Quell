@@ -1,54 +1,45 @@
+import dotenv from 'dotenv';
+dotenv.config();
 
 import { QuellCache } from '../src/QuellCache';
 import { RequestType } from '../src/types/types';
+import { redisCacheMain } from '../src/helpers/redisConnection';
 import schema from '../test-config/testSchema';
-
 import e from 'express';
+
+let Quell: QuellCache;
+
+beforeAll(async () => {
+    Quell = new QuellCache({
+      schema,
+      redisPort: +process.env.REDIS_PORT! || 6379,
+      redisHost: process.env.REDIS_HOST || '127.0.0.1',
+      redisPassword: process.env.REDIS_PASSWORD || '',
+    });
+
+    // Ensure the Redis client QuellCache uses is connected
+    if (!Quell.redisCache.isOpen) await Quell.redisCache.connect();
+    // Optionally ensure the shared client is connected too
+    if (!redisCacheMain.isOpen) await redisCacheMain.connect();
+
+    // Write initial cache state
+    await Promise.all([
+        Quell.writeToCache('country--1', { id: '1', capitol: { id: '2', name: 'DC' } }),
+        Quell.writeToCache('country--2', { id: '2' }),
+        Quell.writeToCache('country--3', { id: '3' }),
+        Quell.writeToCache('countries', ['country--1', 'country--2', 'country--3']),
+  ]);
+});
+
+afterAll(async () => {
+    if (Quell.redisCache.isOpen) {
+      await Quell.redisCache.flushAll();
+      await Quell.redisCache.quit();
+    }
+  });
 
 //Legacy Test Suite for buildFromCache from QuellCache
 describe('server test for buildFromCache', () => {
-    const Quell = new QuellCache({
-        schema: schema,
-        redisPort: Number(process.env.REDIS_PORT) || 6379,
-        redisHost: process.env.REDIS_HOST || '127.0.0.1',
-        redisPassword: process.env.REDIS_PASSWORD || '',
-    });
-    
-    // inputs: prototype object (which contains args), collection (defaults to an empty array)
-    // outputs: protoype object with fields that were not found in the cache set to false
-    
-    beforeAll(() => {
-        const promise1 = new Promise((resolve, reject) => {
-            resolve(
-                Quell.writeToCache('country--1', {
-                    id: '1',
-                    capitol: { id: '2', name: 'DC' },
-                })
-            );
-        });
-        const promise2 = new Promise((resolve, reject) => {
-            resolve(Quell.writeToCache('country--2', { id: '2' }))
-        });
-        const promise3 = new Promise((resolve, reject) => {
-            resolve(Quell.writeToCache('country--3', { id: '3' }))
-        });
-        const promise4 = new Promise((resolve, reject) => {
-            resolve(
-                Quell.writeToCache('countries', [
-                    'country--1',
-                    'country--2',
-                    'country--3',
-                ])
-            )
-        });
-        return Promise.all([promise1, promise2, promise3, promise4]);
-    });
-    
-    afterAll(() => {
-        Quell.redisCache.flushAll();
-        Quell.redisCache.quit();
-    });
-    
     test('Basic query', async () => {
         const testProto = {
             country: {
@@ -70,21 +61,11 @@ describe('server test for buildFromCache', () => {
                 __id: '3',
             },
         };
-        const expectedResponseFromCache = {
-            data: {
-                country: {
-                    id: '3',
-                },
-            },
-        };
-        const prototypeKeys = Object.keys(testProto);
-        const responseFromCache = await Quell.buildFromCache(
-            testProto,
-            prototypeKeys
-        );
+        const expectedResponse = { data: { country: { id: '3' } } };
+        const result = await Quell.buildFromCache(testProto, Object.keys(testProto));
         // we expect prototype after running through buildFromCache to have id has stayed true but every other field has been toggled to false (if not found in sessionStorage)
         expect(testProto).toEqual(endProto);
-        expect(responseFromCache).toEqual(expectedResponseFromCache);
+        expect(result).toEqual(expectedResponse);
     });
     
     test('Basic query for data not in the cache', async () => {
@@ -108,14 +89,8 @@ describe('server test for buildFromCache', () => {
                 __id: '3',
             },
         };
-        const expectedResponseFromCache = {
-            data: { book: {} },
-        };
-        const prototypeKeys = Object.keys(testProto);
-        const responseFromCache = await Quell.buildFromCache(
-            testProto,
-            prototypeKeys
-        );
+        const expectedResponseFromCache = { data: { book: {} }  };
+        const responseFromCache = await Quell.buildFromCache(testProto, Object.keys(testProto));
         // we expect prototype after running through buildFromCache to have id has stayed true but every other field has been toggled to false (if not found in sessionStorage)
         expect(testProto).toEqual(endProto);
         expect(responseFromCache).toEqual(expectedResponseFromCache);
@@ -204,11 +179,7 @@ describe('server test for buildFromCache', () => {
                 },
             },
         };
-        const prototypeKeys = Object.keys(testProto);
-        const responseFromCache = await Quell.buildFromCache(
-            testProto,
-            prototypeKeys
-        );
+        const responseFromCache = await Quell.buildFromCache(testProto, Object.keys(testProto));
         expect(testProto).toEqual(endProto);
         expect(responseFromCache).toEqual(expectedResponseFromCache);
     });
@@ -235,23 +206,13 @@ describe('server test for buildFromCache', () => {
         const expectedResponseFromCache = {
             data: {
                 countries: [
-                    {
-                        id: '1',
-                    },
-                    {
-                        id: '2',
-                    },
-                    {
-                        id: '3',
-                    },
+                    {   id: '1' },
+                    {   id: '2' },
+                    {   id: '3' },
                 ],
             },
         };
-        const prototypeKeys = Object.keys(testProto);
-        const responseFromCache = await Quell.buildFromCache(
-            testProto,
-            prototypeKeys
-        );
+        const responseFromCache = await Quell.buildFromCache(testProto, Object.keys(testProto));
         expect(testProto).toEqual(endProto);
         expect(responseFromCache).toEqual(expectedResponseFromCache);
     });
@@ -309,14 +270,9 @@ describe('server test for buildFromCache', () => {
                 },
             },
         };
-        const expectedResponseFromCache = {
-            data: { continents: {} },
-        };
+        const expectedResponseFromCache = { data: { continents: {} }  };
         const prototypeKeys = Object.keys(testProto);
-        const responseFromCache = await Quell.buildFromCache(
-            testProto,
-            prototypeKeys
-        );
+        const responseFromCache = await Quell.buildFromCache(testProto, Object.keys(testProto));
         expect(testProto).toEqual(endProto);
         expect(responseFromCache).toEqual(expectedResponseFromCache);
     });
@@ -326,51 +282,8 @@ describe('server test for buildFromCache', () => {
 
 //Legacy Test Suite for basic query form QuellCache
 describe('server test for query', () => {
-  const Quell = new QuellCache({
-    schema: schema,
-    redisPort: Number(process.env.REDIS_PORT) || 6379,
-    redisHost: process.env.REDIS_HOST || '127.0.0.1',
-    redisPassword: process.env.REDIS_PASSWORD || '',
-  });
-  // inputs: prototype object (which contains args), collection (defaults to an empty array)
-  // outputs: protoype object with fields that were not found in the cache set to false
-
-  beforeAll(() => {
-    const promise1 = new Promise((resolve, reject) => {
-      resolve(
-        Quell.writeToCache('country--1', {
-          id: '1',
-          capitol: { id: '2', name: 'DC' },
-        })
-      );
-    });
-    const promise2 = new Promise((resolve, reject) => {
-      resolve(Quell.writeToCache('country--2', { id: '2' }));
-    });
-    const promise3 = new Promise((resolve, reject) => {
-      resolve(Quell.writeToCache('country--3', { id: '3' }));
-    });
-    const promise4 = new Promise((resolve, reject) => {
-      resolve(
-        Quell.writeToCache('countries', [
-          'country--1',
-          'country--2',
-          'country--3',
-        ])
-      );
-    });
-    return Promise.all([promise1, promise2, promise3, promise4]);
-  });
-
-  // afterAll(() => {
-  //   Quell.redisCache.flushAll();
-  //   Quell.redisCache.quit();
-  // });
-
   test('If query is empty, should error out in rateLimiter', async () => {
-    const mockReq = <RequestType> {
-      body: {}
-    } 
+    const mockReq = <RequestType> { body: {} }; 
     
     const mockRes = <e.Response<any, Record<string, any>>> {};
     const mockNext = <e.NextFunction> jest.fn();
@@ -389,7 +302,7 @@ describe('server test for query', () => {
     })
   });
 
-  test('If query is empty, should error out in query', async () => {
+  test('query errors on empty query', async () => {
     const mockReq = <RequestType> {
       body: {}
     } 
