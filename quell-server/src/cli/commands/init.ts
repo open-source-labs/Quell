@@ -38,7 +38,7 @@ export async function initCommand(options: InitOptions = {}): Promise<void> {
     logger.info(`Detected package manager: ${packageManager}`);
     
     // Create basic directory structure
-    await createDirectories(['src']);
+    // await createDirectories(['src']);
     
     // 1. Create .env file
     logger.log('\nCreating configuration files...');
@@ -50,11 +50,11 @@ export async function initCommand(options: InitOptions = {}): Promise<void> {
     }
     
     // 2. Create Quell config file
-    const configResult = await createFile('src/quell-config.ts', configTemplate, options.force);
+    const configResult = await createFile('quell-config.ts', configTemplate, options.force);
     if (configResult.created) {
-      logger.success('Created src/quell-config.ts');
+      logger.success('Created quell-config.ts');
     } else if (configResult.existed) {
-      logger.warning('src/quell-config.ts already exists (use --force to overwrite)');
+      logger.warning('quell-config.ts already exists (use --force to overwrite)');
     }
     
     // 3. Create example server file if requested
@@ -160,7 +160,7 @@ export async function initCommand(options: InitOptions = {}): Promise<void> {
       logger.log('   • Replace sample data with your database queries');
     } else {
       logger.log('   • Create your GraphQL schema file');
-      logger.log('   • Update src/quell-config.ts to use your schema');
+      logger.log('   • Update quell-config.ts to use your schema');
     }
     logger.log('');
     

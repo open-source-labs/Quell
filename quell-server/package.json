@@ -16,7 +16,7 @@
     "test": "jest --forceExit",
     "test-coverage": "jest --coverage",
     "clear-cache": "node bin/clearCache.js",
-    "build": "tsc"
+    "build": "tsc --declaration"
   },
   "engines": {
     "node": ">=14.17.5",
