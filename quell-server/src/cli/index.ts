@@ -38,7 +38,7 @@ ${chalk.bold('INIT OPTIONS:')}
   -t, --typescript     Use TypeScript templates (default)
   -j, --javascript     Use JavaScript templates
   --skip-install       Skip automatic dependency installation
-  --redis-host <host>  Redis host (default: localhost)
+  --redis-host <host>  Redis host (default: 127.0.0.1)
   --redis-port <port>  Redis port (default: 6379)
 
 ${chalk.bold('EXAMPLES:')}
@@ -81,7 +81,7 @@ function createProgram(): Command {
     .option('-t, --typescript', 'Use TypeScript templates (default)', true)
     .option('-j, --javascript', 'Use JavaScript templates')
     .option('--skip-install', 'Skip automatic dependency installation')
-    .option('--redis-host <host>', 'Redis host', 'localhost')
+    .option('--redis-host <host>', 'Redis host', "'127.0.0.1'")
     .option('--redis-port <port>', 'Redis port', '6379')
     .action(initCommand);
 

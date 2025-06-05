@@ -38,7 +38,7 @@ export async function initCommand(options: InitOptions = {}): Promise<void> {
     logger.info(`Detected package manager: ${packageManager}`);
     
     // Create basic directory structure
-    // await createDirectories(['src']);
+    await createDirectories(['src', 'src/server', 'src/server/schema']);
     
     // 1. Create .env file
     logger.log('\nCreating configuration files...');
@@ -59,14 +59,14 @@ export async function initCommand(options: InitOptions = {}): Promise<void> {
     
     // 3. Create example server file if requested
     if (options.example) {
-      const serverResult = await createFile('src/server.ts', serverTemplate, options.force);
+      const serverResult = await createFile('src/server/example-server.ts', serverTemplate, options.force);
       if (serverResult.created) {
-        logger.success('Created src/server.ts with example GraphQL server');
+        logger.success('Created src/server/example-server.ts with example GraphQL server');
       }
       
-      const schemaResult = await createFile('src/schema.ts', schemaTemplate, options.force);
+      const schemaResult = await createFile('src/server/schema/example-schema.ts', schemaTemplate, options.force);
       if (schemaResult.created) {
-        logger.success('Created src/schema.ts with example schema');
+        logger.success('Created src/server/schema/example-schema.ts with example schema');
       }
     }
     

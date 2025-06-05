@@ -1,35 +1,31 @@
-export const serverTemplate = `import express from 'express';
-import { graphqlHTTP } from 'express-graphql';
-import { quellCache } from './quell-config';
-import { schema, resolvers } from './schema';
+export const serverTemplate = `import express, { Request, Response, NextFunction } from 'express';
+import { quellCache } from '../../quell-config';
+import { schema, resolvers } from './schema/example-schema';
 import dotenv from 'dotenv';
 
 // Load environment variables
 dotenv.config();
 
 const app = express();
+
 const PORT = process.env.PORT || 4000;
 
-// Apply rate limiter middleware (optional)
-app.use('/graphql', quellCache.rateLimiter);
-
-// Apply depth limit middleware (optional)
-app.use('/graphql', quellCache.depthLimit);
-
-// Apply cost limit middleware (optional)
-app.use('/graphql', quellCache.costLimit);
-
 // Apply Quell caching middleware
-app.use('/graphql', quellCache.query);
-
-// GraphQL endpoint
 app.use(
-  '/graphql',
-  graphqlHTTP({
-    schema,
-    rootValue: resolvers,
-    graphiql: true,
-  })
+  "/graphql",
+  // clearElapsedTime,
+  // quellCache.rateLimiter as any,
+  // quellCache.costLimit as any,
+  // quellCache.depthLimit as any,
+  quellCache.query as any,
+  (_req: Request, res: Response): void => {
+    try {
+      res.status(200).json({ queryResponse: res.locals });
+    } catch (error) {
+      console.error("Error in GraphQL endpoint:", error);
+      res.status(500).json({ error: "Internal server error" });
+    }
+  }
 );
 
 // Add an endpoint to clear the cache

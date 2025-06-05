@@ -12,7 +12,7 @@ if (majorVersion < 16) {
 }
 
 // Import and run the CLI
-import('../dist/src/cli/index.js').catch((error) => {
+import('../dist/cli/index.js').catch((error) => {
   console.error('❌ Failed to load Quell CLI:', error.message);
   process.exit(1);
 });
