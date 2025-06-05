@@ -57,30 +57,45 @@ export function createNormalizeForCache(
     protoField: ProtoObjType,
     currName: string
   ) {
-      console.log("=== NORMALIZE FOR CACHE ===");
-  console.log("Response Data:", JSON.stringify(responseData, null, 2));
-  console.log("Map:", JSON.stringify(map, null, 2));
-  console.log("Proto Field:", JSON.stringify(protoField, null, 2));
-  console.log("Current Name:", currName);
+    console.log("=== NORMALIZE FOR CACHE ===");
+    console.log("Response Data:", JSON.stringify(responseData, null, 2));
+    console.log("Proto Field:", JSON.stringify(protoField, null, 2));
+    
+    // Add safety check
+    if (!responseData) {
+      console.log("ERROR: responseData is undefined or null");
+      return;
+    }
+    
     for (const resultName in responseData) {
       const currField = responseData[resultName];
       const currProto: ProtoObjType = protoField[resultName] as ProtoObjType;
+      
+      console.log(`Processing field: ${resultName}`);
+      console.log(`currField:`, currField);
+      console.log(`currProto:`, currProto);
+      
+      // Add safety check here too
+      if (!currProto) {
+        console.log(`ERROR: currProto is undefined for field ${resultName}`);
+        continue;
+      }
+      
       if (Array.isArray(currField)) {
         await processArrayData(currField, map, currProto, resultName, currName)      
       } else if (typeof currField === "object") {
         await processObjectData(
-            currField,
-            currProto,
-            map,
-            currName,
-            resultName,
-            protoField,
-            responseData
-          );
+          currField,
+          currProto,
+          map,
+          currName,
+          resultName,
+          protoField,
+          responseData
+        );
       }
     }
   }
-
 
 /**
  * Helper function to process array data during normalization
@@ -169,7 +184,12 @@ async function processArrayData(
         );
       }
     }
-    
+
+    console.log("=== ABOUT TO WRITE TO CACHE ===");
+console.log("Cache ID:", cacheID);
+console.log("Field Store (what will be cached):", JSON.stringify(fieldStore, null, 2));
+console.log("Current Field (from response):", JSON.stringify(currField, null, 2));
+
     // Store the object in cache
     writeToCache(cacheID, fieldStore);
   }

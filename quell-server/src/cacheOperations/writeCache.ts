@@ -27,6 +27,8 @@ export function createWriteToCache(
     item: Type | string[] | ExecutionResult
   ): void {
     const lowerKey: string = key.toLowerCase();
+    console.log("WRITING TO CACHE:", lowerKey, JSON.stringify(item));
+
     if (!key.includes("uncacheable")) {
       redisCache.set(lowerKey, JSON.stringify(item));
       redisCache.EXPIRE(lowerKey, cacheExpiration);
