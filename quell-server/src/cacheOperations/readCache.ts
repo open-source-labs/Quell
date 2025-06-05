@@ -180,6 +180,25 @@ export function createBuildFromCache(config: ReadCacheConfig) {
     }
   };
 
+/**
+ * Helper function to recursively mark all primitive fields in a nested object as false
+ * This ensures they get included in the database query
+ */
+const markNestedFieldsAsFalse = (obj: ProtoObjType): void => {
+  for (const key in obj) {
+    if (key.includes("__")) continue; // Skip meta fields
+    
+    if (typeof obj[key] === "object" && obj[key] !== null) {
+      // Recursively mark nested objects
+      markNestedFieldsAsFalse(obj[key] as ProtoObjType);
+    } else {
+      // Mark primitive fields as false
+      obj[key] = false;
+    }
+  }
+};
+
+
   /**
    * Process nested cache queries
    */
@@ -191,6 +210,8 @@ export function createBuildFromCache(config: ReadCacheConfig) {
     firstRun: boolean
   ): Promise<void> => {
     if (!firstRun) {
+          // Handle recursive calls (non-root level)
+
       // If this field is not in the cache, set to false
       if (
         (itemFromCache === null ||
@@ -219,44 +240,51 @@ export function createBuildFromCache(config: ReadCacheConfig) {
         );
       }
     } else {
-      // Handle normal (non-recursive) case
-      for (const field in prototype[typeKey] as ProtoObjType) {
-        // If field is not found in cache then toggle to false
-        if (
-          itemFromCache[typeKey] &&
-          !Object.prototype.hasOwnProperty.call(
-            itemFromCache[typeKey],
-            field
-          ) &&
-          !field.includes("__") &&
-          typeof (prototype[typeKey] as ProtoObjType)[field] !== "object"
-        ) {
-          (prototype[typeKey] as ProtoObjType)[field] = false;
-        }
+    // Handle root level processing (firstRun = true)
+    for (const field in prototype[typeKey] as ProtoObjType) {
+         // Skip meta fields
+      if (field.includes("__")) continue;
 
-        // If field contains a nested query, recurse
-        if (
-          !field.includes("__") &&
-          typeof (prototype[typeKey] as ProtoObjType)[field] === "object"
-        ) {
+      const fieldPrototype = (prototype[typeKey] as ProtoObjType)[field];
+      const isFieldObject = typeof fieldPrototype === "object";
+      const fieldExistsInCache = itemFromCache[typeKey] && 
+        Object.prototype.hasOwnProperty.call(itemFromCache[typeKey], field);
+      const cacheDataExists = itemFromCache[typeKey];
+
+  if (isFieldObject) {
+        // Handle nested object/array fields (like albums)
+        if (fieldExistsInCache) {
+          // Field exists in cache, recurse to process nested data
           await buildFromCache(
-            (prototype[typeKey] as ProtoObjType)[field] as ProtoObjType,
+            fieldPrototype as ProtoObjType,
             prototypeKeys,
             itemFromCache[typeKey][field] || {},
             false
           );
+        } else {
+   // Field doesn't exist in cache - mark it for database retrieval
+   console.log(`Field '${field}' not found in cache, will query from database`);
+          
+   // For nested objects, we need to mark all their primitive fields as false
+   // so that createQueryObj includes them in the database query
+   markNestedFieldsAsFalse(fieldPrototype as ProtoObjType);
+ }
+      } else {
+        // Handle primitive fields (like id, name)
+        if (!fieldExistsInCache) {
+          if (cacheDataExists) {
+            // Cache has entity data but missing this field
+            (prototype[typeKey] as ProtoObjType)[field] = false;
+          } else {
+            // No cache data at all - mark field for database retrieval
+            (prototype[typeKey] as ProtoObjType)[field] = false;
+          }
         }
-        // If there are no data in itemFromCache, toggle to false
-        else if (
-          !itemFromCache[typeKey] &&
-          !field.includes("__") &&
-          typeof (prototype[typeKey] as ProtoObjType)[field] !== "object"
-        ) {
-          (prototype[typeKey] as ProtoObjType)[field] = false;
-        }
+        // If field exists in cache, leave it as is (it will be used from cache)
       }
     }
-  };
+  }
+};
 
   /**
    * Main buildFromCache function
