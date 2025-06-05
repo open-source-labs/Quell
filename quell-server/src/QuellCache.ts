@@ -494,11 +494,14 @@ console.log('+++++++++++++++++++');
         // Create a new query string that contains only the fields not found in the cache so that we can
         // request only that information from the database.
         
+        console.log("QUERY OBJECT BEFORE createQueryStr:", JSON.stringify(queryObject, null, 2));
         const newQueryString: string = createQueryStr(
           queryObject,
           operationType
         );
-        
+        console.log("NEW QUERY STRING:", newQueryString);
+
+    
         // Execute the query using the new query string.
         graphql({ schema: this.schema, source: newQueryString })
         .then(async (databaseResponseRaw: ExecutionResult): Promise<void> => {
@@ -557,7 +560,7 @@ console.log('+++++++++++++++++++');
 
             // The response is given a cached key equal to false to indicate to the front end of the demo site that the
             // information was *NOT* entirely found in the cache.
-            mergedResponse.cached = false;
+            mergedResponse.cacheHit = false;
 
             res.locals.queryResponse = { ...mergedResponse };
 
@@ -577,7 +580,7 @@ console.log('+++++++++++++++++++');
         // If the query object is empty, there is nothing left to query and we can send the information from cache.
         // The response is given a cached key equal to true to indicate to the front end of the demo site that the
         // information was entirely found in the cache.
-        cacheResponse.cached = true;
+        cacheResponse.cacheHit = true;
         res.locals.queryResponse = { ...cacheResponse };
         return next();
       }

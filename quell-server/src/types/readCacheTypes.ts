@@ -24,7 +24,7 @@ import type {
    */
   export interface CacheResponse {
     data: ItemFromCacheType;
-    cached?: boolean;
+    cacheHit?: boolean;
   }
   
   /**
