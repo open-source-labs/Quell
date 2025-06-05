@@ -57,6 +57,11 @@ export function createNormalizeForCache(
     protoField: ProtoObjType,
     currName: string
   ) {
+      console.log("=== NORMALIZE FOR CACHE ===");
+  console.log("Response Data:", JSON.stringify(responseData, null, 2));
+  console.log("Map:", JSON.stringify(map, null, 2));
+  console.log("Proto Field:", JSON.stringify(protoField, null, 2));
+  console.log("Current Name:", currName);
     for (const resultName in responseData) {
       const currField = responseData[resultName];
       const currProto: ProtoObjType = protoField[resultName] as ProtoObjType;

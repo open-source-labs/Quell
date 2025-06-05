@@ -519,23 +519,42 @@ console.log('+++++++++++++++++++');
             JSON.stringify(databaseResponse)
           );
           
-          // Check if the cache response has any data by iterating over the keys in cache response.
-          let cacheHasData = false;
-          
           // Check cache data
           console.log(
             "CACHE RESPONSE DATA:",
             JSON.stringify(cacheResponse.data)
           );
           
+          // Determine cache hit status
+let cacheHitStatus: "full" | "partial" | "none" = "none";
+
+// Check if cache has any data
+let cacheHasData = false;
+
           for (const key in cacheResponse.data) {
             if (Object.keys(cacheResponse.data[key]).length > 0) {
               cacheHasData = true;
               break;
             }
           }
+
+          // Check if query needs any database data
+const needsDatabaseData = Object.keys(queryObject).length > 0;
+
+if (!needsDatabaseData) {
+  // Everything found in cache
+  cacheHitStatus = "full";
+} else if (cacheHasData) {
+  // Some data from cache, some from database
+  cacheHitStatus = "partial";
+} else {
+  // No data from cache, everything from database
+  cacheHitStatus = "none";
+}
           
           console.log("CACHE HAS DATA:", cacheHasData);
+          console.log("NEEDS DATABASE DATA:", needsDatabaseData);
+console.log("CACHE HIT STATUS:", cacheHitStatus);
           
            // Create merged response object to merge the data from the cache and the data from the database.
             // If the cache response does not have data then just use the database response.
@@ -547,8 +566,14 @@ console.log('+++++++++++++++++++');
                 )
               : databaseResponse;
 
+              console.log("=== ABOUT TO CACHE ===");
+console.log("Merged Response:", JSON.stringify(mergedResponse, null, 2));
+console.log("Prototype:", JSON.stringify(prototype, null, 2));
+
                  // CACHE THE MERGED RESPONSE
             await this.handleQueryCaching('partial', mergedResponse, prototype, operationType);
+
+            console.log("=== FINISHED CACHING ===");
 
             // const currName = "string it should not be again";
             // const test = await this.normalizeForCache(
@@ -560,7 +585,7 @@ console.log('+++++++++++++++++++');
 
             // The response is given a cached key equal to false to indicate to the front end of the demo site that the
             // information was *NOT* entirely found in the cache.
-            mergedResponse.cacheHit = false;
+            mergedResponse.cacheHit = cacheHitStatus;
 
             res.locals.queryResponse = { ...mergedResponse };
 
@@ -580,7 +605,7 @@ console.log('+++++++++++++++++++');
         // If the query object is empty, there is nothing left to query and we can send the information from cache.
         // The response is given a cached key equal to true to indicate to the front end of the demo site that the
         // information was entirely found in the cache.
-        cacheResponse.cacheHit = true;
+        cacheResponse.cacheHit = "full";
         res.locals.queryResponse = { ...cacheResponse };
         return next();
       }
