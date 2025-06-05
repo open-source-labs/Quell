@@ -59,17 +59,47 @@ export function createUpdateIdCache(
     keyWithID: string,
     currName: string
   ): void {
+    console.log(`=== UPDATE ID CACHE ===`);
+    console.log(`objKey: ${objKey}`);
+    console.log(`keyWithID: ${keyWithID}`);
+    console.log(`currName: ${currName}`);
+    console.log(`Current idCache state:`, JSON.stringify(idCache, null, 2));
+
     if (!idCache[currName]) {
       idCache[currName] = {};
-      idCache[currName][objKey] = keyWithID;
-      return undefined; // Explicitly return undefined
-    } else if (
-      !Array.isArray(idCache[currName][objKey]) ||
-      !idCache[currName][objKey]
-    ) {
-      idCache[currName][objKey] = [];
-    } else {
-      (idCache[currName][objKey] as string[]).push(keyWithID);
     }
+
+    // Check if this key already exists
+    if (!idCache[currName][objKey]) {
+      // First time seeing this key - store the string directly
+      idCache[currName][objKey] = keyWithID;
+      console.log(`Stored new key: ${objKey} = ${keyWithID}`);
+    } else if (typeof idCache[currName][objKey] === "string") {
+      // Key exists as string - only convert to array if it's actually different
+      const existingValue = idCache[currName][objKey] as string;
+      if (existingValue !== keyWithID) {
+        idCache[currName][objKey] = [existingValue, keyWithID];
+        console.log(
+          `Converted to array: ${objKey} = [${existingValue}, ${keyWithID}]`
+        );
+      } else {
+        console.log(
+          `Key ${objKey} already exists with same value, skipping duplicate`
+        );
+      }
+    } else if (Array.isArray(idCache[currName][objKey])) {
+      // Key exists as array - only add if not already present
+      const existingArray = idCache[currName][objKey] as string[];
+      if (!existingArray.includes(keyWithID)) {
+        existingArray.push(keyWithID);
+        console.log(`Added to existing array: ${objKey} = [..., ${keyWithID}]`);
+      } else {
+        console.log(
+          `Key ${objKey} already exists in array, skipping duplicate`
+        );
+      }
+    }
+
+    console.log(`Updated idCache state:`, JSON.stringify(idCache, null, 2));
   };
 }

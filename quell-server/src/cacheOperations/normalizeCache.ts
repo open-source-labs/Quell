@@ -1,4 +1,4 @@
-import { RedisClientType } from 'redis';
+import { RedisClientType } from "redis";
 
 import type {
   ProtoObjType,
@@ -7,30 +7,30 @@ import type {
   Type,
   FieldsObjectType,
   ServerErrorType,
-} from '../types/types';
+} from "../types/types";
 
 import type {
   WriteToCacheFunction,
   UpdateIdCacheFunction,
-} from '../types/writeCacheTypes';
+} from "../types/writeCacheTypes";
 
 /**
  * Configuration interface for normalize cache operations
  */
 export interface NormalizeCacheConfig {
-    writeToCache: WriteToCacheFunction;
-    updateIdCache: UpdateIdCacheFunction;
-  }
-  
-  /**
-   * Function type for normalizing data for cache
-   */
-  export type NormalizeForCacheFunction = (
-    responseData: ResponseDataType,
-    map: QueryMapType,
-    protoField: ProtoObjType,
-    currName: string
-  ) => Promise<void>;
+  writeToCache: WriteToCacheFunction;
+  updateIdCache: UpdateIdCacheFunction;
+}
+
+/**
+ * Function type for normalizing data for cache
+ */
+export type NormalizeForCacheFunction = (
+  responseData: ResponseDataType,
+  map: QueryMapType,
+  protoField: ProtoObjType,
+  currName: string
+) => Promise<void>;
 
 /**
  * Creates a normalizeForCache function with the provided configuration
@@ -40,10 +40,10 @@ export interface NormalizeCacheConfig {
  * @returns Bound normalizeForCache function
  */
 export function createNormalizeForCache(
-    config: NormalizeCacheConfig
-  ): NormalizeForCacheFunction {
-    const { writeToCache, updateIdCache } = config;
-  
+  config: NormalizeCacheConfig
+): NormalizeForCacheFunction {
+  const { writeToCache, updateIdCache } = config;
+
   /**
    * Traverses over response data and formats it appropriately so that it can be stored in the cache.
    * @param {Object} responseData - Data we received from an external source of data such as a database or API.
@@ -60,29 +60,29 @@ export function createNormalizeForCache(
     console.log("=== NORMALIZE FOR CACHE ===");
     console.log("Response Data:", JSON.stringify(responseData, null, 2));
     console.log("Proto Field:", JSON.stringify(protoField, null, 2));
-    
+
     // Add safety check
     if (!responseData) {
       console.log("ERROR: responseData is undefined or null");
       return;
     }
-    
+
     for (const resultName in responseData) {
       const currField = responseData[resultName];
       const currProto: ProtoObjType = protoField[resultName] as ProtoObjType;
-      
+
       console.log(`Processing field: ${resultName}`);
       console.log(`currField:`, currField);
       console.log(`currProto:`, currProto);
-      
+
       // Add safety check here too
       if (!currProto) {
         console.log(`ERROR: currProto is undefined for field ${resultName}`);
         continue;
       }
-      
+
       if (Array.isArray(currField)) {
-        await processArrayData(currField, map, currProto, resultName, currName)      
+        await processArrayData(currField, map, currProto, resultName, currName);
       } else if (typeof currField === "object") {
         await processObjectData(
           currField,
@@ -97,32 +97,22 @@ export function createNormalizeForCache(
     }
   }
 
-/**
- * Helper function to process array data during normalization
- */
-async function processArrayData(
+  /**
+   * Helper function to process array data during normalization
+   */
+  async function processArrayData(
     currField: ResponseDataType[],
     map: QueryMapType,
     currProto: ProtoObjType,
     resultName: string,
-    currName: string,
+    currName: string
   ): Promise<void> {
-    for (let i = 0; i < currField.length; i++) {
-      const el: ResponseDataType = currField[i];
-      const dataType: string | undefined | string[] = map[resultName];
-  
-      if (typeof el === 'object' && typeof dataType === 'string') {
-        await normalizeForCache(
-          { [dataType]: el },
-          map,
-          {
-            [dataType]: currProto,
-          },
-          currName
-        );
-      }
-    }
+    console.log("=== PROCESSING ARRAY DATA ===");
+    console.log(
+      "Skipping individual array item caching - arrays stored with parent object only"
+    );
   }
+
   /**
    * Helper function to process object data during normalization
    */
@@ -135,12 +125,12 @@ async function processArrayData(
     protoField: ProtoObjType,
     responseData: ResponseDataType
   ): Promise<void> {
-          // Need to get non-Alias ID for cache
+    // Need to get non-Alias ID for cache
 
-        // Temporary store for field properties
+    // Temporary store for field properties
 
     const fieldStore: ResponseDataType = {};
-  
+
     // Create a cacheID based on __type and __id from the prototype
     let cacheID: string = Object.prototype.hasOwnProperty.call(
       map,
@@ -148,32 +138,35 @@ async function processArrayData(
     )
       ? (map[currProto.__type as string] as string)
       : (currProto.__type as string);
-  
-    cacheID += currProto.__id ? `--${currProto.__id}` : '';
-  
+
+    cacheID += currProto.__id ? `--${currProto.__id}` : "";
+
     // Process each key in the object
     for (const key in currField) {
       // Check for ID fields and update cache accordingly
       if (
         !currProto.__id &&
-        (key === 'id' || key === '_id' || key === 'ID' || key === 'Id')
+        (key === "id" || key === "_id" || key === "ID" || key === "Id")
       ) {
         const updatedCurrName = updateCurrentName(
           responseData,
           cacheID,
           currName
         );
-        
+
         const cacheIDForIDCache: string = cacheID;
         cacheID += `--${currField[key]}`;
-        
+
         updateIdCache(cacheIDForIDCache, cacheID, updatedCurrName);
       }
-  
+
       fieldStore[key] = currField[key];
-  
+
       // Recursively process nested objects
-      if (typeof currField[key] === 'object' && protoField[resultName] !== null) {
+      if (
+        typeof currField[key] === "object" &&
+        protoField[resultName] !== null
+      ) {
         await normalizeForCache(
           { [key]: currField[key] },
           map,
@@ -186,14 +179,20 @@ async function processArrayData(
     }
 
     console.log("=== ABOUT TO WRITE TO CACHE ===");
-console.log("Cache ID:", cacheID);
-console.log("Field Store (what will be cached):", JSON.stringify(fieldStore, null, 2));
-console.log("Current Field (from response):", JSON.stringify(currField, null, 2));
+    console.log("Cache ID:", cacheID);
+    console.log(
+      "Field Store (what will be cached):",
+      JSON.stringify(fieldStore, null, 2)
+    );
+    console.log(
+      "Current Field (from response):",
+      JSON.stringify(currField, null, 2)
+    );
 
     // Store the object in cache
     writeToCache(cacheID, fieldStore);
   }
-  
+
   /**
    * Helper function to update the current name based on response data
    */
@@ -205,10 +204,10 @@ console.log("Current Field (from response):", JSON.stringify(currField, null, 2)
     if (responseData[cacheID.toLowerCase()]) {
       const responseDataAtCacheID = responseData[cacheID.toLowerCase()];
       if (
-        typeof responseDataAtCacheID !== 'string' &&
+        typeof responseDataAtCacheID !== "string" &&
         !Array.isArray(responseDataAtCacheID)
       ) {
-        if (typeof responseDataAtCacheID.name === 'string') {
+        if (typeof responseDataAtCacheID.name === "string") {
           return responseDataAtCacheID.name;
         }
       }
