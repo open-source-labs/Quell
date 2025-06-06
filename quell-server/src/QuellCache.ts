@@ -19,8 +19,7 @@ import {
   createWriteToCache,
   createUpdateIdCache,
 } from "./cacheOperations/writeCache";
-import {
-  createNormalizeForCache} from "./cacheOperations/normalizeCache";
+import { createNormalizeForCache } from "./cacheOperations/normalizeCache";
 import { createUpdateCacheByMutation } from "./cacheOperations/updateCache";
 import {
   createClearCache,
@@ -61,13 +60,14 @@ import type {
   ServerErrorType,
   ParsedASTType,
   RequestType,
+  ResponseDataType,
 } from "./types/types";
 
 // Import function types
 import type {
   BuildFromCacheFunction,
   GenerateCacheIDFunction,
-  CacheResponse
+  CacheResponse,
 } from "./types/readCacheTypes";
 import type {
   WriteToCacheFunction,
@@ -177,7 +177,7 @@ export class QuellCache {
   }: ConstructorOptions) {
     // Convert schema to a standardized format
     const standardizedSchema = anySchemaToQuellSchema(schema);
-console.log('+++++++++++++++++++');
+    console.log("+++++++++++++++++++");
 
     // Initialize schema-related properties
     this.schema = schema;
@@ -423,32 +423,31 @@ console.log('+++++++++++++++++++');
       this.redisCache.flushAll();
       idCache = {};
 
-      
       // Execute the operation and add the result to the response.
       graphql({ schema: this.schema, source: queryString })
-      .then((databaseResponse: ExecutionResult): void => {
-        res.locals.queryResponse = databaseResponse;
-        
-        // Determine if the query string is a valid mutation in the schema.
-        // Loop through the mutations in the mutationMap.
-        for (const mutation in this.mutationMap) {
-          // If any mutation from the mutationMap is found on the proto, the query string includes
-          // a valid mutation. Update the mutation query object, name, type variables. Update the cache with the response.
-          // We don't need to wait until writeToCache is finished.
-          if (Object.prototype.hasOwnProperty.call(proto, mutation)) {
-            const mutationName = mutation;
-            const mutationType = this.mutationMap[mutation] as string;
-            const mutationQueryObject = proto[mutation] as ProtoObjType;
-            this.updateCacheByMutation(
-              databaseResponse,
-              mutationName,
-              mutationType,
-              mutationQueryObject
-            );
-            break;
+        .then((databaseResponse: ExecutionResult): void => {
+          res.locals.queryResponse = databaseResponse;
+
+          // Determine if the query string is a valid mutation in the schema.
+          // Loop through the mutations in the mutationMap.
+          for (const mutation in this.mutationMap) {
+            // If any mutation from the mutationMap is found on the proto, the query string includes
+            // a valid mutation. Update the mutation query object, name, type variables. Update the cache with the response.
+            // We don't need to wait until writeToCache is finished.
+            if (Object.prototype.hasOwnProperty.call(proto, mutation)) {
+              const mutationName = mutation;
+              const mutationType = this.mutationMap[mutation] as string;
+              const mutationQueryObject = proto[mutation] as ProtoObjType;
+              this.updateCacheByMutation(
+                databaseResponse,
+                mutationName,
+                mutationType,
+                mutationQueryObject
+              );
+              break;
+            }
           }
-          }
-          return next()
+          return next();
         })
         .catch((error: Error): void => {
           const err: ServerErrorType = {
@@ -481,60 +480,86 @@ console.log('+++++++++++++++++++');
       //   cached?: boolean;
       // } = await this.buildFromCache(prototype, prototypeKeys);
 
-      const cacheResponse: CacheResponse = await this.buildFromCache(prototype, prototypeKeys);
+      const cacheResponse: CacheResponse = await this.buildFromCache(
+        prototype,
+        prototypeKeys
+      );
 
-      
       // Create query object containing the fields that were not found in the cache.
       // This will be used to create a new GraphQL string.
       const queryObject: ProtoObjType = createQueryObj(prototype);
-      
+
       // If the cached response is incomplete, reformulate query,
       // handoff query, join responses, and cache joined responses.
       if (Object.keys(queryObject).length > 0) {
         // Create a new query string that contains only the fields not found in the cache so that we can
         // request only that information from the database.
-        
+
+        console.log(
+          "QUERY OBJECT BEFORE createQueryStr:",
+          JSON.stringify(queryObject, null, 2)
+        );
         const newQueryString: string = createQueryStr(
           queryObject,
           operationType
         );
-        
+        console.log("NEW QUERY STRING:", newQueryString);
+
         // Execute the query using the new query string.
         graphql({ schema: this.schema, source: newQueryString })
-        .then(async (databaseResponseRaw: ExecutionResult): Promise<void> => {
-          // The GraphQL must be parsed in order to join with it with the data retrieved from
-          // the cache before sending back to user.
-          const databaseResponse = JSON.parse(
-            JSON.stringify(databaseResponseRaw)
-          );
-          console.log(
-            "DATABASE RESPONSE RAW:",
-            JSON.stringify(databaseResponseRaw)
-          );
-          console.log(
-            "DATABASE RESPONSE PARSED:",
-            JSON.stringify(databaseResponse)
-          );
-          
-          // Check if the cache response has any data by iterating over the keys in cache response.
-          let cacheHasData = false;
-          
-          // Check cache data
-          console.log(
-            "CACHE RESPONSE DATA:",
-            JSON.stringify(cacheResponse.data)
-          );
-          
-          for (const key in cacheResponse.data) {
-            if (Object.keys(cacheResponse.data[key]).length > 0) {
-              cacheHasData = true;
-              break;
+          .then(async (databaseResponseRaw: ExecutionResult): Promise<void> => {
+            // The GraphQL must be parsed in order to join with it with the data retrieved from
+            // the cache before sending back to user.
+            const databaseResponse = JSON.parse(
+              JSON.stringify(databaseResponseRaw)
+            );
+            console.log(
+              "DATABASE RESPONSE RAW:",
+              JSON.stringify(databaseResponseRaw)
+            );
+            console.log(
+              "DATABASE RESPONSE PARSED:",
+              JSON.stringify(databaseResponse)
+            );
+
+            // Check cache data
+            console.log(
+              "CACHE RESPONSE DATA:",
+              JSON.stringify(cacheResponse.data)
+            );
+
+            // Determine cache hit status
+            let cacheHitStatus: "full" | "partial" | "none" = "none";
+
+            // Check if cache has any data
+            let cacheHasData = false;
+
+            for (const key in cacheResponse.data) {
+              if (Object.keys(cacheResponse.data[key]).length > 0) {
+                cacheHasData = true;
+                break;
+              }
             }
-          }
-          
-          console.log("CACHE HAS DATA:", cacheHasData);
-          
-           // Create merged response object to merge the data from the cache and the data from the database.
+
+            // Check if query needs any database data
+            const needsDatabaseData = Object.keys(queryObject).length > 0;
+
+            if (!needsDatabaseData) {
+              // Everything found in cache
+              cacheHitStatus = "full";
+            } else if (cacheHasData) {
+              // Some data from cache, some from database
+              cacheHitStatus = "partial";
+            } else {
+              // No data from cache, everything from database
+              cacheHitStatus = "none";
+            }
+
+            console.log("CACHE HAS DATA:", cacheHasData);
+            console.log("NEEDS DATABASE DATA:", needsDatabaseData);
+            console.log("CACHE HIT STATUS:", cacheHitStatus);
+
+            // Create merged response object to merge the data from the cache and the data from the database.
             // If the cache response does not have data then just use the database response.
             const mergedResponse = cacheHasData
               ? joinResponses(
@@ -544,8 +569,28 @@ console.log('+++++++++++++++++++');
                 )
               : databaseResponse;
 
-                 // CACHE THE MERGED RESPONSE
-            await this.handleQueryCaching('partial', mergedResponse, prototype, operationType);
+            console.log("=== ABOUT TO CACHE ===");
+            console.log(
+              "Merged Response:",
+              JSON.stringify(mergedResponse, null, 2)
+            );
+            console.log("Prototype:", JSON.stringify(prototype, null, 2));
+
+            // CACHE THE COMPLETE MERGED RESPONSE
+            if (cacheHitStatus === "partial" || cacheHitStatus === "none") {
+ // Determine the correct data to cache based on the response structure
+ const dataToCache = cacheHitStatus === "none" 
+ ? mergedResponse.data as ResponseDataType  // Database response has .data wrapper
+ : mergedResponse as ResponseDataType;      // Joined response is already unwrapped
+ 
+await this.normalizeForCache(
+ dataToCache,
+ this.queryMap,
+ prototype,
+ "root"
+);
+}
+            console.log("=== FINISHED CACHING ===");
 
             // const currName = "string it should not be again";
             // const test = await this.normalizeForCache(
@@ -557,7 +602,7 @@ console.log('+++++++++++++++++++');
 
             // The response is given a cached key equal to false to indicate to the front end of the demo site that the
             // information was *NOT* entirely found in the cache.
-            mergedResponse.cached = false;
+            mergedResponse.cacheHit = cacheHitStatus;
 
             res.locals.queryResponse = { ...mergedResponse };
 
@@ -577,7 +622,7 @@ console.log('+++++++++++++++++++');
         // If the query object is empty, there is nothing left to query and we can send the information from cache.
         // The response is given a cached key equal to true to indicate to the front end of the demo site that the
         // information was entirely found in the cache.
-        cacheResponse.cached = true;
+        cacheResponse.cacheHit = "full";
         res.locals.queryResponse = { ...cacheResponse };
         return next();
       }
