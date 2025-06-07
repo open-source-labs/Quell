@@ -188,6 +188,14 @@ export class QuellCache {
     // Initialize cache properties
     this.idCache = idCache;
     this.redisCache = redisCacheMain;
+
+    //connect to Redis
+    if (!this.redisCache.isOpen) {
+      this.redisCache.connect().catch((err) => {
+        console.error('Redis connection error in QuellCache constructor:', err);
+      });
+    }
+
     this.redisReadBatchSize = 10;
     this.cacheExpiration = cacheExpiration;
 
