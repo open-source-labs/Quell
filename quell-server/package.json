@@ -179,9 +179,8 @@
       "name": "Jeremy Dalton",
       "url": "https://github.com/jeremycoledalton"
     }
-
   ],
-  "homepage": "https://www.quell.dev/",
+  "homepage": "https://www.logiquell.dev/",
   "dependencies": {
     "dotenv": "^16.3.1",
     "express": ">=4.0.0",
@@ -197,6 +196,7 @@
     "@testing-library/react": "^14.0.0",
     "@types/express": "^4.17.17",
     "@types/jest": "^29.5.14",
+    "@types/mocha": "^10.0.10",
     "@types/node": "^22.15.17",
     "@types/pg": "^8.10.2",
     "@types/supertest": "^2.0.12",
