@@ -39,6 +39,7 @@ export function createBuildFromCache(config: ReadCacheConfig) {
     } else {
       cacheID = generateCacheID(prototype);
     }
+    console.log(`Generated base cache ID: ${cacheID}`);
 
     // Get key name from args if available
     let keyName: string | undefined;
@@ -47,19 +48,43 @@ export function createBuildFromCache(config: ReadCacheConfig) {
     } else {
       keyName = Object.values(prototype.__args as object)[0];
     }
+    console.log(`Key name from args: ${keyName}`);
 
     // Check ID cache for mapping
     if (keyName && idCache[keyName]) {
+      console.log(`Found ID cache for ${keyName}:`, idCache[keyName]);
+
       if (idCache[keyName][cacheID]) {
-        cacheID = idCache[keyName][cacheID] as string;
+        const mappedValue = idCache[keyName][cacheID];
+
+        // Handle both string and array cases
+        if (typeof mappedValue === "string") {
+          cacheID = mappedValue;
+          console.log(`Updated cache ID from ID cache: ${cacheID}`);
+        } else if (Array.isArray(mappedValue) && mappedValue.length > 0) {
+          // If it's an array, use the first value (they should all be the same anyway)
+          cacheID = mappedValue[0];
+          console.log(`Updated cache ID from ID cache array: ${cacheID}`);
+        }
       }
 
       // Try capitalized version
       const capitalized = cacheID.charAt(0).toUpperCase() + cacheID.slice(1);
       if (idCache[keyName][capitalized]) {
-        cacheID = idCache[keyName][capitalized] as string;
+        const mappedValue = idCache[keyName][capitalized];
+
+        // Handle both string and array cases
+        if (typeof mappedValue === "string") {
+          cacheID = mappedValue;
+          console.log(`Updated cache ID from capitalized version: ${cacheID}`);
+        } else if (Array.isArray(mappedValue) && mappedValue.length > 0) {
+          // If it's an array, use the first value
+          cacheID = mappedValue[0];
+          console.log(`Updated cache ID from capitalized array: ${cacheID}`);
+        }
       }
     }
+    console.log(`Final cache ID: ${cacheID}`);
 
     return cacheID;
   };
@@ -181,6 +206,24 @@ export function createBuildFromCache(config: ReadCacheConfig) {
   };
 
   /**
+   * Helper function to recursively mark all primitive fields in a nested object as false
+   * This ensures they get included in the database query
+   */
+  const markNestedFieldsAsFalse = (obj: ProtoObjType): void => {
+    for (const key in obj) {
+      if (key.includes("__")) continue; // Skip meta fields
+
+      if (typeof obj[key] === "object" && obj[key] !== null) {
+        // Recursively mark nested objects
+        markNestedFieldsAsFalse(obj[key] as ProtoObjType);
+      } else {
+        // Mark primitive fields as false
+        obj[key] = false;
+      }
+    }
+  };
+
+  /**
    * Process nested cache queries
    */
   const processNestedCache = async (
@@ -191,6 +234,8 @@ export function createBuildFromCache(config: ReadCacheConfig) {
     firstRun: boolean
   ): Promise<void> => {
     if (!firstRun) {
+      // Handle recursive calls (non-root level)
+
       // If this field is not in the cache, set to false
       if (
         (itemFromCache === null ||
@@ -219,40 +264,50 @@ export function createBuildFromCache(config: ReadCacheConfig) {
         );
       }
     } else {
-      // Handle normal (non-recursive) case
+      // Handle root level processing (firstRun = true)
       for (const field in prototype[typeKey] as ProtoObjType) {
-        // If field is not found in cache then toggle to false
-        if (
-          itemFromCache[typeKey] &&
-          !Object.prototype.hasOwnProperty.call(
-            itemFromCache[typeKey],
-            field
-          ) &&
-          !field.includes("__") &&
-          typeof (prototype[typeKey] as ProtoObjType)[field] !== "object"
-        ) {
-          (prototype[typeKey] as ProtoObjType)[field] = false;
-        }
+        // Skip meta fields
+        if (field.includes("__")) continue;
 
-        // If field contains a nested query, recurse
-        if (
-          !field.includes("__") &&
-          typeof (prototype[typeKey] as ProtoObjType)[field] === "object"
-        ) {
-          await buildFromCache(
-            (prototype[typeKey] as ProtoObjType)[field] as ProtoObjType,
-            prototypeKeys,
-            itemFromCache[typeKey][field] || {},
-            false
-          );
-        }
-        // If there are no data in itemFromCache, toggle to false
-        else if (
-          !itemFromCache[typeKey] &&
-          !field.includes("__") &&
-          typeof (prototype[typeKey] as ProtoObjType)[field] !== "object"
-        ) {
-          (prototype[typeKey] as ProtoObjType)[field] = false;
+        const fieldPrototype = (prototype[typeKey] as ProtoObjType)[field];
+        const isFieldObject = typeof fieldPrototype === "object";
+        const fieldExistsInCache =
+          itemFromCache[typeKey] &&
+          Object.prototype.hasOwnProperty.call(itemFromCache[typeKey], field);
+        const cacheDataExists = itemFromCache[typeKey];
+
+        if (isFieldObject) {
+          // Handle nested object/array fields (like albums)
+          if (fieldExistsInCache) {
+            // Field exists in cache, recurse to process nested data
+            await buildFromCache(
+              fieldPrototype as ProtoObjType,
+              prototypeKeys,
+              itemFromCache[typeKey][field] || {},
+              false
+            );
+          } else {
+            // Field doesn't exist in cache - mark it for database retrieval
+            console.log(
+              `Field '${field}' not found in cache, will query from database`
+            );
+
+            // For nested objects, we need to mark all their primitive fields as false
+            // so that createQueryObj includes them in the database query
+            markNestedFieldsAsFalse(fieldPrototype as ProtoObjType);
+          }
+        } else {
+          // Handle primitive fields (like id, name)
+          if (!fieldExistsInCache) {
+            if (cacheDataExists) {
+              // Cache has entity data but missing this field
+              (prototype[typeKey] as ProtoObjType)[field] = false;
+            } else {
+              // No cache data at all - mark field for database retrieval
+              (prototype[typeKey] as ProtoObjType)[field] = false;
+            }
+          }
+          // If field exists in cache, leave it as is (it will be used from cache)
         }
       }
     }
@@ -271,6 +326,9 @@ export function createBuildFromCache(config: ReadCacheConfig) {
     firstRun = true,
     subID: boolean | string = false
   ): Promise<{ data: ItemFromCacheType }> {
+    console.log("=== BUILD FROM CACHE START ===");
+    console.log("Prototype:", JSON.stringify(prototype, null, 2));
+    console.log("Prototype Keys:", prototypeKeys);
     for (const typeKey in prototype) {
       // If the current key is a root query, check cache and set any results to itemFromCache
       if (prototypeKeys.includes(typeKey)) {
@@ -279,7 +337,10 @@ export function createBuildFromCache(config: ReadCacheConfig) {
           subID
         );
 
+        console.log(`Looking for cache with key: ${cacheID}`);
         const cacheResponse = await getFromRedis(cacheID, redisCache);
+        console.log(`Cache response for ${cacheID}:`, cacheResponse);
+
         itemFromCache[typeKey] = cacheResponse ? JSON.parse(cacheResponse) : {};
       }
 
@@ -308,6 +369,9 @@ export function createBuildFromCache(config: ReadCacheConfig) {
         );
       }
     }
+
+    console.log("=== BUILD FROM CACHE END ===");
+    console.log("Final itemFromCache:", JSON.stringify(itemFromCache, null, 2));
 
     // Return itemFromCache on a data property to resemble GraphQL response format
     return { data: itemFromCache };

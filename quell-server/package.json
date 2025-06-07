@@ -9,11 +9,14 @@
     "package.json",
     "README.md"
   ],
+  "bin": {
+    "quell": "./bin/quell.js"
+  },
   "scripts": {
     "test": "jest --forceExit",
     "test-coverage": "jest --coverage",
     "clear-cache": "node bin/clearCache.js",
-    "build": "tsc"
+    "build": "tsc --declaration"
   },
   "engines": {
     "node": ">=14.17.5",
@@ -182,8 +185,11 @@
   ],
   "homepage": "https://www.logiquell.dev/",
   "dependencies": {
+    "chalk": "^4.1.2",
+    "commander": "^14.0.0",
     "dotenv": "^16.3.1",
     "express": ">=4.0.0",
+    "fs-extra": "^11.3.0",
     "pg": "^8.11.1",
     "redis": "^4.6.5",
     "redis-mock": "^0.56.3"
@@ -195,6 +201,7 @@
   "devDependencies": {
     "@testing-library/react": "^14.0.0",
     "@types/express": "^4.17.17",
+    "@types/fs-extra": "^11.0.4",
     "@types/jest": "^29.5.14",
     "@types/mocha": "^10.0.10",
     "@types/node": "^22.15.17",
