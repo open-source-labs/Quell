@@ -5,7 +5,7 @@ import {
   RedisOptionsType,
   RedisStatsType,
   ServerErrorType,
-} from "../types";
+} from "../types/types";
 
 //connection to Redis server
 const redisCache: RedisClientType = redisCacheMain;
@@ -57,7 +57,7 @@ export const getRedisInfo = (
     getValues: true,
   }
 ): RequestHandler[] => {
-  console.log("Getting Redis Info");
+  // console.log("Getting Redis Info");
   const middleware: RequestHandler[] = [];
 
   /**
@@ -217,10 +217,10 @@ export const getStatsFromRedis = (
               },
               // Server time
               {
-                name: 'System time',
+                name: "System time",
                 value: dataLines
                   .find((line) => line.match(/server_time_in_usec/))
-                  ?.split(':')[1],
+                  ?.split(":")[1],
               },
               // Number of seconds since Redis server start
               {
@@ -238,10 +238,10 @@ export const getStatsFromRedis = (
               },
               // Path to server's executable
               {
-                name: 'Path to executable',
+                name: "Path to executable",
                 value: dataLines
                   .find((line) => line.match(/executable/))
-                  ?.split(':')[1],
+                  ?.split(":")[1],
               },
               // Path to server's configuration file
               {
@@ -276,10 +276,10 @@ export const getStatsFromRedis = (
               },
               // Number of clients being tracked
               {
-                name: 'Tracked clients',
+                name: "Tracked clients",
                 value: dataLines
                   .find((line) => line.match(/tracking_clients/))
-                  ?.split(':')[1],
+                  ?.split(":")[1],
               },
               // Blocked clients
               {
@@ -307,17 +307,17 @@ export const getStatsFromRedis = (
               },
               // % of peak out of total
               {
-                name: 'Peak memory used % total',
+                name: "Peak memory used % total",
                 value: dataLines
                   .find((line) => line.match(/used_memory_peak_perc/))
-                  ?.split(':')[1],
+                  ?.split(":")[1],
               },
               // Initial amount of memory consumed at startup
               {
-                name: 'Memory consumed at startup',
+                name: "Memory consumed at startup",
                 value: dataLines
                   .find((line) => line.match(/used_memory_startup/))
-                  ?.split(':')[1],
+                  ?.split(":")[1],
               },
               // Size of dataset
               // {

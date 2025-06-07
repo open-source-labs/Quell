@@ -1,11 +1,13 @@
 import request from 'supertest';
 import app from '../../test-config/test-server';
-import { QuellCache } from '../../src/quell';
+import { QuellCache } from '../../src/QuellCache';
 import schema from '../../test-config/testSchema';
 import { getRedisInfo } from '../../src/helpers/redisHelpers';
 
 // tests pass locally, but time out in travis CI build...
-xdescribe('server test for getRedisInfo', () => {
+
+// Legacy Test Suite for getRedisInfo from redisHelpers
+describe('server test for getRedisInfo', () => {
   const Quell = new QuellCache({
     schema: schema,
     redisPort: Number(process.env.REDIS_PORT) || 6379,
